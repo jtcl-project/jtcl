@@ -98,7 +98,7 @@ public class TclCmdTest extends TestCase {
 		String line = in.readLine();
 		while (line != null) {
 			System.out.println(line);
-			if (line.contains("FAILED")) {
+			if (line.indexOf("FAILED") > 0) {
 				String[] words = line.split(" ");
 				if (words.length == 3) {   // example:  "---- for-6.13 FAILED"
 					String testCaseName = words[1];
