@@ -1,5 +1,7 @@
 package tcl.lang.cmd;
 
+import java.util.Collections;
+
 import tcl.lang.TclCmdTest;
 
 public class BinaryCmdTest extends TclCmdTest {

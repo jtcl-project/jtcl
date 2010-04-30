@@ -56,6 +56,19 @@ public class TclCmdTest extends TestCase {
 	 * @throws Exception
 	 */
 	public void tclTestResource(String resName, List expectedFailureCases) throws Exception {
+		tclTestResource(null, resName, expectedFailureCases);
+	}
+	
+	/**
+	 * Test a Tcl test file resource, test file is assumed to 'package require tcltest'.
+	 * Examine test output, check expected and unexpected test case failures, if any occur, the 
+	 * junit test will fail.
+	 * @param preTestCode A string of Tcl code to evaluate before running the test case.
+	 * @param resName The name of a tcltest file as a resource path.  
+	 * @param expectedFailureCases The list of expected test case failures (List of String).
+	 * @throws Exception
+	 */
+	public void tclTestResource(String preTestCode, String resName, List expectedFailureCases) throws Exception {
 		List unexpectedFailures = new LinkedList();
 		
 		// set up temporary file for tcltest output
@@ -73,6 +86,16 @@ public class TclCmdTest extends TestCase {
 			throw new Exception(errStr, e);
 		}
 
+		// run the preTestCode, if any
+		if (preTestCode != null) {
+			try {
+				interp.eval(preTestCode);
+			} catch (TclException e) {
+				String errStr = interp.getVar("errorInfo", 0).toString();
+				throw new Exception(errStr, e);
+			}
+		}
+		
 		// run the test case 
 		String errStr = "";
 		try {
