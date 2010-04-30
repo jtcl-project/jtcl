@@ -2,7 +2,10 @@ package tcl.lang;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -12,6 +15,8 @@ import junit.framework.TestCase;
 
 public class TclCmdTest extends TestCase {
 
+	public static final String TCLTEST_VERBOSE = "tcltest::configure -verbose {start pass body error skip}";
+	
 	private Interp interp;
 	
 	public void setUp() throws Exception {
@@ -38,17 +43,17 @@ public class TclCmdTest extends TestCase {
 	}
 	
 	/**
-	 * Test a Tcl test file resource, test file is assumed to 'package require tcltest'.
+	 * Test a Tcl test file resource.
 	 * No failures are expected in running of the tcl test cases, if any occur, the junit test will fail.
 	 * @param resName The name of a tcltest file as a resource path.  
 	 * @throws Exception
 	 */
 	public void tclTestResource(String resName) throws Exception {
-		tclTestResource(resName, new LinkedList());
+		tclTestResource(resName, Collections.EMPTY_LIST);
 	}
 	
 	/**
-	 * Test a Tcl test file resource, test file is assumed to 'package require tcltest'.
+	 * Test a Tcl test file resource.
 	 * Examine test output, check expected and unexpected test case failures, if any occur, the 
 	 * junit test will fail.
 	 * @param resName The name of a tcltest file as a resource path.  
@@ -60,10 +65,11 @@ public class TclCmdTest extends TestCase {
 	}
 	
 	/**
-	 * Test a Tcl test file resource, test file is assumed to 'package require tcltest'.
+	 * Test a Tcl test file resource.
 	 * Examine test output, check expected and unexpected test case failures, if any occur, the 
 	 * junit test will fail.
-	 * @param preTestCode A string of Tcl code to evaluate before running the test case.
+	 * @param preTestCode A string of Tcl code to evaluate before running the test case.  Hint:
+	 * use TCLTEST_VERBOSE to show progress of tcl test cases.
 	 * @param resName The name of a tcltest file as a resource path.  
 	 * @param expectedFailureCases The list of expected test case failures (List of String).
 	 * @throws Exception
@@ -91,26 +97,34 @@ public class TclCmdTest extends TestCase {
 			try {
 				interp.eval(preTestCode);
 			} catch (TclException e) {
-				String errStr = interp.getVar("errorInfo", 0).toString();
+				tmpFile.delete();
+				String errStr = interp.getVar("errorInfo", 0).toString()
+					+ "\nwhile running preTestCode:\n" 
+					+ preTestCode;
 				throw new Exception(errStr, e);
+			} catch (Exception e) {
+				tmpFile.delete();
+				throw new Exception("Exception while running preTestCode:\n:" + preTestCode, e);
 			}
 		}
 		
 		// run the test case 
-		String errStr = "";
 		try {
 			interp.evalResource(resName);
 		} catch (TclException e) {
-			errStr = interp.getVar("errorInfo", 0).toString();
-			System.out.println(errStr);
-			throw new Exception(errStr, e);  // probably should defer throwing this error. ???
+			String errStr = interp.getVar("errorInfo", 0).toString()
+				+ "\nwhile running tcltest\ncontents of test output:\n"
+				+ readFile(tmpFile);
+			tmpFile.delete();
+			throw new Exception(errStr, e);
+		} catch (Exception e) {
+			String errStr = "Exception while running tcltest\ncontents of test output:\n"
+				+ readFile(tmpFile);
+			tmpFile.delete();
+			throw new Exception(errStr, e);
 		}
 		
-		
-		if (! tmpFile.exists()) {
-			fail("temp file \"" + tmpFileStr + "\" not found.");
-		}
-		
+				
 		// for failures that are expected, remove failed cases from expected list,
 		// and record any unexpected failed test cases.
 		// parsing tcltest output is extremely dependent on format of tcltest reporting.
@@ -136,22 +150,43 @@ public class TclCmdTest extends TestCase {
 		
 		tmpFile.delete();
 		
+		// if we found unexpected failed tcl test cases, or
 		// if expected failure cases is non-empty, fail this junit test.
-		if (! expectedFailureCases.isEmpty()) {
-			fail("Expected failed tcl test cases: " + expectedFailureCases.toString());
-		}
+		// the latter means that we expected to see a test case as failed, but in fact it 
+		// passed (or we didn't notice it as failed.)
 		
-		// if we found unexpected errors, fail this junit test.
-		if (! unexpectedFailures.isEmpty()) {
-			fail("Unexpected failed tcl test cases: " + unexpectedFailures.toString());
+		if (! expectedFailureCases.isEmpty() || ! unexpectedFailures.isEmpty()) {
+			String unFailedExpected = expectedFailureCases.isEmpty() ? "" :
+				"Expected-to-fail tcl test cases that were not reported as failed: " + expectedFailureCases.toString() + "\n";
+			String unExpectedFailed = unexpectedFailures.isEmpty() ? "" :
+				"Unexpected failed tcl test cases: " + unexpectedFailures.toString();
+			fail(unFailedExpected +  unExpectedFailed);
 		}
+	}
+	
+	private String readFile(File file) {
+		StringBuffer buf = new StringBuffer();
+		try {
+			BufferedReader in = new BufferedReader(new FileReader(file));
+			String line = in.readLine();
+			while (line != null) {
+				buf.append(line).append('\n');
+				line = in.readLine();
+			}
+			in.close();
+		} catch (FileNotFoundException e) {
+			// ignore 
+		} catch (IOException e) {
+			// ignore
+		}
+		return buf.toString();
 	}
 	
 	/**
 	 * Dummy test method to keep JUnit happy.
 	 * @throws Exception
 	 */
-	public void test() throws Exception {
+	public void XXtest() throws Exception {
 		// nothing
 	}
 }
