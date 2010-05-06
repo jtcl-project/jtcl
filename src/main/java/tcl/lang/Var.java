@@ -86,11 +86,11 @@ public class Var {
 
 	// Methods to read various flag bits of variables.
 
-	final boolean isVarScalar() {
+	public final boolean isVarScalar() {
 		return ((flags & SCALAR) != 0);
 	}
 
-	final boolean isVarLink() {
+	public final boolean isVarLink() {
 		return ((flags & LINK) != 0);
 	}
 
@@ -102,7 +102,7 @@ public class Var {
 		return ((flags & UNDEFINED) != 0);
 	}
 
-	final boolean isVarArrayElement() {
+	public final boolean isVarArrayElement() {
 		return ((flags & ARRAY_ELEMENT) != 0);
 	}
 
@@ -110,15 +110,15 @@ public class Var {
 		return ((flags & NAMESPACE_VAR) != 0);
 	}
 
-	final boolean isVarInHashtable() {
+	public final boolean isVarInHashtable() {
 		return ((flags & IN_HASHTABLE) != 0);
 	}
 
-	final boolean isVarTraceExists() {
+	public final boolean isVarTraceExists() {
 		return ((flags & TRACE_EXISTS) != 0);
 	}
 
-	final boolean isVarNoCache() {
+	public final boolean isVarNoCache() {
 		return ((flags & NO_CACHE) != 0);
 	}
 
