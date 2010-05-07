@@ -185,6 +185,11 @@ public class ArrayCmd implements Command {
 			// is written into sbuf, which is returned.
 
 			// FIXME : do we need to port over the 8.1 code for this loop?
+			
+			// FIXME - (tp) trace.test 'trace-1.11' and 'trace-1.12' (others?) fail because of
+			//             read traces set on an array, where those traces modify the array
+			//             structure.  no fix yet.  probably requires fixes to Var.java, and
+			//             incrementing 'var.refCount' here before reading, and decrementing after.
 
 			for (Iterator iter = table.entrySet().iterator(); iter.hasNext();) {
 				Map.Entry entry = (Map.Entry) iter.next();
