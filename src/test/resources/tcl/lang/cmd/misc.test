@@ -55,7 +55,7 @@ test misc-1.2 {error in variable ref. in command in array reference} {
 } [subst -novariables -nocommands {1
 missing close-brace for variable name
 missing close-brace for variable name
-    while compiling
+    while executing
 "set tst $a([winfo name $\{zz)
 	# this is a bogus comment
 	# this is a bogus comment

@@ -179,9 +179,9 @@ test incr-1.19 {TclCompileIncrCmd: increment given, but erroneous} {
     catch {incr i [set]} msg
     set errorInfo
 } {wrong # args: should be "set varName ?newValue?"
-    while compiling
+    while executing
 "set"
-    while compiling
+    while executing
 "incr i [set]"}
 test incr-1.20 {TclCompileIncrCmd: increment given, in quotes} {
     set i 25
@@ -221,9 +221,9 @@ test incr-1.26 {TclCompileIncrCmd: runtime error, bad variable name} {
 test incr-1.27 {TclCompileIncrCmd: runtime error, bad variable name} {
     list [catch {incr [set]} msg] $msg $errorInfo
 } {1 {wrong # args: should be "set varName ?newValue?"} {wrong # args: should be "set varName ?newValue?"
-    while compiling
+    while executing
 "set"
-    while compiling
+    while executing
 "incr [set]"}}
 test incr-1.28 {TclCompileIncrCmd: runtime error, readonly variable} {
     proc readonly args {error "variable is read-only"}
@@ -432,9 +432,9 @@ test incr-2.19 {incr command (not compiled): increment given, but erroneous} {
     catch {$z i [set]} msg
     set errorInfo
 } {wrong # args: should be "set varName ?newValue?"
-    while compiling
+    while executing
 "set"
-    while compiling
+    while executing
 "$z i [set]"}
 test incr-2.20 {incr command (not compiled): increment given, in quotes} {
     set z incr
@@ -482,9 +482,9 @@ test incr-2.27 {incr command (not compiled): runtime error, bad variable name} {
     set z incr
     list [catch {$z [set]} msg] $msg $errorInfo
 } {1 {wrong # args: should be "set varName ?newValue?"} {wrong # args: should be "set varName ?newValue?"
-    while compiling
+    while executing
 "set"
-    while compiling
+    while executing
 "$z [set]"}}
 test incr-2.28 {incr command (not compiled): runtime error, readonly variable} {
     set z incr
