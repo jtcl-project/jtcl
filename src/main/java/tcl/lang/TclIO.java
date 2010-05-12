@@ -80,7 +80,7 @@ public class TclIO {
 
 		while (it.hasNext()) {
 			String chanName = (String) it.next();
-			StdChannel chan = (StdChannel) ht.get(chanName);
+			Channel chan = (Channel) ht.get(chanName);
 
 			if (chan == stdinChan) {
 				chanName = "stdin";
