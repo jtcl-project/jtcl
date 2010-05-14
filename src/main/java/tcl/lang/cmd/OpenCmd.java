@@ -153,6 +153,12 @@ public class OpenCmd implements Command {
 		 */
 
 		String fileName = argv[1].toString();
+		
+		// don't try to open fileNames of zero length
+		if (fileName.length() == 0) {
+			throw new TclException(interp, "couldn't open \"\": no such file or directory");
+		}
+		
 		if (!pipeline) {
 			try {
 				if (fileName.startsWith("resource:/")) {
