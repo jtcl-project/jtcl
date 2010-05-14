@@ -30,7 +30,7 @@ import tcl.lang.TclNumArgsException;
 import tcl.lang.TclObject;
 import tcl.lang.TclString;
 
-/*
+/**
  * This class implements the built-in "binary" command in Tcl.
  */
 
@@ -44,54 +44,46 @@ public class BinaryCmd implements Command {
 	// The following constants are used by GetFormatSpec to indicate various
 	// special conditions in the parsing of a format specifier.
 
-	// Use all elements in the argument.
+	/**
+	 * Use all elements in the argument.
+	 */
 	static final private int BINARY_ALL = -1;
-	// No count was specified in format.
+	/**
+	 * No count was specified in format.
+	 */
 	static final private int BINARY_NOCOUNT = -2;
-	// End of format was found.
+	/**
+	 * End of format was found.
+	 */
 	static final private char FORMAT_END = ' ';
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * cmdProc --
-	 * 
+	/**
 	 * This procedure is invoked as part of the Command interface to process the
 	 * "binary" Tcl command. See the user documentation for details on what it
 	 * does.
 	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: See the user documentation.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @see tcl.lang.Command#cmdProc(tcl.lang.Interp, tcl.lang.TclObject[])
 	 */
-
-	public void cmdProc(Interp interp, // Current interpreter.
-			TclObject[] argv) // Argument list.
-			throws TclException // A standard Tcl exception.
-	{
+	public void cmdProc(Interp interp, TclObject[] argv) throws TclException {
 		int arg; // Index of next argument to consume.
 		char[] format = null; // User specified format string.
 		char cmd; // Current format character.
 		int cursor; // Current position within result buffer.
 		int maxPos; // Greatest position within result buffer that
-		// cursor has visited.
+					// cursor has visited.
 		int value = 0; // Current integer value to be packed.
-		// Initialized to avoid compiler warning.
+						// Initialized to avoid compiler warning.
 		int offset, size = 0, length, index;
 
 		if (argv.length < 2) {
-			throw new TclNumArgsException(interp, 1, argv,
-					"option ?arg arg ...?");
+			throw new TclNumArgsException(interp, 1, argv, "option ?arg arg ...?");
 		}
 		int cmdIndex = TclIndex.get(interp, argv[1], validCmds, "option", 0);
 
 		switch (cmdIndex) {
 		case CMD_FORMAT: {
 			if (argv.length < 3) {
-				throw new TclNumArgsException(interp, 2, argv,
-						"formatString ?arg arg ...?");
+				throw new TclNumArgsException(interp, 2, argv, "formatString ?arg arg ...?");
 			}
 
 			// To avoid copying the data, we format the string in two passes.
@@ -185,9 +177,7 @@ public class BinaryCmd implements Command {
 						if (count == BINARY_ALL) {
 							count = listc;
 						} else if (count > listc) {
-							throw new TclException(interp,
-									"number of elements in list"
-											+ " does not match count");
+							throw new TclException(interp, "number of elements in list" + " does not match count");
 						}
 					}
 					offset += count * size;
@@ -195,8 +185,7 @@ public class BinaryCmd implements Command {
 				}
 				case 'x': {
 					if (count == BINARY_ALL) {
-						throw new TclException(interp, "cannot use \"*\""
-								+ " in format string with \"x\"");
+						throw new TclException(interp, "cannot use \"*\"" + " in format string with \"x\"");
 					}
 					if (count == BINARY_NOCOUNT) {
 						count = 1;
@@ -246,8 +235,7 @@ public class BinaryCmd implements Command {
 			// number of bytes and filling with nulls.
 
 			TclObject resultObj = TclByteArray.newInstance();
-			byte[] resultBytes = TclByteArray.setLength(interp, resultObj,
-					length);
+			byte[] resultBytes = TclByteArray.setLength(interp, resultObj, length);
 			interp.setResult(resultObj);
 
 			// Pack the data into the result object. Note that we can skip
@@ -263,7 +251,9 @@ public class BinaryCmd implements Command {
 				int count = GetFormatCount(format, parsePos);
 
 				if ((count == 0) && (cmd != '@')) {
-					arg++;
+					if (cmd != 'x') {
+						arg++;
+					}
 					continue;
 				}
 
@@ -308,8 +298,7 @@ public class BinaryCmd implements Command {
 							if (str[offset] == '1') {
 								value |= 1;
 							} else if (str[offset] != '0') {
-								expectedButGot(interp, "binary",
-										new String(str));
+								expectedButGot(interp, "binary", new String(str));
 							}
 							if (((offset + 1) % 8) == 0) {
 								resultBytes[cursor++] = (byte) value;
@@ -322,8 +311,7 @@ public class BinaryCmd implements Command {
 							if (str[offset] == '1') {
 								value |= 128;
 							} else if (str[offset] != '0') {
-								expectedButGot(interp, "binary",
-										new String(str));
+								expectedButGot(interp, "binary", new String(str));
 							}
 							if (((offset + 1) % 8) == 0) {
 								resultBytes[cursor++] = (byte) value;
@@ -361,8 +349,7 @@ public class BinaryCmd implements Command {
 							value <<= 4;
 							int c = Character.digit(str[offset], 16);
 							if (c < 0) {
-								expectedButGot(interp, "hexadecimal",
-										new String(str));
+								expectedButGot(interp, "hexadecimal", new String(str));
 							}
 							value |= (c & 0xf);
 							if ((offset % 2) != 0) {
@@ -375,8 +362,7 @@ public class BinaryCmd implements Command {
 							value >>= 4;
 							int c = Character.digit(str[offset], 16);
 							if (c < 0) {
-								expectedButGot(interp, "hexadecimal",
-										new String(str));
+								expectedButGot(interp, "hexadecimal", new String(str));
 							}
 							value |= ((c << 4) & 0xf0);
 							if ((offset % 2) != 0) {
@@ -418,8 +404,7 @@ public class BinaryCmd implements Command {
 						}
 					}
 					for (int ix = 0; ix < count; ix++) {
-						cursor = FormatNumber(interp, cmd, listv[ix],
-								resultBytes, cursor);
+						cursor = FormatNumber(interp, cmd, listv[ix], resultBytes, cursor);
 					}
 					break;
 				}
@@ -463,8 +448,7 @@ public class BinaryCmd implements Command {
 		}
 		case CMD_SCAN: {
 			if (argv.length < 4) {
-				throw new TclNumArgsException(interp, 2, argv,
-						"value formatString ?varName varName ...?");
+				throw new TclNumArgsException(interp, 2, argv, "value formatString ?varName varName ...?");
 			}
 			byte[] src = TclByteArray.getBytes(interp, argv[2]);
 			length = src.length;
@@ -500,16 +484,14 @@ public class BinaryCmd implements Command {
 
 					if (cmd == 'A') {
 						while (size > 0) {
-							if (src[offset + size - 1] != '\0'
-									&& src[offset + size - 1] != ' ') {
+							if (src[offset + size - 1] != '\0' && src[offset + size - 1] != ' ') {
 								break;
 							}
 							size--;
 						}
 					}
 
-					interp.setVar(argv[arg++], TclByteArray.newInstance(src,
-							offset, size), 0);
+					interp.setVar(argv[arg++], TclByteArray.newInstance(src, offset, size), 0);
 
 					offset += count;
 					break;
@@ -552,8 +534,7 @@ public class BinaryCmd implements Command {
 						}
 					}
 
-					interp.setVar(argv[arg++], TclString.newInstance(s
-							.toString()), 0);
+					interp.setVar(argv[arg++], TclString.newInstance(s.toString()), 0);
 
 					offset += (count + 7) / 8;
 					break;
@@ -596,8 +577,7 @@ public class BinaryCmd implements Command {
 						}
 					}
 
-					interp.setVar(argv[arg++], TclString.newInstance(s
-							.toString()), 0);
+					interp.setVar(argv[arg++], TclString.newInstance(s.toString()), 0);
 
 					offset += (count + 1) / 2;
 					break;
@@ -648,8 +628,7 @@ public class BinaryCmd implements Command {
 						valueObj = TclList.newInstance();
 						int thisOffset = offset;
 						for (int ix = 0; ix < count; ix++) {
-							TclList.append(null, valueObj, ScanNumber(src,
-									thisOffset, cmd));
+							TclList.append(null, valueObj, ScanNumber(src, thisOffset, cmd));
 							thisOffset += size;
 						}
 						offset += count * size;
@@ -705,11 +684,7 @@ public class BinaryCmd implements Command {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * GetFormatSpec --
-	 * 
+	/**
 	 * This function parses the format strings used in the binary format and
 	 * scan commands.
 	 * 
@@ -717,14 +692,13 @@ public class BinaryCmd implements Command {
 	 * current command character or FORMAT_END if the string did not have a
 	 * format specifier.
 	 * 
-	 * Side effects: None.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param format
+	 *            Format string.
+	 * @param parsePos
+	 *            Current position in input.
+	 * @return
 	 */
-
-	private char GetFormatSpec(char[] format, // Format string.
-			ParsePosition parsePos) // Current position in input.
-	{
+	private char GetFormatSpec(char[] format, ParsePosition parsePos) {
 		int ix = parsePos.getIndex();
 
 		// Skip any leading blanks.
@@ -747,11 +721,7 @@ public class BinaryCmd implements Command {
 		return format[ix++];
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * GetFormatCount --
-	 * 
+	/**
 	 * This function parses the format strings used in the binary format and
 	 * scan commands.
 	 * 
@@ -759,14 +729,13 @@ public class BinaryCmd implements Command {
 	 * the current command count. The count is set to BINARY_ALL if the count
 	 * character was '*' or BINARY_NOCOUNT if no count was specified.
 	 * 
-	 * Side effects: None.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param format
+	 *            Format string.
+	 * @param parsePos
+	 *            Current position in input.
+	 * @return
 	 */
-
-	private int GetFormatCount(char[] format, // Format string.
-			ParsePosition parsePos) // Current position in input.
-	{
+	private int GetFormatCount(char[] format, ParsePosition parsePos) {
 		int ix = parsePos.getIndex();
 
 		// Extract any trailing digits or '*'.
@@ -776,8 +745,7 @@ public class BinaryCmd implements Command {
 			return BINARY_ALL;
 		} else if (ix < format.length && Character.isDigit(format[ix])) {
 			int length = 1;
-			while (ix + length < format.length
-					&& Character.isDigit(format[ix + length])) {
+			while (ix + length < format.length && Character.isDigit(format[ix + length])) {
 				length++;
 			}
 			parsePos.setIndex(ix + length);
@@ -788,27 +756,21 @@ public class BinaryCmd implements Command {
 	}
 
 	/**
-	 *----------------------------------------------------------------------
-	 * 
-	 * FormatNumber --
-	 * 
 	 * This method is called by the binary cmdProc to format a number into a
 	 * location pointed at by cursor.
 	 * 
-	 * Results: None
-	 * 
-	 * Side effects: None.
-	 * 
-	 *----------------------------------------------------------------------
+	 * @param interp
+	 * @param type
+	 *            Type of number to format.
+	 * @param src
+	 *            Number to format.
+	 * @param resultBytes
+	 * @param cursor
+	 * @return
+	 * @throws TclException
 	 */
-
-	static int FormatNumber(Interp interp, // Current interpreter.
-			char type, // Type of number to format.
-			TclObject src, // Number to format.
-			byte[] resultBytes, int cursor) throws TclException // A standard
-	// Tcl
-	// exception.
-	{
+	static int FormatNumber(Interp interp, char type, TclObject src, byte[] resultBytes, int cursor)
+			throws TclException {
 		if (type == 'd') {
 			double dvalue = TclDouble.get(interp, src);
 			// System.out.println("double value is \"" + dvalue + "\"");
@@ -874,26 +836,21 @@ public class BinaryCmd implements Command {
 	}
 
 	/**
-	 *----------------------------------------------------------------------
-	 * 
-	 * ScanNumber --
-	 * 
 	 * This routine is called by Tcl_BinaryObjCmd to scan a number out of a
 	 * buffer.
 	 * 
 	 * Results: Returns a newly created object containing the scanned number.
 	 * This object has a ref count of zero.
 	 * 
-	 * Side effects: None.
-	 * 
-	 *----------------------------------------------------------------------
+	 * @param src
+	 *            Buffer to scan number.
+	 * @param pos
+	 *            Position in buffer.
+	 * @param type
+	 *            Format character from "binary scan"
+	 * @return
 	 */
-
-	private static TclObject ScanNumber(byte[] src, // Buffer to scan number
-			// from.
-			int pos, //
-			int type) // Format character from "binary scan"
-	{
+	private static TclObject ScanNumber(byte[] src, int pos, int type) {
 		switch (type) {
 		case 'c': {
 			return TclInteger.newInstance((int) src[pos]);
@@ -907,30 +864,25 @@ public class BinaryCmd implements Command {
 			return TclInteger.newInstance((int) value);
 		}
 		case 'i': {
-			int value = (src[pos] & 0xff) + ((src[pos + 1] & 0xff) << 8)
-					+ ((src[pos + 2] & 0xff) << 16)
+			int value = (src[pos] & 0xff) + ((src[pos + 1] & 0xff) << 8) + ((src[pos + 2] & 0xff) << 16)
 					+ ((src[pos + 3] & 0xff) << 24);
 			return TclInteger.newInstance(value);
 		}
 		case 'I': {
-			int value = (src[pos + 3] & 0xff) + ((src[pos + 2] & 0xff) << 8)
-					+ ((src[pos + 1] & 0xff) << 16) + ((src[pos] & 0xff) << 24);
+			int value = (src[pos + 3] & 0xff) + ((src[pos + 2] & 0xff) << 8) + ((src[pos + 1] & 0xff) << 16)
+					+ ((src[pos] & 0xff) << 24);
 			return TclInteger.newInstance(value);
 		}
 		case 'f': {
-			int value = (src[pos + 3] & 0xff) + ((src[pos + 2] & 0xff) << 8)
-					+ ((src[pos + 1] & 0xff) << 16) + ((src[pos] & 0xff) << 24);
+			int value = (src[pos + 3] & 0xff) + ((src[pos + 2] & 0xff) << 8) + ((src[pos + 1] & 0xff) << 16)
+					+ ((src[pos] & 0xff) << 24);
 			return TclDouble.newInstance(Float.intBitsToFloat(value));
 		}
 		case 'd': {
-			long value = (((long) src[pos + 7]) & 0xff)
-					+ (((long) (src[pos + 6] & 0xff)) << 8)
-					+ (((long) (src[pos + 5] & 0xff)) << 16)
-					+ (((long) (src[pos + 4] & 0xff)) << 24)
-					+ (((long) (src[pos + 3] & 0xff)) << 32)
-					+ (((long) (src[pos + 2] & 0xff)) << 40)
-					+ (((long) (src[pos + 1] & 0xff)) << 48)
-					+ (((long) (src[pos] & 0xff)) << 56);
+			long value = (((long) src[pos + 7]) & 0xff) + (((long) (src[pos + 6] & 0xff)) << 8)
+					+ (((long) (src[pos + 5] & 0xff)) << 16) + (((long) (src[pos + 4] & 0xff)) << 24)
+					+ (((long) (src[pos + 3] & 0xff)) << 32) + (((long) (src[pos + 2] & 0xff)) << 40)
+					+ (((long) (src[pos + 1] & 0xff)) << 48) + (((long) (src[pos] & 0xff)) << 56);
 			return TclDouble.newInstance(Double.longBitsToDouble(value));
 		}
 		}
@@ -942,29 +894,20 @@ public class BinaryCmd implements Command {
 	 * arguments specified.
 	 * 
 	 * @param interp
-	 *            - The TclInterp which called the cmdProc method.
+	 * @throws TclException
 	 */
-
-	private static void missingArg(Interp interp) // Current interpreter.
-			throws TclException // A standard Tcl exception.
-	{
-		throw new TclException(interp,
-				"not enough arguments for all format specifiers");
+	private static void missingArg(Interp interp) throws TclException {
+		throw new TclException(interp, "not enough arguments for all format specifiers");
 	}
 
 	/**
 	 * Called whenever an invalid format specifier was detected.
 	 * 
 	 * @param interp
-	 *            - The TclInterp which called the cmdProc method.
 	 * @param cmd
-	 *            - The invalid field specifier.
+	 * @throws TclException
 	 */
-
-	private static void badField(Interp interp, // Current interpreter.
-			char cmd) // the invalid field specifier.
-			throws TclException // A standard Tcl exception.
-	{
+	private static void badField(Interp interp, char cmd) throws TclException {
 		throw new TclException(interp, "bad field specifier \"" + cmd + "\"");
 	}
 
@@ -973,14 +916,10 @@ public class BinaryCmd implements Command {
 	 * no count specified.
 	 * 
 	 * @param interp
-	 *            - The TclInterp which called the cmdProc method.
+	 * @throws TclException
 	 */
-
-	private static void alephWithoutCount(Interp interp) // Current interpreter.
-			throws TclException // A standard Tcl exception.
-	{
-		throw new TclException(interp,
-				"missing count for \"@\" field specifier");
+	private static void alephWithoutCount(Interp interp) throws TclException {
+		throw new TclException(interp, "missing count for \"@\" field specifier");
 	}
 
 	/**
@@ -989,17 +928,12 @@ public class BinaryCmd implements Command {
 	 * char not in this range.
 	 * 
 	 * @param interp
-	 *            - The TclInterp which called the cmdProc method.
+	 * @param expected
+	 * @param str
+	 * @throws TclException
 	 */
-
-	private static void expectedButGot(Interp interp, // Current interpreter.
-			String expected, // Classification of what was expected.
-			String str) // Was was found instead.
-			throws TclException // A standard Tcl exception.
-	{
-		throw new TclException(interp, "expected " + expected
-				+ " string but got \"" + str + "\" instead");
+	private static void expectedButGot(Interp interp, String expected, String str) throws TclException {
+		throw new TclException(interp, "expected " + expected + " string but got \"" + str + "\" instead");
 	}
 
-} // end BinaryCmd
-
+}
