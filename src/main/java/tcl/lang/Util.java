@@ -31,14 +31,10 @@ public class Util {
 	// numerical equivalent. It maps from '0' through 'z' to integers
 	// (100 for non-digit characters).
 
-	static char cvtIn[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8,
-			9, // '0' - '9'
-			100, 100, 100, 100, 100, 100,
-			100, // punctuation
-			10, 11, 12, 13, 14, 15, 16, 17, 18,
-			19, // 'A' - 'Z'
-			20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,
-			100, 100, 100, 100, 100, 100, // punctuation
+	static char cvtIn[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, // '0' - '9'
+			100, 100, 100, 100, 100, 100, 100, // punctuation
+			10, 11, 12, 13, 14, 15, 16, 17, 18, 19, // 'A' - 'Z'
+			20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 100, 100, 100, 100, 100, 100, // punctuation
 			10, 11, 12, 13, 14, 15, 16, 17, 18, 19, // 'a' - 'z'
 			20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35 };
 
@@ -53,8 +49,7 @@ public class Util {
 	// is 10^2^i. Used to convert decimal
 	// exponents into floating-point numbers.
 
-	static final double powersOf10[] = { 10., 100., 1.0e4, 1.0e8, 1.0e16,
-			1.0e32, 1.0e64, 1.0e128, 1.0e256 };
+	static final double powersOf10[] = { 10., 100., 1.0e4, 1.0e8, 1.0e16, 1.0e32, 1.0e64, 1.0e128, 1.0e256 };
 
 	// Default precision for converting floating-point values to strings.
 
@@ -72,26 +67,19 @@ public class Util {
 
 	static int precision = DEFAULT_PRECISION;
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
+	/**
 	 * Util -- Dummy constructor to keep Java from automatically creating a
 	 * default public constructor for the Util class.
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
 	 */
 
 	private Util() {
 		// Do nothing. This should never be called.
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * strtoul --
-	 * 
+	/**
 	 * Implements functionality of the strtoul() function used in the C Tcl
 	 * library. This method will parse digits from what should be a 32-bit
 	 * (signed) integer and report the index of the character immediately
@@ -112,20 +100,22 @@ public class Util {
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param s
+	 *            String of ASCII digits, possibly preceded by white space. For
+	 *            bases greater than 10, either lower- or upper-case digits may
+	 *            be used.
+	 * 
+	 * @param start
+	 *            The index of s where the number starts.
+	 * @param base
+	 *            Base for conversion. Must be less than 37. If 0, then the base
+	 *            is chosen from the leading characters of string: "0x" means
+	 *            hex, "0" means octal, anything else means decimal.
+	 * @param strtoulResult
+	 *            Location to store results
 	 */
 
-	public static void strtoul(String s, // String of ASCII digits, possibly
-											// preceded by
-			// white space. For bases greater than 10, either
-			// lower- or upper-case digits may be used.
-			int start, // The index of s where the number starts.
-			int base, // Base for conversion. Must be less than 37. If 0,
-			// then the base is chosen from the leading characters
-			// of string: "0x" means hex, "0" means octal,
-			// anything else means decimal.
-			StrtoulResult strtoulResult) // Location to store results in
-	{
+	public static void strtoul(String s, int start, int base, StrtoulResult strtoulResult) {
 		long result = 0;
 		int digit;
 		boolean anyDigits = false;
@@ -136,8 +126,7 @@ public class Util {
 
 		// Skip any leading blanks.
 
-		while (i < len
-				&& (((c = s.charAt(i)) == ' ') || Character.isWhitespace(c))) {
+		while (i < len && (((c = s.charAt(i)) == ' ') || Character.isWhitespace(c))) {
 			i++;
 		}
 		if (i >= len) {
@@ -166,7 +155,7 @@ public class Util {
 					i++;
 					c = s.charAt(i);
 					if (c == 'x' || c == 'X') { // FIXME: RS: ?? if ((c == 'x'
-												// || c == 'X') && i < len -1) {
+						// || c == 'X') && i < len -1) {
 						i++;
 						base = 16;
 					}
@@ -226,26 +215,22 @@ public class Util {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * getInt --
-	 * 
+	/**
 	 * Converts an ASCII string to an integer.
 	 * 
 	 * Results: The integer value of the string.
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 *            The current interpreter. Can be null
+	 * @param s
+	 *            The string to convert from. Must be in valid Tcl integer
+	 *            format.
+	 * @return integer value
+	 * @throws TclException
 	 */
-
-	public static int getInt(Interp interp, // The current interpreter. Can be
-											// null.
-			String s) // The string to convert from. Must be in valid
-			// Tcl integer format.
-			throws TclException // If the string is not a valid Tcl integer.
-	{
+	public static int getInt(Interp interp, String s) throws TclException {
 		int len = s.length();
 		int i = 0;
 		char c;
@@ -263,18 +248,14 @@ public class Util {
 				if (interp != null) {
 					interp.setErrorCode(TclString.newInstance(intTooBigCode));
 				}
-				throw new TclException(interp,
-						"integer value too large to represent");
+				throw new TclException(interp, "integer value too large to represent");
 			} else {
-				throw new TclException(interp, "expected integer but got \""
-						+ s + "\"" + checkBadOctal(interp, s));
+				throw new TclException(interp, "expected integer but got \"" + s + "\"" + checkBadOctal(interp, s));
 			}
 		} else if (res.index < len) {
 			for (i = res.index; i < len; i++) {
 				if (((c = s.charAt(i)) != ' ') && !Character.isWhitespace(c)) {
-					throw new TclException(interp,
-							"expected integer but got \"" + s + "\""
-									+ checkBadOctal(interp, s));
+					throw new TclException(interp, "expected integer but got \"" + s + "\"" + checkBadOctal(interp, s));
 				}
 			}
 		}
@@ -282,16 +263,15 @@ public class Util {
 		return (int) res.value;
 	}
 
-	static long getWideInt(Interp interp, String str) throws TclException // If
-																			// the
-																			// string
-																			// is
-																			// not
-																			// a
-																			// valid
-																			// Tcl
-																			// integer.
-	{
+	/**
+	 * Converts an ASCII string to a wide integer.
+	 * 
+	 * @param interp
+	 * @param str
+	 * @return
+	 * @throws TclException
+	 */
+	static long getWideInt(Interp interp, String str) throws TclException {
 		int len = str.length();
 		int i = 0;
 		char c;
@@ -309,17 +289,14 @@ public class Util {
 				if (interp != null) {
 					interp.setErrorCode(TclString.newInstance(intTooBigCode));
 				}
-				throw new TclException(interp,
-						"long value too large to represent");
+				throw new TclException(interp, "long value too large to represent");
 			} else {
-				throw new TclException(interp, "expected long but got \"" + str
-						+ "\"" + checkBadOctal(interp, str));
+				throw new TclException(interp, "expected long but got \"" + str + "\"" + checkBadOctal(interp, str));
 			}
 		} else if (res.index < len) {
 			for (i = res.index; i < len; i++) {
 				if (((c = str.charAt(i)) != ' ') && !Character.isWhitespace(c)) {
-					throw new TclException(interp, "expected long but got \""
-							+ str + "\"" + checkBadOctal(interp, str));
+					throw new TclException(interp, "expected long but got \"" + str + "\"" + checkBadOctal(interp, str));
 				}
 			}
 		}
@@ -327,9 +304,7 @@ public class Util {
 		return (int) res.value;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
+	/**
 	 * TclGetIntForIndex -> Util.getIntForIndex
 	 * 
 	 * This procedure returns an integer corresponding to the list index held in
@@ -344,11 +319,14 @@ public class Util {
 	 * Side effects: The object referenced by tobj might be converted to an
 	 * integer object.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 *            interp, can be null
+	 * @param tobj
+	 *            the index object, an integer, "end", or "end-n"
+	 * @param endValue
+	 *            the index value to use as "end"
 	 */
-	public static final int getIntForIndex(Interp interp, // Interp object, can
-															// be null
-			TclObject tobj, int endValue) throws TclException {
+	public static final int getIntForIndex(Interp interp, TclObject tobj, int endValue) throws TclException {
 		int length, offset;
 
 		if (tobj.isIntType()) {
@@ -358,13 +336,17 @@ public class Util {
 		String bytes = tobj.toString();
 		length = bytes.length();
 
-		if ((length == 0)
-				|| !"end".regionMatches(0, bytes, 0, (length > 3) ? 3 : length)) {
+		if ((length == 0) || !"end".regionMatches(0, bytes, 0, (length > 3) ? 3 : length)) {
+			// make sure bytes string is all digits
+			for (int i = 0; i < length; i++) {
+				if (!Character.isDigit(bytes.charAt(i)) && bytes.charAt(i) != '-') {
+					throw new TclException(interp, "bad index \"" + bytes + "\": must be integer or end?-integer?");
+				}
+			}
 			try {
 				offset = TclInteger.get(null, tobj);
 			} catch (TclException e) {
-				throw new TclException(interp, "bad index \"" + bytes
-						+ "\": must be integer or end?-integer?"
+				throw new TclException(interp, "bad index \"" + bytes + "\": must be integer or end?-integer?"
 						+ checkBadOctal(interp, bytes));
 			}
 			return offset;
@@ -376,8 +358,15 @@ public class Util {
 			// This is our limited string expression evaluator
 			// Pass everything after "end-" to then reverse for offset.
 
+			String offsetStr = bytes.substring(4);
+			// make sure offsetStr is all digits
+			for (int i = 0; i < offsetStr.length(); i++) {
+				if (!Character.isDigit(offsetStr.charAt(i)) && offsetStr.charAt(i) != '-') {
+					throw new TclException(interp, "bad index \"" + bytes + "\": must be integer or end?-integer?");
+				}
+			}
 			try {
-				offset = Util.getInt(interp, bytes.substring(4));
+				offset = Util.getInt(interp, offsetStr);
 				offset = -offset;
 				return endValue + offset;
 			} catch (TclException ex) {
@@ -385,14 +374,11 @@ public class Util {
 			}
 		}
 
-		throw new TclException(interp, "bad index \"" + bytes
-				+ "\": must be integer or end?-integer?"
+		throw new TclException(interp, "bad index \"" + bytes + "\": must be integer or end?-integer?"
 				+ checkBadOctal(interp, bytes.substring(3)));
 	}
 
 	/*
-	 * ----------------------------------------------------------------------
-	 * 
 	 * TclCheckBadOctal -> Util.checkBadOctal
 	 * 
 	 * This procedure checks for a bad octal value and returns a meaningful
@@ -402,13 +388,13 @@ public class Util {
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp Interpreter to use for error reporting, can be null.
+	 * 
+	 * @param value the value to check
+	 * 
+	 * @return
 	 */
-
-	static final String checkBadOctal(Interp interp, // Interpreter to use for
-														// error reporting.
-			// If NULL, then no error message is returned.
-			String value) {
+	static final String checkBadOctal(Interp interp, String value) {
 		int p = 0;
 		final int len = value.length();
 
@@ -423,12 +409,12 @@ public class Util {
 		}
 		if ((p < len) && (value.charAt(p) == '0')) {
 			while ((p < len) && Character.isDigit(value.charAt(p))) { // INTL:
-																		// digit.
+				// digit.
 				p++;
 			}
 			while ((p < len) && Character.isWhitespace(value.charAt(p))) { // INTL:
-																			// ISO
-																			// space.
+				// ISO
+				// space.
 				p++;
 			}
 			if (p >= len) {
@@ -441,9 +427,7 @@ public class Util {
 		return "";
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
+	/**
 	 * strtod --
 	 * 
 	 * Converts the leading decimal digits of a string into double and report
@@ -454,17 +438,18 @@ public class Util {
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param s
+	 *            String of ASCII digits, possibly preceded by white space. For
+	 *            bases greater than 10, either lower- or upper-case digits may
+	 *            be used.
+	 * @param start
+	 *            The index of the string to start on.
+	 * @param len
+	 *            The string length, or -1
+	 * @param strtodResult
+	 *            place to store results
 	 */
-
-	public static void strtod(String s, // String of ASCII digits, possibly
-										// preceded by
-			// white space. For bases greater than 10, either lower- or
-			// upper-case digits may be used.
-			final int start, // The index of the string to start on.
-			int len, // The string length, or -1
-			StrtodResult strtodResult) // place to store results
-	{
+	public static void strtod(String s, final int start, int len, StrtodResult strtodResult) {
 		int decPt = -1; // Number of mantissa digits BEFORE decimal
 		// point.
 		int si;
@@ -479,8 +464,7 @@ public class Util {
 
 		// Skip any leading blanks.
 
-		while (i < len
-				&& (((c = s.charAt(i)) == ' ') || Character.isWhitespace(c))) {
+		while (i < len && (((c = s.charAt(i)) == ' ') || Character.isWhitespace(c))) {
 			i++;
 		}
 		if (i >= len) {
@@ -525,8 +509,7 @@ public class Util {
 			}
 
 			if (infLen > 0) {
-				strtodResult.update((negative ? Double.NEGATIVE_INFINITY
-						: Double.POSITIVE_INFINITY), i + infLen, 0);
+				strtodResult.update((negative ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY), i + infLen, 0);
 				return;
 			}
 		}
@@ -627,8 +610,7 @@ public class Util {
 			return;
 		}
 
-		if ((result == Double.NEGATIVE_INFINITY)
-				|| (result == Double.POSITIVE_INFINITY)
+		if ((result == Double.NEGATIVE_INFINITY) || (result == Double.POSITIVE_INFINITY)
 				|| (result == 0.0 && !maybeZero)) {
 			strtodResult.update(result, i, TCL.DOUBLE_RANGE);
 			return;
@@ -643,8 +625,7 @@ public class Util {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
 	 * 
 	 * getDouble --
 	 * 
@@ -654,15 +635,15 @@ public class Util {
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 *            The current interpreter, can be null
+	 * @param s
+	 *            The string to convert from. Must be in valid Tcl double
+	 *            format.
+	 * @return the double value
+	 * @throws TclException
 	 */
-
-	static double getDouble(Interp interp, // The current interpreter, can be
-											// null.
-			String s) // The string to convert from. Must be in valid
-			// Tcl double format.
-			throws TclException // If the string is not a valid Tcl double.
-	{
+	static double getDouble(Interp interp, String s) throws TclException {
 		int len = s.length();
 		int i = 0;
 		char c;
@@ -680,18 +661,14 @@ public class Util {
 				if (interp != null) {
 					interp.setErrorCode(TclString.newInstance(fpTooBigCode));
 				}
-				throw new TclException(interp,
-						"floating-point value too large to represent");
+				throw new TclException(interp, "floating-point value too large to represent");
 			} else {
-				throw new TclException(interp,
-						"expected floating-point number but got \"" + s + "\"");
+				throw new TclException(interp, "expected floating-point number but got \"" + s + "\"");
 			}
 		} else if (res.index < len) {
 			for (i = res.index; i < len; i++) {
 				if ((c = s.charAt(i)) != ' ' && !Character.isWhitespace(c)) {
-					throw new TclException(interp,
-							"expected floating-point number but got \"" + s
-									+ "\"");
+					throw new TclException(interp, "expected floating-point number but got \"" + s + "\"");
 				}
 			}
 		}
@@ -699,9 +676,7 @@ public class Util {
 		return res.value;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
+	/**
 	 * Tcl_ConcatObj -> concat
 	 * 
 	 * Concatenate the strings from a set of objects into a single string object
@@ -712,13 +687,16 @@ public class Util {
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param from
+	 *            The starting index.
+	 * @param to
+	 *            The ending index (inclusive).
+	 * @param objv
+	 *            Array of objects to concatenate.
+	 * @return new String object
+	 * @throws TclException
 	 */
-
-	public static TclObject concat(int from, // The starting index.
-			int to, // The ending index (inclusive).
-			TclObject[] objv) // Array of objects to concatenate.
-			throws TclException {
+	public static TclObject concat(int from, int to, TclObject[] objv) throws TclException {
 		int allocSize, elemLength, i, j;
 		String element;
 		StringBuffer concatStr;
@@ -759,8 +737,7 @@ public class Util {
 
 				obj = objv[i];
 				TclObject[] elements = TclList.getElements(null, obj);
-				TclList.replace(null, tlist, Integer.MAX_VALUE, 0, elements, 0,
-						elements.length - 1);
+				TclList.replace(null, tlist, Integer.MAX_VALUE, 0, elements, 0, elements.length - 1);
 			}
 			return tlist;
 		}
@@ -827,8 +804,7 @@ public class Util {
 		return TclString.newInstance(concatStr);
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
 	 * 
 	 * stringMatch --
 	 * 
@@ -840,13 +816,13 @@ public class Util {
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param str
+	 *            String to compare pattern against
+	 * @param pat
+	 *            Pattern which may contain special characters.
+	 * @return true if string matches within the pattern
 	 */
-
-	public static final boolean stringMatch(String str, // String to compare
-														// pattern against.
-			String pat) // Pattern which may contain special characters.
-	{
+	public static final boolean stringMatch(String str, String pat) {
 		char[] strArr = str.toCharArray();
 		char[] patArr = pat.toCharArray();
 		int strLen = str.length(); // Cache the len of str.
@@ -888,8 +864,7 @@ public class Util {
 					return true;
 				}
 				while (true) {
-					if (stringMatch(str.substring(sIndex), pat
-							.substring(pIndex))) {
+					if (stringMatch(str.substring(sIndex), pat.substring(pIndex))) {
 						return true;
 					}
 					if (sIndex == strLen) {
@@ -927,8 +902,7 @@ public class Util {
 							return false;
 						}
 						ch2 = patArr[pIndex];
-						if (((ch1 <= strch) && (ch2 >= strch))
-								|| ((ch1 >= strch) && (ch2 <= strch))) {
+						if (((ch1 <= strch) && (ch2 >= strch)) || ((ch1 >= strch) && (ch2 <= strch))) {
 							break;
 						}
 					} else if (ch1 == strch) {
@@ -966,9 +940,7 @@ public class Util {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
+	/**
 	 * Tcl_UtfToTitle -> toTitle --
 	 * 
 	 * Changes the first character of a string to title case or uppercase and
@@ -978,11 +950,11 @@ public class Util {
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param str
+	 *            String to convert.
+	 * @return new string
 	 */
-
-	public static String toTitle(String str) // String to convert in place.
-	{
+	public static String toTitle(String str) {
 		// Capitalize the first character and then lowercase the rest of the
 		// characters until we get to the end of string.
 
@@ -996,9 +968,7 @@ public class Util {
 		return buf.toString();
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
+	/**
 	 * 
 	 * regExpMatch --
 	 * 
@@ -1009,23 +979,21 @@ public class Util {
 	 * 
 	 * Side effects: None.
 	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
+	 * @param interp
+	 *            Current interpreter
+	 * @param string
+	 *            The string to match.
+	 * @param pattern
+	 *            The regular expression.
+	 * @return true if matched
+	 * @throws TclException
 	 */
-
-	public static final boolean regExpMatch(Interp interp, // Current
-															// interpreter.
-			String string, // The string to match.
-			TclObject pattern) // The regular expression.
-			throws TclException {
+	public static final boolean regExpMatch(Interp interp, String string, TclObject pattern) throws TclException {
 		Regex r = TclRegexp.compile(interp, pattern, string);
 		return r.match();
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
+	/**
 	 * 
 	 * appendElement --
 	 * 
@@ -1036,16 +1004,15 @@ public class Util {
 	 * 
 	 * Side effects: The value of "sbuf" is changesd.
 	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
+	 * @param interp
+	 *            Current interpreter.
+	 * @param sbuf
+	 *            The buffer to append to.
+	 * @param s
+	 *            The string to append.
+	 * @throws TclException
 	 */
-
-	public static final void appendElement(Interp interp, // Current
-															// interpreter.
-			StringBuffer sbuf, // The buffer to append to.
-			String s) // The string to append.
-			throws TclException {
+	public static final void appendElement(Interp interp, StringBuffer sbuf, String s) throws TclException {
 		if (sbuf.length() > 0) {
 			sbuf.append(' ');
 		}
@@ -1054,8 +1021,7 @@ public class Util {
 		convertElement(s, flags, sbuf);
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
 	 * 
 	 * findElement --
 	 * 
@@ -1069,26 +1035,27 @@ public class Util {
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 *            Current interpreter, can be null.
+	 * @param s
+	 *            The string to locate an element.
+	 * @param i
+	 *            The index inside s to start locating an element.
+	 * @param len
+	 *            The length of the string.
+	 * @param fer
+	 *            The result object to populate.
+	 * @return true if found.
+	 * @throws TclException
 	 */
-
-	static final boolean findElement(Interp interp, // Current interpreter. If
-													// non-null, is used
-			// to store error messages.
-			String s, // The string to locate an element.
-			int i, // The index inside s to start locating an
-			// element.
-			int len, // The length of the string.
-			FindElemResult fer) // The result object to populate.
-			throws TclException {
+	static final boolean findElement(Interp interp, String s, int i, int len, FindElemResult fer) throws TclException {
 		int openBraces = 0;
 		boolean inQuotes = false;
 		char c = '\0';
 		int elemStart, elemEnd;
 		int size = 0;
 
-		while (i < len
-				&& (((c = s.charAt(i)) == ' ') || Character.isWhitespace(c))) {
+		while (i < len && (((c = s.charAt(i)) == ' ') || Character.isWhitespace(c))) {
 			i++;
 		}
 		if (i >= len) {
@@ -1119,11 +1086,9 @@ public class Util {
 				elemEnd = i;
 				size = (elemEnd - elemStart);
 				if (openBraces != 0) {
-					throw new TclException(interp,
-							"unmatched open brace in list");
+					throw new TclException(interp, "unmatched open brace in list");
 				} else if (inQuotes) {
-					throw new TclException(interp,
-							"unmatched open quote in list");
+					throw new TclException(interp, "unmatched open quote in list");
 				}
 				if (sbuf == null) {
 					elem = s.substring(elemStart, elemEnd);
@@ -1170,10 +1135,8 @@ public class Util {
 								break;
 							}
 						}
-						throw new TclException(interp,
-								"list element in braces followed by \""
-										+ s.substring(i + 1, errEnd)
-										+ "\" instead of space");
+						throw new TclException(interp, "list element in braces followed by \""
+								+ s.substring(i + 1, errEnd) + "\" instead of space");
 					}
 				} else if (openBraces != 0) {
 					openBraces--;
@@ -1247,10 +1210,8 @@ public class Util {
 								break;
 							}
 						}
-						throw new TclException(interp,
-								"list element in quotes followed by \""
-										+ s.substring(i + 1, errEnd)
-										+ "\" instead of space");
+						throw new TclException(interp, "list element in quotes followed by \""
+								+ s.substring(i + 1, errEnd) + "\" instead of space");
 					}
 				} else {
 					i++;
@@ -1263,9 +1224,7 @@ public class Util {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
+	/**
 	 * Tcl_ScanElement -> scanElement
 	 * 
 	 * This procedure is a companion procedure to convertElement. It scans a
@@ -1277,12 +1236,14 @@ public class Util {
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 *            The current interpreter.
+	 * @param string
+	 *            The String to scan. (could be null)
+	 * @return flags
+	 * @throws TclException
 	 */
-
-	static int scanElement(Interp interp, // The current interpreter.
-			String string) // The String to scan. (could be null)
-			throws TclException {
+	static int scanElement(Interp interp, String string) throws TclException {
 		int flags, nestingLevel;
 		char c;
 		int len;
@@ -1399,8 +1360,7 @@ public class Util {
 		return flags;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
 	 * 
 	 * Tcl_ConvertElement -> convertElement
 	 * 
@@ -1413,13 +1373,14 @@ public class Util {
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param s
+	 *            Source information for list element.
+	 * @param flags
+	 *            Flags produced by scanElement
+	 * @param sbuf
+	 *            Buffer to write element to
 	 */
-
-	static void convertElement(String s, // Source information for list element.
-			int flags, // Flags produced by scanElement
-			StringBuffer sbuf) // Buffer to write element to
-	{
+	static void convertElement(String s, int flags, StringBuffer sbuf) {
 		int i = 0;
 		char c;
 		final int len = (s == null ? 0 : s.length());
@@ -1513,8 +1474,7 @@ public class Util {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
 	 * 
 	 * TrimLeft --
 	 * 
@@ -1525,9 +1485,12 @@ public class Util {
 	 * 
 	 * Side effects: |>None.<|
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param str
+	 *            The string to trim
+	 * @param pattern
+	 *            The pattern string used to trim.
+	 * @return
 	 */
-
 	public static String TrimLeft(String str, String pattern) {
 		int i, j;
 		char c, p;
@@ -1554,26 +1517,24 @@ public class Util {
 		return str.substring(i, strLen);
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
 	 * 
 	 * TrimLeft --
 	 * 
-	 * |>description<|
+	 * Trims whitespace on the left side of a strin.g
 	 * 
-	 * Results: |>None.<|
+	 * Results: The trimmed string.
 	 * 
-	 * Side effects: |>None.<|
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param str
+	 *            The string to trim.
+	 * @return The trimmed string.
 	 */
-
 	public static String TrimLeft(String str) {
 		return TrimLeft(str, " \n\t\r");
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
 	 * 
 	 * TrimRight --
 	 * 
@@ -1582,11 +1543,12 @@ public class Util {
 	 * 
 	 * Results: |>None.<|
 	 * 
-	 * Side effects: |>None.<|
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param str
+	 *            The string to trim.
+	 * @param pattern
+	 *            The pattern to trim.
+	 * @return The trimmed string.
 	 */
-
 	public static String TrimRight(String str, String pattern) {
 		char[] strArray = str.toCharArray();
 		char[] patternArray = pattern.toCharArray();
@@ -1620,8 +1582,7 @@ public class Util {
 		return TrimRight(str, " \n\t\r");
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
 	 * 
 	 * getBoolean --
 	 * 
@@ -1632,13 +1593,15 @@ public class Util {
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 *            The current interpreter.
+	 * @param string
+	 *            The string representation of the boolean.
+	 * @return
+	 * @throws TclException
+	 *             For malformed boolean values.
 	 */
-
-	public static boolean getBoolean(Interp interp, // The current interpreter.
-			String string) // The string representation of the boolean.
-			throws TclException // For malformed boolean values.
-	{
+	public static boolean getBoolean(Interp interp, String string) throws TclException {
 		String s = string.toLowerCase();
 
 		// The length of 's' needs to be > 1 if it begins with 'o',
@@ -1690,28 +1653,22 @@ public class Util {
 			}
 		}
 
-		throw new TclException(interp, "expected boolean value but got \""
-				+ string + "\"");
+		throw new TclException(interp, "expected boolean value but got \"" + string + "\"");
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
+	/**
 	 * 
 	 * getActualPlatform --
 	 * 
-	 * This static procedure returns the integer code for the actuall platform
-	 * on which Jacl is running.
+	 * This static procedure returns the integer code for the actual platform on
+	 * which Jacl is running.
 	 * 
 	 * Results: Returns and integer.
 	 * 
 	 * Side effects: None.
 	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
+	 * @return Platform int
 	 */
-
 	final static int getActualPlatform() {
 		if (Util.isWindows()) {
 			return JACL.PLATFORM_WINDOWS;
@@ -1722,8 +1679,7 @@ public class Util {
 		return JACL.PLATFORM_UNIX;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
 	 * 
 	 * isUnix --
 	 * 
@@ -1733,9 +1689,8 @@ public class Util {
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @return true if Unix
 	 */
-
 	public final static boolean isUnix() {
 		if (isMac() || isWindows()) {
 			return false;
@@ -1743,8 +1698,7 @@ public class Util {
 		return true;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
 	 * 
 	 * isMac --
 	 * 
@@ -1755,9 +1709,8 @@ public class Util {
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @return true if Mac
 	 */
-
 	public final static boolean isMac() {
 		String os = System.getProperty("os.name").toLowerCase();
 		if (os.startsWith("mac") && !os.endsWith("x")) {
@@ -1766,8 +1719,7 @@ public class Util {
 		return false;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
 	 * 
 	 * isWindows --
 	 * 
@@ -1777,9 +1729,8 @@ public class Util {
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @return true if Windows
 	 */
-
 	public final static boolean isWindows() {
 		String os = System.getProperty("os.name");
 		if (os.toLowerCase().startsWith("win")) {
@@ -1788,8 +1739,7 @@ public class Util {
 		return false;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
 	 * 
 	 * isJacl --
 	 * 
@@ -1800,15 +1750,13 @@ public class Util {
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @return true if jacl
 	 */
-
 	static boolean isJacl() {
 		return true;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
 	 * 
 	 * looksLikeInt --
 	 * 
@@ -1818,15 +1766,15 @@ public class Util {
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param s
+	 *            String to check
+	 * @return true if looks like an integer
 	 */
-
 	static boolean looksLikeInt(String s) {
 		return Expression.looksLikeInt(s, s.length(), 0, true);
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
 	 * 
 	 * setupPrecisionTrace --
 	 * 
@@ -1837,22 +1785,18 @@ public class Util {
 	 * Side effects: A variable trace is set up for the tcl_precision global
 	 * variable.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
 	 */
-
-	static void setupPrecisionTrace(Interp interp) // Current interpreter.
-	{
+	static void setupPrecisionTrace(Interp interp) {
 		try {
-			interp.traceVar("tcl_precision", new PrecTraceProc(),
-					TCL.GLOBAL_ONLY | TCL.TRACE_WRITES | TCL.TRACE_READS
-							| TCL.TRACE_UNSETS);
+			interp.traceVar("tcl_precision", new PrecTraceProc(), TCL.GLOBAL_ONLY | TCL.TRACE_WRITES | TCL.TRACE_READS
+					| TCL.TRACE_UNSETS);
 		} catch (TclException e) {
 			throw new TclRuntimeError("unexpected TclException: " + e);
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
 	 * 
 	 * printDouble --
 	 * 
@@ -1863,12 +1807,11 @@ public class Util {
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param number
+	 *            The number to format into a string
+	 * @return String rep
 	 */
-
-	static String printDouble(double number) // The number to format into a
-												// string.
-	{
+	static String printDouble(double number) {
 		String s = FormatCmd.toString(number, precision, 10);
 		int length = s.length();
 		for (int i = 0; i < length; i++) {
@@ -1879,8 +1822,7 @@ public class Util {
 		return s + ".0";
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
 	 * 
 	 * tryGetSystemProperty --
 	 * 
@@ -1892,12 +1834,13 @@ public class Util {
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param propName
+	 *            Name of a property
+	 * @param defautlValue
+	 *            Default if property not found
+	 * @return property value
 	 */
-
-	static String tryGetSystemProperty(String propName, // Name of the property
-			String defautlValue) // Default value.
-	{
+	static String tryGetSystemProperty(String propName, String defautlValue) {
 		try {
 			return System.getProperty(propName);
 		} catch (SecurityException e) {
@@ -1905,18 +1848,14 @@ public class Util {
 		}
 	}
 
-} // end Util
+}
 
-/*
- * ----------------------------------------------------------------------
- * 
- * PrecTraceProc.java --
+/**
  * 
  * The PrecTraceProc class is used to implement variable traces for the
  * tcl_precision variable to control precision used when converting
  * floating-point values to strings.
  * 
- * ----------------------------------------------------------------------
  */
 
 final class PrecTraceProc implements VarTrace {
@@ -1925,8 +1864,7 @@ final class PrecTraceProc implements VarTrace {
 
 	static final int TCL_MAX_PREC = 17;
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
 	 * 
 	 * traceProc --
 	 * 
@@ -1939,25 +1877,20 @@ final class PrecTraceProc implements VarTrace {
 	 * undoes the effect of the variable modification. Otherwise it modifies
 	 * Util.precision that's used by Util.printDouble().
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @see tcl.lang.VarTrace#traceProc(tcl.lang.Interp, java.lang.String,
+	 *      java.lang.String, int)
+	 * @throws If
+	 *             the action is a TCL.TRACES_WRITE and the new value doesn't
+	 *             make sense.
 	 */
-
-	public void traceProc(Interp interp, // Interpreter containing variable.
-			String name1, // Name of variable.
-			String name2, // Second part of variable name.
-			int flags) // Information about what happened.
-			throws TclException // If the action is a TCL.TRACES_WRITE and
-	// the new value doesn't make sense.
-	{
+	public void traceProc(Interp interp, String name1, String name2, int flags) throws TclException {
 		// If the variable is unset, then recreate the trace and restore
 		// the default value of the format string.
 
 		if ((flags & TCL.TRACE_UNSETS) != 0) {
-			if (((flags & TCL.TRACE_DESTROYED) != 0)
-					&& ((flags & TCL.INTERP_DESTROYED) == 0)) {
-				interp.traceVar(name1, name2, new PrecTraceProc(),
-						TCL.GLOBAL_ONLY | TCL.TRACE_WRITES | TCL.TRACE_READS
-								| TCL.TRACE_UNSETS);
+			if (((flags & TCL.TRACE_DESTROYED) != 0) && ((flags & TCL.INTERP_DESTROYED) == 0)) {
+				interp.traceVar(name1, name2, new PrecTraceProc(), TCL.GLOBAL_ONLY | TCL.TRACE_WRITES | TCL.TRACE_READS
+						| TCL.TRACE_UNSETS);
 				Util.precision = Util.DEFAULT_PRECISION;
 			}
 			return;
@@ -1969,9 +1902,7 @@ final class PrecTraceProc implements VarTrace {
 		// out of date.
 
 		if ((flags & TCL.TRACE_READS) != 0) {
-			interp
-					.setVar(name1, name2, Util.precision, flags
-							& TCL.GLOBAL_ONLY);
+			interp.setVar(name1, name2, Util.precision, flags & TCL.GLOBAL_ONLY);
 			return;
 		}
 
@@ -2000,8 +1931,8 @@ final class PrecTraceProc implements VarTrace {
 		StrtoulResult r = interp.strtoulResult;
 		Util.strtoul(value, 0, 10, r);
 
-		if ((r.value <= 0) || (r.value > TCL_MAX_PREC) || (r.value > 100)
-				|| (r.index == 0) || (r.index != value.length())) {
+		if ((r.value <= 0) || (r.value > TCL_MAX_PREC) || (r.value > 100) || (r.index == 0)
+				|| (r.index != value.length())) {
 			interp.setVar(name1, name2, Util.precision, TCL.GLOBAL_ONLY);
 			throw new TclException(interp, "improper value for precision");
 		}
@@ -2009,4 +1940,4 @@ final class PrecTraceProc implements VarTrace {
 		Util.precision = (int) r.value;
 	}
 
-} // end PrecTraceProc
+}

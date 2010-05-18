@@ -28,6 +28,15 @@ public class TclCmdTest extends TestCase {
 	}
 	
 	/**
+	 * Execute code, print results.
+	 * @param code
+	 */
+	public void tclTestCode(String code) throws Exception {
+		interp.eval(code);
+		System.out.println(interp.getResult().toString());
+	}
+	
+	/**
 	 * Test a Tcl test file resource, test file is assumed to 'package require tcltest'.
 	 * Failures in tcl test cases are ignored.
 	 * @param resName The name of a tcltest file as a resource path.  

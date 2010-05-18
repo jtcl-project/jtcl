@@ -147,8 +147,6 @@ public class TclList implements InternalRep {
 	}
 
 	/**
-	 *----------------------------------------------------------------------
-	 * 
 	 * copy (TclListObjCopy) --
 	 * 
 	 * Makes a "pure list" copy of a list value. This provides for the C level a
@@ -366,8 +364,6 @@ public class TclList implements InternalRep {
 	}
 
 	/**
-	 *----------------------------------------------------------------------
-	 * 
 	 * TclListObjSetElement --
 	 * 
 	 * Set a single element of a list to a specified value
@@ -391,21 +387,17 @@ public class TclList implements InternalRep {
 	 *            Tcl object to store in the designated list element
 	 * 
 	 *           
-	 *            ----------------------------------------------------------------
-	 *            ------
 	 * @throws TclException
 	 */
 
 	public static void setElement(Interp interp, TclObject list, int index,
 			TclObject value) throws TclException {
 
-		TclList listRep; /* Internal representation of the list being modified. */
-		TclObject[] elems; /* Pointers to elements of the list. */
+		TclList listRep; 	// Internal representation of the list being modified.
+		TclObject[] elems; 	// Pointers to elements of the list.
 		int elemCount;
 
-		/*
-		 * Ensure that the list parameter designates an unshared list.
-		 */
+		// Ensure that the list parameter designates an unshared list.
 
 		if (list.isShared()) {
 			throw new TclRuntimeError(
@@ -434,9 +426,7 @@ public class TclList implements InternalRep {
 				.size()]);
 		elemCount = listRep.alist.size();
 
-		/*
-		 * Ensure that the index is in bounds.
-		 */
+		// Ensure that the index is in bounds.
 
 		if (index < 0 || index >= elemCount) {
 			if (interp != null) {
@@ -446,9 +436,7 @@ public class TclList implements InternalRep {
 			throw new TclRuntimeError("list index out of range");
 		}
 
-		/*
-		 * If the internal rep is shared, replace it with an unshared copy.
-		 */
+		// If the internal rep is shared, replace it with an unshared copy.
 
 		if (list.getRefCount() > 1) {
 			TclList oldListRep = listRep;
@@ -473,20 +461,14 @@ public class TclList implements InternalRep {
 		}
 
 		/*
-		 * Add a reference to the new list element.
+		 * NOTE: A reference to the new list element will be added in the replace() method.
 		 */
 
-		value.refCount++;
-
-		/*
-		 * Remove a reference from the old list element.
-		 */
+		// Remove a reference from the old list element.
 
 		elems[index].refCount--;
 
-		/*
-		 * Stash the new object in the list.
-		 */
+		// Stash the new object in the list.
 
 		elems[index] = value;
 		TclList.replace(interp, list, 0, TclList.getLength(interp, list),
