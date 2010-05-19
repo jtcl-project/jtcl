@@ -210,7 +210,9 @@ public class CallFrame {
 		int i;
 		StringBuffer sbuf = new StringBuffer(200);
 		sbuf.append("wrong # args: should be \"");
-		sbuf.append(name.toString());
+		TclObject procNameList = TclList.newInstance();
+		TclList.append(interp, procNameList, name);
+		sbuf.append(procNameList.toString());
 		for (i = 0; i < proc.argList.length; i++) {
 			TclObject arg = proc.argList[i][0];
 			TclObject def = proc.argList[i][1];
