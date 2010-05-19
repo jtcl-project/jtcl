@@ -23,15 +23,13 @@ import tcl.lang.TclException;
 import tcl.lang.TclNumArgsException;
 import tcl.lang.TclObject;
 
-/*
+/**
  * This class implements the built-in "source" command in Tcl.
  */
 
 public class SourceCmd implements Command {
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
+	/**
 	 * cmdProc --
 	 * 
 	 * This cmdProc is invoked to process the "source" Tcl command. See the user
@@ -42,13 +40,9 @@ public class SourceCmd implements Command {
 	 * Side effects: A standard Tcl result is stored in the interpreter. See the
 	 * user documentation.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @see tcl.lang.Command#cmdProc(tcl.lang.Interp, tcl.lang.TclObject[])
 	 */
-
-	public void cmdProc(Interp interp, // Current interpreter.
-			TclObject argv[]) // Argument list.
-			throws TclException // Standard Tcl exception.
-	{
+	public void cmdProc(Interp interp, TclObject argv[]) throws TclException {
 		String fileName = null;
 		boolean url = false;
 
@@ -85,8 +79,7 @@ public class SourceCmd implements Command {
 			} else if (code == TCL.ERROR) {
 				// Record information telling where the error occurred.
 
-				interp.addErrorInfo("\n    (file line " + interp.errorLine
-						+ ")");
+				interp.addErrorInfo("\n    (file line " + interp.errorLine + ")");
 				throw e;
 			} else {
 				throw e;
@@ -94,5 +87,4 @@ public class SourceCmd implements Command {
 		}
 	}
 
-} // end SourceCmd
-
+}

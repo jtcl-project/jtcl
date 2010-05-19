@@ -29,11 +29,12 @@ import tcl.lang.TclString;
 public class TimeCmd implements Command {
 	/**
 	 * See Tcl user documentation for details.
+	 * 
+	 * @see tcl.lang.Command#cmdProc(tcl.lang.Interp, tcl.lang.TclObject[])
 	 */
-
 	public void cmdProc(Interp interp, TclObject argv[]) throws TclException {
 		if ((argv.length < 2) || (argv.length > 3)) {
-			throw new TclNumArgsException(interp, 1, argv, "script ?count?");
+			throw new TclNumArgsException(interp, 1, argv, "command ?count?");
 		}
 
 		int count;
@@ -51,11 +52,9 @@ public class TimeCmd implements Command {
 
 		int uSecs = (int) (((endTime - startTime) * 1000) / count);
 		if (uSecs == 1) {
-			interp.setResult(TclString
-					.newInstance("1 microsecond per iteration"));
+			interp.setResult(TclString.newInstance("1 microsecond per iteration"));
 		} else {
-			interp.setResult(TclString.newInstance(uSecs
-					+ " microseconds per iteration"));
+			interp.setResult(TclString.newInstance(uSecs + " microseconds per iteration"));
 		}
 	}
 }
