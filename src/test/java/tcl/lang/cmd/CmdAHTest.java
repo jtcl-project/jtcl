@@ -13,6 +13,6 @@ public class CmdAHTest extends TclCmdTest {
 		}));
 
 		String resName = "/tcl/lang/cmd/cmdAH.test";
-		tclTestResource(resName, expectedFailureList);
+		tclTestResource(TCLTEST_VERBOSE, resName, expectedFailureList);
 	}
 }

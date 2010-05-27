@@ -524,7 +524,7 @@ public class StringCmd implements Command {
 		case STR_LAST: {
 			if (objv.length < 4 || objv.length > 5) {
 				throw new TclNumArgsException(interp, 2, objv,
-						"subString string ?lastIndex?");
+						"subString string ?startIndex?");
 			}
 			String string1 = objv[2].toString();
 			String string2 = objv[3].toString();

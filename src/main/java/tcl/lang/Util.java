@@ -205,13 +205,15 @@ public class Util {
 		}
 
 		// See if there were any digits at all.
-
+		if (negative) {
+			result = -result;
+		}
 		if (!anyDigits) {
 			strtoulResult.update(0, 0, TCL.INVALID_INTEGER);
-		} else if (overflowed) {
+		} else if (overflowed || result > Integer.MAX_VALUE || result < Integer.MIN_VALUE) {
 			strtoulResult.update(0, i, TCL.INTEGER_RANGE);
 		} else {
-			strtoulResult.update((negative ? -result : result), i, 0);
+			strtoulResult.update(result, i, 0);
 		}
 	}
 
