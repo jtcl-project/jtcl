@@ -7,4 +7,9 @@ public class LsetCmdTest extends TclCmdTest {
 		String resName = "/tcl/lang/cmd/lset.test";
 		tclTestResource(resName);
 	}
+	
+	public void testLsetComp() throws Exception {
+		String resName = "/tcl/lang/cmd/lsetComp.test";
+		tclTestResource(resName);
+	}
 }

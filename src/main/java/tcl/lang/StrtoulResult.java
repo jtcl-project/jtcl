@@ -22,32 +22,42 @@ package tcl.lang;
 
 public class StrtoulResult {
 
-	// If the conversion is successful, errno = 0;
-	//
-	// If the number cannot be converted to a valid unsigned 32-bit integer,
-	// contains the error code (TCL.INTEGER_RANGE or TCL.INVALID_INTEGER).
+	/**
+	 * If the conversion is successful, errno = 0; If the number cannot be
+	 * converted to a valid unsigned 32-bit integer, contains the error code
+	 * (TCL.INTEGER_RANGE or TCL.INVALID_INTEGER).
+	 */
 
 	public int errno = 0;
 
-	// If errno is 0, points to the character right after the number
+	/**
+	 * If errno is 0, points to the character right after the number
+	 */
 
 	public int index = -1;
 
-	// If errno is 0, contains the value of the number.
+	/**
+	 * If errno is 0, contains the value of the number.
+	 */
 
 	public long value = 0;
 
-	// Update a StrtoulResult. Note that there is typically
-	// just one StrtoulResult for each interp.
+	/**
+	 * Update a StrtoulResult. Note that there is typically just one
+	 * StrtoulResult for each interp.
+	 * 
+	 * @param v
+	 *            value for the value field.
+	 * @param i
+	 *            value for the index field.
+	 * @param e
+	 *            value for the errno field.
+	 */
 
-	public void update(long v, // value for the value field.
-			int i, // value for the index field.
-			int e) // value for the errno field.
-	{
+	public void update(long v, int i, int e) {
 		value = v;
 		index = i;
 		errno = e;
 	}
 
-} // end StrtoulResult
-
+}

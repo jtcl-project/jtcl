@@ -7,4 +7,9 @@ public class AppendCmdTest extends TclCmdTest {
 		String resName = "/tcl/lang/cmd/append.test";
 		tclTestResource(resName);
 	}
+	
+	public void testAppendComp() throws Exception {
+		String resName = "/tcl/lang/cmd/appendComp.test";
+		tclTestResource(resName);
+	}
 }
