@@ -2794,7 +2794,8 @@ public class Interp extends EventuallyFreed {
 			fchan.open(this, sourceFile.getPath(), TclIO.RDONLY);
 			wasOpened = true;
 			fchan.read(this, result, TclIO.READ_ALL, 0);
-			return result.toString();
+			// return up to ^Z for tcl8.4 compatibility
+			return trimToCtrlZ(result.toString());
 		} catch (TclException e) {
 			resetResult();
 			return null;
@@ -2811,6 +2812,21 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
+	/**
+	 * Retrun a string, up to the first ^Z, if any.
+	 * @param source
+	 * @return
+	 */
+	private String trimToCtrlZ(String source) {
+		char ctrlZ = 26;
+		int end = source.indexOf(ctrlZ);
+		if (end == -1) {
+			return source;
+		} else {
+			return source.substring(0,end);
+		}
+	}
+	
 	/*
 	 * ----------------------------------------------------------------------
 	 * 
@@ -2877,9 +2893,11 @@ public class Interp extends EventuallyFreed {
 		}
 
 		if (content instanceof String) {
-			return convertStringCRLF((String) content);
+			// return up to ^Z for tcl8.4 compatibility
+			return trimToCtrlZ(convertStringCRLF((String) content));
 		} else if (content instanceof InputStream) {
-			return readScriptFromInputStream((InputStream) content);
+			// return up to ^Z for tcl8.4 compatibility
+			return trimToCtrlZ(readScriptFromInputStream((InputStream) content));
 		} else {
 			return null;
 		}
