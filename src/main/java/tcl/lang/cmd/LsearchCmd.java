@@ -37,9 +37,8 @@ import tcl.lang.Util;
 
 public class LsearchCmd implements Command {
 
-	static final private String[] options = { "-all", "-ascii", "-decreasing",
-			"-dictionary", "-exact", "-glob", "-increasing", "-inline",
-			"-integer", "-not", "-real", "-regexp", "-sorted", "-start" };
+	static final private String[] options = { "-all", "-ascii", "-decreasing", "-dictionary", "-exact", "-glob",
+			"-increasing", "-inline", "-integer", "-not", "-real", "-regexp", "-sorted", "-start" };
 	static final int LSEARCH_ALL = 0;
 	static final int LSEARCH_ASCII = 1;
 	static final int LSEARCH_DECREASING = 2;
@@ -65,12 +64,7 @@ public class LsearchCmd implements Command {
 	static final int REGEXP = 2;
 	static final int SORTED = 3;
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
-	 * 
-	 * cmdProc --
-	 * 
+	/**
 	 * This procedure is invoked to process the "lsearch" Tcl command. See the
 	 * user documentation for details on what it does.
 	 * 
@@ -78,15 +72,10 @@ public class LsearchCmd implements Command {
 	 * 
 	 * Side effects: See the user documentation.
 	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
+	 * @see tcl.lang.Command#cmdProc(tcl.lang.Interp, tcl.lang.TclObject[])
 	 */
 
-	public void cmdProc(Interp interp, // Current interpreter.
-			TclObject[] objv) // Arguments to "lsearch" command.
-			throws TclException {
+	public void cmdProc(Interp interp, TclObject[] objv) throws TclException {
 		int mode = GLOB;
 		int dataType = ASCII;
 		int offset = 0;
@@ -101,8 +90,7 @@ public class LsearchCmd implements Command {
 		Regex regexp;
 
 		if (objv.length < 3) {
-			throw new TclNumArgsException(interp, 1, objv,
-					"?options? list pattern");
+			throw new TclNumArgsException(interp, 1, objv, "?options? list pattern");
 		}
 
 		for (int i = 1; i < objv.length - 2; i++) {
@@ -152,7 +140,7 @@ public class LsearchCmd implements Command {
 					throw new TclException(interp, "missing starting index");
 				}
 				i++;
-				start = objv[i];
+				start = objv[i].duplicate();
 				break;
 			}
 		}
@@ -173,7 +161,6 @@ public class LsearchCmd implements Command {
 		if (start != null) {
 			try {
 				offset = Util.getIntForIndex(interp, start, listv.length - 1);
-				start.release();
 			} catch (TclException e) {
 				throw e;
 			}
@@ -198,7 +185,7 @@ public class LsearchCmd implements Command {
 			}
 		}
 
-		TclObject patObj = objv[objv.length - 1];
+		TclObject patObj = objv[objv.length - 1].duplicate();
 		String patternBytes = null;
 		int patInt = 0;
 		double patDouble = 0.0;
@@ -354,13 +341,10 @@ public class LsearchCmd implements Command {
 				case REGEXP: {
 
 					try {
-						regexp = new Regex(patObj.toString(), listv[i]
-								.toString(), 0);
+						regexp = new Regex(patObj.toString(), listv[i].toString(), 0);
 						match = regexp.match();
 					} catch (PatternSyntaxException ex) {
-						interp
-								.setResult("couldn't compile regular expression pattern: "
-										+ ex.getMessage());
+						interp.setResult("couldn't compile regular expression pattern: " + ex.getMessage());
 						interp.setErrorCode(TclInteger.newInstance(TCL.ERROR));
 						return;
 					}
@@ -386,8 +370,7 @@ public class LsearchCmd implements Command {
 						 */
 						TclList.append(interp, resultList, listv[i]);
 					} else {
-						TclList.append(interp, resultList, TclInteger
-								.newInstance(i));
+						TclList.append(interp, resultList, TclInteger.newInstance(i));
 					}
 				}
 			}
@@ -411,9 +394,7 @@ public class LsearchCmd implements Command {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
+	/**
 	 * DictionaryCompare -> dictionaryCompare
 	 * 
 	 * This function compares two strings as if they were being used in an index
@@ -429,14 +410,12 @@ public class LsearchCmd implements Command {
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param left
+	 * @param right
+	 * @return
 	 */
-
-	private static int DictionaryCompare(String left, String right) // The
-	// strings
-	// to
-	// compare
-	{
+	
+	private static int DictionaryCompare(String left, String right) {
 		char[] leftArr = left.toCharArray();
 		char[] rightArr = right.toCharArray();
 		char leftChar, rightChar, leftLower, rightLower;
@@ -446,8 +425,7 @@ public class LsearchCmd implements Command {
 		int secondaryDiff = 0;
 
 		while (true) {
-			if ((rInd < rightArr.length) && (Character.isDigit(rightArr[rInd]))
-					&& (lInd < leftArr.length)
+			if ((rInd < rightArr.length) && (Character.isDigit(rightArr[rInd])) && (lInd < leftArr.length)
 					&& (Character.isDigit(leftArr[lInd]))) {
 				// There are decimal numbers embedded in the two
 				// strings. Compare them as numbers, rather than
@@ -461,13 +439,12 @@ public class LsearchCmd implements Command {
 					rInd++;
 					zeros--;
 				}
-				while ((leftArr[lInd] == '0') && (lInd + 1 < leftArr.length)
-						&& (Character.isDigit(leftArr[lInd + 1]))) {
+				while ((leftArr[lInd] == '0') && (lInd + 1 < leftArr.length) && (Character.isDigit(leftArr[lInd + 1]))) {
 					lInd++;
 					zeros++;
 				}
 				if (secondaryDiff == 0) {
-					secondaryDiff = zeros;
+					secondaryDiff = zeros;// end LsearchCmd
 				}
 
 				// The code below compares the numbers in the two
@@ -477,16 +454,13 @@ public class LsearchCmd implements Command {
 
 				diff = 0;
 				while (true) {
-					if ((diff == 0) && (lInd < leftArr.length)
-							&& (rInd < rightArr.length)) {
+					if ((diff == 0) && (lInd < leftArr.length) && (rInd < rightArr.length)) {
 						diff = leftArr[lInd] - rightArr[rInd];
 					}
 					rInd++;
 					lInd++;
-					if (rInd >= rightArr.length
-							|| !Character.isDigit(rightArr[rInd])) {
-						if (lInd < leftArr.length
-								&& Character.isDigit(leftArr[lInd])) {
+					if (rInd >= rightArr.length || !Character.isDigit(rightArr[rInd])) {
+						if (lInd < leftArr.length && Character.isDigit(leftArr[lInd])) {
 							return 1;
 						} else {
 							// The two numbers have the same length. See
@@ -497,8 +471,7 @@ public class LsearchCmd implements Command {
 							}
 							break;
 						}
-					} else if (lInd >= leftArr.length
-							|| !Character.isDigit(leftArr[lInd])) {
+					} else if (lInd >= leftArr.length || !Character.isDigit(leftArr[lInd])) {
 						return -1;
 					}
 				}
@@ -536,11 +509,9 @@ public class LsearchCmd implements Command {
 			if (diff != 0) {
 				return diff;
 			} else if (secondaryDiff == 0) {
-				if (Character.isUpperCase(leftChar)
-						&& Character.isLowerCase(rightChar)) {
+				if (Character.isUpperCase(leftChar) && Character.isLowerCase(rightChar)) {
 					secondaryDiff = -1;
-				} else if (Character.isUpperCase(rightChar)
-						&& Character.isLowerCase(leftChar)) {
+				} else if (Character.isUpperCase(rightChar) && Character.isLowerCase(leftChar)) {
 					secondaryDiff = 1;
 				}
 			}
@@ -551,4 +522,4 @@ public class LsearchCmd implements Command {
 		return diff;
 	}
 
-} // end LsearchCmd
+}
