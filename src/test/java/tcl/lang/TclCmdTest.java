@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 import tcl.lang.Interp;
 import tcl.lang.TclException;
@@ -18,13 +19,17 @@ public class TclCmdTest extends TestCase {
 	public static final String TCLTEST_VERBOSE = "tcltest::configure -verbose {start pass body error skip}";
 	
 	private Interp interp;
+	private String tempDir;
 	
 	public void setUp() throws Exception {
+		tempDir = createTempdir();
 		interp = new Interp();
+		interp.setWorkingDir(tempDir);
 	}
 	
 	public void tearDown() {
 		interp.dispose();
+		removeTempDir(new File(tempDir));
 	}
 	
 	/**
@@ -88,7 +93,8 @@ public class TclCmdTest extends TestCase {
 		
 		// set up temporary file for tcltest output
 		File tmpFile = File.createTempFile("tclCmdTest", ".txt");
-		String tmpFileStr = tmpFile.getCanonicalPath();
+		tmpFile.deleteOnExit();
+		String tmpFileStr = tmpFile.getAbsolutePath().replaceAll("\\\\", "\\\\\\\\");
 		
 		// load the tcltest package, export namespace procs, 
 		// configure output file to the temporary file we created.
@@ -106,13 +112,13 @@ public class TclCmdTest extends TestCase {
 			try {
 				interp.eval(preTestCode);
 			} catch (TclException e) {
-				tmpFile.delete();
+				//tmpFile.delete();
 				String errStr = interp.getVar("errorInfo", 0).toString()
 					+ "\nwhile running preTestCode:\n" 
 					+ preTestCode;
 				throw new Exception(errStr, e);
 			} catch (Exception e) {
-				tmpFile.delete();
+				//tmpFile.delete();
 				throw new Exception("Exception while running preTestCode:\n:" + preTestCode, e);
 			}
 		}
@@ -124,12 +130,12 @@ public class TclCmdTest extends TestCase {
 			String errStr = interp.getVar("errorInfo", 0).toString()
 				+ "\nwhile running tcltest\ncontents of test output:\n"
 				+ readFile(tmpFile);
-			tmpFile.delete();
+			//tmpFile.delete();
 			throw new Exception(errStr, e);
 		} catch (Exception e) {
 			String errStr = "Exception while running tcltest\ncontents of test output:\n"
 				+ readFile(tmpFile);
-			tmpFile.delete();
+			//tmpFile.delete();
 			throw new Exception(errStr, e);
 		}
 		
@@ -195,7 +201,49 @@ public class TclCmdTest extends TestCase {
 	 * Dummy test method to keep JUnit happy.
 	 * @throws Exception
 	 */
-	public void XXtest() throws Exception {
+	public void test() throws Exception {
 		// nothing
+	}
+	
+	/**
+	 * Create a new temp directory within java.io.tmpdir.
+	 * Files created during tests will be written here.
+	 * @return
+	 * @throws Exception
+	 */
+	private String createTempdir() throws Exception {
+		String baseTempPath = System.getProperty("java.io.tmpdir");
+
+		Random rand = new Random();
+		int start = rand.nextInt() % 100000;
+		if (start < 0) {
+			start = -start;
+		}
+		for(int r = start; r < start + 10; r++) {
+			File tempDir = new File(baseTempPath, "tcltest" + r);
+			try {
+				tempDir.mkdir();
+				return tempDir.getAbsolutePath();
+			} catch (Exception e) {
+				// ignore, keep trying until limit is reached
+			}
+		}
+		throw new Exception("Could not create temp directory in: " + baseTempPath);
+	}
+	
+	/**
+	 * Remove the temp dir, and all files & directories within.
+	 * @param rootDir
+	 */
+	private void removeTempDir(File rootDir) {
+		File[] files = rootDir.listFiles();
+		for (int i = 0; i < files.length; i++) {
+			if (files[i].isDirectory()) {
+				removeTempDir(files[i]);
+			} else {
+				files[i].delete();
+			}
+		}
+		rootDir.delete();
 	}
 }
