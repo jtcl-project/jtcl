@@ -26,6 +26,7 @@ import tcl.lang.TclIndex;
 import tcl.lang.TclInteger;
 import tcl.lang.TclNumArgsException;
 import tcl.lang.TclObject;
+import tcl.lang.TclString;
 
 /**
  * This class implements the built-in "regsub" command in Tcl.
@@ -74,11 +75,7 @@ public class RegsubCmd implements Command {
 		int offset = 0;
 		String result;
 
-		// Default regexp behavior is to assume that '.' will match newline
-		// characters and that only \n is seen as a newline. Support for
-		// newline sensitive matching must be enabled, it is off by default.
-
-		flags = Pattern.DOTALL | Pattern.UNIX_LINES;
+		flags = 0;
 
 		for (idx = 1; idx < objv.length; idx++) {
 			if (last) {
@@ -100,20 +97,20 @@ public class RegsubCmd implements Command {
 				all = true;
 				break;
 			case OPT_EXPANDED:
-				flags |= Pattern.COMMENTS;
+				flags |= Regex.TCL_REG_EXPANDED;
 				break;
 			case OPT_LINESTOP:
-				flags &= ~Pattern.DOTALL; // Don't match . to newline character
+				flags |= Regex.TCL_REG_NLSTOP;
 				break;
 			case OPT_LINEANCHOR:
-				flags |= Pattern.MULTILINE; // Use line sensitive matching
+				flags |= Regex.TCL_REG_NLANCH;
 				break;
 			case OPT_LINE:
-				flags |= Pattern.MULTILINE; // Use line sensitive matching
-				flags &= ~Pattern.DOTALL; // Don't match . to newline character
+				flags |= Regex.TCL_REG_NLANCH;
+				flags |= Regex.TCL_REG_NLSTOP;
 				break;
 			case OPT_NOCASE:
-				flags |= Pattern.CASE_INSENSITIVE;
+				flags |= Regex.TCL_REG_NOCASE;
 				break;
 			case OPT_START:
 				if (++idx == objv.length) {
@@ -151,29 +148,39 @@ public class RegsubCmd implements Command {
 			varName = objv[idx++].toString();
 		}
 
-		Regex reg;
+
+		Regex reg = null;
 		try {
-			// we use the substring of string at the specified offset
 			reg = new Regex(exp, string, offset, flags);
 		} catch (PatternSyntaxException ex) {
-			throw new TclException(interp, Regex.getPatternSyntaxMessage(ex));
-		}
-
-		// Parse a subSpec param from Tcl's to Java's form.
-
-		subSpec = Regex.parseSubSpec(subSpec);
+            interp.setErrorCode(TclString
+                    .newInstance("REGEXP COMPILE_ERROR {" + Regex.getPatternSyntaxMessage(ex) + "}"));
+            throw new TclException(interp, Regex.getPatternSyntaxMessage(ex));
+        } catch (Exception e) {
+            interp.setErrorCode(TclString
+                    .newInstance("REGEXP COMPILE_ERROR {" + e.getMessage() + "}"));
+            throw new TclException(interp, e.getMessage());
+        }
 
 		// do the replacement process
+        result = reg.replace(subSpec, all);
+        int matchCount = reg.getCount();
 
-		if (!all) {
-			result = reg.replaceFirst(subSpec);
-		} else {
-			result = reg.replaceAll(subSpec);
-		}
+        // Emulate an apparent bug in TCL C Implementation. It 
+        // has a special case in which it doesn't
+        // use the regular expression engine.  That special case
+        // is conditioned on '-all' being used.  And that special
+        // case returns an empty string for 'regsub -all "" "" A'
+        // even though 'regsub "" "" A" returns 'A' and 
+        // 'regex "" ""' returns 1.
+        if (all && exp.length()==0 && string.length()==0) {
+            result = "";
+            matchCount = 0;
+        } 
 
 		try {
 			if (varName != null) {
-				interp.setResult(reg.getCount());
+				interp.setResult(matchCount);
 				interp.setVar(varName, result, 0);
 			} else {
 				interp.setResult(result);

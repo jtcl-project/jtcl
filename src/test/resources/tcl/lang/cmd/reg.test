@@ -23,6 +23,62 @@ if {[lsearch [namespace children] ::tcltest] == -1} {
 	[expr {[info commands testregexp] != {}}]
 ::tcltest::testConstraint localeRegexp 0
 
+# JTCL doesn't support BRE's yet
+::tcltest::testConstraint BRE 0
+
+# JTCL doesn't support explicitly requested ERE's
+::tcltest::testConstraint ERE 0
+
+# JTCL doesn't support all the testregexp -about detail
+# in a successful compile.  Ok to eliminate these,
+# because they are followed by an actual execution
+# of the same regex, which will fail to compile
+# if there is a compile bug
+::tcltest::testConstraint compileExpected 0
+
+# Don't test for loss of ^ and $ anchors here;
+# The ^ xflag not supported in Regex.java, and the -start
+# tests in regexp.test do the same thing anyway.  And $ anchor
+# is never lost in TCL.  We lump REG_BOSONLY into this
+# categore
+::tcltest::testConstraint anchorLoss 0
+
+# JTCL doesn't support TCL_REG_CANMATCH (incomplete matches)
+# and neither does C TCL.  As far as I can tell,
+# it only exists in the C TCL test code.
+::tcltest::testConstraint canMatch 0
+
+# JTCL uses Java Pattern for regexp, which is more forgiving
+# of syntax violations that Spencer's regex engine.  This constraint
+# allows us to skip tests that don't compile in C TCL, but compile
+# in Java TCL
+::tcltest::testConstraint forgiveSyntax 0
+
+# Test names of constrained tests for JTCL.  This is not
+# an exhaustive list; many tests are constrained based on -xflags
+# See isJTCLunsupportedTest()
+set jtclConstrainedTests(reg-6.6)       forgiveSyntax
+set jtclConstrainedTests(reg-7.11)      forgiveSyntax
+set jtclConstrainedTests(reg-7.12)      forgiveSyntax
+set jtclConstrainedTests(reg-7.15)      forgiveSyntax
+set jtclConstrainedTests(reg-8.5)       forgiveSyntax
+set jtclConstrainedTests(reg-8.6)       forgiveSyntax
+set jtclConstrainedTests(reg-9.10.ARE)  forgiveSyntax
+set jtclConstrainedTests(reg-9.31.ARE)  forgiveSyntax
+set jtclConstrainedTests(reg-10.21)     forgiveSyntax
+set jtclConstrainedTests(reg-10.29)     forgiveSyntax
+set jtclConstrainedTests(reg-10.30)     forgiveSyntax
+set jtclConstrainedTests(reg-10.31)     forgiveSyntax
+set jtclConstrainedTests(reg-10.32)     forgiveSyntax
+set jtclConstrainedTests(reg-11.21)     forgiveSyntax
+set jtclConstrainedTests(reg-11.22)     forgiveSyntax
+set jtclConstrainedTests(reg-11.25)     forgiveSyntax
+set jtclConstrainedTests(reg-11.26)     forgiveSyntax
+set jtclConstrainedTests(reg-20.8.ARE)  BRE
+set jtclConstrainedTests(reg-20.9)      BRE
+set jtclConstrainedTests(reg-20.14)     ERE
+set jtclConstrainedTests(reg-20.32)     ERE
+
 # This file uses some custom procedures, defined below, for regexp regression
 # testing.  The name of the procedure indicates the general nature of the
 # test:
@@ -188,6 +244,48 @@ proc infoflags {fl} {
 	return $ret
 }
 
+proc isJTCLunsupportedTest {prefix testid flags} {
+    global jtclConstrainedTests
+
+    set c ""
+
+    if {[string first "b" $flags]>=0} then {
+        # JTCL doesn't do BRE's yet
+        set c BRE
+    }
+    if {[string first "e" $flags]>=0} then {
+        # JTCL doesn't do explicitly requested ERE's yet
+        set c ERE
+    }
+    if {[string first "^" $flags]>=0 ||
+        [string first "$" $flags]>=0} then {
+        # Anchor loss tested elsewhere; '$' flag not used in TCL
+        set c anchorLoss
+    }
+    if {[string first "t" $flags]>=0} then {
+        # JTCL doesn't do explicitly requested ERE's yet
+        set c canMatch
+    }
+    if {[string first "s" $flags]>=0} then {
+        # JTCL doesn't do REG_BOSONLY; tested with -start in regexp.test
+        set c anchorLoss
+    }
+
+    set testName $prefix.[tno $testid]
+    if [info exists jtclConstrainedTests($testName)] then {
+        set c $jtclConstrainedTests($testName)
+    }
+
+    if {[string length $c] > 0 &&
+        ! [::tcltest::testConstraint $c]} then {
+	    # This will register as a skipped test
+	    test $testName [desc $testid] $c {} {}
+        return 1
+    }
+    return 0
+}
+
+    
 # compilation error expected
 proc e {testid flags re err} {
 	global prefix ask errorCode
@@ -198,6 +296,10 @@ proc e {testid flags re err} {
 	    test $prefix.[tno $testid] [desc $testid] localeRegexp {} {}
 	    return
 	}
+
+    if [isJTCLunsupportedTest $prefix $testid $flags] {
+        return
+    }
 
 	# if &, test as both ARE and BRE
 	set amp [string first "&" $flags]
@@ -211,8 +313,11 @@ proc e {testid flags re err} {
 
 	set cmd [concat [list testregexp -$ask] [flags $flags] [list $re]]
 	set run "list \[catch \{$cmd\}\] \[lindex \$errorCode 1\]"
+
+    # instead of looking for REG_$err, look for COMPILE_ERROR; JTCL
+    # implementation doesn't detail all the compile error types
 	test $prefix.[tno $testid] [desc $testid] \
-		{testregexp} $run [list 1 REG_$err]
+		{testregexp} $run [list 1 COMPILE_ERROR]
 }
 
 # match failure expected
@@ -225,6 +330,10 @@ proc f {testid flags re target args} {
 	    test $prefix.[tno $testid] [desc $testid] localeRegexp {} {}
 	    return
 	}
+
+    if [isJTCLunsupportedTest $prefix $testid $flags] {
+        return
+    }
 
 	# if &, test as both ARE and BRE
 	set amp [string first "&" $flags]
@@ -250,7 +359,7 @@ proc f {testid flags re target args} {
 		set info [list $nsub $infoflags]
 	}
 	lappend testid "compile"
-	test $prefix.[tno $testid] [desc $testid] {testregexp} $ccmd $info
+	test $prefix.[tno $testid] [desc $testid] {testregexp compileExpected} $ccmd $info
 
 	set testid [lreplace $testid end end "execute"]
 	set ecmd [concat [list testregexp] $f [list $re $target]]
@@ -277,6 +386,10 @@ proc matchexpected {opts testid flags re target args} {
 	    test $prefix.[tno $testid] [desc $testid] localeRegexp {} {}
 	    return
 	}
+
+    if [isJTCLunsupportedTest $prefix $testid $flags] {
+        return
+    }
 
 	# if &, test as both BRE and ARE
 	set amp [string first "&" $flags]
@@ -324,7 +437,9 @@ proc matchexpected {opts testid flags re target args} {
 
 	set info [list $nsub $infoflags]
 	lappend testid "compile"
-	test $prefix.[tno $testid] [desc $testid] {testregexp} $ccmd $info
+    # for JTCL, add compileExpected constraint, because JTCL doesn't generate
+    # all the -about detail, and compile errors will be caught during 'execute'
+	test $prefix.[tno $testid] [desc $testid] {testregexp compileExpected} $ccmd $info
 	set testid [lreplace $testid end end "execute"]
 	test $prefix.[tno $testid] [desc $testid] {testregexp} $erun $result
 }
@@ -958,7 +1073,8 @@ i  5	t	abc		abc	{0 2}	{0 2}
 i  6	t	abc		xyabc	{2 4}	{2 4}
 p  7	t	abc+		xyab	{2 3}	""
 i  8	t	abc+		xyabc	{2 4}	{2 4}
-knownBug i  9	t	abc+		xyabcd	{2 4}	{6 5}
+#knownBug i  9	t	abc+		xyabcd	{2 4}	{6 5}
+i  9	t	abc+		xyabcd	{2 4}	{6 5}
 i  10	t	abc+		xyabcdd	{2 4}	{7 6}
 p  11	tPT	abc+?		xyab	{2 3}	""
 # the retain numbers in these two may look wrong, but they aren't
@@ -995,7 +1111,7 @@ test reg-31.1 {[[:xdigit:]] behaves correctly when followed by [[:space:]]} {
     # Code used to produce {1 2:::DebugWin32 2 :::DebugWin32} !!!
 } {1 2 2 {}}
 
-test reg-32.1 {canmatch functionality -- at end} testregexp {
+test reg-32.1 {canmatch functionality -- at end} {testregexp canMatch} {
     set pat {blah}
     set line "asd asd"
     # can match at the final d, if '%' follows
@@ -1003,7 +1119,7 @@ test reg-32.1 {canmatch functionality -- at end} testregexp {
     lappend res $resvar
 } {0 7}
 
-test reg-32.2 {canmatch functionality -- at end} testregexp {
+test reg-32.2 {canmatch functionality -- at end} {testregexp canMatch} {
     set pat {s%$}
     set line "asd asd"
     # can only match after the end of the string
@@ -1011,7 +1127,7 @@ test reg-32.2 {canmatch functionality -- at end} testregexp {
     lappend res $resvar
 } {0 7}
 
-test reg-32.3 {canmatch functionality -- not last char} testregexp {
+test reg-32.3 {canmatch functionality -- not last char} {testregexp canMatch} {
     set pat {[^d]%$}
     set line "asd asd"
     # can only match after the end of the string
@@ -1019,7 +1135,7 @@ test reg-32.3 {canmatch functionality -- not last char} testregexp {
     lappend res $resvar
 } {0 7}
 
-test reg-32.3.1 {canmatch functionality -- no match} testregexp {
+test reg-32.3.1 {canmatch functionality -- no match} {testregexp canMatch} {
     set pat {\Zx}
     set line "asd asd"
     # can match the last char, if followed by x
@@ -1027,7 +1143,7 @@ test reg-32.3.1 {canmatch functionality -- no match} testregexp {
     lappend res $resvar
 } {0 -1}
 
-test reg-32.4 {canmatch functionality -- last char} {knownBug} {
+test reg-32.4 {canmatch functionality -- last char} {canMatch} {
     set pat {.x}
     set line "asd asd"
     # can match the last char, if followed by x
@@ -1035,7 +1151,7 @@ test reg-32.4 {canmatch functionality -- last char} {knownBug} {
     lappend res $resvar
 } {0 6}
 
-test reg-32.4.1 {canmatch functionality -- last char} {knownBug} {
+test reg-32.4.1 {canmatch functionality -- last char} {canMatch} {
     set pat {.x$}
     set line "asd asd"
     # can match the last char, if followed by x
@@ -1043,7 +1159,7 @@ test reg-32.4.1 {canmatch functionality -- last char} {knownBug} {
     lappend res $resvar
 } {0 6}
 
-test reg-32.5 {canmatch functionality -- last char} {knownBug} {
+test reg-32.5 {canmatch functionality -- last char} {canMatch} {
     set pat {.[^d]x$}
     set line "asd asd"
     # can match the last char, if followed by not-d and x.
@@ -1051,7 +1167,7 @@ test reg-32.5 {canmatch functionality -- last char} {knownBug} {
     lappend res $resvar
 } {0 6}
 
-test reg-32.6 {canmatch functionality -- last char} {knownBug} {
+test reg-32.6 {canmatch functionality -- last char} {canMatch} {
     set pat {[^a]%[^\r\n]*$}
     set line "asd asd"
     # can match at the final d, if '%' follows
@@ -1059,7 +1175,7 @@ test reg-32.6 {canmatch functionality -- last char} {knownBug} {
     lappend res $resvar
 } {0 6}
 
-test reg-32.7 {canmatch functionality -- last char} {knownBug} {
+test reg-32.7 {canmatch functionality -- last char} {canMatch} {
     set pat {[^a]%$}
     set line "asd asd"
     # can match at the final d, if '%' follows
@@ -1067,7 +1183,7 @@ test reg-32.7 {canmatch functionality -- last char} {knownBug} {
     lappend res $resvar
 } {0 6}
 
-test reg-32.8 {canmatch functionality -- last char} {knownBug} {
+test reg-32.8 {canmatch functionality -- last char} {canMatch} {
     set pat {[^x]%$}
     set line "asd asd"
     # can match at the final d, if '%' follows
@@ -1075,7 +1191,7 @@ test reg-32.8 {canmatch functionality -- last char} {knownBug} {
     lappend res $resvar
 } {0 6}
 
-test reg-32.9 {canmatch functionality -- more complex case} {knownBug} {
+test reg-32.9 {canmatch functionality -- more complex case} {canMatch} {
     set pat {((\B\B|\Bh+line)[ \t]*|[^\B]%[^\r\n]*)$}
     set line "asd asd"
     # can match at the final d, if '%' follows

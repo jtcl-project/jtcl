@@ -178,7 +178,7 @@ public class TclCmdTest extends TestCase {
 			fail(unFailedExpected +  unExpectedFailed);
 		}
 	}
-	
+
 	private String readFile(File file) {
 		StringBuffer buf = new StringBuffer();
 		try {
@@ -246,4 +246,11 @@ public class TclCmdTest extends TestCase {
 		}
 		rootDir.delete();
 	}
+
+    /**
+     * @return the TCL interpreter
+     */
+    protected Interp getInterp() {
+        return interp;
+    }
 }

@@ -41,6 +41,10 @@ public class RegexpCmd implements Command {
 			"-inline", "-expanded", "-line", "-linestop", "-lineanchor",
 			"-nocase", "-start", "--" };
 
+	private static final String validOptsWithXFlags[] = { "-all", "-about", "-indices",
+			"-inline", "-expanded", "-line", "-linestop", "-lineanchor",
+			"-nocase", "-start", "--", "-xflags" };
+
 	private static final int OPT_ALL = 0;
 	private static final int OPT_ABOUT = 1;
 	private static final int OPT_INDICES = 2;
@@ -52,7 +56,9 @@ public class RegexpCmd implements Command {
 	private static final int OPT_NOCASE = 8;
 	private static final int OPT_START = 9;
 	private static final int OPT_LAST = 10;
+	private static final int OPT_XFLAGS = 11;
 
+    private boolean allowXFlags = false;
 	/*
 	 * --------------------------------------------------------------------------
 	 * ---
@@ -79,6 +85,46 @@ public class RegexpCmd implements Command {
 	{
 		interp.createCommand("regexp", new tcl.lang.cmd.RegexpCmd());
 		interp.createCommand("regsub", new tcl.lang.cmd.RegsubCmd());
+	}
+
+    /**
+     * Sets this instance of RegexpCmd to interpret and pass on
+     * the arguments of -xflags.  By default, allowXFlags is false.
+     *
+     * @param allow Set to true to allow -xflags processing
+     */
+    public void setAllowXFlags(boolean allow) {
+        allowXFlags = allow;
+    }
+
+    /**
+	 * Returns a list for -about when a compile error occur.
+	 * first element of the list is a subexpression count (0). The second element is
+	 * a should be a list of property names that describe various attributes of the regular
+	 * expression. Here we use just "COMPILE_ERROR"; reg.test is adjusted accordingly.
+	 * 
+	 * Primarily intended for debugging purposes.
+	 * 
+	 * @param interp
+	 *            current Jacl interpreter object
+	 * @return A list containing information about the regular expression.
+	 * @throws TclException
+	 */
+
+	protected TclObject getAboutCompileError(Interp interp) throws TclException {
+		TclObject props = TclList.newInstance();
+
+        // 0 for subexpression count
+		TclList.append(interp, props, TclString.newInstance("0"));
+
+        // For now, provie "COMPILE_ERROR" on any compile problem,
+        // or an empty list.  This result interacts with 'reg.test',
+        // which we've changed to expect COMPILE_ERROR instead of implementation
+        // specific compile error messages.
+        // Perhaps we should emulate TclRegAbout() in the future?
+		TclList.append(interp, props, TclString.newInstance("COMPILE_ERROR"));
+
+		return props;
 	}
 
 	/*
@@ -114,12 +160,9 @@ public class RegexpCmd implements Command {
 		// regular expression at
 		TclObject result;
 		int i;
+        String xflags = null;
 
-		// Default regexp behavior is to assume that '.' will match newline
-		// characters and that only \n is seen as a newline. Support for
-		// newline sensitive matching must be enabled, it is off by default.
-
-		flags = Pattern.DOTALL | Pattern.UNIX_LINES;
+		flags = 0;
 
 		for (i = 1; i < objv.length; i++) {
 			if (last) {
@@ -134,30 +177,32 @@ public class RegexpCmd implements Command {
 				break;
 			}
 
-			int index = TclIndex.get(interp, obj, validOpts, "switch", 0);
+			int index = TclIndex.get(interp, obj, 
+                                     allowXFlags ? validOptsWithXFlags : validOpts,
+                                     "switch", 0);
 
 			switch (index) {
 			case OPT_ABOUT:
 				about = true;
 				break;
 			case OPT_EXPANDED:
-				flags |= Pattern.COMMENTS;
+				flags |= Regex.TCL_REG_EXPANDED;
 				break;
 			case OPT_INDICES:
 				indices = true;
 				break;
 			case OPT_LINESTOP:
-				flags &= ~Pattern.DOTALL; // Don't match . to newline character
+				flags |= Regex.TCL_REG_NLSTOP;
 				break;
 			case OPT_LINEANCHOR:
-				flags |= Pattern.MULTILINE; // Use line sensitive matching
+				flags |= Regex.TCL_REG_NLANCH;
 				break;
 			case OPT_LINE:
-				flags |= Pattern.MULTILINE; // Use line sensitive matching
-				flags &= ~Pattern.DOTALL; // Don't match . to newline character
+				flags |= Regex.TCL_REG_NLSTOP;
+				flags |= Regex.TCL_REG_NLANCH;
 				break;
 			case OPT_NOCASE:
-				flags |= Pattern.CASE_INSENSITIVE;
+				flags |= Regex.TCL_REG_NOCASE;
 				break;
 			case OPT_ALL:
 				all = 1;
@@ -182,6 +227,16 @@ public class RegexpCmd implements Command {
 			case OPT_LAST:
 				last = true;
 				break;
+            case OPT_XFLAGS:
+				if (++i >= objv.length) {
+					// break the switch, the index out of bounds exception
+					// will be caught later
+					break;
+				}
+
+				xflags = objv[i].toString();
+                last = true; // according to test case reg-11.18.execute
+                break;
 			} // end of switch block
 		} // end of for loop
 
@@ -209,30 +264,29 @@ public class RegexpCmd implements Command {
 			string = objv[i++].toString();
 		}
 
-		Regex reg;
+		Regex reg = null;
 		result = TclInteger.newInstance(0);
 
-		if ((string.length() == 0) && ((flags & Pattern.MULTILINE) != 0)) {
-			// Compile the expression without the Pattern.MULTILINE flag
-			// so that matching to the empty string works as expected.
-
-			flags &= ~Pattern.MULTILINE;
-		}
-
 		try {
-			reg = new Regex(exp, string, offset, flags);
+            if (xflags==null)
+			    reg = new Regex(exp, string, offset, flags);
+            else
+			    reg = new Regex(exp, string, offset, flags, xflags);
 		} catch (PatternSyntaxException ex) {
+			interp.setErrorCode(TclString
+					.newInstance("REGEXP COMPILE_ERROR {" + Regex.getPatternSyntaxMessage(ex) + "}"));
 			throw new TclException(interp, Regex.getPatternSyntaxMessage(ex));
-		}
-
-		// If about switch was enabled, return info about regexp
+		} catch (Exception e) {
+			interp.setErrorCode(TclString
+					.newInstance("REGEXP COMPILE_ERROR {" + e.getMessage() + "}"));
+			throw new TclException(interp, e.getMessage());
+        }
 
 		if (about) {
-			TclObject props = TclList.newInstance();
-			props = reg.getInfo(interp);
-			interp.appendElement(props.toString());
+            interp.setResult(reg.getInfo(interp));
 			return;
 		}
+
 
 		boolean matched;
 
@@ -291,9 +345,11 @@ public class RegexpCmd implements Command {
 						end = reg.end(group);
 						group++;
 
+
 						if (end >= reg.getOffset()) {
 							end--;
 						}
+
 					} else {
 						start = -1;
 						end = -1;
@@ -345,36 +401,26 @@ public class RegexpCmd implements Command {
 				break;
 			}
 
-			// Adjust the offset to the character just after the last one
-			// in the matchVar and increment all to count how many times
-			// we are making a match. We always increment the offset by
-			// at least one to prevent endless looping (as in the case:
-			// regexp -all {a*} a). Otherwise, when we match the NULL
-			// string at the end of the input string, we will loop
-			// indefinitely (because the length of the match is 0, so
-			// the offset never changes).
+            all++;
 
-			offset = reg.getOffset();
-
-			int matchStart = reg.start();
-			int matchEnd = reg.end();
-			int matchLength = (matchEnd - matchStart);
-
-			// FIXME: Does not match Tcl impl here, how does Tcl C version work?
-			// offset += matchEnd;
-			offset += (matchStart - offset) + matchLength;
-
-			// A match of length zero could happen for {^} {$} or {.*} and in
-			// these cases we always want to bump the index up one.
-
-			if (matchLength == 0) {
-				offset++;
-			}
-			all++;
-			if (offset >= string.length()) {
-				break;
-			}
-			reg.setOffset(offset);
+            /* Emulate a possible TCL bug here.  In the C TCL implementation
+             * this match() loop exits when reg.end() of a non-zero-length
+             * match is >= string.length(), or when reg.end()+1 of
+             * a zero-length match is >= string.length().  The "bug" is
+             * that any further zero-length match will not be seen.
+             * regsub -all does not suffer from this same malady.
+             * For example,
+             *   regexp -all -inline {a*} {a}  returns {a}
+             *   regsub -all {a*} {a} {Z} returns {ZZ}, one 'Z' for the
+             *     length=1 match on 'a', and another for the 0-length
+             *     match right after 'a' that regexp misses.  
+             * Without this fix, regexp would act like regsub and return
+             * {a {}}   
+             */
+            int endMatch = reg.end();
+            if (reg.start() == reg.end())
+                ++endMatch;
+            if (endMatch >= string.length()) break;
 		} // end of while loop
 
 		// Set the interpreter's object result to an integer object with

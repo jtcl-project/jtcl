@@ -344,9 +344,7 @@ public class LsearchCmd implements Command {
 						regexp = new Regex(patObj.toString(), listv[i].toString(), 0);
 						match = regexp.match();
 					} catch (PatternSyntaxException ex) {
-						interp.setResult("couldn't compile regular expression pattern: " + ex.getMessage());
-						interp.setErrorCode(TclInteger.newInstance(TCL.ERROR));
-						return;
+			            throw new TclException(interp, Regex.getPatternSyntaxMessage(ex));
 					}
 					break;
 				}
