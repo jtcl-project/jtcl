@@ -62,6 +62,8 @@ public class LappendCmd implements Command {
 				interp.resetResult();
 				return;
 			}
+			// ensure the target variable is a list, or can be converted to one
+			TclList.getLength(interp, newValue);
 		} else {
 			newValue = lappendVar(interp, objv[1].toString(), objv, 2);
 		}
