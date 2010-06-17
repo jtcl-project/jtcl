@@ -586,7 +586,7 @@ public class InfoCmd implements Command {
 		if (objv.length == 2) {
 			pattern = null;
 		} else if (objv.length == 3) {
-			pattern = objv[2].toString();
+			pattern = NamespaceCmd.tail(objv[2].toString());
 		} else {
 			throw new TclNumArgsException(interp, 2, objv, "?pattern?");
 		}
@@ -770,8 +770,16 @@ public class InfoCmd implements Command {
 		if (objv.length != 2 && objv.length != 3) {
 			throw new TclNumArgsException(interp, 2, objv, "?interp?");
 		}
-		// FIXME : what should "info loaded" return?
-		throw new TclException(interp, "info loaded not implemented");
+        if (objv.length == 3) {
+            Interp slaveInterp = InterpCmd.getInterp(interp, objv[2]);
+            if (slaveInterp==null) {
+                throw new TclException(interp,"could not find interpreter \""+
+                                              objv[2].toString() + "\"");
+            }
+        }
+        // Since the 'load' command is not supported, always
+        // return a null list for 'info loaded'
+        interp.setResult(TclString.newInstance(""));
 	}
 
 	/*
