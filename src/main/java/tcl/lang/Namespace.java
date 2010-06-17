@@ -270,7 +270,12 @@ public class Namespace {
 		ns.activationCount++;
 		frame.ns = ns;
 		frame.isProcCallFrame = isProcCallFrame;
-		frame.objv = null;
+		if (isProcCallFrame) {
+            // don't override objv for namespace callframes;
+            // it is stuffed with the objv to namespace for
+            // info level n reporting
+            frame.objv = null;
+        }
 
 		frame.caller = interp.frame;
 		frame.callerVar = interp.varFrame;

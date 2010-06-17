@@ -960,7 +960,7 @@ public class InfoCmd implements Command {
 	 * Called to implement the "info script" command that returns the script
 	 * file that is currently being evaluated. Handles the following syntax:
 	 * 
-	 * info script
+	 * info script ?filename?
 	 * 
 	 * Results: Returns if successful, raises TclException otherwise.
 	 * 
@@ -971,8 +971,11 @@ public class InfoCmd implements Command {
 
 	private static void InfoScriptCmd(Interp interp, TclObject[] objv)
 			throws TclException {
-		if (objv.length != 2) {
-			throw new TclNumArgsException(interp, 2, objv, null);
+
+        if (objv.length == 3) {
+            interp.scriptFile = objv[2].toString();
+        } else if (objv.length != 2) {
+			throw new TclNumArgsException(interp, 2, objv, "?filename?");
 		}
 
 		interp.setResult(interp.scriptFile);

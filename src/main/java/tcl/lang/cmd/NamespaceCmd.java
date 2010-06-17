@@ -506,6 +506,9 @@ public class NamespaceCmd implements InternalRep, Command {
 		// the command(s).
 
 		frame = interp.newCallFrame();
+        // copy objv into frame so 'info level n' can report it
+        frame.objv = new TclObject[objv.length];
+        System.arraycopy(objv, 0, frame.objv, 0, objv.length);
 		Namespace.pushCallFrame(interp, frame, namespace, false);
 
 		try {
@@ -825,6 +828,9 @@ public class NamespaceCmd implements InternalRep, Command {
 		// Make the specified namespace the current namespace.
 
 		frame = interp.newCallFrame();
+        // copy objv into frame so 'info level n' can report it
+        frame.objv = new TclObject[objv.length];
+        System.arraycopy(objv, 0, frame.objv, 0, objv.length);
 		Namespace.pushCallFrame(interp, frame, namespace, false);
 
 		// Execute the command. If there is just one argument, just treat it as
