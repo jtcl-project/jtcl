@@ -67,10 +67,10 @@
            debug="true" 
            optimize="false" 
            deprecation="true" 
-           target="1.4" 
+           target="1.5" 
            verbose="false" 
            fork="false" 
-           source="1.4">
+           source="1.5">
       <src>
         <pathelement location="${maven.build.srcDir.0}"/>
       </src>
@@ -95,10 +95,10 @@
            debug="true" 
            optimize="false" 
            deprecation="true" 
-           target="1.4" 
+           target="1.5" 
            verbose="false" 
            fork="false" 
-           source="1.4">
+           source="1.5">
       <src>
         <pathelement location="${maven.build.testDir.0}"/>
       </src>
