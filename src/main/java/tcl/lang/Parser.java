@@ -1,13 +1,6 @@
 /* 
  * Parser.java --
  *
- *	This class contains methods that parse Tcl scripts.  They
- *	do so in a general-purpose fashion that can be used for many
- *	different purposes, including compilation, direct execution,
- *	code analysis, etc.  This class also includes a few additional
- *	procedures such as evalObjv, eval, and eval2, which allow 
- *	scripts to be evaluated directly, without compiling.
- *
  * Copyright (c) 1998 by Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
@@ -20,48 +13,44 @@ package tcl.lang;
 
 import java.util.Arrays;
 
+/**
+ * 	This class contains methods that parse Tcl scripts.  They
+ *	do so in a general-purpose fashion that can be used for many
+ *	different purposes, including compilation, direct execution,
+ *	code analysis, etc.  This class also includes a few additional
+ *	procedures such as evalObjv, eval, and eval2, which allow 
+ *	scripts to be evaluated directly, without compiling.
+ */
 public class Parser {
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * parseCommand --
-	 * 
-	 * Given a script, this procedure parses the first Tcl command in the string
+	/**
+	 * Given a script, parse the first Tcl command in the string
 	 * and returns information about the structure of the command.
 	 * 
-	 * Results: The return value is TclParse object that contains information
-	 * about the parsed command. If the command was parsed successfully, the
-	 * TclParse object's result variable is set to TCL_OK and TCL_ERROR
-	 * otherwise. If an error occurs and interp isn't null then an error message
-	 * is left in its result.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp Interpreter to use for error reporting; if null, then no error message 
+	 *               is provided.
+	 * @param script_array References the script
+	 * @param script_index index of next character in script to parse
+	 * @param numChars Total number of characters in string. If < 0,
+	 *                 the script consists of all characters up to the
+	 *                 first null character
+	 * @param fileName Name of file from which script was loaded. Null means there is no
+	 *                 known file for the script. Used for error messages.
+	 * @param lineNum Line number of first byte in string. Used for error messages.
+	 * @param nested True means that this is a nested command: close bracket should be considered
+	 *               a command terminator. If false, then close bracket has no special meaning.
+	 * @return a TclParse object that contains information
+	 *         about the parsed command. If the command was parsed successfully, the
+	 *         TclParse object's result variable is set to TCL_OK and TCL_ERROR
+	 *         otherwise. If an error occurs and interp isn't null then an error message
+	 *         is left in its result. Side effects: None.
 	 */
-
-	static TclParse parseCommand(Interp interp, // Interpreter to use for error
-												// reporting;
-			// if null, then no error message is
-			// provided.
-
-			char[] script_array, // References the script and contains an
-			int script_index, // index to the next character to parse.
-
-			int numChars, // Total number of characters in string. If < 0,
-			// the script consists of all characters up to the
-			// first null character.
-			String fileName, // Name of file from which script was
-			// loaded. Null means there is no
-			// known file for the script. Used for
-			// error messages.
-			int lineNum, // Line number of first byte in string.
-			// Used for error messages.
-			boolean nested) // True means that this is a nested command:
-	// close bracket should be considered
-	// a command terminator. If false, then close
-	// bracket has no special meaning.
+	static TclParse parseCommand(Interp interp, char[] script_array, 
+			int script_index, 
+			int numChars, 
+			String fileName, 
+			int lineNum, 
+			boolean nested) 
 	{
 
 		char cur; // the char we are currently parsing
@@ -428,6 +417,31 @@ public class Parser {
 		parse.commandSize = script_index - parse.commandStart;
 		parse.result = TCL.OK;
 		return parse;
+	}
+	
+	/**
+	 * Test whether a script can be parsed, without actually doing any execution
+	 * @param script script to parse
+	 * @param nested script is nested; should consider bracket as close 
+	 * @return true if script has no parsing errors; false otherwise
+	 */
+	public static boolean isParseableScript(String script, boolean nested) {
+		TclParse parse = null;
+		CharPointer src = new CharPointer(script);
+		int len = script.length();
+		int parseError = Parser.TCL_PARSE_SUCCESS;
+
+		do {
+			parse = parseCommand(null, src.array, src.index, len, null, 0, nested);
+			parseError = parse.errorType;
+			src.index = parse.commandStart + parse.commandSize;
+			parse.release(); // Release parser resources
+			if (src.index >= len) {
+				break;
+			}
+		} while (parseError == Parser.TCL_PARSE_SUCCESS);
+		
+		return (parseError == Parser.TCL_PARSE_SUCCESS);
 	}
 
 	/*
@@ -1222,6 +1236,11 @@ public class Parser {
 							logCommandInfo(interp, script_array, script_index,
 									parse.commandStart, commandLength, e);
 						}
+						/*
+						 *  set the interp.termOffset even on exception, so 'subst' can use
+						 *  when a continue, break or return exception occurs
+						 */
+						interp.termOffset =  parse.commandStart + parse.commandSize - script_index;
 						throw e;
 					} finally {
 						for (i = 0; i < objUsed; i++) {
