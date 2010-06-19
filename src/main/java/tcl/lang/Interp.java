@@ -155,16 +155,16 @@ public class Interp extends EventuallyFreed {
 
 	public String scriptFile;
 
-	// Number of times the interp.eval() routine has been recursively
-	// invoked.
-
+	/** Number of times the interp.eval() routine has been recursively
+	 *  invoked.
+     */
 	public int nestLevel;
 
 	// Used to catch infinite loops in Parser.eval2.
 
 	private int maxNestingDepth = 1000;
 
-	// Flags used when evaluating a command.
+	/** Flags used when evaluating a command. */
 
 	public int evalFlags;
 
@@ -172,13 +172,13 @@ public class Interp extends EventuallyFreed {
 
 	int flags;
 
-	// Is this interpreted marked as safe?
+	/** Is this interpreted marked as safe? */
 
 	public boolean isSafe;
 
-	// Offset of character just after last one compiled or executed
-	// by Parser.eval2().
-
+	/** Offset of character just after last one compiled or executed
+	 * by Parser.eval2().
+	 */
 	public int termOffset;
 
 	// List of name resolution schemes added to this interpreter.
@@ -187,8 +187,8 @@ public class Interp extends EventuallyFreed {
 
 	ArrayList resolvers;
 
-	// The expression parser for this interp.
-
+	/** The expression parser for this interp.
+	  */
 	public Expression expr;
 
 	// Used by the Expression class. If it is equal to zero, then the
@@ -208,17 +208,17 @@ public class Interp extends EventuallyFreed {
 
 	long randSeed;
 
-	// If returnCode is TCL.ERROR, stores the errorInfo.
-
+	/** If returnCode is TCL.ERROR, stores the errorInfo.
+	 */
 	public String errorInfo;
 
-	// If returnCode is TCL.ERROR, stores the errorCode.
-
+	/** If returnCode is TCL.ERROR, stores the errorCode.
+	 */
 	public String errorCode;
 
-	// Completion code to return if current procedure exits with a
-	// TCL_RETURN code.
-
+	/** Completion code to return if current procedure exits with a
+	 *  TCL_RETURN code.
+	 */
 	public int returnCode;
 
 	// True means the interpreter has been deleted: don't process any
@@ -227,15 +227,15 @@ public class Interp extends EventuallyFreed {
 
 	protected boolean deleted;
 
-	// True means an error unwind is already in progress. False
-	// means a command proc has been invoked since last error occured.
-
+	/** True means an error unwind is already in progress. False
+	 * means a command proc has been invoked since last error occured.
+	 */
 	public boolean errInProgress;
 
-	// True means information has already been logged in $errorInfo
-	// for the current eval() instance, so eval() needn't log it
-	// (used to implement the "error" command).
-
+	/** True means information has already been logged in $errorInfo
+	 *  for the current eval() instance, so eval() needn't log it
+	 * (used to implement the "error" command).
+	 */
 	public boolean errAlreadyLogged;
 
 	// True means that addErrorInfo has been called to record
@@ -244,9 +244,9 @@ public class Interp extends EventuallyFreed {
 
 	protected boolean errCodeSet;
 
-	// When TCL_ERROR is returned, this gives the line number within
-	// the command where the error occurred (1 means first line).
-
+	/** When TCL_ERROR is returned, this gives the line number within
+	 * the command where the error occurred (1 means first line).
+	 */
 	public int errorLine;
 
 	// Stores the current result in the interpreter.
@@ -327,21 +327,21 @@ public class Interp extends EventuallyFreed {
 	TclToken[] parserTokens;
 	int parserTokensUsed;
 
-	// Used ONLY by JavaImportCmd
+	/** Used ONLY by JavaImportCmd */
 	public HashMap[] importTable = { new HashMap(), new HashMap() };
 
-	// Used by callers of Util.strtoul(), also used in FormatCmd.strtoul().
-	// There is typically only one instance of a StrtoulResult around
-	// at any one time. Callers should exercise care to use the results
-	// before any other code could call strtoul() again.
-
+	/** Used by callers of Util.strtoul(), also used in FormatCmd.strtoul().
+	 * There is typically only one instance of a StrtoulResult around
+	 * at any one time. Callers should exercise care to use the results
+	 * before any other code could call strtoul() again.
+	 */
 	public StrtoulResult strtoulResult = new StrtoulResult();
 
-	// Used by callers of Util.strtod(). Usage is same as above.
+	/** Used by callers of Util.strtod(). Usage is same as {@link #strtoulResult} */
 
 	public StrtodResult strtodResult = new StrtodResult();
 
-	// Used only with Namespace.getNamespaceForQualName()
+	/** Used only with Namespace.getNamespaceForQualName() */
 
 	public Namespace.GetNamespaceForQualNameResult getnfqnResult = new Namespace.GetNamespaceForQualNameResult();
 
@@ -2432,20 +2432,16 @@ public class Interp extends EventuallyFreed {
 		setResult(result);
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * eval --
-	 * 
+	/**
 	 * Execute a Tcl command in a string.
 	 * 
-	 * Results: The return value is void. However, a standard Tcl Exception may
+	 * A standard Tcl Exception may
 	 * be generated. The interpreter's result object will contain the value of
 	 * the evaluation but will persist only until the next call to one of the
 	 * eval functions.
 	 * 
-	 * Side effects: The side effects will be determined by the exact Tcl code
-	 * to be evaluated.
+	 * @param script The script to be evaluated
+	 * @throws TclException on any TCL errors generated by the script
 	 * 
 	 * ----------------------------------------------------------------------
 	 */
@@ -2456,9 +2452,16 @@ public class Interp extends EventuallyFreed {
 		eval(script, 0);
 	}
 
-	public void eval(String string, // A script to evaluate.
-			int flags) // Flags, either 0 or TCL.EVAL_GLOBAL
-			throws TclException // A standard Tcl exception.
+	/**
+	 * Evaluate a TCL script in a string
+	 * 
+	 * @param string containing the TCL script
+	 * @param flags Either 0 or TCL.EVAL_GLOBAL
+	 * @throws TclException on any TCL error
+	 */
+	public void eval(String string, 
+			int flags)
+			throws TclException 
 	{
 		if (string == null) {
 			throw new NullPointerException("passed null String to eval()");
@@ -2502,28 +2505,17 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * Tcl_EvalObjEx -> eval
-	 * 
-	 * Execute a Tcl command in a TclObject.
-	 * 
-	 * Results: The return value is void. However, a standard Tcl Exception may
-	 * be generated. The interpreter's result object will contain the value of
-	 * the evaluation but will persist only until the next call to one of the
-	 * eval functions.
-	 * 
-	 * Side effects: The side effects will be determined by the exact Tcl code
-	 * to be evaluated.
-	 * 
-	 * ----------------------------------------------------------------------
-	 */
 
-	public void eval(TclObject tobj, // A Tcl object holding a script to
-										// evaluate.
-			int flags) // Flags, either 0 or TCL.EVAL_GLOBAL
-			throws TclException // A standard Tcl exception.
+	/** 
+	 * Execute a Tcl script in a TclObject.
+	 * 
+	 * @param tobj A Tcl object holding a script to evaluate
+	 * @param flags either 0 or TCL.EVAL_GLOBAL
+	 * @throws TclException on any TCL error
+	 */
+	public void eval(TclObject tobj, 
+			int flags) 
+			throws TclException 
 	{
 		boolean isPureList = false;
 
@@ -2689,20 +2681,14 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * evalFile -- Loads a Tcl script from a file and evaluates it in the
+
+	/**
+	 * Loads a Tcl script from a file and evaluates it in the
 	 * current interpreter.
 	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: The side effects will be determined by the exact Tcl code
-	 * to be evaluated.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param s Name of the file to evaluate
+	 * @throws TclException on any TCL error or on a file read error
 	 */
-
 	public void evalFile(String s) // The name of file to evaluate.
 			throws TclException {
 		String fileContent; // Contains the content of the file.
@@ -2731,24 +2717,16 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * evalURL --
-	 * 
+
+	/**
 	 * Loads a Tcl script from a URL and evaluate it in the current interpreter.
 	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: The side effects will be determined by the exact Tcl code
-	 * to be evaluated.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param context URL context under which s is to be interpreted
+	 * @param s the URL
+	 * @throws TclException on any TCL or read error
 	 */
-
-	public void evalURL(URL context, // URL context under which s is
-										// interpreted.
-			String s) // The name of URL.
+	public void evalURL(URL context, 								
+			String s) 
 			throws TclException {
 		String fileContent; // Contains the content of the file.
 
