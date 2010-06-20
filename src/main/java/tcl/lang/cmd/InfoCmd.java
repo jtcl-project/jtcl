@@ -14,6 +14,7 @@
 
 package tcl.lang.cmd;
 
+import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Iterator;
@@ -826,24 +827,18 @@ public class InfoCmd implements Command {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * InfoNameOfExecutableCmd --
-	 * 
+	/**
 	 * Called to implement the "info nameofexecutable" command that returns the
-	 * name of the binary file running this application. Handles the following
-	 * syntax:
+	 * name of the binary file running this application. This implementation attempts
+	 * to locate the Java VM executable, and returns a list in the interpreters result object
+	 * that contains a full java command line to execute this application.  Since this returns a list,
+	 * to properly make [exec [info nameofexecutable]] work requires 
+	 * [eval exec [info nameofexecutable]]
 	 * 
-	 * info nameofexecutable
-	 * 
-	 * Results: Returns if successful, raises TclException otherwise.
-	 * 
-	 * Side effects: Returns a result in the interpreter's result object.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp Interpreter in which to evaluate command
+	 * @param objv arguments 'info nameofexecutable'
+	 * @throws TclException on any error
 	 */
-
 	private static void InfoNameOfExecutableCmd(Interp interp, TclObject[] objv)
 			throws TclException {
 
@@ -851,18 +846,36 @@ public class InfoCmd implements Command {
 			throw new TclNumArgsException(interp, 2, objv, null);
 		}
 
-		// We depend on a user defined property named "JAVA" since
-		// the JDK provides no means to learn the name of the executable
-		// that launched the application.
+		// The JDK provides direct no means to learn the name of the executable
+		// that launched the application.  We'll try to find the java vm
 
-		String nameOfExecutable = System.getProperty("JAVA");
+		String javaHome = System.getProperty("java.home");
+		String nameOfExecutable = null;
+
+		if (javaHome != null) {
+			// test java.home/bin/java
+			File javaPath = new File(new File(new File(javaHome),"bin"),"java");
+			if (javaPath.exists()) {
+				nameOfExecutable = javaPath.getPath();
+			}
+		}
 
 		if (nameOfExecutable != null) {
+			// add the classpath
 			TclObject result = TclList.newInstance();
-			TclList.append(interp, result, TclString
-					.newInstance(nameOfExecutable));
-			TclList.append(interp, result, TclString
-					.newInstance("tcl.lang.Shell"));
+			TclList.append(interp, result, TclString.newInstance(nameOfExecutable));
+
+			String classpath = System.getProperty("java.class.path");
+			if (classpath!=null) {
+				TclList.append(interp, result, TclString.newInstance("-classpath"));
+				TclList.append(interp, result, TclString.newInstance(classpath));
+			}
+
+			// add the top level class
+			Throwable t = new Throwable();
+			StackTraceElement[] es = t.getStackTrace();
+			TclList.append(interp, result, TclString.newInstance(es[es.length-1].getClassName()));
+			
 			interp.setResult(result);
 		}
 
