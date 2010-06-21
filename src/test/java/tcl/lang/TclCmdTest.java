@@ -4,25 +4,38 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
-import tcl.lang.Interp;
-import tcl.lang.TclException;
 import junit.framework.TestCase;
 
 public class TclCmdTest extends TestCase {
 
+	public static final String EXEC_NAME = "jtcltest.bat";
+	public static final Class SHELL_CLASS = tcl.lang.Shell.class;
+	public static final String SHELL = SHELL_CLASS.getName();
 	public static final String TCLTEST_VERBOSE = "tcltest::configure -verbose {start pass body error skip}";
+	public static String TCLTEST_NAMEOFEXECUTABLE = "MISSING";
 	
 	private Interp interp;
 	private String tempDir;
 	
 	public void setUp() throws Exception {
 		tempDir = createTempdir();
+		createExecScript(new File(tempDir), EXEC_NAME);
+		String sep = System.getProperty("file.separator");
+		TCLTEST_NAMEOFEXECUTABLE = "rename info ::tcl::info; "
+			+ "proc info args {"
+			+ "  if {[llength $args] == 1 && [lindex $args 0] eq \"nameofexecutable\"} {"
+			+"    return " + tempDir + sep + EXEC_NAME 
+			+ "  } else {"
+			+ "   uplevel ::tcl::info $args"
+			+ "  }"
+			+ "}";
 		interp = new Interp();
 		interp.setWorkingDir(tempDir);
 	}
@@ -252,5 +265,64 @@ public class TclCmdTest extends TestCase {
      */
     protected Interp getInterp() {
         return interp;
+    }
+    
+    /**
+     * Create a script to invoke JTcl.  Script currently checks if the first argument is "<<", and
+     * if so assumes the second argument is a script to execute.  If not, then execute JTcl with arguments.
+     * FIXME: CURRENTLY BROKEN FOR WINDOWS
+     * @param path
+     * @param name
+     */
+    private void createExecScript(File path, String name) {
+    	String os = System.getProperty("os.name");
+    	boolean isWindows = os.startsWith("Windows");
+    	String sep = System.getProperty("file.separator"); 
+    	String java = System.getProperty("java.home");
+    	if (java.endsWith(sep)) {
+    		java = java + "bin" + sep + "java";
+    	} else {
+    		java = java + sep + "bin" + sep + "java";
+    	}
+    	String classPath = SHELL_CLASS.getProtectionDomain().getCodeSource().getLocation().toExternalForm();
+    	String execLine;
+    	if (isWindows) {
+    		if (classPath.startsWith("file:/")) {
+    			classPath = classPath.substring(6);
+    		}
+    		// FIXME: this is probably all wrong, needs to be similar to the unix/mac handling
+    		String javaExec = java + " -cp " + classPath + " " +  SHELL;
+    		execLine = javaExec + " @1 @2 @3 @4 @5 @6 @7 @8 @9";
+    	} else {
+    		if (classPath.startsWith("file:")) {
+    			classPath = classPath.substring(5);
+    		}
+    		String javaExec = java + " -cp " + classPath + " " + SHELL;
+    		execLine = "#!\n" 
+    			+ "if [ \"X$1\" = \"X<<\" ] ; then \n"
+    			+ "  echo \"$2\" >tcltest_$$.tcl; " + javaExec + " tcltest_$$.tcl; rm tcltest_$$.tcl \n"
+    			+ "else\n "
+    			+      javaExec + " $* \n" 
+    			+ "fi";
+    	}
+    	File execFile = new File(path, name);
+    	execFile.deleteOnExit();
+    	FileWriter out = null;
+    	try {
+    		out = new FileWriter(execFile);
+    		out.write(execLine);
+    		out.close();
+    	} catch (Exception e) {
+    		throw new RuntimeException(e);
+    	}
+    	if (! isWindows) {
+    		try {
+    			Process process = Runtime.getRuntime().exec("chmod +x " + execFile.getCanonicalPath());
+    			process.waitFor();
+    			process.destroy();
+    		} catch (Exception e) {
+    			throw new RuntimeException(e);
+    		}
+    	}
     }
 }
