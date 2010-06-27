@@ -1,89 +1,47 @@
 package tcl.lang;
 
-import java.io.EOFException;
 import java.io.IOException;
 
 import tcl.lang.channel.Channel;
 import tcl.lang.channel.StdChannel;
 
-/*
- *----------------------------------------------------------------------
- *
- * ConsoleThread --
- *
+/**
  * This class implements the Console Thread: it is started by
  * tcl.lang.Shell if the user gives no initial script to evaluate, or
  * when the -console option is specified. The console thread loops
  * forever, reading from the standard input, executing the user input
  * and writing the result to the standard output.
- *
- *----------------------------------------------------------------------
  */
-
 public class ConsoleThread extends Thread {
 
-	// Interpreter associated with this console thread.
-
+	/**
+	 *  Interpreter associated with this console thread.
+	 */
 	Interp interp;
 
-	// Collect the user input in this buffer until it forms a complete Tcl
-	// command.
-
+	/**
+	 * Collect the user input in this buffer until it forms a complete Tcl command
+	 */
 	StringBuffer sbuf;
 
-	// Used to for interactive input/output
-
+	/**
+	 *  Used to for interactive output
+	 */
 	private Channel out;
+	
+	/**
+	 *  Used to for interactive error output
+	 */
 	private Channel err;
 
-	// set to true to get extra debug output
+	/**
+	 *  set to true to get extra debug output
+	 */
 	private static final boolean debug = false;
 
-	// used to keep track of wether or not System.in.available() works
-	private static boolean sysInAvailableWorks = false;
-
-	static {
-		try {
-			// There is no way to tell whether System.in will block AWT
-			// threads, so we assume it does block if we can use
-			// System.in.available().
-
-			System.in.available();
-			sysInAvailableWorks = true;
-		} catch (Exception e) {
-			// If System.in.available() causes an exception -- it's probably
-			// no supported on this platform (e.g. MS Java SDK). We assume
-			// sysInAvailableWorks is false and let the user suffer ...
-		}
-
-		// Sun's JDK 1.2 on Windows systems is screwed up, it does not
-		// echo chars to the console unless blocking IO is used.
-		// For this reason we need to use blocking IO under Windows.
-
-		if (Util.isWindows()) {
-			sysInAvailableWorks = false;
-		}
-
-		if (debug) {
-			System.out.println("sysInAvailableWorks = " + sysInAvailableWorks);
-		}
-
-	}
-
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * ConsoleThread --
-	 * 
+	/**
 	 * Create a ConsoleThread.
-	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: Member fields are initialized.
-	 * 
-	 * ----------------------------------------------------------------------
 	 */
-
 	public ConsoleThread(Interp i) // Initial value for interp.
 	{
 		setName("ConsoleThread");
@@ -94,11 +52,7 @@ public class ConsoleThread extends Thread {
 		err = TclIO.getStdChannel(StdChannel.STDERR);
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * run --
-	 * 
+	/**
 	 * Called by the JVM to start the execution of the console thread. It loops
 	 * forever to handle user inputs.
 	 * 
@@ -107,10 +61,7 @@ public class ConsoleThread extends Thread {
 	 * Side effects: This method never returns. During its execution, some
 	 * TclObjects may be locked inside the historyObjs vector. Remember to free
 	 * them at "appropriate" times!
-	 * 
-	 * ----------------------------------------------------------------------
 	 */
-
 	public synchronized void run() {
 		if (debug) {
 			System.out.println("entered ConsoleThread run() method");
@@ -278,56 +229,13 @@ public class ConsoleThread extends Thread {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * getLine --
-	 * 
-	 * Gets a new line from System.in and put it in sbuf.
+	/**
+	 * Gets a new line from System.in and put it in ConsoleThread.sbuf.
 	 * 
 	 * Result: The new line of user input, including the trailing carriage
 	 * return character.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * ----------------------------------------------------------------------
 	 */
-
 	private void getLine() {
-		// On Unix platforms, System.in.read() will block the delivery of
-		// of AWT events. We must make sure System.in.available() is larger
-		// than zero before attempting to read from System.in. Since
-		// there is no asynchronous IO in Java, we must poll the System.in
-		// every 100 milliseconds.
-
-		int availableBytes = -1;
-
-		if (sysInAvailableWorks) {
-			try {
-				// Wait until there are inputs from System.in. On Unix,
-				// this usually means the user has pressed the return key.
-
-				availableBytes = 0;
-
-				while (availableBytes == 0) {
-					availableBytes = System.in.available();
-
-					// if (debug) {
-					// System.out.println(availableBytes +
-					// " bytes can be read from System.in");
-					// }
-
-					Thread.sleep(100);
-				}
-			} catch (InterruptedException e) {
-				System.exit(0);
-			} catch (EOFException e) {
-				System.exit(0);
-			} catch (IOException e) {
-				e.printStackTrace();
-				System.exit(0);
-			}
-		}
 
 		// Loop until user presses return or EOF is reached.
 		char c2 = ' ';
@@ -335,13 +243,17 @@ public class ConsoleThread extends Thread {
 
 		if (debug) {
 			System.out.println("now to read from System.in");
-			System.out.println("availableBytes = " + availableBytes);
 		}
 
-		while (availableBytes != 0) {
+		while (true) {
 			try {
+				/*
+				 * Note that this System.in.read() will only really interact properly with the rest
+				 * of TCL if System.in is an instance of ManagedSystemInStream.  Interp creates an instance
+				 * of ManagedSystemInStream, which replaces the original System.in with itself.
+				 */
 				int i = System.in.read();
-
+				
 				if (i == -1) {
 					if (sbuf.length() == 0) {
 						System.exit(0);
@@ -351,10 +263,8 @@ public class ConsoleThread extends Thread {
 				}
 
 				c = (char) i;
-				availableBytes--;
 
 				if (debug) {
-					System.out.print("(" + (availableBytes + 1) + ") ");
 					System.out.print("'" + c + "', ");
 				}
 
@@ -366,7 +276,7 @@ public class ConsoleThread extends Thread {
 						System.out.println("checking windows hack");
 					}
 
-					i = System.in.read();
+					i = interp.systemIn.read();
 					if (i == -1) {
 						if (sbuf.length() == 0) {
 							System.exit(0);
@@ -401,22 +311,14 @@ public class ConsoleThread extends Thread {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * putLine --
-	 * 
+	/**
 	 * Prints a string into the given channel with a trailing carriage return.
 	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param channel Channel to print to
+	 * @param s String to print
 	 */
-
-	private void putLine(Channel channel, // The Channel to print to.
-			String s) // The String to print.
+	private void putLine(Channel channel,
+			String s) 
 	{
 		try {
 			channel.write(interp, s);
@@ -431,23 +333,15 @@ public class ConsoleThread extends Thread {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * put --
-	 * 
+	/**
 	 * Prints a string into the given channel without a trailing carriage
 	 * return.
 	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param channel Channel to print to
+	 * @param s String to print
 	 */
-
-	private void put(Channel channel, // The Channel to print to.
-			String s) // The String to print.
+	private void put(Channel channel,
+			String s) 
 	{
 		try {
 			channel.write(interp, s);

@@ -50,72 +50,82 @@ public class Interp extends EventuallyFreed {
 	// variables are accessed by the ReflectObject class, they
 	// are defined here be cause we need them to be per interp data.
 
-	// Translates Object to ReflectObject. This makes sure we have only
-	// one ReflectObject internalRep for the same Object -- this
-	// way Object identity can be done by string comparison.
-
+	/** Translates Object to ReflectObject. This makes sure we have only
+	 *  one ReflectObject internalRep for the same Object -- this
+	 * way Object identity can be done by string comparison.
+	 */
 	public HashMap reflectObjTable = new HashMap();
 
-	// Number of reflect objects created so far inside this Interp
-	// (including those that have be freed)
-
+	/** Number of reflect objects created so far inside this Interp
+	 * (including those that have be freed)
+	 */
 	public long reflectObjCount = 0;
 
-	// Table used to store reflect hash index conflicts, see
-	// ReflectObject implementation for more details
-
+	/** Table used to store reflect hash index conflicts, see
+	 * ReflectObject implementation for more details
+	 */
 	public HashMap reflectConflictTable = new HashMap();
 
-	// The number of chars to copy from an offending command into error
-	// message.
-
+	/** The number of chars to copy from an offending command into error
+	 * message.
+	 */
 	private static final int MAX_ERR_LENGTH = 200;
 
-	// We pretend this is Tcl 8.4, patch level 0.
-
+	/**
+	 *  We pretend this is Tcl 8.4
+	 */
 	static final String TCL_VERSION = "8.4";
+	/**
+	 *  We pretend this is Tcl 8.4, patch level 0.
+	 */
 	static final String TCL_PATCH_LEVEL = "8.4.0";
 
-	// Total number of times a command procedure
-	// has been called for this interpreter.
-
+	/** Total number of times a command procedure
+	 * has been called for this interpreter.
+	 */
 	public int cmdCount;
 
-	// Table of channels currently registered in this interp.
-
+	/**
+	 * Table of channels currently registered in this interp.
+	 */
 	public HashMap interpChanTable;
 
-	// The Notifier associated with this Interp.
-
+	/**
+	 *  The Notifier associated with this Interp.
+	 */
 	private Notifier notifier;
 
-	// Hash table for associating data with this interpreter. Cleaned up
-	// when this interpreter is deleted.
-
+	/**
+	 *  Hash table for associating data with this interpreter. Cleaned up 
+	 *  when this interpreter is deleted
+	 */
 	HashMap assocData;
 
-	// Current working directory.
-
+	/**
+	 * Current working directory.
+	 */
 	private File workingDir;
 
-	// Points to top-most in stack of all nested procedure
-	// invocations. null means there are no active procedures.
-
+	/** Points to top-most in stack of all nested procedure
+	 * invocations. null means there are no active procedures.
+	 */
 	public CallFrame frame;
 
-	// Points to the call frame whose variables are currently in use
-	// (same as frame unless an "uplevel" command is being
-	// executed). null means no procedure is active or "uplevel 0" is
-	// being exec'ed.
-
+	/** Points to the call frame whose variables are currently in use
+	 * (same as frame unless an "uplevel" command is being
+	 * executed). null means no procedure is active or "uplevel 0" is
+	 * being exec'ed.
+	 */
 	public CallFrame varFrame;
 
-	// The interpreter's global namespace.
-
+	/**
+	 *  The interpreter's global namespace.
+	 */
 	Namespace globalNs;
 
-	// Hash table used to keep track of hidden commands on a per-interp basis.
-
+	/**
+	 * Hash table used to keep track of hidden commands on a per-interp basis.
+	 */
 	public HashMap hiddenCmdTable;
 
 	// Information used by InterpCmd.java to keep
@@ -389,6 +399,13 @@ public class Interp extends EventuallyFreed {
 	// at the next safe moment.
 
 	private TclInterruptedExceptionEvent interruptedEvent = null;
+	
+	/**
+	 * Using System.in directly creates non-interruptible block during System.in.read().
+	 * This instance prevents the read() block.  The first instance created will replace
+	 * System.in with itself, so code doesn't have to use this instance directly.  
+	 */
+	static public ManagedSystemInStream systemIn = new ManagedSystemInStream();
 
 	/*
 	 * ----------------------------------------------------------------------
@@ -702,7 +719,7 @@ public class Interp extends EventuallyFreed {
 		if (nestLevel > 0) {
 			throw new TclRuntimeError("dispose() called with active evals");
 		}
-
+		
 		// Remove our association with the notifer (if we had one).
 
 		if (notifier != null) {

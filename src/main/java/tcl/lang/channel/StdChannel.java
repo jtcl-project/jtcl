@@ -19,6 +19,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 
 import tcl.lang.Interp;
+import tcl.lang.ManagedSystemInStream;
 import tcl.lang.TclException;
 import tcl.lang.TclIO;
 import tcl.lang.TclObject;
@@ -53,7 +54,7 @@ public class StdChannel extends Channel {
 	 * reassign to a specific Java stream.
 	 */
 
-	static InputStream _in = System.in;
+	static InputStream _in = new ManagedSystemInStream();
 	static PrintStream _out = System.out;
 	static PrintStream _err = System.err;
 
