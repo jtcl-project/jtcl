@@ -67,7 +67,7 @@ public class ConsoleThread extends Thread {
 			System.out.println("entered ConsoleThread run() method");
 		}
 
-		put(out, "% ");
+		if (isInteractive()) put(out, "% ");
 
 		while (true) {
 			// Loop forever to collect user inputs in a StringBuffer.
@@ -157,7 +157,7 @@ public class ConsoleThread extends Thread {
 										+ evalResult + "\"");
 							}
 
-							if (evalResult.length() > 0) {
+							if (evalResult.length() > 0  && isInteractive()) {
 								putLine(out, evalResult);
 							}
 						}
@@ -180,10 +180,10 @@ public class ConsoleThread extends Thread {
 							try {
 								interp.eval(prompt.toString(), TCL.EVAL_GLOBAL);
 							} catch (TclException e) {
-								put(out, "% ");
+								if (isInteractive()) put(out, "% ");
 							}
 						} else {
-							put(out, "% ");
+							if (isInteractive()) put(out, "% ");
 						}
 
 						return 1;
@@ -210,10 +210,10 @@ public class ConsoleThread extends Thread {
 							try {
 								interp.eval(prompt.toString(), TCL.EVAL_GLOBAL);
 							} catch (TclException e) {
-								put(out, "");
+								if (isInteractive()) put(out, "");
 							}
 						} else {
-							put(out, "");
+							if (isInteractive()) put(out, "");
 						}
 
 						return 1;
@@ -311,6 +311,18 @@ public class ConsoleThread extends Thread {
 		}
 	}
 
+	/**
+	 * @return true if tcl_interactive is true, false if not
+	 */
+	private boolean isInteractive() {
+		TclObject value = null;
+		try {
+			value = interp.getVar("tcl_interactive", TCL.GLOBAL_ONLY);
+			return TclBoolean.get(interp, value);
+		} catch (TclException e) {
+			return true;
+		}
+	}
 	/**
 	 * Prints a string into the given channel with a trailing carriage return.
 	 * 

@@ -23,6 +23,11 @@ package tcl.lang;
 
 public class Shell {
 
+	/**
+	 * Set to true to force tcl_interactive to 0 in the shell
+	 */
+	public static boolean forceNonInteractive = false;
+	
 	/*
 	 * ----------------------------------------------------------------------
 	 * 
@@ -65,7 +70,7 @@ public class Shell {
 			int argc = args.length;
 			if (fileName == null) {
 				interp.setVar("argv0", "tcl.lang.Shell", TCL.GLOBAL_ONLY);
-				interp.setVar("tcl_interactive", "1", TCL.GLOBAL_ONLY);
+				interp.setVar("tcl_interactive", forceNonInteractive ? "0" : "1", TCL.GLOBAL_ONLY);
 			} else {
 				interp.setVar("argv0", fileName, TCL.GLOBAL_ONLY);
 				interp.setVar("tcl_interactive", "0", TCL.GLOBAL_ONLY);
