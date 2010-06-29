@@ -17,7 +17,10 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
+import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Set;
 
 import tcl.lang.Command;
 import tcl.lang.Interp;
@@ -145,14 +148,21 @@ public class EncodingCmd implements Command {
 		// Determine default system encoding, use
 		// "iso8859-1" if default is not known.
 
+		// use Java 1.5 API.  Since the EncodingMap
+		// uses the Java historical names, look through
+		// all the aliases to find a match to the defaultCharset
+		
+		Charset defaultCharset = Charset.defaultCharset();
+		Set<String> aliases = defaultCharset.aliases();
+		ArrayList<String> all = new ArrayList<String>(aliases.size()+1);
+		all.add(defaultCharset.name());
+		all.addAll(aliases);
+		
+		Iterator<String> iterator = all.iterator();
+		
 		String enc = null;
-
-		try {
-			enc = System.getProperty("file.encoding");
-		} catch (SecurityException ex) {
-		}
-
-		if (enc != null) {
+		while (iterator.hasNext()) {
+			enc = iterator.next();
 			// Lookup EncodingMap for this Java encoding name
 			String key = "java," + enc;
 			EncodingMap map = (EncodingMap) encodeHash.get(key);
@@ -160,7 +170,8 @@ public class EncodingCmd implements Command {
 				enc = null;
 			} else {
 				systemTclEncoding = map.tclName;
-				systemJavaEncoding = map.javaName;
+				systemJavaEncoding = map.javaName;	
+				break;
 			}
 		}
 
