@@ -8,15 +8,13 @@ import tcl.lang.TclCmdTest;
 
 public class MiscCmdTest extends TclCmdTest {
 	public void testBasic() throws Exception {
-		LinkedList expectedFailureList = new LinkedList(Arrays.asList( new String[] {
+		LinkedList<String> expectedFailureList = new LinkedList<String>(Arrays.asList( new String[] {
 				// FIXME: error message differ
-				"basic-12.1", 
-				// FIXME: exec problems??
-				"basic-46.2", "basic-46.3", "basic-46.3", "basic-46.4", "basic-46.5"
+				"basic-12.1" 
 			}));
 		
 		String resName = "/tcl/lang/cmd/basic.test";
-		tclTestResource(resName, expectedFailureList);
+		tclTestResource(TCLTEST_NAMEOFEXECUTABLE, resName, expectedFailureList);
 	}
 	
 	public void testIo() throws Exception {

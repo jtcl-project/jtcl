@@ -7,21 +7,19 @@ import java.util.LinkedList;
 
 public class RegexCmdTest extends TclCmdTest {
 	public void testCmd() throws Exception {
-		LinkedList expectedFailureList = new LinkedList(Arrays.asList( new String[] {
-            "regexp-14.3"  // exec [interpreter] fails because [info nameofexecutable] can't
-                           // return something that can exec a script 
+		LinkedList<String> expectedFailureList = new LinkedList<String>(Arrays.asList( new String[] {
+          
         }));
 		String resName = "/tcl/lang/cmd/regexp.test";
-		tclTestResource(resName,expectedFailureList);
+		tclTestResource(TCLTEST_NAMEOFEXECUTABLE,resName,expectedFailureList);
 	}
 	
 	public void testRegexComp() throws Exception {
-		LinkedList expectedFailureList = new LinkedList(Arrays.asList( new String[] {
-            "regexpComp-14.3"  // exec [interpreter] fails because [info nameofexecutable] can't
-                               // return something that can exec a script 
+		LinkedList<String> expectedFailureList = new LinkedList<String>(Arrays.asList( new String[] {
+            
         }));
 		String resName = "/tcl/lang/cmd/regexpComp.test";
-		tclTestResource(resName, expectedFailureList);
+		tclTestResource(TCLTEST_NAMEOFEXECUTABLE, resName, expectedFailureList);
 	}
 
     public void testRegexSyntax() throws Exception {
@@ -41,7 +39,7 @@ public class RegexCmdTest extends TclCmdTest {
         // or for things that are not supported (BRE's, ERE's).  Due to the unique nature
         // of reg.test, it's much easier to turn off tests there than to use 
         // expectedFailureList here.  This list is reserved for real bugs.
-		LinkedList expectedFailureList = new LinkedList(Arrays.asList( new String[] {
+		LinkedList<String> expectedFailureList = new LinkedList<String>(Arrays.asList( new String[] {
             "reg-3.5.execute",  "reg-14.9.execute", "reg-26.1.execute",
             "reg-26.2.execute", "reg-26.3.execute" 
         }));
