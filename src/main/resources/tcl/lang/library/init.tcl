@@ -293,17 +293,11 @@ proc unknown args {
 		set errorCode $savedErrorCode
 		set errorInfo $savedErrorInfo
 		set redir ""
-		# jtcl - remove exec redirection
-		# if {[namespace which -command console] eq ""} {
-		#    set redir ">&@stdout <@stdin"
-		# }
-		#return [uplevel 1 exec $redir $new [lrange $args 1 end]]
-		# jtcl - try to run as an external command, if fails, keep going.
-		set ret [catch {uplevel 1 exec $redir $new [lrange $args 1 end]} result]
-		if {$ret == 0} {
-		    puts $result
-		    return 
+		if {[namespace which -command console] eq ""} {
+		    set redir ">&@stdout <@stdin"
 		}
+		return [uplevel 1 exec $redir $new [lrange $args 1 end]]
+		
 	    }
 	}
 	set errorCode $savedErrorCode

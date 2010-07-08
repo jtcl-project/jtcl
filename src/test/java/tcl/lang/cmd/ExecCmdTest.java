@@ -1,10 +1,22 @@
 package tcl.lang.cmd;
 
+import java.util.Arrays;
+import java.util.LinkedList;
+
 import tcl.lang.TclCmdTest;
 
 public class ExecCmdTest extends TclCmdTest {
 	public void testCmd() throws Exception {
+		LinkedList<String> expectedFailureList = new LinkedList<String>(Arrays.asList( new String[] {
+				// These fail because JVM doesn't allow background processes to survive the JVM
+				// if they read from STDIN or write to STDOUT/STDERR.  There's no direct access
+				// in the JVM to filedescriptors 0, 1, 2; we're only given InputStream() and OutputStream()
+				// so the JVM must be running.  However, putting processes in the background does
+				// work, even though these tests fail.
+	            "exec-11.5",
+	            "exec-17.1" 
+	        }));
 		String resName = "/tcl/lang/cmd/exec.test";
-		tclTestResource(resName);
+		tclTestResource(TCLTEST_NAMEOFEXECUTABLE,  resName, expectedFailureList);
 	}
 }

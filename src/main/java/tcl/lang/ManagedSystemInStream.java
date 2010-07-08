@@ -77,6 +77,11 @@ public class ManagedSystemInStream extends InputStream implements Runnable {
 	private static InputStream originalSystemIn = null;
 
 	/**
+	 * Is true for the instance installed on System.in
+	 */
+	private boolean isSystemInInstance = false;
+	
+	/**
 	 * Create a new ManagedSystemInStream. If this is the first
 	 * ManagedSystemInStream instance, System.in is set to this instance, so all
 	 * direct access to System.in goes through this instance. Other objects can
@@ -86,6 +91,14 @@ public class ManagedSystemInStream extends InputStream implements Runnable {
 	public ManagedSystemInStream() {
 		super();
 		synchronized (mutex) {
+			// install this stream as System.in if a ManagedSystemInStream has
+			// not yet
+			// been installed on System.in
+			if (originalSystemIn == null) {
+				originalSystemIn = System.in;
+				isSystemInInstance = true;
+				System.setIn(this);
+			}
 			if (readThread == null) {
 				nextRead = 0;
 				nextWrite = 0;
@@ -93,15 +106,16 @@ public class ManagedSystemInStream extends InputStream implements Runnable {
 				readThread = new Thread(null, this, "ManagedSystemInStream reader thread");
 				readThread.start();
 			}
-			// install this stream as System.in if a ManagedSystemInStream has
-			// not yet
-			// been installed on System.in
-			if (originalSystemIn == null) {
-				originalSystemIn = System.in;
-				System.setIn(this);
-			}
+
 			++nOpenInstances;
 		}
+	}
+
+	/**
+	 * @return the true if this instance is installed on System.in
+	 */
+	public boolean isSystemInInstance() {
+		return isSystemInInstance;
 	}
 
 	/*
@@ -138,6 +152,7 @@ public class ManagedSystemInStream extends InputStream implements Runnable {
 				System.setIn(originalSystemIn);
 				originalSystemIn = null;
 			}
+			mutex.notify(); // interrupt any pending ManaagedSystemInStream.read()
 		}
 		// don't close System.in
 		super.close();

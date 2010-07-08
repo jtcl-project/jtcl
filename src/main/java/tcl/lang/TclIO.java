@@ -69,6 +69,11 @@ public class TclIO {
 	private static StdChannel stdoutChan = null;
 	private static StdChannel stderrChan = null;
 
+	/**
+	 * @param interp Interpreter context
+	 * @param chanName Name of channel
+	 * @return Channel or null if chanName does not exist
+	 */
 	public static Channel getChannel(Interp interp, String chanName) {
 		return ((Channel) getInterpChanTable(interp).get(chanName));
 	}

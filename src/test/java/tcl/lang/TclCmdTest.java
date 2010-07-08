@@ -16,7 +16,7 @@ import junit.framework.TestCase;
 public class TclCmdTest extends TestCase {
 
 	public static final String EXEC_NAME = "jtcltest.bat";
-	public static final Class SHELL_CLASS = tcl.lang.Shell.class;
+	public static final Class SHELL_CLASS = tcl.lang.NonInteractiveShell.class;
 	public static final String SHELL = SHELL_CLASS.getName();
 	public static final String TCLTEST_VERBOSE = "tcltest::configure -verbose {start pass body error skip}";
 	public static String TCLTEST_NAMEOFEXECUTABLE = "MISSING";
@@ -35,7 +35,9 @@ public class TclCmdTest extends TestCase {
 			+ "  } else {"
 			+ "   uplevel ::tcl::info $args"
 			+ "  }"
-			+ "}";
+			+ "} ; "
+			+ "::tcltest::interpreter " + tempDir + sep + EXEC_NAME;
+			
 		interp = new Interp();
 		interp.setWorkingDir(tempDir);
 	}
@@ -268,8 +270,7 @@ public class TclCmdTest extends TestCase {
     }
     
     /**
-     * Create a script to invoke JTcl.  Script currently checks if the first argument is "<<", and
-     * if so assumes the second argument is a script to execute.  If not, then execute JTcl with arguments.
+     * Create a script to invoke JTcl.
      * FIXME: CURRENTLY BROKEN FOR WINDOWS
      * @param path
      * @param name
@@ -298,12 +299,8 @@ public class TclCmdTest extends TestCase {
     			classPath = classPath.substring(5);
     		}
     		String javaExec = java + " -cp " + classPath + " " + SHELL;
-    		execLine = "#!\n" 
-    			+ "if [ \"X$1\" = \"X<<\" ] ; then \n"
-    			+ "  echo \"$2\" >tcltest_$$.tcl; " + javaExec + " tcltest_$$.tcl; rm tcltest_$$.tcl \n"
-    			+ "else\n "
-    			+      javaExec + " $* \n" 
-    			+ "fi";
+    		execLine = "#!\n"
+    			+      javaExec + " \"$@\" \n"; 
     	}
     	File execFile = new File(path, name);
     	execFile.deleteOnExit();

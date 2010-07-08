@@ -67,10 +67,17 @@ set path(sh) [makeFile {
     lappend cmd ";"
 
     set newcmd {}
+
+    # for jtcl: This script won't see the info nameofexecutable hack in TclCmdTest.java
+    set nameofexecutable [info nameofexecutable]
+    if { [string first "java " nameofexecutable] >= 0 &&
+         [llength nameofexecutable] == 4 } {
+        lset nameofexecutable 3 "tcl.lang.NonInteractiveShell"
+    }
     
     foreach arg $cmd {
 	if {$arg == ";"} {
-	    eval exec >@stdout 2>@stderr [list [info nameofexecutable]] $newcmd
+	    eval exec >@stdout 2>@stderr $nameofexecutable $newcmd
 	    set newcmd {}
 	    continue
 	}

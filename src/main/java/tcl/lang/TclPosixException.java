@@ -16,6 +16,10 @@
 
 package tcl.lang;
 
+import java.io.IOException;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+
 /*
  * This class implements exceptions used to report posix errors in Tcl scripts.
  */
@@ -119,42 +123,37 @@ public class TclPosixException extends TclException {
 	public static final int ENOSYS = 78; /* Function not implemented */
 	public static final int EFTYPE = 79; /* Inappropriate file type or format */
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * TclPosixException --
-	 * 
+	
+	/**
 	 * Creates a TclException with the appropiate Tcl error message for posix
 	 * error, and sets the interp's error code to a 3 element list (eg. {"posix"
-	 * "eexist" {file already exists}}). If the appendPosixMsg flag is true,
-	 * then append the last element to the Tcl error message.
+	 * "eexist" {file already exists}}).  Does not append posix message to intepreter result.
 	 * 
-	 * Side effects: None.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp Current interpretor, or null
+	 * @param errno code of posix error
+	 * @param errorMsg message to output to user
+	 * @throws TclException
 	 */
-
 	public TclPosixException(Interp interp, // Interpreter for error report.
 			int errno, // Code of posix error.
 			String errorMsg) // Message to ouput to user.
 			throws TclException {
 		super(TCL.ERROR);
 
-		String msg = getPosixMsg(errno);
-
-		TclObject threeEltListObj = TclList.newInstance();
-		TclList.append(interp, threeEltListObj, TclString.newInstance("POSIX"));
-		TclList.append(interp, threeEltListObj, TclString
-				.newInstance(getPosixId(errno)));
-		TclList.append(interp, threeEltListObj, TclString.newInstance(msg));
-
-		interp.setErrorCode(threeEltListObj);
-
-		if (interp != null) {
-			interp.setResult(errorMsg);
-		}
+		init(interp, errno, false, errorMsg);
 	}
 
+	/**
+	 * Creates a TclException with the appropiate Tcl error message for posix
+	 * error, and sets the interp's error code to a 3 element list (eg. {"posix"
+	 * "eexist" {file already exists}}).
+	 * 
+	 * @param interp Current interpretor, or null
+	 * @param errno code of posix error
+	 * @param appendPosixMsg if true, appends posix message to errorMsg in interpreter result
+	 * @param errorMsg message to output to user
+	 * @throws TclException
+	 */
 	public TclPosixException(Interp interp, // Interpreter for error report.
 			int errno, // Code of posix error.
 			boolean appendPosixMsg, // Tells whether to append posix
@@ -163,6 +162,39 @@ public class TclPosixException extends TclException {
 			throws TclException {
 		super(TCL.ERROR);
 
+		init(interp, errno, appendPosixMsg, errorMsg);
+	}
+	
+	/**
+	 * Construct a TclPosixException from a Java IOException
+	 * 
+	 * @param interp current interpreter
+	 * @param ioException The IOException that was thrown
+	 * @param appendPosixMsg true if the Posix message should be appended to the errorMessage in the interpreter result
+	 * @param errorMessage error message to return in interpreter result
+	 * @throws TclException
+	 */
+	public TclPosixException(Interp interp, IOException ioException, boolean appendPosixMsg, String errorMessage)
+			throws TclException {
+		super(TCL.ERROR);
+		String iomsg = ioException.getMessage();
+		int errorAt = iomsg.indexOf("error=");
+		int errno;
+		if (errorAt == -1) {
+			if (iomsg.indexOf("o such file or directory") != -1) {
+				errno = ENOENT;
+			} else throw new TclException(interp,iomsg);
+		} else {
+			int start = errorAt+6;
+			int end = start;
+			while (end < iomsg.length() && Character.isDigit(iomsg.charAt(end))) end++;
+			String errnoString = iomsg.substring(start,end);
+			errno = Integer.parseInt(errnoString);
+		}
+		init(interp, errno, appendPosixMsg, errorMessage);
+	}
+	
+	private void init(Interp interp, int errno, boolean appendPosixMsg, String errorMsg) throws TclException {
 		String msg = getPosixMsg(errno);
 
 		TclObject threeEltListObj = TclList.newInstance();
@@ -417,20 +449,12 @@ public class TclPosixException extends TclException {
 		return "unknown error";
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * getPosixMsg --
-	 * 
+	/**
 	 * Return the message string corresponding to "errno".
 	 * 
-	 * Returns: An error message String.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param errno A POSIX error number
+	 * @return An error message String.
 	 */
-
 	static String getPosixMsg(int errno) // Code of posix error.
 	{
 		switch (errno) {
