@@ -5,39 +5,45 @@ package tcl.lang.channel;
 
 class ChannelBuffer {
 
-	// The next position into which a character
-	// will be put in the buffer.
-
+	/** The next position into which a character
+	 * will be put in the buffer.
+	 */
 	int nextAdded;
 
-	// Position of next byte to be removed
-	// from the buffer.
-
+	/** Position of next byte to be removed
+	 * from the buffer.
+	 */
 	int nextRemoved;
 
-	// How big is the buffer?
+	/**
+	 * How big is the buffer?
+	 */
 
 	int bufLength;
 
-	// Next buffer in chain.
+	/**
+	 * Next buffer in chain.
+	 */
 
 	ChannelBuffer next;
 
-	// The actual bytes stored in the buffer
+	/**
+	 * The actual bytes stored in the buffer
+	 */
 
 	byte[] buf;
 
-	// A channel buffer has BUFFER_PADDING bytes extra at beginning to
-	// hold any bytes of a native-encoding character that got split by
-	// the end of the previous buffer and need to be moved to the
-	// beginning of the next buffer to make a contiguous string so it
-	// can be converted to UTF-8.
-	//
-	// A channel buffer has BUFFER_PADDING bytes extra at the end to
-	// hold any bytes of a native-encoding character (generated from a
-	// UTF-8 character) that overflow past the end of the buffer and
-	// need to be moved to the next buffer.
-
+	/** A channel buffer has BUFFER_PADDING bytes extra at beginning to
+	 * hold any bytes of a native-encoding character that got split by
+	 * the end of the previous buffer and need to be moved to the
+	 * beginning of the next buffer to make a contiguous string so it
+	 * can be converted to UTF-8.
+	 *
+	 * A channel buffer has BUFFER_PADDING bytes extra at the end to
+	 * hold any bytes of a native-encoding character (generated from a
+	 * UTF-8 character) that overflow past the end of the buffer and
+	 * need to be moved to the next buffer.
+	 */
 	final static int BUFFER_PADDING = 16;
 
 	/**

@@ -25,6 +25,7 @@ import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
+import java.nio.charset.CodingErrorAction;
 import java.util.ArrayList;
 
 import tcl.lang.TCL;
@@ -1232,8 +1233,7 @@ class TclInputStream {
 	}
 
 	/**
-	 * ReadChars -> readChars
-	 * 
+	 *
 	 * Reads from the channel until the requested number of characters have been
 	 * seen, EOF is seen, or the channel would block. Raw bytes from the channel
 	 * are converted to characters and stored in obj. EOL and EOF translation is
@@ -1244,15 +1244,14 @@ class TclInputStream {
 	 * 
 	 * The return value is the number of characters appended to the object.
 	 * 
-	 * @param obj
-	 *            , the TclByteArrayObject we are operating on
+	 * @param tobj
+	 *           the TclByteArrayObject we are operating on
 	 * @param charsToRead
 	 *            , Maximum number of chars to store. Chars are obtained from
 	 *            the first buffer in the queue -- even if this number is larger
 	 *            than the number of chars only the chars from the first buffer
 	 *            are returned.
 	 */
-
 	int readChars(TclObject tobj, int charsToRead) throws IOException {
 		final boolean debug = false;
 
@@ -1599,6 +1598,8 @@ class TclInputStream {
 
 			Charset chrset = Charset.forName(encoding);
 			csd = chrset.newDecoder();
+			csd.onMalformedInput(CodingErrorAction.REPLACE);
+			csd.onUnmappableCharacter(CodingErrorAction.REPLACE);
 		}
 		if (encodingStart) {
 			csd.reset();
@@ -1672,6 +1673,9 @@ class TclInputStream {
 				}
 			} else {
 				// Some unexpected result, like an invalid character
+				if (debug) {
+					System.out.println("Setting TCL_CONVERT_MULTIBYTE because cresult="+cresult);
+				}
 				result = TCL_CONVERT_MULTIBYTE;
 				break;
 			}
