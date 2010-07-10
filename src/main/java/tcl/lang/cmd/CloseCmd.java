@@ -77,6 +77,10 @@ public class CloseCmd implements Command {
 				if (stderrOutput.endsWith("\n")) {
 					stderrOutput = stderrOutput.substring(0, stderrOutput.length() - 1);
 				}
+			} else {
+				if (errorReturned) {
+					stderrOutput = "child process exited abnormally";
+				}
 			}
 			if (errorReturned) {
 				throw new TclException(interp, stderrOutput);

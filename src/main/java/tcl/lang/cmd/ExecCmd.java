@@ -159,6 +159,9 @@ public class ExecCmd implements Command {
 		}
 
 		if (errorReturned) {
+			if (stderrString.length()==0) {
+				stderrString = "child process exited abnormally";
+			}
 			if (!keepNewline && stderrString.endsWith("\n")) {
 				stderrString = stderrString.substring(0, stderrString.length() - 1);
 			}
