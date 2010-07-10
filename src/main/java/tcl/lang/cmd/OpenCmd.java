@@ -24,6 +24,7 @@ import tcl.lang.TclList;
 import tcl.lang.TclNumArgsException;
 import tcl.lang.TclObject;
 import tcl.lang.channel.FileChannel;
+import tcl.lang.channel.PipelineChannel;
 import tcl.lang.channel.ResourceChannel;
 
 /**
@@ -145,7 +146,6 @@ public class OpenCmd implements Command {
 		if ((argv[1].toString().length() > 0)
 				&& (argv[1].toString().charAt(0) == '|')) {
 			pipeline = true;
-			throw new TclException(interp, "pipelines not implemented yet");
 		}
 
 		/*
@@ -176,10 +176,19 @@ public class OpenCmd implements Command {
 				throw new TclException(interp, "cannot open file: " + fileName);
 			}
 		} else {
-			/*
-			 * Pipeline code here...
-			 */
-
+			if ((modeFlags & TclIO.WRONLY)==TclIO.WRONLY)
+				modeFlags = TclIO.WRONLY;
+			if ((modeFlags & TclIO.RDONLY)==TclIO.RDONLY)
+				modeFlags = TclIO.RDONLY;
+			
+			PipelineChannel pipelineChannel = new PipelineChannel();
+			try {
+				pipelineChannel.open(interp, fileName, modeFlags);
+			} catch (IOException e) {
+				throw new TclException(interp, "cannot open pipeline: "+e.getMessage());
+			}
+			TclIO.registerChannel(interp, pipelineChannel);
+			interp.setResult(pipelineChannel.getChanName());
 		}
 	}
 }

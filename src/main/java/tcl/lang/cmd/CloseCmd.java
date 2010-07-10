@@ -15,11 +15,14 @@ package tcl.lang.cmd;
 
 import tcl.lang.Command;
 import tcl.lang.Interp;
+import tcl.lang.Pipeline;
 import tcl.lang.TclException;
 import tcl.lang.TclIO;
 import tcl.lang.TclNumArgsException;
 import tcl.lang.TclObject;
+import tcl.lang.TclString;
 import tcl.lang.channel.Channel;
+import tcl.lang.channel.PipelineChannel;
 
 /**
  * This class implements the built-in "close" command in Tcl.
@@ -46,10 +49,39 @@ public class CloseCmd implements Command {
 
 		chan = TclIO.getChannel(interp, argv[1].toString());
 		if (chan == null) {
-			throw new TclException(interp, "can not find channel named \""
-					+ argv[1].toString() + "\"");
+			throw new TclException(interp, "can not find channel named \"" + argv[1].toString() + "\"");
 		}
 
 		TclIO.unregisterChannel(interp, chan);
+
+		if (chan.getBlocking() && chan instanceof PipelineChannel) {
+			Pipeline pipeline = ((PipelineChannel) chan).getPipeline();
+
+			// pids are bogus, JVM won't tell us the real PID
+			int[] pids = pipeline.getProcessIdentifiers();
+			int[] exitValues = pipeline.getExitValues();
+			boolean errorReturned = false;
+
+			// stuff any non-zero exit statuses into errorCode, just like exec
+			for (int i = 0; i < exitValues.length; i++) {
+				if (exitValues[i] != 0) {
+					errorReturned = true;
+					interp.setErrorCode(TclString.newInstance("CHILDSTATUS " + pids[i] + " " + exitValues[i]));
+				}
+			}
+
+			// Return any stderr output in tcl exception
+			String stderrOutput = ((PipelineChannel) chan).getStderrOutput();
+			if (stderrOutput.length() > 0) {
+				errorReturned = true;
+				if (stderrOutput.endsWith("\n")) {
+					stderrOutput = stderrOutput.substring(0, stderrOutput.length() - 1);
+				}
+			}
+			if (errorReturned) {
+				throw new TclException(interp, stderrOutput);
+			}
+			pipeline.throwAnyExceptions();
+		}
 	}
 }

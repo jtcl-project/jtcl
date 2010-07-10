@@ -46,6 +46,7 @@ public class TclByteArrayChannel extends Channel {
 			istream = new ByteArrayInputStream(barray);
 
 		}
+		setChanName(TclIO.getNextDescriptor(interp, "bytearray"));
 	}
 
 	/**
@@ -57,6 +58,7 @@ public class TclByteArrayChannel extends Channel {
 		setEncoding(null);
 		this.mode = TclIO.WRONLY;
 		ostream = new ByteArrayOutputStream();
+		setChanName(TclIO.getNextDescriptor(interp, "bytearray"));
 	}
 
 	/**

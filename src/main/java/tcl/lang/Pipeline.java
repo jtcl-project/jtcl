@@ -11,6 +11,7 @@ import java.util.Set;
 
 import tcl.lang.channel.Channel;
 import tcl.lang.channel.FileChannel;
+import tcl.lang.channel.PipelineChannel;
 import tcl.lang.channel.TclByteArrayChannel;
 
 /**
@@ -76,6 +77,10 @@ public class Pipeline implements Runnable {
 	 * The stdin coupler, which must be stopped
 	 */
 	PipelineCoupler stdinCoupler = null;
+	
+	PipelineCoupler.ExceptionReceiver inputException = new PipelineCoupler.ExceptionReceiver();
+	PipelineCoupler.ExceptionReceiver outputException = new PipelineCoupler.ExceptionReceiver();
+	PipelineCoupler.ExceptionReceiver errorException = new PipelineCoupler.ExceptionReceiver();
 
 	/**
 	 * A set of redirectors that the parser recognizes
@@ -340,9 +345,7 @@ public class Pipeline implements Runnable {
 		 */
 		couplers = new ArrayList<PipelineCoupler>();
 
-		PipelineCoupler.ExceptionReceiver inputException = new PipelineCoupler.ExceptionReceiver();
-		PipelineCoupler.ExceptionReceiver outputException = new PipelineCoupler.ExceptionReceiver();
-		PipelineCoupler.ExceptionReceiver errorException = new PipelineCoupler.ExceptionReceiver();
+		
 
 		/*
 		 * Execute each command in the pipeline and create the PipelineCoupler
@@ -373,7 +376,17 @@ public class Pipeline implements Runnable {
 					managedSystemInStream = new ManagedSystemInStream();
 					c = new PipelineCoupler(managedSystemInStream, process.getOutputStream());
 				} else {
-					c = new PipelineCoupler(interp, this.pipelineInputChannel, process.getOutputStream());
+					if (this.pipelineInputChannel instanceof PipelineChannel) {
+						// We connected from a pipeline, so just go through the back door stream
+						c = null;
+						try {
+							c = new PipelineCoupler(((PipelineChannel) this.pipelineInputChannel).getInputStream(), process.getOutputStream());
+						} catch (IOException e) {
+							// do nothing
+						}
+					} else {
+						c = new PipelineCoupler(interp, this.pipelineInputChannel, process.getOutputStream());
+					}
 				}
 				c.setExceptionReceiver(inputException);
 				c.setName("stdin PipelineCoupler for " + this);
@@ -420,8 +433,17 @@ public class Pipeline implements Runnable {
 				if (this.pipelineOutputChannel == null) {
 					c = new PipelineCoupler(process.getInputStream(), System.out);
 				} else {
-					c = new PipelineCoupler(interp, process.getInputStream(), this.pipelineOutputChannel);
-					c.setWriteMutex(pipelineOutputChannel);
+					if (pipelineOutputChannel instanceof PipelineChannel) {
+						c = null;
+						try {
+							c = new PipelineCoupler(process.getInputStream(), ((PipelineChannel) pipelineOutputChannel).getOutputStream());
+						} catch (IOException e) {
+							// do nothing
+						}
+					} else {
+						c = new PipelineCoupler(interp, process.getInputStream(), this.pipelineOutputChannel);
+						c.setWriteMutex(pipelineOutputChannel);
+					}
 				}
 				c.setExceptionReceiver(outputException);
 
@@ -432,23 +454,13 @@ public class Pipeline implements Runnable {
 			}
 		}
 
-		/*
-		 * If this Pipeline is in the background, just return.
-		 */
-		if (this.execInBackground) {
-			/* Run waitForExitAndCleanup() in a separate thread */
-			Thread t = new Thread(this);
-			t.start();
-			return;
-		}
-
-		/* Otherwise, we're not running in the background */
-		waitForExitAndCleanup();
-
-		/*
-		 * If we got any exceptions from the threads during reading or writing
-		 * at ends of Pipeline, throw them now
-		 */
+	}
+	/**
+	 * If we got any exceptions from the threads during reading or writing
+	 * at ends of Pipeline, throw them now
+	 */
+	public void throwAnyExceptions() throws TclException {
+		
 		if (outputException.getException() != null) {
 			throw outputException.getAsTclException(interp);
 		}
@@ -459,16 +471,18 @@ public class Pipeline implements Runnable {
 			throw inputException.getAsTclException(interp);
 		}
 	}
-
 	/**
 	 * Wait for processes in pipeline to die, then close couplers and any open
 	 * channels
+	 * 
+	 * @param force Kill processes forcibly, if true
 	 */
-	private void waitForExitAndCleanup() {
+	public void waitForExitAndCleanup(boolean force) {
 		/*
 		 * Wait for processes to finish
 		 */
 		for (int i = 0; i < processes.size(); i++) {
+			if (force) processes.get(i).destroy();
 			try {
 				processes.get(i).waitFor();
 			} catch (InterruptedException e) {
@@ -630,7 +644,7 @@ public class Pipeline implements Runnable {
 	}
 
 	public void run() {
-		waitForExitAndCleanup();
+		waitForExitAndCleanup(false);
 	}
 
 }
