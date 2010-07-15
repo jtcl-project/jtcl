@@ -2,6 +2,7 @@ package tcl.lang;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -649,13 +650,28 @@ public class Pipeline implements Runnable {
 		return redirectStderrToResult;
 	}
 	/**
-	 * @return Array of pseudo process identifiers, since JVM doesn't give us
-	 *         the real thing
+	 * @return Array of  process identifiers, or array of -1 if we can't get PIDs
 	 */
 	public int[] getProcessIdentifiers() {
 		int[] pid = new int[processes.size()];
 		for (int i = 0; i < processes.size(); i++) {
-			pid[i] = i;
+			// Use reflection to see if the 'pid' field exists as it does on Sun's UnixProcess
+			Process p = processes.get(i);
+			try {
+				// try UnixProcess
+				Field f = p.getClass().getDeclaredField("pid");
+				f.setAccessible(true);
+				pid[i] = f.getInt(p);
+			} catch (Exception e) {
+				// try ProcessImpl on Windows and Harmony's SubProcess
+				try {
+					Field f = p.getClass().getDeclaredField("handle");
+					f.setAccessible(true);
+					pid[i] = f.getInt(p);					
+				} catch (Exception e1) {
+					pid[i] = -1; // just punt
+				}
+			}
 		}
 		return pid;
 	}

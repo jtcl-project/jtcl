@@ -965,6 +965,7 @@ public class Interp extends EventuallyFreed {
 		Extension.loadOnDemand(this, "namespace", "tcl.lang.cmd.NamespaceCmd");
 		Extension.loadOnDemand(this, "open", "tcl.lang.cmd.OpenCmd");
 		Extension.loadOnDemand(this, "package", "tcl.lang.cmd.PackageCmd");
+		Extension.loadOnDemand(this, "pid", "tcl.lang.cmd.PidCmd");
 		Extension.loadOnDemand(this, "proc", "tcl.lang.cmd.ProcCmd");
 		Extension.loadOnDemand(this, "puts", "tcl.lang.cmd.PutsCmd");
 		Extension.loadOnDemand(this, "pwd", "tcl.lang.cmd.PwdCmd");
