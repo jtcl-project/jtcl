@@ -136,7 +136,7 @@ public class ExecCmd implements Command {
 				throw new TclException(interp, e.getMessage());
 			}
 			stderrString = stderrChannel.getTclString().toString();
-			errorReturned = (stderrString.length() > 0);
+			errorReturned = (stderrString.length() > 0) && ! pipeline.isErrorRedirectedToResult();
 		}
 		if (stdoutChannel != null) {
 			try {
@@ -172,7 +172,14 @@ public class ExecCmd implements Command {
 		if (!keepNewline && stdoutString.endsWith("\n")) {
 			stdoutString = stdoutString.substring(0, stdoutString.length() - 1);
 		}
-		interp.setResult(stdoutString);
+		if (!keepNewline && stderrString.endsWith("\n")) {
+			stderrString = stderrString.substring(0, stderrString.length() - 1);
+		}
+		if (pipeline.isErrorRedirectedToResult()) {
+			interp.setResult(stderrString + stdoutString);
+		} else {
+			interp.setResult(stdoutString);
+		}
 		pipeline.throwAnyExceptions();
 	}
 

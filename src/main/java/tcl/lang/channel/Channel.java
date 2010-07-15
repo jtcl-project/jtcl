@@ -476,10 +476,10 @@ public abstract class Channel {
 
 	public void setBufferSize(int size) {
 
-		// If the buffer size is smaller than 10 bytes or larger than 1 Meg
+		// If the buffer size is smaller than 1 byte or larger than 1 Meg
 		// do not accept the requested size and leave the current buffer size.
 
-		if ((size < 10) || (size > (1024 * 1024))) {
+		if ((size < 1) || (size > (1024 * 1024))) {
 			return;
 		}
 

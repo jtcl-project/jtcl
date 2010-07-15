@@ -48,7 +48,11 @@ public class Pipeline implements Runnable {
 	 */
 	private Channel pipelineErrorChannel = null;
 
-
+	/**
+	 * set to true if 2>@1 seen
+	 */
+	private boolean redirectStderrToResult = false;
+	
 	/**
 	 * If true, run Pipeline in the background
 	 */
@@ -87,7 +91,7 @@ public class Pipeline implements Runnable {
 	 */
 	private static final Set<String> redirectors;
 	static {
-		Set<String> rd = new HashSet<String>(12);
+		Set<String> rd = new HashSet<String>(13);
 		rd.add("<");
 		rd.add("<@");
 		rd.add("<<");
@@ -99,6 +103,7 @@ public class Pipeline implements Runnable {
 		rd.add(">>&");
 		rd.add(">@");
 		rd.add("2>@");
+		rd.add("2>@1");
 		rd.add(">&@");
 		redirectors = Collections.unmodifiableSet(rd);
 	}
@@ -163,7 +168,7 @@ public class Pipeline implements Runnable {
 			 */
 			int argLen = arg.length();
 			String redirector = null;
-			for (int j = argLen > 3 ? 3 : argLen; j >= 1; --j) {
+			for (int j = argLen > 4 ? 4 : argLen; j >= 1; --j) {
 				redirector = arg.substring(0, j);
 				if (redirectors.contains(redirector)) {
 					break;
@@ -176,6 +181,9 @@ public class Pipeline implements Runnable {
 				 * to next object
 				 */
 				commandList.add(arg);
+				continue;
+			} else if ("2>@1".equals(redirector)) {
+				redirectStderrToResult = true;
 				continue;
 			} else {
 				/* It was a redirector, so let's figure out what to do with it */
@@ -372,9 +380,26 @@ public class Pipeline implements Runnable {
 				 */
 				PipelineCoupler c;
 				if (pipelineInputChannel == null) {
-					// provide standard input directly
-					managedSystemInStream = new ManagedSystemInStream();
-					c = new PipelineCoupler(managedSystemInStream, process.getOutputStream());
+					// provide standard input directly.  Don't use stdin in interactive mode
+					// when we exec in background, to avoid stealing stdin from the Shell
+					boolean isInteractive = false;
+					try {
+						TclObject tcl_interactive = interp.getVar("tcl_interactive",TCL.GLOBAL_ONLY);
+						isInteractive = "1".equals(tcl_interactive.toString());
+					} catch (TclException e) {
+						isInteractive = false;
+					}
+					if (isInteractive && execInBackground) {
+						c = null;
+						try {
+							process.getOutputStream().close();
+						} catch (IOException e) {
+							// do nothing
+						}
+					} else {
+						managedSystemInStream = new ManagedSystemInStream();
+						c = new PipelineCoupler(managedSystemInStream, process.getOutputStream());
+					}
 				} else {
 					if (this.pipelineInputChannel instanceof PipelineChannel) {
 						// We connected from a pipeline, so just go through the back door stream
@@ -388,11 +413,13 @@ public class Pipeline implements Runnable {
 						c = new PipelineCoupler(interp, this.pipelineInputChannel, process.getOutputStream());
 					}
 				}
-				c.setExceptionReceiver(inputException);
-				c.setName("stdin PipelineCoupler for " + this);
-				stdinCoupler = c;
-				c.start();
-				couplers.add(c);
+				if (c!=null) {
+					c.setExceptionReceiver(inputException);
+					c.setName("stdin PipelineCoupler for " + this);
+					stdinCoupler = c;
+					c.start();
+					couplers.add(c);
+				}
 
 			} else {
 				/*
@@ -615,6 +642,12 @@ public class Pipeline implements Runnable {
 		this.execInBackground = execInBackground;
 	}
 
+	/**
+	 * Return true if 2>@1 was seen
+	 */
+	public boolean isErrorRedirectedToResult() {
+		return redirectStderrToResult;
+	}
 	/**
 	 * @return Array of pseudo process identifiers, since JVM doesn't give us
 	 *         the real thing

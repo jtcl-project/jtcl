@@ -1,5 +1,7 @@
 package tcl.lang;
 
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -12,6 +14,10 @@ import java.io.InputStream;
  * After the initial instance is created, Java objects can read from System.in
  * directly to get the benefits of this class, or can create another instance of
  * this class that can be close()'d to interrupt a blocked read.
+ * 
+ * This class forces standard input to remain unbuffered, so the JVM doesn't steal
+ * bytes from stdin that might be useful to subsequent processes that run after this
+ * JVM exits.
  */
 public class ManagedSystemInStream extends InputStream implements Runnable {
 	/**
@@ -20,20 +26,19 @@ public class ManagedSystemInStream extends InputStream implements Runnable {
 	private volatile boolean streamClosed = false;
 
 	/**
-	 * The thread that directly reads System.in
+	 * The thread that directly reads standard input
 	 */
 	private static Thread readThread = null;
 
 	/**
-	 * Size of the buffer that passed data from System.in between the current
-	 * thread and readThread.
+	 * Unbuffered FileInputStream that is attached to real stdin
 	 */
-	final static int bufferSize = 256;
+	private static FileInputStream stdin = null;
 
 	/**
 	 * Set to true when an end-of-file is seen on System.in in this instance
 	 */
-	private  boolean eofSeen = false;
+	private boolean eofSeen = false;
 
 	/**
 	 * This object is synchronized on to allow communication between the current
@@ -42,26 +47,24 @@ public class ManagedSystemInStream extends InputStream implements Runnable {
 	private static Object mutex = new Object();
 
 	/**
+	 * Byte returned from the readThread
+	 */
+	private static int stdinByte;
+
+	/**
+	 * Set to true to request a byte from the readThread
+	 */
+	private static boolean requestStdinByte = false;
+
+	/**
+	 * Set to true when stdinByte contains a valid byte from readThread
+	 */
+	private static boolean stdinByteIsValid = false;
+
+	/**
 	 * Any exception caught in readThread; synchronized on mutex
 	 */
 	private static IOException ioException = null;
-
-	/**
-	 * buffer passed from readThread to this thread containing data read from
-	 * System.in
-	 */
-	private static int[] data = new int[bufferSize];
-
-	/**
-	 * index in data of next byte to return from read()
-	 */
-	private static int nextRead = 0;
-
-	/**
-	 * index in data of next byte to write when the readThread does
-	 * System.in.read()
-	 */
-	private static int nextWrite = 0;
 
 	/**
 	 * number of instances of ManagedSystemInStream that have not yet been
@@ -69,18 +72,11 @@ public class ManagedSystemInStream extends InputStream implements Runnable {
 	 */
 	private static int nOpenInstances = 0;
 
-
-	/**
-	 * Original stream that System.in was set to prior to the first instance of
-	 * this class
-	 */
-	private static InputStream originalSystemIn = null;
-
 	/**
 	 * Is true for the instance installed on System.in
 	 */
 	private boolean isSystemInInstance = false;
-	
+
 	/**
 	 * Create a new ManagedSystemInStream. If this is the first
 	 * ManagedSystemInStream instance, System.in is set to this instance, so all
@@ -94,14 +90,12 @@ public class ManagedSystemInStream extends InputStream implements Runnable {
 			// install this stream as System.in if a ManagedSystemInStream has
 			// not yet
 			// been installed on System.in
-			if (originalSystemIn == null) {
-				originalSystemIn = System.in;
+			if (stdin == null) {
+				stdin = new FileInputStream(FileDescriptor.in);
 				isSystemInInstance = true;
 				System.setIn(this);
 			}
 			if (readThread == null) {
-				nextRead = 0;
-				nextWrite = 0;
 				ioException = null;
 				readThread = new Thread(null, this, "ManagedSystemInStream reader thread");
 				readThread.start();
@@ -125,67 +119,23 @@ public class ManagedSystemInStream extends InputStream implements Runnable {
 	 */
 	@Override
 	public int available() throws IOException {
-		synchronized (mutex) {
-			// always return at least 1, to allow for reading EOF
-			return (nextWrite - nextRead) + originalSystemIn.available() + 1;
-		}
+		return 0;
 	}
 
 	/**
 	 * Closes this ManagedSystemInStream instance. Stops any blocked read() on
-	 * this instance. If this is the last non-closed() instance, restores
-	 * System.in to its original value.
+	 * this instance.
 	 */
 	@Override
 	public void close() throws IOException {
 		if (streamClosed)
 			return;
-		streamClosed = true;
 		synchronized (mutex) {
 			--nOpenInstances;
-			if (nOpenInstances == 0 && readThread != null) {
-				// kill the readThread. If it's blocked on a read, it will not
-				// die until it gets a byte
-				readThread.interrupt();
-				readThread = null;
-				// reset System.in
-				System.setIn(originalSystemIn);
-				originalSystemIn = null;
-			}
-			mutex.notify(); // interrupt any pending ManaagedSystemInStream.read()
+			streamClosed = true;
+			mutex.notifyAll(); // interrupt any pending
+								// ManagedSystemInStream.read()
 		}
-		// don't close System.in
-		super.close();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.io.InputStream#mark(int)
-	 */
-	@Override
-	public synchronized void mark(int readlimit) {
-		originalSystemIn.mark(readlimit);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.io.InputStream#markSupported()
-	 */
-	@Override
-	public boolean markSupported() {
-		return originalSystemIn.markSupported();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.io.InputStream#reset()
-	 */
-	@Override
-	public synchronized void reset() throws IOException {
-		originalSystemIn.reset();
 	}
 
 	/**
@@ -199,9 +149,9 @@ public class ManagedSystemInStream extends InputStream implements Runnable {
 	 *         stream is closed
 	 */
 	@Override
-	public synchronized int read() throws IOException {
+	public int read() throws IOException {
 		while (true) {
-			if (streamClosed)
+			if (eofSeen || streamClosed)
 				return -1;
 			synchronized (mutex) {
 				if (ioException != null) {
@@ -209,21 +159,23 @@ public class ManagedSystemInStream extends InputStream implements Runnable {
 					ioException = null;
 					throw e;
 				}
-				if (eofSeen)
-					return -1;
-				if (nextRead == nextWrite)
+
+				if (stdinByteIsValid) {
+					stdinByteIsValid = false;
+					if (stdinByte == -1)
+						eofSeen = true;
+					return stdinByte;
+				} else {
+					// if no pending request exists, make one
+					if (!requestStdinByte) {
+						requestStdinByte = true;
+						mutex.notifyAll();
+					}
 					try {
-						mutex.wait(100); // poll for closed channel
+						mutex.wait(100); // poll for stream close
 					} catch (InterruptedException e) {
 						// do nothing
 					}
-				else {
-					int c = data[nextRead++];
-					if (nextRead == bufferSize)
-						nextRead = 0;
-					if (c == -1)
-						eofSeen = true;
-					return c;
 				}
 			}
 		}
@@ -233,90 +185,41 @@ public class ManagedSystemInStream extends InputStream implements Runnable {
 	 * Reads from System.in directly in a separate thread.
 	 */
 	public void run() {
-		int nAvailable = 0;
+		boolean doRead;
+		IOException savedException;
+		int valueRead = -1;
 
 		while (true) {
 			if (Thread.interrupted())
 				break;
-			nAvailable = 0;
-			try {
-				nAvailable = originalSystemIn.available();
-			} catch (IOException e) {
-				synchronized (mutex) {
-					ioException = e;
-					mutex.notifyAll();
-				}
+			synchronized (mutex) {
+				doRead = requestStdinByte & !stdinByteIsValid;
+				if (!doRead)
+					try {
+						mutex.wait();
+					} catch (InterruptedException e) {
+						break;
+					}
 			}
-			/*
-			 * Grab whatever is immediately available inside of the synchronized
-			 * section
-			 */
-			if (nAvailable > 0) {
+			if (doRead) {
+				savedException = null;
+				try {
+					valueRead = stdin.read();
+				} catch (IOException e1) {
+					savedException = e1;
+				}
 				synchronized (mutex) {
-					for (int i = 0; i < nAvailable; i++) {
-						if (nextRead == nextWrite + 1 || (nextWrite == bufferSize - 1 && nextRead == 0))
-							break; // don't overwrite buffer
-						int c;
-						try {
-							c = originalSystemIn.read();
-						} catch (IOException e) {
-							ioException = e;
-							break;
-						}
-						data[nextWrite++] = c;
-						if (nextWrite == bufferSize)
-							nextWrite = 0;
+					if (savedException == null) {
+						stdinByte = valueRead;
+						stdinByteIsValid = true;
+						requestStdinByte = false;
+					} else {
+						ioException = savedException;
+						requestStdinByte = false;
 					}
 					mutex.notifyAll();
-				}
-			} else {
-				/*
-				 * Possibly block. Because System.in.available() returns 0 even
-				 * if EOF has been reached, we actually have to test for EOF
-				 * with a blocking call to read()
-				 */
-				int c = 0;
-				IOException exception = null;
-				try {
-					Thread.sleep(100);
-				} catch (InterruptedException e1) {
-					return;
-				}
-				try {
-					c = originalSystemIn.read();
-				} catch (IOException e) {
-					exception = e;
-					synchronized (mutex) {
-						ioException = e;
-						mutex.notifyAll();
-					}
-				}
-
-				/*
-				 * If we didn't get an exception, stuff the read character into
-				 * the circular buffer
-				 */
-				while (exception == null) {
-					synchronized (mutex) {
-						if (nextRead == nextWrite + 1 || (nextWrite == bufferSize - 1 && nextRead == 0)) {
-							// buffer is full, let's wait to be notified when
-							// it's been emptied some
-							try {
-								mutex.wait();
-							} catch (InterruptedException e) {
-								return; // exit thread if interrupted
-							}
-						} else {
-							data[nextWrite++] = c;
-							if (nextWrite == bufferSize)
-								nextWrite = 0;
-							mutex.notifyAll();
-							break;
-						}
-					}
 				}
 			}
 		}
 	}
-
 }

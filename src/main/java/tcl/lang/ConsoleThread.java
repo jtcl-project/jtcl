@@ -276,7 +276,7 @@ public class ConsoleThread extends Thread {
 						System.out.println("checking windows hack");
 					}
 
-					i = interp.systemIn.read();
+					i = System.in.read();
 					if (i == -1) {
 						if (sbuf.length() == 0) {
 							System.exit(0);
