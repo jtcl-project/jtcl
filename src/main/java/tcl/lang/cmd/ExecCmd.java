@@ -26,6 +26,7 @@ import tcl.lang.TclNumArgsException;
 import tcl.lang.TclObject;
 import tcl.lang.TclString;
 import tcl.lang.channel.TclByteArrayChannel;
+import tcl.lang.process.Redirect;
 
 /**
  * This class implements the built-in "exec" command in Tcl.
@@ -76,15 +77,21 @@ public class ExecCmd implements Command {
 		Pipeline pipeline = new Pipeline(interp, argv, firstWord);
 
 		/*
+		 * Inherit JVM's stdin if it wasn't redirected
+		 */
+		if (pipeline.getStdinRedirect() == null) {
+			pipeline.setStdinRedirect(Redirect.inherit());
+		}
+		/*
 		 * If standard output was not redirected, give Pipeline someplace for
 		 * stdout if not running in background
 		 */
 		TclByteArrayChannel stdoutChannel = null;
 
-		if (pipeline.getPipelineOutputChannel() == null && !pipeline.isExecInBackground()) {
+		if (pipeline.getStdoutRedirect() == null && !pipeline.isExecInBackground()) {
 			/* Collect stdout in a TclByteArray */
 			stdoutChannel = new TclByteArrayChannel(interp);
-			pipeline.setPipelineOutputChannel(stdoutChannel, true);
+			pipeline.setStdoutRedirect(new Redirect(stdoutChannel, false));
 		}
 
 		/*
@@ -93,10 +100,10 @@ public class ExecCmd implements Command {
 		 */
 		TclByteArrayChannel stderrChannel = null;
 
-		if (pipeline.getPipelineErrorChannel() == null && !pipeline.isExecInBackground()) {
+		if (pipeline.getStderrRedirect() == null && !pipeline.isExecInBackground()) {
 			/* Collect stderr in a TclByteArray */
 			stderrChannel = new TclByteArrayChannel(interp);
-			pipeline.setPipelineErrorChannel(stderrChannel, true);
+			pipeline.setStderrRedirect(new Redirect(stderrChannel, false));
 		}
 
 		/*
@@ -136,7 +143,7 @@ public class ExecCmd implements Command {
 				throw new TclException(interp, e.getMessage());
 			}
 			stderrString = stderrChannel.getTclString().toString();
-			errorReturned = (stderrString.length() > 0) && ! pipeline.isErrorRedirectedToResult();
+			errorReturned = (stderrString.length() > 0) && !pipeline.isErrorRedirectedToResult();
 		}
 		if (stdoutChannel != null) {
 			try {
@@ -159,7 +166,7 @@ public class ExecCmd implements Command {
 		}
 
 		if (errorReturned) {
-			if (stderrString.length()==0) {
+			if (stderrString.length() == 0) {
 				stderrString = "child process exited abnormally";
 			}
 			if (!keepNewline && stderrString.endsWith("\n")) {

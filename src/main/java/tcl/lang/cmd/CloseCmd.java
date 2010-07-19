@@ -56,8 +56,7 @@ public class CloseCmd implements Command {
 
 		if (chan.getBlocking() && chan instanceof PipelineChannel) {
 			Pipeline pipeline = ((PipelineChannel) chan).getPipeline();
-
-			// pids are bogus, JVM won't tell us the real PID
+			
 			int[] pids = pipeline.getProcessIdentifiers();
 			int[] exitValues = pipeline.getExitValues();
 			boolean errorReturned = false;

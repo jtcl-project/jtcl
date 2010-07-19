@@ -2,18 +2,16 @@ package tcl.lang;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Set;
 
 import tcl.lang.channel.Channel;
-import tcl.lang.channel.FileChannel;
-import tcl.lang.channel.PipelineChannel;
 import tcl.lang.channel.TclByteArrayChannel;
+import tcl.lang.process.Redirect;
+import tcl.lang.process.TclProcess;
 
 /**
  * This class encapsulates a pipeline of operating system commands
@@ -22,38 +20,15 @@ import tcl.lang.channel.TclByteArrayChannel;
 public class Pipeline implements Runnable {
 
 	/**
-	 * List of operating system commands in pipeline, in input to output order
+	 * The processes, in input to output order
 	 */
-	private ArrayList<ProcessBuilder> commands = new ArrayList<ProcessBuilder>();
-
-	/**
-	 * The processes that are started
-	 */
-	private ArrayList<Process> processes = new ArrayList<Process>();
-
-	/**
-	 * Channel the provides this Pipeline with input. If null, an instance of
-	 * ManagedSystemIn is used for input
-	 */
-	private Channel pipelineInputChannel = null;
-
-	/**
-	 * Channel that this Pipeline writes the standard output of the last command
-	 * to. If null, Java's System.out is used
-	 */
-	private Channel pipelineOutputChannel = null;
-
-	/**
-	 * Channel that this Pipeline writes standard error of all commands to. If
-	 * null, Java's System.err is used
-	 */
-	private Channel pipelineErrorChannel = null;
+	private ArrayList<TclProcess> processes = new ArrayList<TclProcess>();
 
 	/**
 	 * set to true if 2>@1 seen
 	 */
 	private boolean redirectStderrToResult = false;
-	
+
 	/**
 	 * If true, run Pipeline in the background
 	 */
@@ -65,27 +40,21 @@ public class Pipeline implements Runnable {
 	Interp interp = null;
 
 	/**
-	 * List of PipelineCouplers that are created for the Pipeline
+	 * tcl.lang.process.Redirect object for this Pipeline's stdin
 	 */
-	private ArrayList<PipelineCoupler> couplers = null;
-
+	Redirect stdinRedirect = null;
 	/**
-	 * List of Channels that must be closed when the Pipeline completes
+	 * tcl.lang.process.Redirect object for this Pipeline's stdout
 	 */
-	private ArrayList<Channel> channelsToClose = null;
-
+	Redirect stdoutRedirect = null;
 	/**
-	 * Our own Managed System.in
+	 * tcl.lang.process.Redirect object for this Pipelines stderr
 	 */
-	ManagedSystemInStream managedSystemInStream = null;
+	Redirect stderrRedirect = null;
 	/**
-	 * The stdin coupler, which must be stopped
+	 * Exception caught in thread
 	 */
-	PipelineCoupler stdinCoupler = null;
-	
-	PipelineCoupler.ExceptionReceiver inputException = new PipelineCoupler.ExceptionReceiver();
-	PipelineCoupler.ExceptionReceiver outputException = new PipelineCoupler.ExceptionReceiver();
-	PipelineCoupler.ExceptionReceiver errorException = new PipelineCoupler.ExceptionReceiver();
+	TclException savedException = null;
 
 	/**
 	 * A set of redirectors that the parser recognizes
@@ -136,8 +105,6 @@ public class Pipeline implements Runnable {
 			--endIndex;
 		}
 
-		channelsToClose = new ArrayList<Channel>();
-
 		for (int i = startIndex; i <= endIndex; i++) {
 			String arg = objv[i].toString();
 
@@ -158,7 +125,9 @@ public class Pipeline implements Runnable {
 					// exec.test
 					throw new TclException(interp, "illegal use of | or |& in command");
 				}
-				redirectErrorStream(addCommand(commandList, cwd), true);
+				int newCmdIndex = addCommand(commandList, cwd);
+				processes.get(newCmdIndex).setStderrRedirect(Redirect.stderrToStdout());
+
 				commandList = new ArrayList<String>(); // reset command list
 				continue;
 			}
@@ -202,87 +171,39 @@ public class Pipeline implements Runnable {
 					redirectee = objv[i].toString();
 				}
 
-				/* Convert redirectee to a Channel */
-				Channel channel = null;
+				/*
+				 * Convert redirectee to a Channel or File, and create a
+				 * Redirect object
+				 */
+				Redirect redirect = null;
+
 				if (redirector.contains("@")) {
 					/* The redirectee is a channel name */
-					channel = TclIO.getChannel(interp, redirectee);
+					Channel channel = TclIO.getChannel(interp, redirectee);
 					if (channel == null) {
 						throw new TclException(interp, "could not find channel named \"" + redirectee + "\"");
 					}
-					if (! channel.isReadOnly()) {
-						try {
-							channel.flush(interp);
-						} catch (IOException e) {
-							throw new TclException(interp, e.getMessage());
-						}
-					}
+					redirect = new Redirect(channel, false);
 				} else if (redirector.equals("<<")) {
-					channel = new TclByteArrayChannel(interp, TclString.newInstance(redirectee));
+					Channel channel = new TclByteArrayChannel(interp, TclString.newInstance(redirectee));
 					TclIO.registerChannel(interp, channel);
-					channelsToClose.add(channel);
+					redirect = new Redirect(channel, true);
 				} else {
-					/* must be a file, so open it */
-					FileChannel fc = new FileChannel();
-					int modeFlags = 0;
-					if (redirector.contains(">>")) {
-						modeFlags = TclIO.CREAT | TclIO.WRONLY | TclIO.APPEND;
-					} else if (redirector.contains(">")) {
-						modeFlags = TclIO.CREAT | TclIO.WRONLY | TclIO.TRUNC;
-					} else if (redirector.contains("<")) {
-						modeFlags = TclIO.RDONLY;
-					}
-					try {
-						fc.open(interp, redirectee, modeFlags);
-						TclIO.registerChannel(interp, fc);
-						channelsToClose.add(fc);
-					} catch (IOException e) {
-						throw new TclPosixException(interp, e, true, "couldn't " +
-								(modeFlags == TclIO.RDONLY ? "read" : "write") +
-								" file \"" + redirectee + "\"");
-					} catch (TclPosixException e1) {
-						if (interp.getResult().toString().indexOf("no such file or directory") != -1) {
-							// reformat filename
-							interp.setResult("couldn't " +
-									(modeFlags == TclIO.RDONLY ? "read" : "write") +
-									" file \"" + redirectee + "\": no such file or directory");
-						}
-						throw e1;
-					}
-					channel = fc;
+					String fn = FileUtil.translateFileName(interp, redirectee);
+					redirect = new Redirect(new File(fn), redirector.contains(">>"));
 				}
 
 				/* Does this redirector apply to stderr, stdout or stdin? */
 				if (redirector.startsWith("2")) {
-					if (channel.isReadOnly()) {
-						throw new TclException(interp, "channel \"" + channel.getChanName()
-								+ "\" wasn't opened for writing");
-					}
-					setPipelineErrorChannel(channel);
+					stderrRedirect = redirect;
 				} else if (redirector.contains(">")) {
-					if (channel.isReadOnly()) {
-						throw new TclException(interp, "channel \"" + channel.getChanName()
-								+ "\" wasn't opened for writing");
-					}
-					setPipelineOutputChannel(channel);
+					stdoutRedirect = redirect;
 					if (redirector.contains("&")) {
-						setPipelineErrorChannel(channel);
+						stderrRedirect = redirect;
 					}
 				} else {
 					// std input is redirected
-					if (channel.isWriteOnly()) {
-						throw new TclException(interp, "channel \"" + channel.getChanName()
-								+ "\" wasn't opened for reading");
-					}
-					if (channel.getChanName() != null && channel.getChanName().equals("stdin")) {
-						// if reading from stdin channel, substitute our own
-						// ManagedSystemInStream
-						// in exec(). This helps stdin interactivity by avoiding
-						// Channel buffering
-						channel = null;
-					} else {
-						setPipelineInputChannel(channel);
-					}
+					stdinRedirect = redirect;
 				}
 			}
 		}
@@ -303,38 +224,22 @@ public class Pipeline implements Runnable {
 	 */
 	public int addCommand(List<String> command, File workingDir) throws TclException {
 		String cmd = command.get(0);
-		if (cmd.startsWith("~")) {
-			/* Do tilde substitution on command */
-			int end = 1;
-			while (end < cmd.length() && (Character.isLetterOrDigit(cmd.charAt(end)) || cmd.charAt(end)=='_'))
-					++end;
-			String username = cmd.substring(1,end);
-			String userdir = FileUtil.doTildeSubst(interp, username);
-			cmd = userdir + cmd.substring(end);
-			command.set(0, cmd);
-		}
-		ProcessBuilder pb = new ProcessBuilder(command);
+		cmd = FileUtil.translateFileName(interp, cmd);
+
+		TclProcess proc = TclProcess.newInstance(interp);
+		proc.setCommand(command);
 		if (workingDir != null)
-			pb.directory(workingDir);
-		commands.add(pb);
-		return commands.size() - 1;
+			proc.setWorkingDir(workingDir);
+		int lastProcIndex = processes.size() - 1;
+		if (lastProcIndex >= 0) {
+			/* Pipe from the previous command */
+			TclProcess upstreamProcess = processes.get(lastProcIndex);
+			proc.setStdinRedirect(new Redirect(upstreamProcess));
+			upstreamProcess.setStdoutRedirect(new Redirect(proc));
+		}
+		processes.add(proc);
+		return processes.size() - 1;
 	}
-
-	/**
-	 * Sets the redirectErrorStream property of one of the commands in this
-	 * pipeline. If true, the error stream for that command is redirected to its
-	 * output stream
-	 * 
-	 * @param commandIndex
-	 *            index of command to set the redirectErrorStream property, as
-	 *            returned from addCommand
-	 * @param redirect
-	 *            new value of redirectErrorStreamProperty for the command
-	 */
-	public void redirectErrorStream(int commandIndex, boolean redirect) {
-		commands.get(commandIndex).redirectErrorStream(redirect);
-	}
-
 
 	/**
 	 * Executes the pipeline. If the execInBackground property is false, exec()
@@ -346,285 +251,112 @@ public class Pipeline implements Runnable {
 	 * @throws TclException
 	 */
 	public void exec() throws TclException {
-		if (commands.size() == 0)
+		if (processes.size() == 0)
 			return;
 
+		if (stdinRedirect != null) {
+			/*
+			 * Don't inherit stdin when in background, if the TclProcess
+			 * subclass cannot support inheritance (for example, JavaProcess).
+			 * Without inheritance, stdin bytes will disappear because they will
+			 * be fed into the process's input, even though the process may not
+			 * consume those bytes.
+			 */
+			if (stdinRedirect.getType() == Redirect.Type.INHERIT && execInBackground
+					&& !processes.get(0).canInheritFileDescriptors()) {
+				processes.get(0).setStdinRedirect(null);
+			} else
+				processes.get(0).setStdinRedirect(stdinRedirect);
+		}
+		if (stdoutRedirect != null) {
+			processes.get(processes.size() - 1).setStdoutRedirect(stdoutRedirect);
+		}
 		/*
-		 * Couplers at the boundary of this Pipeline that we want to join()
+		 * Execute each command in the pipeline
 		 */
-		couplers = new ArrayList<PipelineCoupler>();
-
-		
-
-		/*
-		 * Execute each command in the pipeline and create the PipelineCoupler
-		 * threads that copy data from one thread to the next in the pipeline
-		 */
-		for (int i = 0; i < commands.size(); i++) {
-
-			ProcessBuilder pb = commands.get(i);
-
-			/* Start the command */
-			Process process = null;
+		for (int i = 0; i < processes.size(); i++) {
+			TclProcess process = processes.get(i);
+			if (process.getStderrRedirect() == null && stderrRedirect != null) {
+				process.setStderrRedirect(stderrRedirect);
+			}
 			try {
-				process = pb.start();
+				process.start();
 			} catch (IOException e) {
-				throw new TclPosixException(interp, e, true, "couldn't execute \""+pb.command().get(0)+"\"");
-			}
-			processes.add(process);
-
-			/* Tie together streams with PipelineCouplers */
-			if (i == 0) {
-				/*
-				 * Provide a coupler from the pipelineInputChannel to the first
-				 * process
-				 */
-				PipelineCoupler c;
-				if (pipelineInputChannel == null) {
-					// provide standard input directly.  Don't use stdin in interactive mode
-					// when we exec in background, to avoid stealing stdin from the Shell
-					boolean isInteractive = false;
-					try {
-						TclObject tcl_interactive = interp.getVar("tcl_interactive",TCL.GLOBAL_ONLY);
-						isInteractive = "1".equals(tcl_interactive.toString());
-					} catch (TclException e) {
-						isInteractive = false;
-					}
-					if (isInteractive && execInBackground) {
-						c = null;
-						try {
-							process.getOutputStream().close();
-						} catch (IOException e) {
-							// do nothing
-						}
-					} else {
-						managedSystemInStream = new ManagedSystemInStream();
-						c = new PipelineCoupler(managedSystemInStream, process.getOutputStream());
-					}
-				} else {
-					if (this.pipelineInputChannel instanceof PipelineChannel) {
-						// We connected from a pipeline, so just go through the back door stream
-						c = null;
-						try {
-							c = new PipelineCoupler(((PipelineChannel) this.pipelineInputChannel).getInputStream(), process.getOutputStream());
-						} catch (IOException e) {
-							// do nothing
-						}
-					} else {
-						c = new PipelineCoupler(interp, this.pipelineInputChannel, process.getOutputStream());
-					}
-				}
-				if (c!=null) {
-					c.setExceptionReceiver(inputException);
-					c.setName("stdin PipelineCoupler for " + this);
-					stdinCoupler = c;
-					c.start();
-					couplers.add(c);
-				}
-
-			} else {
-				/*
-				 * Provide a coupler between the previous process and this
-				 * process
-				 */
-				PipelineCoupler c = new PipelineCoupler(processes.get(i - 1).getInputStream(), process
-						.getOutputStream());
-
-				couplers.add(c);
-				c.setName("" + (i - 1) + "->" + i + " PipelineCoupler for " + this);
-
-				c.start();
-			}
-
-			/* Couple all the error output to one error stream */
-			if (!pb.redirectErrorStream()) {
-				PipelineCoupler c;
-	
-				if (this.pipelineErrorChannel == null) {
-					// write to System.err
-					c = new PipelineCoupler(process.getErrorStream(), System.err);
-				} else {
-					c = new PipelineCoupler(interp, process.getErrorStream(), this.pipelineErrorChannel);
-					c.setWriteMutex(pipelineErrorChannel);
-				}
-
-				c.setExceptionReceiver(errorException);
-				c.start();
-				c.setName("" + i + " stderr PipelineCoupler for " + this);
-
-				couplers.add(c);
-			}
-
-			/* Couple last command to standard output */
-			if (i == commands.size() - 1) {
-				PipelineCoupler c;
-				if (this.pipelineOutputChannel == null) {
-					c = new PipelineCoupler(process.getInputStream(), System.out);
-				} else {
-					if (pipelineOutputChannel instanceof PipelineChannel) {
-						c = null;
-						try {
-							c = new PipelineCoupler(process.getInputStream(), ((PipelineChannel) pipelineOutputChannel).getOutputStream());
-						} catch (IOException e) {
-							// do nothing
-						}
-					} else {
-						c = new PipelineCoupler(interp, process.getInputStream(), this.pipelineOutputChannel);
-						c.setWriteMutex(pipelineOutputChannel);
-					}
-				}
-				c.setExceptionReceiver(outputException);
-
-				c.start();
-				c.setName("stdout PipelineCoupler for " + this);
-
-				couplers.add(c);
+				throw new TclPosixException(interp, e, true, "couldn't execute \"" + process.command().get(0) + "\"");
 			}
 		}
 
 	}
-	/**
-	 * If we got any exceptions from the threads during reading or writing
-	 * at ends of Pipeline, throw them now
-	 */
-	public void throwAnyExceptions() throws TclException {
-		
-		if (outputException.getException() != null) {
-			throw outputException.getAsTclException(interp);
-		}
-		if (errorException.getException() != null) {
-			throw errorException.getAsTclException(interp);
-		}
-		if (inputException.getException() != null) {
-			throw inputException.getAsTclException(interp);
-		}
-	}
+
 	/**
 	 * Wait for processes in pipeline to die, then close couplers and any open
 	 * channels
 	 * 
-	 * @param force Kill processes forcibly, if true
+	 * @param force
+	 *            Kill processes forcibly, if true
 	 */
-	public void waitForExitAndCleanup(boolean force) {
+	public void waitForExitAndCleanup(boolean force) throws TclException {
 		/*
 		 * Wait for processes to finish
 		 */
 		for (int i = 0; i < processes.size(); i++) {
-			if (force) processes.get(i).destroy();
+			if (force)
+				processes.get(i).destroy();
 			try {
 				processes.get(i).waitFor();
 			} catch (InterruptedException e) {
 				processes.get(i).destroy();
+			} catch (IOException e1) {
+				throw new TclPosixException(interp, e1, true, "Error");
 			}
 
 		}
 
-		if (stdinCoupler != null) {
-			/* Stop the stdin coupler, so it doesn't continue to suck up std in */
-			stdinCoupler.requestStop();
-		}
-		/*
-		 * Wait for output coupler threads to finish before caller tries to
-		 * collect any data from them
-		 */
-		ListIterator<PipelineCoupler> iterator = couplers.listIterator();
-		while (iterator.hasNext()) {
-			try {
-				PipelineCoupler c = iterator.next();
-				c.join();
-			} catch (InterruptedException e) {
-				// do nothing
-			}
-		}
-
-		/* Close any channels that need closing */
-		ListIterator<Channel> chiterator = channelsToClose.listIterator();
-		while (chiterator.hasNext()) {
-			Channel ch = chiterator.next();
-			TclIO.unregisterChannel(interp, ch);
-		}
-
 	}
 
 	/**
-	 * @return the pipelineInputChannel
+	 * @return the stdinRedirect
 	 */
-	public Channel getPipelineInputChannel() {
-		return pipelineInputChannel;
+	public Redirect getStdinRedirect() {
+		return stdinRedirect;
 	}
 
 	/**
-	 * @param pipelineInputChannel
-	 *            the pipelineInputChannel to set, which the pipeline receives
-	 *            data from
+	 * @param stdinRedirect
+	 *            the stdinRedirect to set
 	 */
-	public void setPipelineInputChannel(Channel pipelineInputChannel, boolean close) {
-		this.pipelineInputChannel = pipelineInputChannel;
-		if (close)
-			this.channelsToClose.add(pipelineInputChannel);
+	public void setStdinRedirect(Redirect stdinRedirect) {
+		this.stdinRedirect = stdinRedirect;
 	}
 
 	/**
-	 * @param pipelineInputChannel
-	 *            the pipelineInputChannel to set, which the pipeline receives
-	 *            data from
+	 * @return the stdoutRedirect
 	 */
-	public void setPipelineInputChannel(Channel pipelineInputChannel) {
-		this.pipelineInputChannel = pipelineInputChannel;
+	public Redirect getStdoutRedirect() {
+		return stdoutRedirect;
 	}
 
 	/**
-	 * @return the pipelineOutputChannel
+	 * @param stdoutRedirect
+	 *            the stdoutRedirect to set
 	 */
-	public Channel getPipelineOutputChannel() {
-		return pipelineOutputChannel;
+	public void setStdoutRedirect(Redirect stdoutRedirect) {
+		this.stdoutRedirect = stdoutRedirect;
 	}
 
 	/**
-	 * @param pipelineOutputChannel
-	 *            the pipelineOutputChannel to set, which the pipeline writes
-	 *            standard output to
+	 * @return the stderrRedirect
 	 */
-	public void setPipelineOutputChannel(Channel pipelineOutputChannel, boolean close) {
-		this.pipelineOutputChannel = pipelineOutputChannel;
-		if (close)
-			this.channelsToClose.add(pipelineOutputChannel);
+	public Redirect getStderrRedirect() {
+		return stderrRedirect;
 	}
 
 	/**
-	 * @param pipelineOutputChannel
-	 *            the pipelineOutputChannel to set, which the pipeline writes
-	 *            standard output to
+	 * @param stderrRedirect
+	 *            the stderrRedirect to set
 	 */
-	public void setPipelineOutputChannel(Channel pipelineOutputChannel) {
-		this.pipelineOutputChannel = pipelineOutputChannel;
-	}
-
-	/**
-	 * @return the pipelineErrorChannel
-	 */
-	public Channel getPipelineErrorChannel() {
-		return pipelineErrorChannel;
-	}
-
-	/**
-	 * @param pipelineErrorChannel
-	 *            the pipelineErrorChannel to set, which the pipeline writes
-	 *            stderr to
-	 */
-	public void setPipelineErrorChannel(Channel pipelineErrorChannel, boolean close) {
-		this.pipelineErrorChannel = pipelineErrorChannel;
-		if (close)
-			channelsToClose.add(pipelineErrorChannel);
-	}
-
-	/**
-	 * @param pipelineErrorChannel
-	 *            the pipelineErrorChannel to set, which the pipeline writes
-	 *            stderr to
-	 */
-	public void setPipelineErrorChannel(Channel pipelineErrorChannel) {
-		this.pipelineErrorChannel = pipelineErrorChannel;
+	public void setStderrRedirect(Redirect stderrRedirect) {
+		this.stderrRedirect = stderrRedirect;
 	}
 
 	/**
@@ -649,29 +381,14 @@ public class Pipeline implements Runnable {
 	public boolean isErrorRedirectedToResult() {
 		return redirectStderrToResult;
 	}
+
 	/**
-	 * @return Array of  process identifiers, or array of -1 if we can't get PIDs
+	 * @return Array of process identifiers, or array of -1 if we can't get PIDs
 	 */
 	public int[] getProcessIdentifiers() {
 		int[] pid = new int[processes.size()];
 		for (int i = 0; i < processes.size(); i++) {
-			// Use reflection to see if the 'pid' field exists as it does on Sun's UnixProcess
-			Process p = processes.get(i);
-			try {
-				// try UnixProcess
-				Field f = p.getClass().getDeclaredField("pid");
-				f.setAccessible(true);
-				pid[i] = f.getInt(p);
-			} catch (Exception e) {
-				// try ProcessImpl on Windows and Harmony's SubProcess
-				try {
-					Field f = p.getClass().getDeclaredField("handle");
-					f.setAccessible(true);
-					pid[i] = f.getInt(p);					
-				} catch (Exception e1) {
-					pid[i] = -1; // just punt
-				}
-			}
+			pid[i] = processes.get(i).getPid();
 		}
 		return pid;
 	}
@@ -692,8 +409,24 @@ public class Pipeline implements Runnable {
 		return exitValues;
 	}
 
+	/**
+	 * @throws IOException
+	 *             if one has been caught during a background
+	 *             waitForExitAndCleanup
+	 */
+	public void throwAnyExceptions() throws TclException {
+		if (savedException != null)
+			throw savedException;
+	}
+
 	public void run() {
-		waitForExitAndCleanup(false);
+		try {
+			waitForExitAndCleanup(false);
+		} catch (TclException e) {
+			synchronized (this) {
+				savedException = e;
+			}
+		}
 	}
 
 }

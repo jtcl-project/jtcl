@@ -7,12 +7,12 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import tcl.lang.Interp;
 import tcl.lang.Pipeline;
-import tcl.lang.TCL;
 import tcl.lang.TclException;
 import tcl.lang.TclIO;
 import tcl.lang.TclList;
 import tcl.lang.TclObject;
 import tcl.lang.TclString;
+import tcl.lang.process.Redirect;
 
 /**
  * This class provides a Channel view of a Pipeline object
@@ -50,7 +50,7 @@ public class PipelineChannel extends Channel {
 		TclObject[] objv = TclList.getElements(interp, TclString.newInstance(execString));
 
 		if (objv.length == 0) {
-			throw new TclException(interp,"illegal use of | or |& in command");
+			throw new TclException(interp, "illegal use of | or |& in command");
 		}
 		pipeline = new Pipeline(interp, objv, 0);
 
@@ -63,23 +63,29 @@ public class PipelineChannel extends Channel {
 		if ((modeFlags & TclIO.RDONLY) == TclIO.RDONLY) {
 			this.mode = TclIO.RDONLY;
 			/* Read from pipelines output */
-			if (pipeline.getPipelineOutputChannel() == null) {
-				pipeline.setPipelineOutputChannel(this);
+			if (pipeline.getStdoutRedirect() == null) {
+				pipeline.setStdoutRedirect(new Redirect(pipedOutputStream));
 			} else {
-				throw new TclException(interp,"can't read output from command: standard output was redirected");
+				throw new TclException(interp, "can't read output from command: standard output was redirected");
+			}
+			if (pipeline.getStdinRedirect() == null) {
+				pipeline.setStdinRedirect(Redirect.inherit());
 			}
 		} else if ((modeFlags & TclIO.WRONLY) == TclIO.WRONLY) {
 			this.mode = TclIO.WRONLY;
 			/* Write to pipeline's input */
-			if (pipeline.getPipelineInputChannel() == null) {
-				pipeline.setPipelineInputChannel(this);
+			if (pipeline.getStdinRedirect() == null) {
+				pipeline.setStdinRedirect(new Redirect(pipedInputStream));
 				this.setBuffering(TclIO.BUFF_NONE);
 			} else {
-				throw new TclException(interp,"can't write input to command: standard input was redirected");
+				throw new TclException(interp, "can't write input to command: standard input was redirected");
+			}
+			if (pipeline.getStdoutRedirect() == null) {
+				pipeline.setStdoutRedirect(Redirect.inherit());
 			}
 		}
-		if (pipeline.getPipelineErrorChannel() == null) {
-			pipeline.setPipelineErrorChannel(stderr, true);
+		if (pipeline.getStderrRedirect() == null) {
+			pipeline.setStderrRedirect(new Redirect(stderr, true));
 		}
 		pipeline.setExecInBackground(true);
 		pipeline.exec();
@@ -160,8 +166,15 @@ public class PipelineChannel extends Channel {
 			pipedOutputStream = null;
 		}
 
+
 		if (this.blocking)
-			pipeline.waitForExitAndCleanup(false);
+			try {
+				// force death of process if we are reading from the process, obviously we don't
+				// need anything more
+				pipeline.waitForExitAndCleanup(this.mode == TclIO.RDONLY);
+			} catch (TclException e) {
+				throw new IOException(e.getMessage());
+			}
 
 		if (ex != null)
 			throw ex;
