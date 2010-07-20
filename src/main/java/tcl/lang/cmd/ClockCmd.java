@@ -398,7 +398,7 @@ public class ClockCmd implements Command {
 					break;
 				case 'u': // Weekday number (1 - 7) Sunday = 7.
 					int dayOfWeek17 = calendar.get(Calendar.DAY_OF_WEEK);
-					if (dayOfWeek17 == calendar.SUNDAY) {
+					if (dayOfWeek17 == Calendar.SUNDAY) {
 						result.append(7);
 					} else {
 						result.append(dayOfWeek17 - Calendar.SUNDAY);
@@ -414,7 +414,7 @@ public class ClockCmd implements Command {
 					break;
 				case 'w': // Weekday number (0 - 6) Sunday = 0.
 					int dayOfWeek06 = calendar.get(Calendar.DAY_OF_WEEK);
-					result.append(dayOfWeek06 - calendar.SUNDAY);
+					result.append(dayOfWeek06 - Calendar.SUNDAY);
 					break;
 				case 'W': // Week of year (01-52), Monday is first day.
 					int weekM = GetWeek(calendar, Calendar.MONDAY, false);

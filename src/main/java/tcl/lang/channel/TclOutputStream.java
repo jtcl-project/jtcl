@@ -683,14 +683,14 @@ class TclOutputStream {
 		// buffersize for the channel. This is to honor dynamic changes
 		// of the buffersize made by the user.
 
-		if ((buf.bufLength - buf.BUFFER_PADDING) < bufSize) {
+		if ((buf.bufLength - ChannelBuffer.BUFFER_PADDING) < bufSize) {
 			return;
 		}
 
 		if (curOut == null) {
 			curOut = buf;
-			buf.nextRemoved = buf.BUFFER_PADDING;
-			buf.nextAdded = buf.BUFFER_PADDING;
+			buf.nextRemoved = ChannelBuffer.BUFFER_PADDING;
+			buf.nextAdded = ChannelBuffer.BUFFER_PADDING;
 			buf.next = null;
 		}
 	}

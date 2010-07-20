@@ -211,7 +211,7 @@ class TclInputStream {
 		oldLength = 0;
 		oldEncodingStart = encodingStart;
 		oldEncodingEnd = encodingEnd;
-		oldRemoved = buf.BUFFER_PADDING;
+		oldRemoved = ChannelBuffer.BUFFER_PADDING;
 		if (buf != null) {
 			oldRemoved = buf.nextRemoved;
 		}
@@ -548,7 +548,7 @@ class TclInputStream {
 			buf.nextRemoved = oldRemoved;
 
 			for (buf = buf.next; buf != null; buf = buf.next) {
-				buf.nextRemoved = buf.BUFFER_PADDING;
+				buf.nextRemoved = ChannelBuffer.BUFFER_PADDING;
 			}
 			commonGetsCleanup();
 
@@ -666,7 +666,7 @@ class TclInputStream {
 
 		read: while (true) {
 			if (goto_read || (buf == null)
-					|| (buf.nextAdded == buf.BUFFER_PADDING)) {
+					|| (buf.nextAdded == ChannelBuffer.BUFFER_PADDING)) {
 				// All channel buffers were exhausted and the caller still
 				// hasn't
 				// seen EOL. Need to read more bytes from the channel device.
@@ -779,7 +779,7 @@ class TclInputStream {
 					}
 					extra = rawLen - gs.rawRead.i;
 					System.arraycopy(raw, rawStart + gs.rawRead.i, next.buf,
-							buf.BUFFER_PADDING - extra, extra);
+							ChannelBuffer.BUFFER_PADDING - extra, extra);
 					next.nextRemoved -= extra;
 					buf.nextAdded -= extra;
 
@@ -900,10 +900,10 @@ class TclInputStream {
 
 				extra = buf.bufLength - buf.nextAdded;
 				if (extra > 0) {
-					System.arraycopy(next.buf, buf.BUFFER_PADDING - extra,
+					System.arraycopy(next.buf, ChannelBuffer.BUFFER_PADDING - extra,
 							buf.buf, buf.nextAdded, extra);
 					buf.nextAdded += extra;
-					next.nextRemoved = buf.BUFFER_PADDING;
+					next.nextRemoved = ChannelBuffer.BUFFER_PADDING;
 				}
 				buf = next;
 			}
@@ -1834,7 +1834,7 @@ class TclInputStream {
 			// buffersize made by the user.
 
 			if ((buf != null)
-					&& ((buf.bufLength - buf.BUFFER_PADDING) < bufSize)) {
+					&& ((buf.bufLength - ChannelBuffer.BUFFER_PADDING) < bufSize)) {
 				buf = null;
 			}
 			if (buf == null) {
@@ -1971,7 +1971,7 @@ class TclInputStream {
 		// buffersize for the channel. This is to honor dynamic changes
 		// of the buffersize made by the user.
 
-		if ((buf.bufLength - buf.BUFFER_PADDING) < bufSize) {
+		if ((buf.bufLength - ChannelBuffer.BUFFER_PADDING) < bufSize) {
 			return;
 		}
 
@@ -1979,16 +1979,16 @@ class TclInputStream {
 			inQueueHead = buf;
 			inQueueTail = buf;
 
-			buf.nextRemoved = buf.BUFFER_PADDING;
-			buf.nextAdded = buf.BUFFER_PADDING;
+			buf.nextRemoved = ChannelBuffer.BUFFER_PADDING;
+			buf.nextAdded = ChannelBuffer.BUFFER_PADDING;
 			buf.next = null;
 			return;
 		}
 		if (saveInBuf == null) {
 			saveInBuf = buf;
 
-			buf.nextRemoved = buf.BUFFER_PADDING;
-			buf.nextAdded = buf.BUFFER_PADDING;
+			buf.nextRemoved = ChannelBuffer.BUFFER_PADDING;
+			buf.nextAdded = ChannelBuffer.BUFFER_PADDING;
 			buf.next = null;
 			return;
 		}
