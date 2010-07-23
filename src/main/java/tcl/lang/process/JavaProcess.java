@@ -94,7 +94,7 @@ public class JavaProcess extends TclProcess {
 			processBuilder.redirectErrorStream(true);
 		}
 		process = processBuilder.start();
-
+		
 		/*
 		 * Connect the process's stdin
 		 */
@@ -149,6 +149,7 @@ public class JavaProcess extends TclProcess {
 		/*
 		 * Connect process's stdout
 		 */
+		boolean closeOutput = true;
 		if (stdoutRedirect != null) {
 			switch (stdoutRedirect.type) {
 			case FILE:
@@ -157,9 +158,11 @@ public class JavaProcess extends TclProcess {
 				break;
 			case INHERIT:
 				stdoutStream = new FileOutputStream(FileDescriptor.out);
+				closeOutput = false;  // don't want to close FileDescriptor.out
 				break;
 			case STREAM:
 				stdoutStream = stdoutRedirect.ostream;
+				closeOutput = false;  // opener can close it
 				break;
 			case TCL_CHANNEL:
 				stdoutStream = new OutputStream() {
@@ -202,12 +205,13 @@ public class JavaProcess extends TclProcess {
 			// TCL won't be
 			// able to write
 			stdoutCoupler = new Coupler(process.getInputStream(), stdoutStream,
-					stdoutRedirect.type != Redirect.Type.INHERIT, stdoutRedirect.type == Redirect.Type.INHERIT);
+					closeOutput, stdoutRedirect.type == Redirect.Type.INHERIT);
 			stdoutCoupler.start();
 		}
 		/*
 		 * Connect process's stderr
 		 */
+		closeOutput = true;
 		if (stderrRedirect != null && stderrRedirect.type != Redirect.Type.MERGE_ERROR) {
 			switch (stderrRedirect.type) {
 			case FILE:
@@ -216,9 +220,11 @@ public class JavaProcess extends TclProcess {
 				break;
 			case INHERIT:
 				stderrStream = new FileOutputStream(FileDescriptor.err);
+				closeOutput = false;  // don't close FileDescriptor.err
 				break;
 			case STREAM:
 				stdoutStream = stdoutRedirect.ostream;
+				closeOutput = false;
 				break;
 			case TCL_CHANNEL:
 				stderrStream = new OutputStream() {
@@ -257,7 +263,7 @@ public class JavaProcess extends TclProcess {
 		}
 		if (stderrStream != null) {
 			stderrCoupler = new Coupler(process.getErrorStream(), stderrStream,
-					stderrRedirect.type != Redirect.Type.INHERIT, true);
+					closeOutput, true);
 			stderrCoupler.start();
 		}
 
@@ -371,7 +377,9 @@ public class JavaProcess extends TclProcess {
 						out.flush();
 
 				} catch (IOException e) {
-					saveIOException(e);
+					// don't throw a Pipe Closed exception, pipes get closed in another thread
+					if (! e.getMessage().toLowerCase().contains("pipe closed"))
+						saveIOException(e);
 					try {
 						if (closeOut)
 							out.close();

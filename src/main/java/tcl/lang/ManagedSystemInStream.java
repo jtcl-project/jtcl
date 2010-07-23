@@ -15,20 +15,36 @@ import java.io.InputStream;
  * directly to get the benefits of this class, or can create another instance of
  * this class that can be close()'d to interrupt a blocked read.
  * 
- * This class forces standard input to remain unbuffered, so the JVM doesn't steal
- * bytes from stdin that might be useful to subsequent processes that run after this
- * JVM exits.
+ * This class forces standard input to remain unbuffered, so the JVM doesn't
+ * steal bytes from stdin that might be useful to subsequent processes that run
+ * after this JVM exits.
  */
 public class ManagedSystemInStream extends InputStream implements Runnable {
+
+	/**
+	 * Encapsulates a read(byte [], int, int) call and return values
+	 * 
+	 */
+	private static class ReadRequest {
+		byte[] buf;
+		int offset;
+		int len;
+		int actualLength;
+		IOException exception = null;
+		boolean validData = false;
+		boolean requestData = false;
+	}
+
+	/**
+	 * The object that communicates requests between this thread and the reader
+	 * thread
+	 */
+	private static ReadRequest readRequest = new ReadRequest();
+
 	/**
 	 * Set to true with this ManagedSystemInStream is closed.
 	 */
 	private volatile boolean streamClosed = false;
-
-	/**
-	 * The thread that directly reads standard input
-	 */
-	private static Thread readThread = null;
 
 	/**
 	 * Unbuffered FileInputStream that is attached to real stdin
@@ -41,43 +57,6 @@ public class ManagedSystemInStream extends InputStream implements Runnable {
 	private boolean eofSeen = false;
 
 	/**
-	 * This object is synchronized on to allow communication between the current
-	 * thread and the readThread
-	 */
-	private static Object mutex = new Object();
-
-	/**
-	 * Byte returned from the readThread
-	 */
-	private static int stdinByte;
-
-	/**
-	 * Set to true to request a byte from the readThread
-	 */
-	private static boolean requestStdinByte = false;
-
-	/**
-	 * Set to true when stdinByte contains a valid byte from readThread
-	 */
-	private static boolean stdinByteIsValid = false;
-
-	/**
-	 * Any exception caught in readThread; synchronized on mutex
-	 */
-	private static IOException ioException = null;
-
-	/**
-	 * number of instances of ManagedSystemInStream that have not yet been
-	 * closed
-	 */
-	private static int nOpenInstances = 0;
-
-	/**
-	 * Is true for the instance installed on System.in
-	 */
-	private boolean isSystemInInstance = false;
-
-	/**
 	 * Create a new ManagedSystemInStream. If this is the first
 	 * ManagedSystemInStream instance, System.in is set to this instance, so all
 	 * direct access to System.in goes through this instance. Other objects can
@@ -86,30 +65,16 @@ public class ManagedSystemInStream extends InputStream implements Runnable {
 	 */
 	public ManagedSystemInStream() {
 		super();
-		synchronized (mutex) {
+		synchronized (readRequest) {
 			// install this stream as System.in if a ManagedSystemInStream has
-			// not yet
-			// been installed on System.in
+			// not yet been installed on System.in, and start the readThread
 			if (stdin == null) {
 				stdin = new FileInputStream(FileDescriptor.in);
-				isSystemInInstance = true;
 				System.setIn(this);
-			}
-			if (readThread == null) {
-				ioException = null;
-				readThread = new Thread(null, this, "ManagedSystemInStream reader thread");
+				Thread readThread = new Thread(null, this, "ManagedSystemInStream reader thread");
 				readThread.start();
 			}
-
-			++nOpenInstances;
 		}
-	}
-
-	/**
-	 * @return the true if this instance is installed on System.in
-	 */
-	public boolean isSystemInInstance() {
-		return isSystemInInstance;
 	}
 
 	/*
@@ -130,52 +95,101 @@ public class ManagedSystemInStream extends InputStream implements Runnable {
 	public void close() throws IOException {
 		if (streamClosed)
 			return;
-		synchronized (mutex) {
-			--nOpenInstances;
+		synchronized (readRequest) {
 			streamClosed = true;
-			mutex.notifyAll(); // interrupt any pending
-								// ManagedSystemInStream.read()
+			readRequest.notifyAll(); // interrupt any pending
+			// ManagedSystemInStream.read()
 		}
 	}
 
-	/**
-	 * Reads the next byte of data from System.in. The value byte is returned as
-	 * an int in the range 0 to 255. If no byte is available because the end of
-	 * the stream has been reached, the value -1 is returned. This method blocks
-	 * until input data is available, the end of the stream is detected, an
-	 * exception is thrown or the stream is closed.
+	/*
+	 * (non-Javadoc)
 	 * 
-	 * @return Next byte read from System.in, or -1 on end of file or -1 if this
-	 *         stream is closed
+	 * @see java.io.InputStream#read()
 	 */
 	@Override
 	public int read() throws IOException {
+		byte[] b = new byte[1];
+		int cnt = read(b, 0, 1);
+		if (cnt == -1)
+			return -1;
+		else
+			return b[0];
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.io.InputStream#read(byte[])
+	 */
+	@Override
+	public int read(byte[] b) throws IOException {
+		return read(b, 0, b.length);
+	}
+
+	@Override
+	public int read(byte[] b, int offset, int length) throws IOException {
+		boolean requestMade = false;
+
+		/* create a new request */
 		while (true) {
 			if (eofSeen || streamClosed)
 				return -1;
-			synchronized (mutex) {
-				if (ioException != null) {
-					IOException e = ioException;
-					ioException = null;
-					throw e;
+
+			synchronized (readRequest) {
+				if (eofSeen || streamClosed)
+					return -1;
+
+				/*
+				 * The previous read() may have been interrupted; if so, use
+				 * data from that read()
+				 */
+				if (!requestMade && readRequest.validData) {
+					if (readRequest.exception != null) {
+						readRequest.validData = false;
+						readRequest.requestData = false;
+						throw readRequest.exception;
+					}
+					if (readRequest.actualLength == -1) {
+						eofSeen = true;
+						return -1;
+					}
+					int copyLength = length < readRequest.actualLength ? length : readRequest.actualLength;
+					System.arraycopy(readRequest.buf, readRequest.offset, b, offset, copyLength);
+					readRequest.actualLength -= copyLength;
+					if (readRequest.actualLength <= 0) {
+						readRequest.validData = false;
+						readRequest.requestData = false;
+					}
+					return copyLength;
 				}
 
-				if (stdinByteIsValid) {
-					stdinByteIsValid = false;
-					if (stdinByte == -1)
+				if (!requestMade && !readRequest.validData && !readRequest.requestData) {
+					/* No pending request or data, so request bytes */
+					requestMade = true;
+					readRequest.exception = null;
+					readRequest.buf = b;
+					readRequest.len = length;
+					readRequest.offset = offset;
+					readRequest.requestData = true;
+					readRequest.validData = false;
+					readRequest.notifyAll();
+				}
+
+				if (requestMade && readRequest.validData) {
+					/* Request fulfilled, so return data */
+					readRequest.validData = false;
+					if (readRequest.exception != null)
+						throw readRequest.exception;
+					if (readRequest.actualLength == -1)
 						eofSeen = true;
-					return stdinByte;
-				} else {
-					// if no pending request exists, make one
-					if (!requestStdinByte) {
-						requestStdinByte = true;
-						mutex.notifyAll();
-					}
-					try {
-						mutex.wait(100); // poll for stream close
-					} catch (InterruptedException e) {
-						// do nothing
-					}
+					return readRequest.actualLength;
+				}
+
+				try {
+					readRequest.wait();
+				} catch (InterruptedException e) {
+					// do nothing
 				}
 			}
 		}
@@ -186,38 +200,34 @@ public class ManagedSystemInStream extends InputStream implements Runnable {
 	 */
 	public void run() {
 		boolean doRead;
-		IOException savedException;
-		int valueRead = -1;
 
 		while (true) {
 			if (Thread.interrupted())
 				break;
-			synchronized (mutex) {
-				doRead = requestStdinByte & !stdinByteIsValid;
+			synchronized (readRequest) {
+				doRead = readRequest.requestData && !readRequest.validData;
 				if (!doRead)
 					try {
-						mutex.wait();
+						readRequest.wait();
 					} catch (InterruptedException e) {
 						break;
 					}
 			}
 			if (doRead) {
-				savedException = null;
+				// drop out of synchronized block, because we don't want to
+				// block main thread's
+				// close() while we are blocked on stdin.read().
+				// readRequest.validData and
+				// readRequest.requestData keep us out of trouble here
 				try {
-					valueRead = stdin.read();
+					readRequest.actualLength = stdin.read(readRequest.buf, readRequest.offset, readRequest.len);
 				} catch (IOException e1) {
-					savedException = e1;
+					readRequest.exception = e1;
 				}
-				synchronized (mutex) {
-					if (savedException == null) {
-						stdinByte = valueRead;
-						stdinByteIsValid = true;
-						requestStdinByte = false;
-					} else {
-						ioException = savedException;
-						requestStdinByte = false;
-					}
-					mutex.notifyAll();
+				synchronized (readRequest) {
+					readRequest.validData = true;
+					readRequest.requestData = false;
+					readRequest.notifyAll();
 				}
 			}
 		}
