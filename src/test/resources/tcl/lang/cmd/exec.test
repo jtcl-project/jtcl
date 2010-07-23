@@ -19,6 +19,12 @@ namespace import -force ::tcltest::*
 # All tests require the "exec" command.
 # Skip them if exec is not defined.
 testConstraint exec [llength [info commands exec]]
+
+# Temporary constraint because JTCL uses JavaProcess
+# which can steal too much stdin; remove this constraint
+# when we implement platform-specific exec
+testConstraint stdinInherit 0
+
 unset -nocomplain path
 set path(echo) [makeFile {
     puts -nonewline [lindex $argv 0]
@@ -106,7 +112,7 @@ test exec-1.1 {basic exec operation} {exec} {
 test exec-1.2 {pipelining} {exec stdio} {
     exec [interpreter] $path(echo) a b c d | [interpreter] $path(cat) | [interpreter] $path(cat)
 } "a b c d"
-test exec-1.3 {pipelining} {exec stdio} {
+test exec-1.3 {pipelining} {exec stdio stdinInherit} {
     set a [exec [interpreter] $path(echo) a b c d | [interpreter] $path(cat) | [interpreter] $path(wc)]
     list [scan $a "%d %d %d" b c d] $b $c
 } {3 1 4}
@@ -263,7 +269,7 @@ test exec-6.1 {redirecting stderr through a pipeline} {exec stdio} {
 test exec-6.2 {redirecting stderr through a pipeline} {exec stdio} {
     exec [interpreter] "$path(sh)" -c "\"$path(echo)\" foo bar 1>&2" |& [interpreter] "$path(cat)"
 } "foo bar"
-test exec-6.3 {redirecting stderr through a pipeline} {exec stdio} {
+test exec-6.3 {redirecting stderr through a pipeline} {exec stdio stdinInherit} {
     exec [interpreter] "$path(sh)" -c "\"$path(echo)\" foo bar 1>&2" \
 	|& [interpreter] "$path(sh)" -c "\"$path(echo)\" second msg 1>&2 ; \"$path(cat)\"" |& [interpreter] "$path(cat)"
 } "second msg\nfoo bar"
