@@ -66,7 +66,7 @@ public class StringCmd implements Command {
 
 	static final private String isOptions[] = { "alnum", "alpha", "ascii",
 			"control", "boolean", "digit", "double", "false", "graph",
-			"integer", "lower", "print", "punct", "space", "true", "upper",
+			"integer", "lower", "print", "punct", "space", "true", "upper","wideinteger",
 			"wordchar", "xdigit" };
 	static final private int STR_IS_ALNUM = 0;
 	static final private int STR_IS_ALPHA = 1;
@@ -84,8 +84,9 @@ public class StringCmd implements Command {
 	static final private int STR_IS_SPACE = 13;
 	static final private int STR_IS_TRUE = 14;
 	static final private int STR_IS_UPPER = 15;
-	static final private int STR_IS_WORD = 16;
-	static final private int STR_IS_XDIGIT = 17;
+	static final private int STR_IS_WIDEINTEGER = 16;
+	static final private int STR_IS_WORD = 17;
+	static final private int STR_IS_XDIGIT = 18;
 
 	/**
 	 * Java's Character class has a many boolean test functions to check the
@@ -163,7 +164,7 @@ public class StringCmd implements Command {
 						throw new TclNumArgsException(interp, 2, objv,
 								"?-nocase? ?-length int? string1 string2");
 					}
-					reqlength = TclInteger.get(interp, objv[++i]);
+					reqlength = TclInteger.getInt(interp, objv[++i]);
 				} else {
 					throw new TclException(interp, "bad option \"" + string2
 							+ "\": must be -nocase or -length");
@@ -411,12 +412,58 @@ public class StringCmd implements Command {
 				break;
 			}
 			case STR_IS_INT: {
+				boolean wasAlreadyInt = obj.isIntType();
+				boolean isInteger = true;
+				try {
+					TclInteger.getInt(null, obj);
+				} catch (TclException e) {
+					isInteger = false;
+					if (wasAlreadyInt) {
+						// must have been an expression
+						failat = -1;
+						result = false;
+					}
+				}
+				if (isInteger  || wasAlreadyInt) {
+					break;
+				}
+
+				StrtoulResult res = interp.strtoulResult;
+				Util.strtoul(string1, 0, 0, res);
+				if (res.errno == TCL.INTEGER_RANGE || res.value > Integer.MAX_VALUE || res.value < Integer.MIN_VALUE) {
+					// if (errno == ERANGE), then it was an over/underflow
+					// problem, but in this method, we only want to know
+					// yes or no, so bad flow returns false and sets
+					// the failVarObj to the string length.
+
+					result = false;
+					failat = -1;
+				} else if (res.index == 0) {
+					// In this case, nothing like a number was found
+
+					result = false;
+					failat = 0;
+				} else {
+					// Go onto SPACE, since we are
+					// allowed trailing whitespace
+
+					failat = res.index;
+					for (int i = res.index; i < length1; i++) {
+						if (!Character.isWhitespace(string1.charAt(i))) {
+							result = false;
+							break;
+						}
+					}
+				}
+				break;
+			}
+			case STR_IS_WIDEINTEGER: {
 				if (obj.isIntType()) {
 					break;
 				}
 				boolean isInteger = true;
 				try {
-					TclInteger.get(null, obj);
+					TclInteger.getLong(null, obj);
 				} catch (TclException e) {
 					isInteger = false;
 				}
@@ -733,7 +780,7 @@ public class StringCmd implements Command {
 				throw new TclNumArgsException(interp, 2, objv, "string count");
 			}
 
-			int count = TclInteger.get(interp, objv[3]);
+			int count = TclInteger.getInt(interp, objv[3]);
 
 			String string1 = objv[2].toString();
 			if (string1.length() > 0) {

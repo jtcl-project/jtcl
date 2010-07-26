@@ -294,7 +294,7 @@ public class FileCmd implements Command {
 			}
 			fileObj = FileUtil.getNewFileObj(interp, argv[2].toString());
 			if (argv.length == 4) {
-				long newTime = TclInteger.get(interp, argv[3]) * 1000;
+				long newTime = TclInteger.getLong(interp, argv[3]) * 1000;
 				fileObj.setLastModified(newTime);
 			} else {
 				interp.setResult(getMtime(interp, argv[2].toString(), fileObj));

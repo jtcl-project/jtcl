@@ -558,7 +558,7 @@ public class EventAdaptor {
 		}
 		TclObject result = interp.getResult();
 		try {
-			return TclInteger.get(interp, result);
+			return TclInteger.getInt(interp, result);
 		} catch (TclException e) {
 			interp
 					.addErrorInfo("\n    (attempting to return integer number from binding)");

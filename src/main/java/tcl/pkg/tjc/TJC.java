@@ -1061,7 +1061,7 @@ public class TJC {
 	// differs from the parsed value of the integer,
 	// then it should be passed as the srep.
 
-	public static ExprValue exprGetValue(Interp interp, int ival, String srep)
+	public static ExprValue exprGetValue(Interp interp, long ival, String srep)
 			throws TclException {
 		if (USE_EXPR_CACHE) {
 			ExprValue value = interp.expr.grabExprValue();
@@ -1151,7 +1151,7 @@ public class TJC {
 	// indicates that this method executes 25%
 	// faster than TclInteger.get().
 
-	public static int exprGetKnownInt(final TclObject tobj) {
+	public static long exprGetKnownInt(final TclObject tobj) {
 		return tobj.ivalue;
 	}
 
@@ -1275,7 +1275,7 @@ public class TJC {
 					|| ((d > 0) && (d > ((double) TCL.INT_MAX)))) {
 				Expression.IntegerTooLarge(interp);
 			}
-			value.setIntValue((int) d);
+			value.setIntValue((long) d);
 			break;
 		}
 		case ExprValue.STRING: {
@@ -1435,7 +1435,7 @@ public class TJC {
 
 		if (indexValue.isIntType()) {
 			TclObject result = TclList
-					.index(interp, listObj, indexValue.ivalue);
+					.index(interp, listObj, (int)indexValue.ivalue);
 			if (result == null) {
 				interp.resetResult();
 			} else {
@@ -1531,7 +1531,7 @@ public class TJC {
 		int i;
 
 		if (indObj.isIntType()) {
-			i = indObj.ivalue; // Inline TclInteger.get()
+			i = (int)indObj.ivalue; // Inline TclInteger.get()
 		} else {
 			i = Util.getIntForIndex(interp, indObj, len - 1);
 		}
@@ -1564,7 +1564,7 @@ public class TJC {
 
 		try {
 			if (firstObj.isIntType()) {
-				first = firstObj.ivalue; // Inline TclInteger.get()
+				first = (int)firstObj.ivalue; // Inline TclInteger.get()
 			} else {
 				first = Util.getIntForIndex(interp, firstObj, len - 1);
 			}
@@ -1573,7 +1573,7 @@ public class TJC {
 			}
 
 			if (lastObj.isIntType()) {
-				last = lastObj.ivalue; // Inline TclInteger.get()
+				last = (int)lastObj.ivalue; // Inline TclInteger.get()
 			} else {
 				last = Util.getIntForIndex(interp, lastObj, len - 1);
 			}

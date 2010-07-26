@@ -665,7 +665,7 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 			}
 
 			try {
-				limit = TclInteger.get(interp, objv[objv.length - 1]);
+				limit = TclInteger.getInt(interp, objv[objv.length - 1]);
 			} catch (TclException e) {
 				interp.transferResult(slaveInterp, e.getCompletionCode());
 				throw e;

@@ -81,12 +81,12 @@ public class Util {
 
 	/**
 	 * Implements functionality of the strtoul() function used in the C Tcl
-	 * library. This method will parse digits from what should be a 32-bit
+	 * library. This method will parse digits from what should be a 64-bit
 	 * (signed) integer and report the index of the character immediately
 	 * following the digits.
 	 * 
 	 * E.g.: "0x7fffffff" -> 2147483647 "0x80000000" -> -2147483648
-	 * "0x100000000" -> errno = TCL.INTEGER_RANGE "-0xFF" -> -255
+	 * "-0xFF" -> -255
 	 * 
 	 * This method behaves like the strtoul() function in NativeTcl. This method
 	 * will return a signed 64-bit Java long type in the strtoulResult argument.
@@ -180,8 +180,8 @@ public class Util {
 			}
 		}
 
-		long max = (((long) ((long) 1 << 32)) / ((long) base));
 		boolean overflowed = false;
+		long previousResult = 0;
 
 		for (;; i += 1) {
 			if (i >= len) {
@@ -196,11 +196,14 @@ public class Util {
 				break;
 			}
 
-			if (result > max) {
+			result = result * base + digit;
+			
+			/* result should never decrease, otherwise we've overflowed */
+			if (result < previousResult) {
 				overflowed = true;
 			}
-
-			result = result * base + digit;
+			previousResult = result;
+			
 			anyDigits = true;
 		}
 
@@ -210,8 +213,8 @@ public class Util {
 		}
 		if (!anyDigits) {
 			strtoulResult.update(0, 0, TCL.INVALID_INTEGER);
-		} else if (overflowed || result > Integer.MAX_VALUE || result < Integer.MIN_VALUE) {
-			strtoulResult.update(0, i, TCL.INTEGER_RANGE);
+		} else if (overflowed) {
+			strtoulResult.update(result, i, TCL.INTEGER_RANGE);
 		} else {
 			strtoulResult.update(result, i, 0);
 		}
@@ -232,7 +235,7 @@ public class Util {
 	 * @return integer value
 	 * @throws TclException
 	 */
-	public static int getInt(Interp interp, String s) throws TclException {
+	public static long getInt(Interp interp, String s) throws TclException {
 		int len = s.length();
 		int i = 0;
 		char c;
@@ -262,7 +265,7 @@ public class Util {
 			}
 		}
 
-		return (int) res.value;
+		return res.value;
 	}
 
 	/**
@@ -274,36 +277,7 @@ public class Util {
 	 * @throws TclException
 	 */
 	static long getWideInt(Interp interp, String str) throws TclException {
-		int len = str.length();
-		int i = 0;
-		char c;
-
-		StrtoulResult res;
-		if (interp == null) {
-			res = new StrtoulResult();
-		} else {
-			res = interp.strtoulResult;
-		}
-		Util.strtoul(str, i, 0, res);
-
-		if (res.errno < 0) {
-			if (res.errno == TCL.INTEGER_RANGE) {
-				if (interp != null) {
-					interp.setErrorCode(TclString.newInstance(intTooBigCode));
-				}
-				throw new TclException(interp, "long value too large to represent");
-			} else {
-				throw new TclException(interp, "expected long but got \"" + str + "\"" + checkBadOctal(interp, str));
-			}
-		} else if (res.index < len) {
-			for (i = res.index; i < len; i++) {
-				if (((c = str.charAt(i)) != ' ') && !Character.isWhitespace(c)) {
-					throw new TclException(interp, "expected long but got \"" + str + "\"" + checkBadOctal(interp, str));
-				}
-			}
-		}
-
-		return (int) res.value;
+		return getInt(interp, str);
 	}
 
 	/**
@@ -332,7 +306,7 @@ public class Util {
 		int length, offset;
 
 		if (tobj.isIntType()) {
-			return TclInteger.get(interp, tobj);
+			return (int)TclInteger.getLong(interp, tobj);
 		}
 
 		String bytes = tobj.toString();
@@ -346,7 +320,7 @@ public class Util {
 				}
 			}
 			try {
-				offset = TclInteger.get(null, tobj);
+				offset = (int)TclInteger.getLong(null, tobj);
 			} catch (TclException e) {
 				throw new TclException(interp, "bad index \"" + bytes + "\": must be integer or end?-integer?"
 						+ checkBadOctal(interp, bytes));
@@ -368,7 +342,7 @@ public class Util {
 				}
 			}
 			try {
-				offset = Util.getInt(interp, offsetStr);
+				offset = (int)Util.getInt(interp, offsetStr);
 				offset = -offset;
 				return endValue + offset;
 			} catch (TclException ex) {

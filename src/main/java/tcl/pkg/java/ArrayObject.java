@@ -168,7 +168,7 @@ class ArrayObject extends ReflectObject {
 				subArrayObj = dereferenceArrayDims(interp, javaObj, numDims,
 						indexListObj);
 				subArrayClass = dereferenceClassDims(interp, javaClass, numDims);
-				index = TclInteger.get(interp, TclList.index(interp,
+				index = TclInteger.getInt(interp, TclList.index(interp,
 						indexListObj, numDims - 1));
 			}
 
@@ -203,7 +203,7 @@ class ArrayObject extends ReflectObject {
 				subArrayObj = dereferenceArrayDims(interp, javaObj, numDims,
 						indexListObj);
 				subArrayClass = dereferenceClassDims(interp, javaClass, numDims);
-				index = TclInteger.get(interp, TclList.index(interp,
+				index = TclInteger.getInt(interp, TclList.index(interp,
 						indexListObj, numDims - 1));
 			}
 
@@ -238,7 +238,7 @@ class ArrayObject extends ReflectObject {
 							numDims, indexListObj);
 					subArrayClass = dereferenceClassDims(interp, javaClass,
 							numDims);
-					index = TclInteger.get(interp, TclList.index(interp,
+					index = TclInteger.getInt(interp, TclList.index(interp,
 							indexListObj, numDims - 1));
 				}
 			}
@@ -251,7 +251,7 @@ class ArrayObject extends ReflectObject {
 
 			count = Array.getLength(subArrayObj) - index;
 			if (numArgs > 1) {
-				count = Math.min(count, TclInteger.get(interp,
+				count = Math.min(count, TclInteger.getInt(interp,
 						argv[optionIdx + 2]));
 			}
 
@@ -292,7 +292,7 @@ class ArrayObject extends ReflectObject {
 							numDims, indexListObj);
 					subArrayClass = dereferenceClassDims(interp, javaClass,
 							numDims);
-					index = TclInteger.get(interp, TclList.index(interp,
+					index = TclInteger.getInt(interp, TclList.index(interp,
 							indexListObj, numDims - 1));
 				}
 			}
@@ -308,7 +308,7 @@ class ArrayObject extends ReflectObject {
 					- index);
 
 			if (numArgs > 2) {
-				count = Math.min(count, TclInteger.get(interp,
+				count = Math.min(count, TclInteger.getInt(interp,
 						argv[optionIdx + 2]));
 			}
 
@@ -364,7 +364,7 @@ class ArrayObject extends ReflectObject {
 
 		int arrayLength;
 		if (dim < sizeListLen) {
-			arrayLength = TclInteger.get(interp, TclList.index(interp,
+			arrayLength = TclInteger.getInt(interp, TclList.index(interp,
 					sizeListObj, dim));
 		} else {
 			arrayLength = valueListLen;
@@ -448,7 +448,7 @@ class ArrayObject extends ReflectObject {
 		Object subArrayObj = arrayObj;
 		for (int dim = 0; dim < numDerefDims - 1; dim++) {
 
-			int index = TclInteger.get(interp, TclList.index(interp,
+			int index = TclInteger.getInt(interp, TclList.index(interp,
 					indexListObj, dim));
 			try {
 				subArrayObj = Array.get(subArrayObj, index);

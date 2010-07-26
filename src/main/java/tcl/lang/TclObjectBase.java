@@ -55,17 +55,18 @@ abstract class TclObjectBase {
 
 	static final boolean validate = false;
 
-	// The ivalue field is used for a TclObject that contains
-	// an integer value. This implementation uses less
-	// memory than the previous approach that stored an
-	// int value in a internal rep of type TclInteger.
-	// This implementation executes integer operations
-	// more quickly since instanceof and upcast operations
-	// are no longer needed in the critical execution path.
-	// The ivalue field is always set after a call to
-	// setInternalRep() in the TclInteger class.
-
-	public int ivalue;
+	/**
+	 * The ivalue field is used for a TclObject that contains
+	 * an integer value. This implementation uses less
+	 * memory than the previous approach that stored an
+	 * int value in a internal rep of type TclInteger.
+	 * This implementation executes integer operations
+	 * more quickly since instanceof and upcast operations
+	 * are no longer needed in the critical execution path.
+	 * The ivalue field is always set after a call to
+	 * setInternalRep() in the TclInteger class.
+	 */
+	public long ivalue;
 
 	/*
 	 * Override of java.lang.Object#equals method. Needed in TclList#sort method
@@ -136,7 +137,7 @@ abstract class TclObjectBase {
 	// Return true if the TclObject contains a TclWideInteger.
 
 	public final boolean isWideIntType() {
-		return (internalRep instanceof TclWideInteger);
+		return isIntType();
 	}
 
 	// Return true if the TclObject contains a TclList.
@@ -249,7 +250,7 @@ abstract class TclObjectBase {
 	 * @param ivalue
 	 *            the integer value
 	 */
-	protected TclObjectBase(final int ivalue) {
+	protected TclObjectBase(final long ivalue) {
 		internalRep = TclInteger.dummy;
 		this.ivalue = ivalue;
 		// stringRep = null;
@@ -341,7 +342,7 @@ abstract class TclObjectBase {
 			}
 
 			if (isIntType()) {
-				stringRep = Integer.toString(ivalue);
+				stringRep = Long.toString(ivalue);
 			} else {
 				stringRep = internalRep.toString();
 			}

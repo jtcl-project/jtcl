@@ -74,7 +74,7 @@ public class ReturnCmd implements Command {
 					returnCode = TCL.CONTINUE;
 				} else {
 					try {
-						returnCode = TclInteger.get(interp, argv[i + 1]);
+						returnCode = TclInteger.getInt(interp, argv[i + 1]);
 					} catch (TclException e) {
 						throw new TclException(interp, "bad completion code \""
 								+ argv[i + 1]

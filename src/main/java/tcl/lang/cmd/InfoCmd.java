@@ -684,7 +684,7 @@ public class InfoCmd implements Command {
 			}
 			return;
 		} else if (objv.length == 3) {
-			level = TclInteger.get(interp, objv[2]);
+			level = TclInteger.getInt(interp, objv[2]);
 
 			if (level <= 0) {
 				if (interp.varFrame == null) {

@@ -21,7 +21,12 @@ testConstraint registeredMathFuncs [expr {
     ([catch {expr T1()} msg] != 1) || ($msg ne {unknown math function "T1"})
 }]
 
-testConstraint wideIs64bit [expr {(0x80000000 > 0) && (0x8000000000000000 < 0)}]
+
+# JTCL has 64-bit integers, but throws an exception on larger ints, so this testConstrain
+# is modified
+#testConstraint wideIs64bit [expr {(0x80000000 > 0) && (0x8000000000000000 < 0)}]
+testConstraint wideIs64bit [expr {(0x80000000 > 0)}]
+
 # procedures used below
 
 proc put_hello_char {c} {

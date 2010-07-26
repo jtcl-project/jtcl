@@ -201,11 +201,11 @@ public class SocketCmd implements Command {
 
 	private static int getPort(Interp interp, TclObject tobj)
 			throws TclException {
-		int num = Util.getInt(interp, tobj.toString());
-		if (num > 0xFFFF)
+		long num = Util.getInt(interp, tobj.toString());
+		if (num > 0xFFFFL)
 			throw new TclException(interp,
 					"couldn't open socket: port number too high");
-		return num;
+		return (int)num;
 	}
 
 }

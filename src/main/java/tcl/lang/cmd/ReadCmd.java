@@ -83,7 +83,7 @@ public class ReadCmd implements Command {
 			String arg = argv[i].toString();
 
 			if (Character.isDigit(arg.charAt(0))) {
-				toRead = TclInteger.get(interp, argv[i]);
+				toRead = TclInteger.getInt(interp, argv[i]);
 				readAll = false;
 			} else if (arg.equals("nonewline")) {
 				noNewline = true;

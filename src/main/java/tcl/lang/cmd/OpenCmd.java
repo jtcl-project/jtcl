@@ -139,7 +139,7 @@ public class OpenCmd implements Command {
 		}
 
 		if (argv.length == 4) {
-			prot = TclInteger.get(interp, argv[3]);
+			prot = TclInteger.getInt(interp, argv[3]);
 			throw new TclException(interp,
 					"setting permissions not implemented yet");
 		}

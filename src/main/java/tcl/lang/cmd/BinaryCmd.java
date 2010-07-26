@@ -810,7 +810,7 @@ public class BinaryCmd implements Command {
 				// Integer.toHexString(b & 0xff));
 			}
 		} else {
-			int value = TclInteger.get(interp, src);
+			int value = TclInteger.getInt(interp, src);
 
 			if (type == 'c') {
 				resultBytes[cursor++] = (byte) value;

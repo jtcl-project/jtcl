@@ -36,7 +36,7 @@ public class ExitCmd implements Command {
 			throw new TclNumArgsException(interp, 1, argv, "?returnCode?");
 		}
 		if (argv.length == 2) {
-			code = TclInteger.get(interp, argv[1]);
+			code = TclInteger.getInt(interp, argv[1]);
 		} else {
 			code = 0;
 		}

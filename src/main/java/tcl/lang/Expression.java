@@ -93,7 +93,7 @@ public class Expression {
 			"<=", ">=", "==", "!=", "&", "^", "|", "&&", "||", "?", ":", "eq",
 			"ne", "-", "+", "!", "~" };
 
-	public HashMap mathFuncTable;
+	public HashMap<String, MathFunction> mathFuncTable;
 
 	/**
 	 * The entire expression, as originally passed to eval et al.
@@ -138,7 +138,6 @@ public class Expression {
 	 */
 
 	public void evalSetResult(Interp interp, String string) throws TclException {
-		TclObject obj;
 		ExprValue value = ExprTopLevel(interp, string);
 		switch (value.getType()) {
 		case ExprValue.INT:
@@ -180,7 +179,7 @@ public class Expression {
 	 * Constructor.
 	 */
 	public Expression() {
-		mathFuncTable = new HashMap();
+		mathFuncTable = new HashMap<String, MathFunction>();
 
 		// rand -- needs testing
 		// srand -- needs testing
@@ -390,7 +389,7 @@ public class Expression {
 	public static void ExprParseString(final Interp interp,
 			final TclObject obj, final ExprValue value) {
 		char c;
-		int ival;
+		long ival;
 		double dval;
 		final String s = obj.toString();
 		final int len = s.length();
@@ -422,7 +421,7 @@ public class Expression {
 			case '7':
 			case '8':
 			case '9':
-				ival = (int) (c - '0');
+				ival = (long) (c - '0');
 				value.setIntValue(ival, s);
 				TclInteger.exprSetInternalRep(obj, ival);
 				return;
@@ -454,7 +453,7 @@ public class Expression {
 				case '7':
 				case '8':
 				case '9':
-					ival = (int) -(c - '0');
+					ival = (long) -(c - '0');
 					value.setIntValue(ival, s);
 					TclInteger.exprSetInternalRep(obj, ival);
 					return;
@@ -536,7 +535,7 @@ public class Expression {
 				}
 
 				if (trailing_blanks) {
-					ival = (int) res.value;
+					ival = res.value;
 					// System.out.println("string is an Integer of value " +
 					// ival);
 					value.setIntValue(ival, s);
@@ -992,7 +991,7 @@ public class Expression {
 			break;
 		case DIVIDE:
 			if (t1 == ExprValue.INT) {
-				int dividend, divisor, quotient;
+				long dividend, divisor, quotient;
 
 				if (value2.getIntValue() == 0) {
 					DivideByZero(interp);
@@ -1031,7 +1030,7 @@ public class Expression {
 			}
 			break;
 		case MOD:
-			int dividend,
+			long dividend,
 			divisor,
 			remainder;
 			boolean neg_divisor = false;
@@ -1121,13 +1120,13 @@ public class Expression {
 			break;
 		case LEFT_SHIFT:
 			// In Java, a left shift operation will shift bits from 0
-			// to 31 places to the left. For an int left operand
+			// to 63 places to the left. For an int left operand
 			// the right operand value is implicitly (value & 0x1f),
-			// so a negative shift amount is in the 0 to 31 range.
+			// so a negative shift amount is in the 0 to 63 range.
 
-			int left_shift_num = value.getIntValue();
-			int left_shift_by = value2.getIntValue();
-			if (left_shift_by >= 32) {
+			long left_shift_num = value.getIntValue();
+			long left_shift_by = value2.getIntValue();
+			if (left_shift_by >= 64) {
 				left_shift_num = 0;
 			} else {
 				left_shift_num <<= left_shift_by;
@@ -1136,13 +1135,13 @@ public class Expression {
 			break;
 		case RIGHT_SHIFT:
 			// In Java, a right shift operation will shift bits from 0
-			// to 31 places to the right and propagate the sign bit.
+			// to 63 places to the right and propagate the sign bit.
 			// For an int left operand, the right operand is implicitly
-			// (value & 0x1f), so a negative shift is in the 0 to 31 range.
+			// (value & 0x1f), so a negative shift is in the 0 to 63 range.
 
-			int right_shift_num = value.getIntValue();
-			int right_shift_by = value2.getIntValue();
-			if (right_shift_by >= 32) {
+			long right_shift_num = value.getIntValue();
+			long right_shift_by = value2.getIntValue();
+			if (right_shift_by >= 64) {
 				if (right_shift_num < 0) {
 					right_shift_num = -1;
 				} else {
@@ -1379,7 +1378,7 @@ public class Expression {
 					m_ind = res.index;
 					m_token = VALUE;
 					ExprValue value = grabExprValue();
-					value.setIntValue((int) res.value, token);
+					value.setIntValue(res.value, token);
 					return value;
 				} else {
 					if (res.errno == TCL.INTEGER_RANGE) {
@@ -1862,7 +1861,7 @@ public class Expression {
 					}
 				} else {
 					if (mathFunc.argTypes[i] == MathFunction.INT) {
-						value.setIntValue((int) value.getDoubleValue());
+						value.setIntValue((long) value.getDoubleValue());
 					}
 				}
 			}
@@ -2182,7 +2181,7 @@ class AbsFunction extends MathFunction {
 				value.setDoubleValue(-d);
 			}
 		} else {
-			int i = value.getIntValue();
+			long i = value.getIntValue();
 			if (i > 0) {
 				value.setIntValue(i);
 			} else {
@@ -2217,7 +2216,7 @@ class IntFunction extends MathFunction {
 		if (!value.isIntType()) {
 			double d = value.getDoubleValue();
 			Expression.checkIntegerRange(interp, d);
-			value.setIntValue((int) d);
+			value.setIntValue((long) d);
 		}
 	}
 }
@@ -2233,7 +2232,7 @@ class WideFunction extends MathFunction {
 		if (!value.isIntType()) {
 			double d = value.getDoubleValue();
 			Expression.checkIntegerRange(interp, d);
-			value.setIntValue((int) d);
+			value.setIntValue((long) d);
 		}
 	}
 }
@@ -2255,13 +2254,13 @@ class RoundFunction extends MathFunction {
 					i += -1.0;
 				}
 				Expression.checkIntegerRange(interp, i);
-				value.setIntValue((int) i);
+				value.setIntValue((long) i);
 			} else {
 				if (f >= 0.5) {
 					i += 1.0;
 				}
 				Expression.checkIntegerRange(interp, i);
-				value.setIntValue((int) i);
+				value.setIntValue((long) i);
 			}
 		}
 	}

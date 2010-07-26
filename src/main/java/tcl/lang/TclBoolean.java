@@ -96,7 +96,7 @@ public class TclBoolean implements InternalRep {
 		String string = tobj.toString();
 
 		if (tobj.isIntType()) {
-			int i = TclInteger.get(interp, tobj);
+			long i = TclInteger.getLong(interp, tobj);
 			if (i == 0) {
 				tobj.setInternalRep(falseRep);
 			} else {
@@ -218,7 +218,7 @@ public class TclBoolean implements InternalRep {
 			// An integer with the value 0 or 1 can be
 			// considered a boolean value, so there is
 			// no need to change the internal rep.
-			int ival = tobj.ivalue; // Inline TclInteger.get()
+			long ival = tobj.ivalue; // Inline TclInteger.get()
 			if (ival == 0) {
 				return false;
 			} else if (ival == 1) {

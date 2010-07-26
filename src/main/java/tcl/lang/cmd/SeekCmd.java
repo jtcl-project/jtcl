@@ -84,7 +84,7 @@ public class SeekCmd implements Command {
 			throw new TclException(interp, "can not find channel named \""
 					+ argv[1].toString() + "\"");
 		}
-		long offset = TclInteger.get(interp, argv[2]);
+		long offset = TclInteger.getLong(interp, argv[2]);
 
 		try {
 			chan.seek(interp, offset, mode);

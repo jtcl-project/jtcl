@@ -109,12 +109,12 @@ public class AfterCmd implements Command {
 		int ms = 0;
 
 		if (argv[1].isIntType()) {
-			ms = TclInteger.get(interp, argv[1]);
+			ms = TclInteger.getInt(interp, argv[1]);
 			isNumber = true;
 		} else {
 			String s = argv[1].toString();
 			if ((s.length() > 0) && (Character.isDigit(s.charAt(0)))) {
-				ms = TclInteger.get(interp, argv[1]);
+				ms = TclInteger.getInt(interp, argv[1]);
 				isNumber = true;
 			}
 		}

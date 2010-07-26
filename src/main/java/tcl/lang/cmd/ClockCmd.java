@@ -127,7 +127,7 @@ public class ClockCmd implements Command {
 				throw new TclNumArgsException(interp, 2, objv,
 						"clockval ?-format string? ?-gmt boolean?");
 			}
-			clockVal = TclInteger.get(interp, objv[2]);
+			clockVal = TclInteger.getInt(interp, objv[2]);
 
 			for (argIx = 3; argIx + 1 < objv.length; argIx += 2) {
 				int formatOpt = TclIndex.get(interp, objv[argIx], formatOpts,
@@ -177,7 +177,7 @@ public class ClockCmd implements Command {
 						"clockval ?-format string? ?-gmt boolean?");
 			}
 			if (baseObj != null) {
-				long seconds = TclInteger.get(interp, baseObj);
+				long seconds = TclInteger.getLong(interp, baseObj);
 				baseClock = new Date(seconds * 1000);
 			} else {
 				baseClock = new Date();

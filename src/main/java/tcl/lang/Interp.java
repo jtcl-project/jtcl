@@ -1313,30 +1313,19 @@ public class Interp extends EventuallyFreed {
 				(flags | TCL.LEAVE_ERR_MSG));
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	
+	/**
+	 *  Set a variable to the value in a long argument.
+	 *  
+	 * @param name1 name of scalar variable, or name of array if name2 is non-null
+	 * @param name2 Name of element within an array, or null if setting a scalar
+	 * @param intValue new value for avariable
+	 * @param flags Various flags that tell how to set valu any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY, TCL.APPEND_VALUE, or TCL.LIST_ELEMENT.
+	 * @return Variable with new value
 	 * 
-	 * setVar --
-	 * 
-	 * Set a variable to the value in an int argument.
-	 * 
-	 * Results: Returns the new value of the variable.
-	 * 
-	 * Side effects: May trigger traces.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @throws TclException
 	 */
-
-	public final TclObject setVar(String name1, // If name2 is null, this is
-												// name of a scalar
-			// variable. Otherwise it is the name of an
-			// array.
-			String name2, // Name of an element within an array, or
-			// null.
-			int intValue, // New value for variable.
-			int flags) // Various flags that tell how to set value:
-			// any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY,
-			// TCL.APPEND_VALUE, or TCL.LIST_ELEMENT.
+	public final TclObject setVar(String name1, String name2, long intValue, int flags) 
 			throws TclException {
 		return Var.setVar(this, name1, name2, checkCommonInteger(intValue),
 				(flags | TCL.LEAVE_ERR_MSG));
@@ -2316,23 +2305,16 @@ public class Interp extends EventuallyFreed {
 		setResult(checkCommonString(r));
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * setResult --
-	 * 
+
+	/**
 	 * Arrange for the given Tcl Object to be placed as the result object for
 	 * the interpreter. Convenience functions are also available to create a Tcl
 	 * Object out of the most common Java types.
 	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: The object result for the interpreter is updated.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param r integer value to set result to
 	 */
 
-	public final void setResult(final int r) // An int result.
+	public final void setResult(final long r) // An int result.
 	{
 		setResult(checkCommonInteger(r));
 	}
@@ -4264,18 +4246,17 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 *----------------------------------------------------------------------
-	 * 
 	 * checkCommonInteger()
 	 * 
 	 * If a given integer value is in the common value pool then return a shared
 	 * object for that integer. If the integer value is not in the common pool
 	 * then use to use the recycled int value or a new TclObject.
 	 * 
-	 *----------------------------------------------------------------------
+	 * @param value integer to test
+	 * @return TclObject containing 'value'
 	 */
 
-	public final TclObject checkCommonInteger(int value) {
+	public final TclObject checkCommonInteger(long value) {
 		if (VALIDATE_SHARED_RESULTS) {
 			TclObject[] objv = { m_minusoneIntegerResult, m_zeroIntegerResult,
 					m_oneIntegerResult, m_twoIntegerResult };
@@ -4290,20 +4271,15 @@ public class Interp extends EventuallyFreed {
 			}
 		}
 
-		switch (value) {
-		case -1: {
+		if (value==-1) {
 			return m_minusoneIntegerResult;
-		}
-		case 0: {
+		} else if (value==0) {
 			return m_zeroIntegerResult;
-		}
-		case 1: {
+		} else if (value==1) {
 			return m_oneIntegerResult;
-		}
-		case 2: {
+		} else if (value==2) {
 			return m_twoIntegerResult;
-		}
-		default: {
+		} else {
 			if ((recycledI.getRefCount() == 1)
 					|| ((recycledI.getRefCount() == 2) && (recycledI == m_result))) {
 				// If (refCount == 1) then interp result
@@ -4338,7 +4314,6 @@ public class Interp extends EventuallyFreed {
 			}
 
 			return recycledI;
-		}
 		}
 	}
 

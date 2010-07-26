@@ -1796,7 +1796,7 @@ public class Var {
 			String part2, // If non-null, reference to a string holding
 			// the name of an element in the array
 			// part1.
-			int incrAmount, // Amount to be added to variable.
+			long incrAmount, // Amount to be added to variable.
 			int flags // Various flags that tell how to incr value:
 	// any of TCL.GLOBAL_ONLY,
 	// TCL.NAMESPACE_ONLY, TCL.APPEND_VALUE,

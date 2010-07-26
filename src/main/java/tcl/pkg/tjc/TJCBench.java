@@ -218,7 +218,7 @@ public class TJCBench extends TJC.CompiledCommand {
 	// so that the optimizer does not incorrectly
 	// eliminate what it thinks is dead code.
 
-	static int RESULT_INT = 0;
+	static long RESULT_INT = 0;
 	static Object RESULT_OBJ = null;
 
 	// Invoke TclObject.preserve() over and over again
@@ -257,7 +257,7 @@ public class TJCBench extends TJC.CompiledCommand {
 		for (int i = 0; i < 5000; i++) {
 			Expression.ExprParseObject(interp, tobj, value);
 		}
-		RESULT_INT = TclInteger.get(interp, tobj);
+		RESULT_INT = TclInteger.getInt(interp, tobj);
 	}
 
 	// Invoke ExprParseObject() over and over again on a
@@ -320,7 +320,7 @@ public class TJCBench extends TJC.CompiledCommand {
 		for (int i = 0; i < 5000; i++) {
 			TclInteger.incr(interp, tobj, 1);
 		}
-		RESULT_INT = TclInteger.get(interp, tobj);
+		RESULT_INT = TclInteger.getLong(interp, tobj);
 	}
 
 	// Invoke TclList.getLength() on an unshared
@@ -536,7 +536,7 @@ public class TJCBench extends TJC.CompiledCommand {
 		int ivalue = 0;
 
 		for (int i = 0; i < 5000; i++) {
-			ivalue = TclInteger.get(interp, tobj);
+			ivalue = TclInteger.getInt(interp, tobj);
 		}
 		RESULT_INT = ivalue;
 	}
@@ -550,7 +550,7 @@ public class TJCBench extends TJC.CompiledCommand {
 		int ivalue = 0;
 
 		for (int i = 0; i < 5000; i++) {
-			ivalue = TJC.exprGetKnownInt(tobj);
+			ivalue = (int)TJC.exprGetKnownInt(tobj);
 		}
 		RESULT_INT = ivalue;
 	}
@@ -565,7 +565,7 @@ public class TJCBench extends TJC.CompiledCommand {
 
 	void InternalExprInlineGetInt(Interp interp) throws TclException {
 		TclObject tobj = TclInteger.newInstance(1);
-		int ivalue = 0;
+		long ivalue = 0;
 
 		for (int i = 0; i < 5000; i++) {
 			ivalue = tobj.ivalue;
@@ -647,7 +647,7 @@ public class TJCBench extends TJC.CompiledCommand {
 		for (int i = 0; i < 5000; i++) {
 			ev.optIntUnaryNotNstr();
 		}
-		RESULT_INT = ev.getIntValue();
+		RESULT_INT = (int)ev.getIntValue();
 	}
 
 	// Establish timing results for integer.setResult(TclObject).
@@ -673,7 +673,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			interp.setResult(tobj1);
 			interp.setResult(tobj2);
 		}
-		RESULT_INT = TclInteger.get(interp, interp.getResult());
+		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
 	}
 
 	// Invoke integer.setResult(TclObject) over and over
@@ -690,7 +690,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			interp.setResult(tobj1);
 			interp.setResult(tobj1);
 		}
-		RESULT_INT = TclInteger.get(interp, interp.getResult());
+		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
 	}
 
 	// Establish timing results for integer.resetResult().
@@ -740,7 +740,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			interp.setResult(i1);
 			interp.setResult(i2);
 		}
-		RESULT_INT = TclInteger.get(interp, interp.getResult());
+		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
 	}
 
 	// Establish timing results for integer.setResult(int).
@@ -754,7 +754,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			interp.setResult(i * 2);
 			interp.setResult(i * 3);
 		}
-		RESULT_INT = TclInteger.get(interp, interp.getResult());
+		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
 	}
 
 	// Establish timing results for integer.setResult(double)
@@ -792,8 +792,8 @@ public class TJCBench extends TJC.CompiledCommand {
 	// TJC.exprSetResult() but without a type switch.
 
 	void InternalSetIntResultViaExprValue(Interp interp) throws TclException {
-		int i1 = 1;
-		int i2 = 0;
+		long i1 = 1;
+		long i2 = 0;
 		if (RESULT_INT == 0) {
 			// Make sure ints are not seen as compile
 			// time constant values.
@@ -807,7 +807,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			interp.setResult(value1.getIntValue());
 			interp.setResult(value2.getIntValue());
 		}
-		RESULT_INT = TclInteger.get(interp, interp.getResult());
+		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
 	}
 
 	// Establish timing results for TJC.exprSetResult()
@@ -817,8 +817,8 @@ public class TJCBench extends TJC.CompiledCommand {
 	// operation is taking.
 
 	void InternalExprSetIntResult(Interp interp) throws TclException {
-		int i1 = 1;
-		int i2 = 0;
+		long i1 = 1;
+		long i2 = 0;
 		if (RESULT_INT == 0) {
 			// Make sure ints are not seen as compile
 			// time constant values.
@@ -832,7 +832,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			TJC.exprSetResult(interp, value1);
 			TJC.exprSetResult(interp, value2);
 		}
-		RESULT_INT = TclInteger.get(interp, interp.getResult());
+		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
 	}
 
 	// Invoke unary ! operator on a TclInteger.
@@ -869,7 +869,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			TJC.exprSetResult(interp, tmp0);
 			TJC.exprReleaseValue(interp, tmp0);
 		}
-		RESULT_INT = TclInteger.get(interp, interp.getResult());
+		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
 	}
 
 	// This is the logic emitted for a unary
@@ -893,7 +893,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			TJC.exprUnaryOperator(interp, TJC.EXPR_OP_UNARY_NOT, tmp0);
 			TJC.exprSetResult(interp, tmp0);
 		}
-		RESULT_INT = TclInteger.get(interp, interp.getResult());
+		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
 	}
 
 	// This method is like InternalExprOpIntNotStackValueResult
@@ -917,7 +917,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			TJC.exprUnaryOperator(interp, TJC.EXPR_OP_UNARY_NOT, tmp0);
 			interp.setResult(tmp0.getIntValue());
 		}
-		RESULT_INT = TclInteger.get(interp, interp.getResult());
+		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
 	}
 
 	// This method is like InternalExprOpIntNotStackValueIntResult
@@ -936,7 +936,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			TJC.exprUnaryOperator(interp, TJC.EXPR_OP_UNARY_NOT, tmp0);
 			interp.setResult((tmp0.getIntValue() != 0));
 		}
-		RESULT_INT = TclInteger.get(interp, interp.getResult());
+		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
 	}
 
 	// This optimized logic will check the type of an
@@ -967,7 +967,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			}
 			TJC.exprSetResult(interp, tmp0);
 		}
-		RESULT_INT = TclInteger.get(interp, interp.getResult());
+		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
 	}
 
 	// This implementation is like InternalExprOpIntInlinedNotStackValueResult
@@ -994,7 +994,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			}
 			TJC.exprSetResult(interp, tmp0);
 		}
-		RESULT_INT = TclInteger.get(interp, interp.getResult());
+		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
 	}
 
 	// This implementation takes advantage of the inlined not
@@ -1021,7 +1021,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			}
 			interp.setResult(tmp0.getIntValue());
 		}
-		RESULT_INT = TclInteger.get(interp, interp.getResult());
+		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
 	}
 
 	// Like InternalExprOpIntInlinedNotNstrStackValueIntResult
@@ -1046,7 +1046,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			}
 			interp.setResult((tmp0.getIntValue() != 0));
 		}
-		RESULT_INT = TclInteger.get(interp, interp.getResult());
+		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
 	}
 
 	// Invoke TJC.exprUnaryNotOperatorKnownInt() to set an
@@ -1072,7 +1072,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			}
 			interp.setResult((tmp0.getIntValue() != 0));
 		}
-		RESULT_INT = TclInteger.get(interp, interp.getResult());
+		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
 	}
 
 	// Inline the logic found in exprUnaryNotOperatorKnownInt()
@@ -1098,7 +1098,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			}
 			interp.setResult((tmp0.getIntValue() != 0));
 		}
-		RESULT_INT = TclInteger.get(interp, interp.getResult());
+		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
 	}
 
 	// Inline the logic found in exprUnaryNotOperatorKnownInt()
@@ -1124,7 +1124,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			}
 			interp.setResult((tmp0.getIntValue() != 0));
 		}
-		RESULT_INT = TclInteger.get(interp, interp.getResult());
+		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
 	}
 
 	// Code emitted via +inline-expr with no specific
@@ -1257,7 +1257,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			TJC.exprSetResult(interp, tmp0);
 			TJC.exprReleaseValue(interp, tmp0);
 		}
-		RESULT_INT = TclInteger.get(interp, interp.getResult());
+		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
 	}
 
 	// This is the logic emitted for a binary
@@ -1287,7 +1287,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			TJC.exprBinaryOperator(interp, TJC.EXPR_OP_PLUS, tmp0, tmp1);
 			TJC.exprSetResult(interp, tmp0);
 		}
-		RESULT_INT = TclInteger.get(interp, interp.getResult());
+		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
 	}
 
 	// This method is like InternalExprOpIntPlusStackValueResult
@@ -1311,7 +1311,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			TJC.exprBinaryOperator(interp, TJC.EXPR_OP_PLUS, tmp0, tmp1);
 			interp.setResult(tmp0.getIntValue());
 		}
-		RESULT_INT = TclInteger.get(interp, interp.getResult());
+		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
 	}
 
 	// This methods makes use of an inline plus operator
@@ -1345,7 +1345,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			}
 			interp.setResult(tmp0.getIntValue());
 		}
-		RESULT_INT = TclInteger.get(interp, interp.getResult());
+		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
 	}
 
 	// This implementation avoids a runtime branch operation
@@ -1367,7 +1367,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			tmp0.optIntPlus(tmp1);
 			interp.setResult(tmp0.getIntValue());
 		}
-		RESULT_INT = TclInteger.get(interp, interp.getResult());
+		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
 	}
 
 	// This implementation executes the int plus operation
@@ -1385,7 +1385,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			tmp0.setIntValue(1 + 2);
 			interp.setResult(tmp0.getIntValue());
 		}
-		RESULT_INT = TclInteger.get(interp, interp.getResult());
+		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
 	}
 
 	// This implementation saves the plus operator result into
@@ -1402,7 +1402,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			int tmp0 = 1 + 2;
 			interp.setResult(tmp0);
 		}
-		RESULT_INT = TclInteger.get(interp, interp.getResult());
+		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
 	}
 
 	// Invoke binary + operator on a TclDouble.
@@ -1442,7 +1442,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			} // End if: !0
 			TJC.exprSetResult(interp, tmp0);
 		}
-		RESULT_INT = TclInteger.get(interp, interp.getResult());
+		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
 	}
 
 	// This implementation will use a boolean value
@@ -1467,7 +1467,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			}
 			interp.setResult(tmp0);
 		}
-		RESULT_INT = TclInteger.get(interp, interp.getResult());
+		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
 	}
 
 	// If an operand is known to be of type int, an inlined
@@ -1491,7 +1491,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			}
 			interp.setResult(tmp0);
 		}
-		RESULT_INT = TclInteger.get(interp, interp.getResult());
+		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
 	}
 
 	// If an operand is known to be of type int and the
@@ -1514,7 +1514,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			}
 			interp.setResult(tmp0);
 		}
-		RESULT_INT = TclInteger.get(interp, interp.getResult());
+		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
 	}
 
 	// This method will grab an objv array and fill it

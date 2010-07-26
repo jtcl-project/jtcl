@@ -58,7 +58,7 @@ public final class TclObject extends TclObjectBase {
 	 * @param ivalue
 	 *            the integer value
 	 */
-	protected TclObject(final int ivalue) {
+	protected TclObject(final long ivalue) {
 		super(ivalue);
 	}
 
@@ -118,7 +118,7 @@ public final class TclObject extends TclObjectBase {
 	 * optimized case is worth it for this common case.
 	 */
 
-	final void setRecycledIntValue(int i) {
+	final void setRecycledIntValue(long i) {
 		if (validate) {
 			if ((refCount != 1) && (refCount != 2)) {
 				throw new TclRuntimeError("Invalid refCount " + refCount);

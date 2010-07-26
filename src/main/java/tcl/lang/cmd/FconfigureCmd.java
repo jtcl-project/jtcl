@@ -269,7 +269,7 @@ public class FconfigureCmd implements Command {
 				break;
 			}
 			case OPT_BUFFERSIZE: { // -buffersize
-				chan.setBufferSize(TclInteger.get(interp, argv[i]));
+				chan.setBufferSize(TclInteger.getInt(interp, argv[i]));
 				break;
 			}
 			case OPT_ENCODING: { // -encoding

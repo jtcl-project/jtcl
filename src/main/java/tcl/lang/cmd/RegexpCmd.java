@@ -217,7 +217,7 @@ public class RegexpCmd implements Command {
 					break;
 				}
 
-				offset = TclInteger.get(interp, objv[i]);
+				offset = TclInteger.getInt(interp, objv[i]);
 
 				if (offset < 0) {
 					offset = 0;

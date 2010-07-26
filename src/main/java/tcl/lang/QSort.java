@@ -249,8 +249,8 @@ public final class QSort {
 			break;
 		case INTEGER:
 			try {
-				int int1 = TclInteger.get(sortInterp, obj1);
-				int int2 = TclInteger.get(sortInterp, obj2);
+				long int1 = TclInteger.getLong(sortInterp, obj1);
+				long int2 = TclInteger.getLong(sortInterp, obj2);
 
 				if (int1 > int2) {
 					code = 1;
@@ -292,7 +292,7 @@ public final class QSort {
 			}
 
 			try {
-				code = TclInteger.get(sortInterp, sortInterp.getResult());
+				code = TclInteger.getInt(sortInterp, sortInterp.getResult());
 			} catch (TclException e) {
 				sortInterp.resetResult();
 				TclException e4 = new TclException(sortInterp,

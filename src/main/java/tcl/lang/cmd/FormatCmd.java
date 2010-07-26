@@ -264,7 +264,7 @@ public class FormatCmd implements Command {
 				stoul = null;
 			} else if (format[fmtIndex] == '*') {
 				if (argv.length > argIndex) {
-					width = TclInteger.get(interp, argv[argIndex]);
+					width = TclInteger.getInt(interp, argv[argIndex]);
 					if (width < 0) {
 						width = -width;
 						fmtFlags |= LEFT_JUSTIFY;
@@ -290,7 +290,7 @@ public class FormatCmd implements Command {
 				} else if (format[fmtIndex] == '*') {
 					if (argv.length > argIndex) {
 						precisionSet = true;
-						precision = TclInteger.get(interp, argv[argIndex]);
+						precision = TclInteger.getInt(interp, argv[argIndex]);
 						argIndex++;
 						fmtIndex++;
 						checkOverFlow(interp, format, fmtIndex);
@@ -359,14 +359,14 @@ public class FormatCmd implements Command {
 					// and on. The result is a long value equal to that
 					// of an unsigned int.
 
-					lngValue = (long) TclInteger.get(interp, argv[argIndex]);
+					lngValue = (long) TclInteger.getInt(interp, argv[argIndex]);
 					if (lngValue < 0) {
 						lngValue = (lngValue << 32);
 						lngValue = (lngValue >>> 32);
 					}
 				} else {
 					fmtFlags |= SIGNED_VALUE;
-					lngValue = (long) TclInteger.get(interp, argv[argIndex]);
+					lngValue = (long) TclInteger.getInt(interp, argv[argIndex]);
 				}
 
 				// If the useShort option has been selected, we need
@@ -396,7 +396,7 @@ public class FormatCmd implements Command {
 			}
 			case 'c': {
 				intValue = 0;
-				char arr[] = { (char) TclInteger.get(interp, argv[argIndex]) };
+				char arr[] = { (char) TclInteger.getInt(interp, argv[argIndex]) };
 				strValue = new String(arr);
 				sbuf.append(cvtStrToStr(strValue, width, precision, fmtFlags));
 				break;

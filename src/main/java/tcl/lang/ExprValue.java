@@ -30,7 +30,7 @@ public final class ExprValue {
 	/**
 	 * Integer value, if any.
 	 */
-	private int intValue;
+	private long intValue;
 
 	/**
 	 * Floating-point value, if any.
@@ -52,7 +52,7 @@ public final class ExprValue {
 	 */
 	private static final boolean validate = false;
 
-	public ExprValue(int i, String s) {
+	public ExprValue(long i, String s) {
 		setIntValue(i, s);
 	}
 
@@ -88,7 +88,7 @@ public final class ExprValue {
 		return (type == INT) || (type == DOUBLE);
 	}
 
-	public final int getIntValue() {
+	public final long getIntValue() {
 		if (validate) {
 			if (type != INT) {
 				throw new TclRuntimeError(
@@ -113,7 +113,7 @@ public final class ExprValue {
 			// No-op
 		} else if (type == INT) {
 			if (stringValue == null) {
-				stringValue = Integer.toString(intValue);
+				stringValue = Long.toString(intValue);
 			}
 		} else if (type == DOUBLE) {
 			if (stringValue == null) {
@@ -145,13 +145,13 @@ public final class ExprValue {
 		}
 	}
 
-	public final void setIntValue(int value) {
+	public final void setIntValue(long value) {
 		stringValue = null;
 		intValue = value;
 		type = INT;
 	}
 
-	public final void setIntValue(int value, String s) {
+	public final void setIntValue(long value, String s) {
 		stringValue = s;
 		intValue = value;
 		type = INT;
@@ -217,7 +217,7 @@ public final class ExprValue {
 		} else if (type == INT) {
 			sb.append("INT \"" + intValue + "\"");
 			if (stringValue != null) {
-				String intString = Integer.toString(intValue);
+				String intString = Long.toString(intValue);
 				if (intString.compareTo(stringValue) != 0) {
 					sb.append(" parsed from \"");
 					sb.append(stringValue);

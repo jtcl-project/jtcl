@@ -36,7 +36,7 @@ public class IncrCmd implements Command {
 	 */
 
 	public void cmdProc(Interp interp, TclObject objv[]) throws TclException {
-		int incrAmount;
+		long incrAmount;
 		TclObject newValue;
 
 		if ((objv.length != 2) && (objv.length != 3)) {
@@ -50,7 +50,7 @@ public class IncrCmd implements Command {
 			incrAmount = 1;
 		} else {
 			try {
-				incrAmount = TclInteger.get(interp, objv[2]);
+				incrAmount = TclInteger.getLong(interp, objv[2]);
 			} catch (TclException e) {
 				interp.addErrorInfo("\n    (reading increment)");
 				throw e;

@@ -41,7 +41,7 @@ public class TimeCmd implements Command {
 		if (argv.length == 2) {
 			count = 1;
 		} else {
-			count = TclInteger.get(interp, argv[2]);
+			count = TclInteger.getInt(interp, argv[2]);
 		}
 
 		long startTime = System.currentTimeMillis();

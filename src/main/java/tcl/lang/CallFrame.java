@@ -329,12 +329,12 @@ public class CallFrame {
 		curLevel = (interp.varFrame == null) ? 0 : interp.varFrame.level;
 
 		if ((string.length() > 0) && (string.charAt(0) == '#')) {
-			level = Util.getInt(interp, string.substring(1));
+			level = (int)Util.getInt(interp, string.substring(1));
 			if (level < 0) {
 				throw new TclException(interp, "bad level \"" + string + "\"");
 			}
 		} else if ((string.length() > 0) && Character.isDigit(string.charAt(0))) {
-			level = Util.getInt(interp, string);
+			level = (int)Util.getInt(interp, string);
 			level = curLevel - level;
 		} else {
 			level = curLevel - 1;

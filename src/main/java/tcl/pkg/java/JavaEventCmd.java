@@ -82,7 +82,7 @@ public class JavaEventCmd implements Command {
 			 * without an exception, we've got "-index" (or abreviations).
 			 */
 
-			index = TclInteger.get(interp, argv[2]);
+			index = TclInteger.getInt(interp, argv[2]);
 		}
 
 		if (argv.length == 2) {

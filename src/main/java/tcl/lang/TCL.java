@@ -82,8 +82,8 @@ public class TCL {
 	// The largest positive and negative integer values that can be
 	// represented in Tcl.
 
-	public static final long INT_MAX = 2147483647;
-	public static final long INT_MIN = -2147483648;
+	public static final long INT_MAX = Long.MAX_VALUE;
+	public static final long INT_MIN = Long.MIN_VALUE;
 
 	// These values are used by Util.strtoul and Util.strtod to
 	// report conversion errors.

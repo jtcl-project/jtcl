@@ -251,7 +251,7 @@ public class TclDouble implements InternalRep {
 
 				if (Util.looksLikeInt(tobj.toString())) {
 					try {
-						int ival = TclInteger.get(null, tobj);
+						long ival = TclInteger.getLong(null, tobj);
 
 						// A tricky octal like "040" can be parsed as
 						// the double 40.0 or the integer 32, return
@@ -388,7 +388,7 @@ public class TclDouble implements InternalRep {
 			// should have been parsed as an integer.
 
 			try {
-				int ival = Util.getInt(null, tobj.toString());
+				long ival = Util.getInt(null, tobj.toString());
 				throw new TclRuntimeError(
 						"should not be able to parse string rep as int: "
 								+ tobj.toString());

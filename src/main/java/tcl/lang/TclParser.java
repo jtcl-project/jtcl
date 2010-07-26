@@ -86,8 +86,8 @@ public class TclParser implements Command {
 				index = 0;
 				length = scriptLength;
 			} else if (objv.length == 5) {
-				index = TclInteger.get(interp, objv[3]);
-				length = TclInteger.get(interp, objv[4]);
+				index = TclInteger.getInt(interp, objv[3]);
+				length = TclInteger.getInt(interp, objv[4]);
 
 				if (index < 0) {
 					index = 0;
@@ -856,7 +856,7 @@ public class TclParser implements Command {
 			int len;
 			String bytes;
 			itemPtr = TclList.index(interp, rangePtr, 0);
-			result.indexPtr = TclInteger.get(interp, itemPtr);
+			result.indexPtr = TclInteger.getInt(interp, itemPtr);
 			itemPtr = TclList.index(interp, rangePtr, 1);
 			bytes = itemPtr.toString();
 			len = bytes.length();
@@ -864,7 +864,7 @@ public class TclParser implements Command {
 			if (bytes.equals("end")) {
 				result.lengthPtr = scriptLen;
 			} else {
-				result.lengthPtr = TclInteger.get(interp, itemPtr);
+				result.lengthPtr = TclInteger.getInt(interp, itemPtr);
 			}
 			if (scriptLen >= 0) {
 				if (result.indexPtr < 0) {

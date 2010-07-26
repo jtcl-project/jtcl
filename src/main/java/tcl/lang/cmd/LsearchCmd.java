@@ -198,7 +198,7 @@ public class LsearchCmd implements Command {
 				length = patternBytes.length();
 				break;
 			case INTEGER:
-				patInt = TclInteger.get(interp, patObj);
+				patInt = TclInteger.getInt(interp, patObj);
 				break;
 			case REAL:
 				patDouble = TclDouble.get(interp, patObj);
@@ -238,7 +238,7 @@ public class LsearchCmd implements Command {
 					break;
 				}
 				case INTEGER: {
-					int objInt = TclInteger.get(interp, listv[i]);
+					int objInt = TclInteger.getInt(interp, listv[i]);
 					if (patInt == objInt) {
 						match = 0;
 					} else if (patInt < objInt) {
@@ -322,7 +322,7 @@ public class LsearchCmd implements Command {
 						break;
 					}
 					case INTEGER: {
-						int objInt = TclInteger.get(interp, listv[i]);
+						int objInt = TclInteger.getInt(interp, listv[i]);
 						match = (objInt == patInt);
 						break;
 					}

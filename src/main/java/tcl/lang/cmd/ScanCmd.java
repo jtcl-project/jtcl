@@ -23,7 +23,6 @@ import tcl.lang.TclInteger;
 import tcl.lang.TclNumArgsException;
 import tcl.lang.TclObject;
 import tcl.lang.TclString;
-import tcl.lang.TclWideInteger;
 import tcl.lang.Util;
 
 /**
@@ -250,7 +249,7 @@ public class ScanCmd implements Command {
 						if (!discardFlag) {
 							if (ch == 'u') {
 								testAndSetVar(interp, argv, argIndex++,
-										TclWideInteger.newInstance(strul.value));
+										TclInteger.newInstance(strul.value));
 							} else {
 								i = (int) strul.value;
 								testAndSetVar(interp, argv, argIndex++,

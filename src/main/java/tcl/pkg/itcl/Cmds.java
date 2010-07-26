@@ -1192,7 +1192,7 @@ class Cmds {
 			boolean err = false;
 			loaded = 0;
 			try {
-				loaded = TclInteger.get(interp, obj);
+				loaded = TclInteger.getInt(interp, obj);
 			} catch (TclException ex) {
 				err = true;
 			}

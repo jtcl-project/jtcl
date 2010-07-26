@@ -120,7 +120,7 @@ public class RegsubCmd implements Command {
 					break;
 				}
 
-				offset = TclInteger.get(interp, objv[idx]);
+				offset = TclInteger.getInt(interp, objv[idx]);
 
 				if (offset < 0) {
 					offset = 0;

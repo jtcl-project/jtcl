@@ -72,10 +72,11 @@ public class TclInteger implements InternalRep {
 	 * @return the TclObject with the given integer value.
 	 */
 
-	public static TclObject newInstance(int i) {
+	public static TclObject newInstance(long i) {
 		return new TclObject(i);
 	}
-
+	
+	
 	/**
 	 * SetIntFromAny -> TclInteger.setIntegerFromAny
 	 * 
@@ -105,7 +106,7 @@ public class TclInteger implements InternalRep {
 		// an integer, but the TclDouble module should
 		// not allow conversion to TclDouble in that case.
 
-		int ivalue = Util.getInt(interp, tobj.toString());
+		long ivalue = Util.getInt(interp, tobj.toString());
 		tobj.setInternalRep(dummy);
 		tobj.ivalue = ivalue;
 
@@ -124,23 +125,63 @@ public class TclInteger implements InternalRep {
 	/**
 	 * Tcl_GetIntFromObj -> TclInteger.get
 	 * 
-	 * Returns the integer value of the object.
+	 * Returns the integer value of the object as a Java int.
+	 * This method is @deprecated, because the internal representation
+	 * is now long.  Use getValue() instead
+	 * 
+	 * @param interp
+	 *            current interpreter.
+	 * @param tobj
+	 *            the object to operate on.
+	 * @return the integer value of the object.  Use getLong() to return a Java long, or getInt() to return int.
+	 */
+	@Deprecated
+	public static int get(final Interp interp, final TclObject tobj)
+			throws TclException {
+		return (int)getLong(interp, tobj);
+	}
+	
+	/**
+	 * Tcl_GetIntFromObj -> TclInteger.getValue
+	 * 
+	 * Returns the integer value of the object as a Java long.
 	 * 
 	 * @param interp
 	 *            current interpreter.
 	 * @param tobj
 	 *            the object to operate on.
 	 * @return the integer value of the object.
-	 */
-
-	public static int get(final Interp interp, final TclObject tobj)
-			throws TclException {
+	 * */
+	public static long getLong(final Interp interp, final TclObject tobj)
+		throws TclException {
 		if (!tobj.isIntType()) {
 			setIntegerFromAny(interp, tobj);
 		}
 		return tobj.ivalue;
 	}
 
+	/**
+	 * Tcl_GetIntFromObj -> TclInteger.getValue
+	 * 
+	 * Returns the integer value of the object as a Java int.
+	 * 
+	 * @param interp
+	 *            current interpreter.
+	 * @param tobj
+	 *            the object to operate on.
+	 * @return the integer value of the object as a Java int
+	 * @throws TclException if value will exceed limits of a Java int
+	 * */
+	public static int getInt(final Interp interp, final TclObject tobj)
+		throws TclException {
+		long v = getLong(interp, tobj);
+		if (v > Integer.MAX_VALUE || v < Integer.MIN_VALUE) {
+			throw new TclException(interp, "TclObject value is beyond the max or min value of an int");
+		}
+		return (int)v;
+	}
+
+	
 	/**
 	 * Changes the integer value of the object.
 	 * 
@@ -151,7 +192,7 @@ public class TclInteger implements InternalRep {
 	 * @param i
 	 *            the new integer value.
 	 */
-	public static void set(TclObject tobj, int i) {
+	public static void set(TclObject tobj, long i) {
 		if (!tobj.isIntType()) {
 			// Change the internal rep if not an integer.
 			// Note that this method does not reparse
@@ -162,6 +203,7 @@ public class TclInteger implements InternalRep {
 		tobj.ivalue = i;
 	}
 
+	
 	/**
 	 * Increments the integer value of the object by the given amount. One could
 	 * implement this same operation by calling get() and then set(), this
@@ -176,14 +218,13 @@ public class TclInteger implements InternalRep {
 	 *            amount to increment
 	 */
 	public static void incr(final Interp interp, final TclObject tobj,
-			final int incrAmount) throws TclException {
+			final long incrAmount) throws TclException {
 		if (!tobj.isIntType()) {
 			setIntegerFromAny(interp, tobj);
 		}
 		tobj.invalidateStringRep();
 		tobj.ivalue += incrAmount;
 	}
-
 	/**
 	 * This special helper method is used only by the Expression module. This
 	 * method will change the internal rep to a TclInteger with the passed in
@@ -196,7 +237,7 @@ public class TclInteger implements InternalRep {
 	 *            the new int value.
 	 */
 
-	static void exprSetInternalRep(final TclObject tobj, final int i) {
+	static void exprSetInternalRep(final TclObject tobj, final long i) {
 		if (validate) {
 
 			// Double check that the internal rep is not
@@ -211,7 +252,7 @@ public class TclInteger implements InternalRep {
 			// Double check that the new int value and the
 			// string rep would parse to the same integer.
 
-			int i2;
+			long i2;
 			try {
 				i2 = Util.getInt(null, tobj.toString());
 			} catch (TclException te) {

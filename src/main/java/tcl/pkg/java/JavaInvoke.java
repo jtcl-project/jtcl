@@ -1476,7 +1476,7 @@ public class JavaInvoke {
 		// No point in reparsing a "pure" integer.
 
 		if (obj.hasNoStringRep() && obj.isIntType()) {
-			return TclInteger.get(interp, obj);
+			return TclInteger.getInt(interp, obj);
 		}
 
 		String srep = obj.toString();
@@ -1617,7 +1617,7 @@ public class JavaInvoke {
 		// No point in reparsing a "pure" integer.
 
 		if (obj.hasNoStringRep() && obj.isIntType()) {
-			return (long) TclInteger.get(interp, obj);
+			return (long) TclInteger.getLong(interp, obj);
 		}
 
 		String srep = obj.toString();
