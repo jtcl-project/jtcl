@@ -127,7 +127,8 @@ public class TclInteger implements InternalRep {
 	 * 
 	 * Returns the integer value of the object as a Java int.
 	 * This method is @deprecated, because the internal representation
-	 * is now long.  Use getValue() instead
+	 * is now long.  Use getLong() or getInt() instead.
+	 *
 	 * 
 	 * @param interp
 	 *            current interpreter.
@@ -181,6 +182,38 @@ public class TclInteger implements InternalRep {
 		return (int)v;
 	}
 
+	/**
+	 * Tests whether TclInteger.getLong() will return a valid Java long value
+	 * 
+	 * @param interp current interpreter, may be null
+	 * @param tobj The TclObject to be tested
+	 * @return true if getLong() will return a long.  false if object cannot be converted to a
+	 * TclInteger, or if it is out of range for a long.
+	 */
+	public static boolean isWithinLongRange(final Interp interp, final TclObject tobj) {
+		if (! tobj.isIntType()) {
+			try {
+				setIntegerFromAny(null, tobj);
+			} catch (TclException e) {
+				return false;
+			}
+		}
+		return true; // always withing a long range if it can be converted to Integer
+	}
+	
+	/**
+	 * Tests whether TclInteger.getInt() will return a valid Java int value
+	 * 
+	 * @param interp current interpreturn, may be null
+	 * @param tobj The TclObject to be tested
+	 * @return true if getInt() will return an int; false if object cannot be converted to a TclInteger
+	 * or if it is out of range for an int
+	 */
+	public static boolean isWithinIntRange(final Interp interp, final TclObject tobj) {
+		return (isWithinLongRange(interp, tobj)
+				&& tobj.ivalue >= Integer.MIN_VALUE
+				&& tobj.ivalue <= Integer.MAX_VALUE);
+	}
 	
 	/**
 	 * Changes the integer value of the object.

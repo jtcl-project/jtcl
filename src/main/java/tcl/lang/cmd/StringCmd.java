@@ -412,20 +412,14 @@ public class StringCmd implements Command {
 				break;
 			}
 			case STR_IS_INT: {
-				boolean wasAlreadyInt = obj.isIntType();
-				boolean isInteger = true;
-				try {
-					TclInteger.getInt(null, obj);
-				} catch (TclException e) {
-					isInteger = false;
-					if (wasAlreadyInt) {
-						// must have been an expression
+				if (obj.isIntType()) {
+					if (! TclInteger.isWithinIntRange(interp, obj)) {
 						failat = -1;
 						result = false;
+						break;
+					} else {
+						break;  // integer, in range, must be ok
 					}
-				}
-				if (isInteger  || wasAlreadyInt) {
-					break;
 				}
 
 				StrtoulResult res = interp.strtoulResult;
@@ -459,16 +453,13 @@ public class StringCmd implements Command {
 			}
 			case STR_IS_WIDEINTEGER: {
 				if (obj.isIntType()) {
-					break;
-				}
-				boolean isInteger = true;
-				try {
-					TclInteger.getLong(null, obj);
-				} catch (TclException e) {
-					isInteger = false;
-				}
-				if (isInteger) {
-					break;
+					if (! TclInteger.isWithinLongRange(interp, obj)) {
+						failat = -1;
+						result = false;
+						break;
+					} else {
+						break; // is integer, within long range, so it's ok
+					}
 				}
 
 				StrtoulResult res = interp.strtoulResult;
