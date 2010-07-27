@@ -387,7 +387,7 @@ public class TJC {
 		// of the incr command will be used.
 
 		protected final TclObject incrVarScalar(final Interp interp,
-				final String varname, final int incrAmount,
+				final String varname, final long incrAmount,
 				final Var[] compiledLocals, final int localIndex)
 				throws TclException {
 			Var var = compiledLocals[localIndex];
@@ -426,7 +426,7 @@ public class TJC {
 		// the runtime implementation will be used.
 
 		protected final TclObject incrVarArray(final Interp interp,
-				final String varname, final String key, final int incrAmount,
+				final String varname, final String key, final long incrAmount,
 				final Var[] compiledLocals, final int localIndex)
 				throws TclException {
 			Var var = compiledLocals[localIndex];
@@ -784,13 +784,21 @@ public class TJC {
 		return;
 	}
 
-	// This method is invoked when a compiled incr command
-	// is inlined. This methods works for both scalar
-	// variables and array scalars. This method is not
-	// used for cached variables.
-
+	/**
+	 * This method is invoked when a compiled incr command
+	 * is inlined. This methods works for both scalar
+	 * variables and array scalars. This method is not
+	 * used for cached variables.
+	 * 
+	 * @param interp current interpreter
+	 * @param part1 array name, or scalar name
+	 * @param part2 array index
+	 * @param incrAmount amount to increment
+	 * @return
+	 * @throws TclException
+	 */
 	public static final TclObject incrVar(Interp interp, String part1,
-			String part2, int incrAmount) throws TclException {
+			String part2, long incrAmount) throws TclException {
 		return Var.incrVar(interp, part1, part2, incrAmount, TCL.LEAVE_ERR_MSG);
 	}
 

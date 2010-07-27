@@ -257,7 +257,7 @@ public class TJCBench extends TJC.CompiledCommand {
 		for (int i = 0; i < 5000; i++) {
 			Expression.ExprParseObject(interp, tobj, value);
 		}
-		RESULT_INT = TclInteger.getInt(interp, tobj);
+		RESULT_INT = TclInteger.getLong(interp, tobj);
 	}
 
 	// Invoke ExprParseObject() over and over again on a
@@ -270,7 +270,7 @@ public class TJCBench extends TJC.CompiledCommand {
 		for (int i = 0; i < 5000; i++) {
 			Expression.ExprParseObject(interp, tobj, value);
 		}
-		RESULT_INT = (int) TclDouble.get(interp, tobj);
+		RESULT_INT = (long) TclDouble.get(interp, tobj);
 	}
 
 	// Invoke TJC.getBoolean() over and over with a TclInteger
@@ -533,10 +533,10 @@ public class TJCBench extends TJC.CompiledCommand {
 
 	void InternalTclIntegerGet(Interp interp) throws TclException {
 		TclObject tobj = TclInteger.newInstance(1);
-		int ivalue = 0;
+		long ivalue = 0;
 
 		for (int i = 0; i < 5000; i++) {
-			ivalue = TclInteger.getInt(interp, tobj);
+			ivalue = TclInteger.getLong(interp, tobj);
 		}
 		RESULT_INT = ivalue;
 	}
@@ -547,10 +547,10 @@ public class TJCBench extends TJC.CompiledCommand {
 
 	void InternalExprGetKnownInt(Interp interp) throws TclException {
 		TclObject tobj = TclInteger.newInstance(1);
-		int ivalue = 0;
+		long ivalue = 0;
 
 		for (int i = 0; i < 5000; i++) {
-			ivalue = (int)TJC.exprGetKnownInt(tobj);
+			ivalue = TJC.exprGetKnownInt(tobj);
 		}
 		RESULT_INT = ivalue;
 	}
@@ -582,7 +582,7 @@ public class TJCBench extends TJC.CompiledCommand {
 		for (int i = 0; i < 5000; i++) {
 			d = TclDouble.get(interp, tobj);
 		}
-		RESULT_INT = (int) d;
+		RESULT_INT = (long) d;
 	}
 
 	// Establish timing results for TJC.exprGetKnownInt(),
@@ -596,7 +596,7 @@ public class TJCBench extends TJC.CompiledCommand {
 		for (int i = 0; i < 5000; i++) {
 			d = TJC.exprGetKnownDouble(tobj);
 		}
-		RESULT_INT = (int) d;
+		RESULT_INT = (long) d;
 	}
 
 	// Note that there is no test like
@@ -647,7 +647,7 @@ public class TJCBench extends TJC.CompiledCommand {
 		for (int i = 0; i < 5000; i++) {
 			ev.optIntUnaryNotNstr();
 		}
-		RESULT_INT = (int)ev.getIntValue();
+		RESULT_INT = ev.getIntValue();
 	}
 
 	// Establish timing results for integer.setResult(TclObject).
@@ -727,8 +727,8 @@ public class TJCBench extends TJC.CompiledCommand {
 	// Both the 0 and 1 values have a shared object.
 
 	void InternalSetIntResult(Interp interp) throws TclException {
-		int i1 = 1;
-		int i2 = 0;
+		long i1 = 1;
+		long i2 = 0;
 		if (RESULT_INT == 0) {
 			// Make sure ints are not seen as compile
 			// time constant values.
@@ -740,7 +740,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			interp.setResult(i1);
 			interp.setResult(i2);
 		}
-		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
+		RESULT_INT = TclInteger.getLong(interp, interp.getResult());
 	}
 
 	// Establish timing results for integer.setResult(int).
@@ -750,11 +750,11 @@ public class TJCBench extends TJC.CompiledCommand {
 	// reuse a recycled TclObject value.
 
 	void InternalSetUncommonIntResult(Interp interp) throws TclException {
-		for (int i = 0; i < 5000; i++) {
+		for (long i = 0; i < 5000; i++) {
 			interp.setResult(i * 2);
 			interp.setResult(i * 3);
 		}
-		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
+		RESULT_INT = TclInteger.getLong(interp, interp.getResult());
 	}
 
 	// Establish timing results for integer.setResult(double)
@@ -768,7 +768,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			interp.setResult(i * 2.0);
 			interp.setResult(i * 3.0);
 		}
-		RESULT_INT = (int) TclDouble.get(interp, interp.getResult());
+		RESULT_INT = (long) TclDouble.get(interp, interp.getResult());
 	}
 
 	// Establish timing results for integer.setResult(String)
@@ -807,7 +807,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			interp.setResult(value1.getIntValue());
 			interp.setResult(value2.getIntValue());
 		}
-		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
+		RESULT_INT = TclInteger.getLong(interp, interp.getResult());
 	}
 
 	// Establish timing results for TJC.exprSetResult()
@@ -832,7 +832,7 @@ public class TJCBench extends TJC.CompiledCommand {
 			TJC.exprSetResult(interp, value1);
 			TJC.exprSetResult(interp, value2);
 		}
-		RESULT_INT = TclInteger.getInt(interp, interp.getResult());
+		RESULT_INT = TclInteger.getLong(interp, interp.getResult());
 	}
 
 	// Invoke unary ! operator on a TclInteger.

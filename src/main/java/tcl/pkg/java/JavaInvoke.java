@@ -49,24 +49,17 @@ public class JavaInvoke {
 
 	static private Object EMPTY_ARGS[] = new Object[0];
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
+	/**
+	 * Call the specified constructor
 	 * 
-	 * newInstance --
-	 * 
-	 * Call the specified constructor.
-	 * 
-	 * Results: When successful, the object created by the constructor.
-	 * 
-	 * Side effects: The constructor can cause arbitrary side effects.
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
+	 * @param interp current interpreter
+	 * @param signature Constructor signature
+	 * @param argv arguments
+	 * @param startIdx index of first argument in argv to pass to constructor
+	 * @param count number of arguments to pass to constructor
+	 * @return the object created by the constructor
+	 * @throws TclException
 	 */
-
 	static TclObject newInstance(Interp interp, // Current interpreter.
 			TclObject signature, // Constructor signature.
 			TclObject[] argv, // Arguments.
@@ -117,26 +110,20 @@ public class JavaInvoke {
 		return ReflectObject.newInstance(interp, sig.targetCls, javaObj);
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
-	 * 
-	 * callMethod --
-	 * 
+
+	/**
 	 * Call the specified instance or static method of the given object.
 	 * 
-	 * Results: When successful, this method returns the Java object that the
-	 * Java method would have returned. If the Java method has a void return
-	 * type then null is returned.
-	 * 
-	 * Side effects: The method can cause arbitrary side effects.
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
+	 * @param interp Current interpreter
+	 * @param reflectObj The object whose method to invoke
+	 * @param signature Method signature
+	 * @param argv Arguments
+	 * @param startIdx Index of the first argument in argv[] to pass to the method.
+	 * @param count Number of arguments to pass to the method.
+	 * @param convert Whether the value should be converted into Tcl objects of the closest types.
+	 * @return
+	 * @throws TclException
 	 */
-
 	static TclObject callMethod(Interp interp, // Current interpreter.
 			TclObject reflectObj, // The object whose method to invoke.
 			TclObject signature, // Method signature.
@@ -171,26 +158,19 @@ public class JavaInvoke {
 		}
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
-	 * 
-	 * callStaticMethod --
-	 * 
+	/**
 	 * Call the specified static method of the given object.
 	 * 
-	 * Results: When successful, this method returns the Java object that the
-	 * Java method would have returned. If the Java method has a void return
-	 * type then null is returned.
-	 * 
-	 * Side effects: The method can cause arbitrary side effects.
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
+	 * @param interp Current interpreter
+	 * @param classObj Class whose static method to invoke
+	 * @param signature Method signature
+	 * @param argv Arguments
+	 * @param startIdx Index of the first argument in argv[] to pass to the method.
+	 * @param count Number of arguments to pass to the method.
+	 * @param convert Whether the value should be converted into Tcl objects of the closest types.
+	 * @return
+	 * @throws TclException
 	 */
-
 	static TclObject callStaticMethod(Interp interp, // Current interpreter.
 			TclObject classObj, // Class whose static method to invoke.
 			TclObject signature, // Method signature.
@@ -225,28 +205,22 @@ public class JavaInvoke {
 		}
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
-	 * 
-	 * call --
-	 * 
+
+	/**
 	 * Call the constructor, instance method, or static method with the given
 	 * parameters. Check the parameter types and perform TclObject to JavaObject
-	 * conversion.
+	 * conversion
 	 * 
-	 * Results: The object created by the constructor, or the return value of
-	 * the method call.
-	 * 
-	 * Side effects: The constructor/method call may have arbitrary side
-	 * effects.
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
+	 * @param interp Current interpreter
+	 * @param func Constructor or method to call 
+	 * @param obj The object associated with an instance method call, should be null for static method calls
+	 * @param argv Arguments
+	 * @param startIdx Index of the first argument in argv[] to pass to the method.
+	 * @param count Number of arguments to pass to the method.
+	 * @param convert Whether the value should be converted into Tcl objects of the closest types.
+	 * @return
+	 * @throws TclException
 	 */
-
 	static Object call(Interp interp, PkgInvoker invoker, // The PkgInvoked used
 			// to invoke the
 			// method or constructor.
@@ -331,25 +305,17 @@ public class JavaInvoke {
 		}
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
+	
+	/**
 	 * 
-	 * getField --
-	 * 
-	 * Returns the value of a field in the given object.
-	 * 
-	 * Results: When successful, returns an array: Object result[2]. result[0]
+	 * @param interp current interpreter
+	 * @param classOrObj Class or object whose field to get
+	 * @param signature Signature of the field
+	 * @param convert set to true to convert into Tcl objects
+	 * @return an array: Object result[2]. result[0]
 	 * is the value of the field; result[1] is the type of the field.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
+	 * @throws TclException
 	 */
-
 	static final TclObject getField(Interp interp, // Current interpreter.
 			TclObject classOrObj, // Class or object whose field to get.
 			TclObject signature, // Signature of the field.
@@ -360,24 +326,16 @@ public class JavaInvoke {
 		return getsetField(interp, classOrObj, signature, null, convert, true);
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
-	 * 
-	 * setField --
-	 * 
-	 * Sets the value of a field in the given object.
-	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: When successful, the field is set to the given value.
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
-	 */
 
+	/**
+	 * Sets the value of a field in the given object
+	 * 
+	 * @param interp current interpreter
+	 * @param classOrObj class or object whose field to get
+	 * @param signature signature of the field
+	 * @param value new value for the field
+	 * @throws TclException
+	 */
 	static final void setField(Interp interp, // Current interpreter.
 			TclObject classOrObj, // Class or object whose field to get.
 			TclObject signature, // Signature of the field.
@@ -387,25 +345,18 @@ public class JavaInvoke {
 		getsetField(interp, classOrObj, signature, value, false, false);
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
+	
+	/**
+	 * Gets or sets the value of a field in the given object
 	 * 
-	 * getsetField --
-	 * 
-	 * Gets or sets the field in the given object.
-	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: When successful, the field is set to the given value if
-	 * isget is false.
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
+	 * @param interp current interpreter
+	 * @param classOrObj class or object whose field to get
+	 * @param signature signature of the field
+	 * @param value new value for the field
+	 * @param convert set to true to convert into Tcl Object
+	 * @param isget set to true to get field, false to set field
+	 * @throws TclException
 	 */
-
 	static TclObject getsetField(Interp interp, // Current interpreter.
 			TclObject classOrObj, // Class or object whose field to get.
 			TclObject signature, // Signature of the field.
@@ -487,25 +438,16 @@ public class JavaInvoke {
 		}
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
-	 * 
-	 * getProperty --
-	 * 
-	 * Returns the value of a property in the given object.
-	 * 
-	 * Results: When successful, returns a the value of the property inside a
-	 * TclObject
-	 * 
-	 * Side effects: None.
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
-	 */
 
+	/**
+	 * 
+	 * @param interp current interpreter 
+	 * @param reflectObj object whose property to query
+	 * @param propName name of property to query
+	 * @param convert if true, convert to Tcl Objects
+	 * @return the value of a property in the given object.
+	 * @throws TclException
+	 */
 	static TclObject getProperty(Interp interp, // Current interpreter.
 			TclObject reflectObj, // The object whose property to query.
 			TclObject propName, // The name of the property to query.
@@ -544,24 +486,15 @@ public class JavaInvoke {
 
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
+	/**
+	 * Set a property of an object
 	 * 
-	 * setProperty --
-	 * 
-	 * Returns the value of a property in the given object.
-	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: When successful, the property will have the new value.
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
+	 * @param interp current interpreter 
+	 * @param reflectObj object whose property to query
+	 * @param propName name of property to query
+	 * @param value new value for the property 
+	 * @throws TclException
 	 */
-
 	static void setProperty(Interp interp, // Current interpreter.
 			TclObject reflectObj, // The object whose property to query.
 			TclObject propName, // The name of the property to query.
@@ -601,28 +534,18 @@ public class JavaInvoke {
 		}
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
-	 * 
-	 * getClassByName --
-	 * 
+	/**
 	 * Returns Class object identified by the string name. We allow abbreviation
 	 * of the java.lang.* class if there is no ambiguity: e.g., if there is no
 	 * class whose fully qualified name is "String", then "String" means
 	 * java.lang.String. Inner classes are supported both with fully qualified
 	 * names and imported class names.
 	 * 
-	 * Results: If successful, The Class object identified by the string name.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
+	 * @param interp current interpreter
+	 * @param clsName string name of the class
+	 * @return Class object for the class
+	 * @throws TclException
 	 */
-
 	public static Class getClassByName(Interp interp, // Interp used by
 			// TclClassLoader
 			String clsName) // String name of the class.
@@ -1064,23 +987,19 @@ public class JavaInvoke {
 		return result;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * convertJavaObject --
-	 * 
+
+	/**
 	 * Converts the java.lang.Object into a Tcl object and return TclObject that
-	 * holds the reult. Primitive data types are converted into primitive Tcl
+	 * holds the result. Primitive data types are converted into primitive Tcl
 	 * data types. Otherwise, a ReflectObject wrapper is created for the object
 	 * so that it can be later accessed with the Reflection API.
 	 * 
-	 * Results: The TclObject representation of the Java object.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp current interpreter
+	 * @param cls class of the Java Object
+	 * @param javaObj java.lang.Object object to convert to a TclObject
+	 * @return TclObject that was created
+	 * @throws TclException
 	 */
-
 	static TclObject convertJavaObject(Interp interp, // Current interpreter.
 			Class cls, // The class of the Java Object
 			Object javaObj) // The java.lang.Object to convert to a TclObject.
@@ -1096,9 +1015,7 @@ public class JavaInvoke {
 			return TclInteger.newInstance(((Integer) javaObj).intValue());
 
 		} else if ((cls == Long.TYPE) || (cls == Long.class)) {
-			// A long can not be represented as a TclInteger
-			return TclString.newInstance(javaObj.toString());
-
+			return TclInteger.newInstance(((Long) javaObj).longValue());
 		} else if ((cls == Short.TYPE) || (cls == Short.class)) {
 			return TclInteger.newInstance(((Short) javaObj).intValue());
 
@@ -1125,24 +1042,15 @@ public class JavaInvoke {
 		}
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
+	/**
+	 * Converts a Tcl object to a Java object of the required type
 	 * 
-	 * convertTclObject --
-	 * 
-	 * Converts a Tcl object to a Java Object of the required type.
-	 * 
-	 * Results: An Object of the required type.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
+	 * @param interp current interpreter
+	 * @param type Convert to this type
+	 * @param tclObj Convert from this Tcl object
+	 * @return object of the requested type
+	 * @throws TclException if the conversion fails
 	 */
-
 	static final Object convertTclObject(Interp interp, // Current interpreter.
 			Class type, // Convert to this type.
 			TclObject tclObj) // From this Tcl object.
@@ -1175,28 +1083,13 @@ public class JavaInvoke {
 				return tclObj.toString();
 
 			} else if ((type == Integer.TYPE) || (type == Integer.class)) {
-				// If an object is already a TclInteger type, then pass
-				// the existing value directly. Otherwise, parse the
-				// number as a Java int and see if it can be represented
-				// as a Java int. This logic will raise an exception
-				// when a number can't be represented as a 32bit signed int.
-				// Tcl's weird number parsing rules will wrap the integer
-				// around and calling code can't detect an overflow.
-
-				int jint = parseJavaInt(interp, tclObj);
-				return new Integer(jint);
+				return new Integer(TclInteger.getInt(interp, tclObj));
 
 			} else if ((type == Boolean.TYPE) || (type == Boolean.class)) {
 				return new Boolean(TclBoolean.get(interp, tclObj));
 
 			} else if ((type == Long.TYPE) || (type == Long.class)) {
-				// If an object is already a TclInteger type, then pass
-				// the existing value directly. Otherwise, parse the
-				// number as a Java long. Raise a TclException if the
-				// number is not an integer or is outside the long bounds.
-
-				long jlong = parseJavaLong(interp, tclObj);
-				return new Long(jlong);
+				return new Long(TclInteger.getLong(interp, tclObj));
 
 			} else if ((type == Float.TYPE) || (type == Float.class)) {
 				// Tcl stores floating point numbers as doubles,
@@ -1225,7 +1118,7 @@ public class JavaInvoke {
 			} else if ((type == Byte.TYPE) || (type == Byte.class)) {
 				// Parse a Java int, then check valid byte range.
 
-				int jint = parseJavaInt(interp, tclObj);
+				int jint = TclInteger.getInt(interp, tclObj);
 				if ((jint < Byte.MIN_VALUE) || (jint > Byte.MAX_VALUE)) {
 					throw new TclException(interp,
 							"integer value too large to represent in a byte");
@@ -1235,7 +1128,7 @@ public class JavaInvoke {
 			} else if ((type == Short.TYPE) || (type == Short.class)) {
 				// Parse a Java int, then check valid byte range.
 
-				int jint = parseJavaInt(interp, tclObj);
+				int jint = TclInteger.getInt(interp, tclObj);
 				if ((jint < Short.MIN_VALUE) || (jint > Short.MAX_VALUE)) {
 					throw new TclException(interp,
 							"integer value too large to represent in a short");
@@ -1321,25 +1214,18 @@ public class JavaInvoke {
 		}
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
-	 * 
-	 * wrap --
-	 * 
+	
+	/**
 	 * Wraps a Java Object into a TclObject according to whether the convert
 	 * flag is set.
 	 * 
-	 * Results: The TclObject that wraps the Java Object.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
+	 * @param interp current interpreter
+	 * @param cls the class of the java object
+	 * @param javaObj the java object to wrap
+	 * @param convert if true, convert value to Tcl objects
+	 * @return wrapped Java object, if so requested
+	 * @throws TclException
 	 */
-
 	private static final TclObject wrap(Interp interp, // Current interpreter.
 			Class cls, // The class of the Java Object
 			Object javaObj, // The Java Object to wrap.
@@ -1353,25 +1239,12 @@ public class JavaInvoke {
 		}
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
-	 * 
-	 * isAssignable --
-	 * 
-	 * Return true if the argument object can be assigned to convert flag is
-	 * set.
-	 * 
-	 * Results: The TclObject that wraps the Java Object.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
-	 */
 
+	/**
+	 * @param to_cls class we want to assign to
+	 * @param from_cls class we want to assign from; can be null
+	 * @return true if the argument object can be assigned to 
+	 */
 	static final boolean isAssignable(Class to_cls, // The class we want to
 			// assign to
 			Class from_cls) // The class we want to assign from (can be null)
@@ -1394,50 +1267,25 @@ public class JavaInvoke {
 		}
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
-	 * 
-	 * notAccessibleError --
-	 * 
-	 * Raise a specific TclException when a class that is not accessible is
-	 * found.
-	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
+	
+	/**
+	 * @param interp current interpreter
+	 * @param cls class to throw exception about
+	 * @throws TclException always, indicating class is not accessible
 	 */
-
 	static void notAccessibleError(Interp interp, Class cls)
 			throws TclException {
 		throw new TclException(interp, "Class \""
 				+ JavaInfoCmd.getNameFromClass(cls) + "\" is not accessible");
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
-	 * 
-	 * isInnerClass --
-	 * 
-	 * Return true is a class is either an inner class or an inner interface.
-	 * This is true only for classes defined inside other classes.
-	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
-	 */
 
+	/**
+	 * @param cls class to test
+	 * @return true if is a class is either an inner class or an inner interface.
+	 * This is true only for classes defined inside other classes.
+	 * @throws TclException
+	 */
 	static boolean isInnerClass(Class cls) throws TclException {
 		String cname = cls.getName();
 		if (cname.indexOf('$') == -1) {
@@ -1445,289 +1293,6 @@ public class JavaInvoke {
 		} else {
 			return true;
 		}
-	}
-
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
-	 * 
-	 * parseJavaInt --
-	 * 
-	 * Parse a Java int type from a TclObject. Unlike the rest of Tcl, this
-	 * method will raise an error when an integer value is not in the range
-	 * Integer.MIN_VALUE to Integer.MAX_VALUE. This is the range of a 32bit
-	 * signed number as defined by Java. Tcl parses integers as 32bit unsigned
-	 * numbers and wraps values outside the valid range. This method will catch
-	 * the case of an integer outside of the valid range and raise a
-	 * TclException so that a bogus value is not passed to Java.
-	 * 
-	 * Results: Returns an int value or raises a TclException to indicate that
-	 * the number can't be parsed as a Java int.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
-	 */
-
-	static int parseJavaInt(Interp interp, TclObject obj) throws TclException {
-		// No point in reparsing a "pure" integer.
-
-		if (obj.hasNoStringRep() && obj.isIntType()) {
-			return TclInteger.getInt(interp, obj);
-		}
-
-		String srep = obj.toString();
-		String s = srep;
-		int len = s.length();
-		char c;
-		int startInd, endInd;
-		boolean isNegative = false;
-
-		// Trim whitespace off front of string
-
-		int i = 0;
-		while (i < len
-				&& (((c = s.charAt(i)) == ' ') || Character.isWhitespace(c))) {
-			i++;
-		}
-		if (i >= len) {
-			throw new TclException(interp, "expected integer but got \"" + s
-					+ "\"");
-		}
-		startInd = i;
-
-		// Trim whitespace off end of string
-
-		endInd = len - 1;
-		while (endInd > startInd
-				&& (((c = s.charAt(endInd)) == ' ') || Character
-						.isWhitespace(c))) {
-			endInd--;
-		}
-
-		// Check for optional '-' sign, needed for hex and octal parse.
-
-		c = s.charAt(i);
-		if (c == '-') {
-			isNegative = true;
-			i++;
-		}
-		if (i >= (endInd + 1)) {
-			throw new TclException(interp, "expected integer but got \"" + s
-					+ "\"");
-		}
-
-		// Check for hex or octal string prefix characters
-
-		int radix = Character.MIN_RADIX - 1; // An invalid value
-
-		c = s.charAt(i);
-		if (c == '0' && len > 1) {
-			// Either hex or octal
-			i++;
-			c = s.charAt(i);
-
-			if (len > 2 && (c == 'x' || c == 'X')) {
-				// Parse as hex
-				radix = 16;
-				i++;
-			} else {
-				// Parse as octal
-				radix = 8;
-			}
-
-			// Create string that contains a leading negative sign followed
-			// by the radix letters, leaving out the radix prefix.
-			// For example, "-0xFF" is parsed as "-FF".
-
-			if (isNegative) {
-				s = "-" + s.substring(i, endInd + 1);
-			} else {
-				s = s.substring(i, endInd + 1);
-			}
-		} else {
-			// Parse as decimal integer
-
-			if ((startInd > 0) || (endInd < (len - 1))) {
-				s = s.substring(startInd, endInd + 1);
-			}
-
-			radix = 10;
-		}
-
-		if (s.length() == 0) {
-			throw new TclException(interp, "expected integer but got \"" + srep
-					+ "\"");
-		}
-
-		int ival;
-		try {
-			ival = Integer.parseInt(s, radix);
-		} catch (NumberFormatException nfe) {
-			// If one of the letters is not a valid radix character, then
-			// the number is not a valid. Otherwise, the number must be
-			// an integer value that is outside the valid range.
-
-			for (i = 0; i < s.length(); i++) {
-				c = s.charAt(i);
-				if (i == 0 && c == '-') {
-					continue; // Skip minus sign
-				}
-				if (Character.digit(c, radix) == -1) {
-					throw new TclException(interp,
-							"expected integer but got \"" + srep + "\"");
-				}
-			}
-
-			throw new TclException(interp,
-					"integer value too large to represent in a int");
-		}
-
-		return ival;
-	}
-
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
-	 * 
-	 * parseJavaLong --
-	 * 
-	 * Parse a Java long type from a TclObject. Tcl may not support 64 bit
-	 * integers (Jacl does not), so this method needs to be used to determine if
-	 * a string can be parsed into a long and if the result is in the range
-	 * Long.MIN_VALUE to Long.MAX_VALUE. This method will catch the case of an
-	 * long outside of the valid range and raise a TclException so that a bogus
-	 * value is not passed to Java.
-	 * 
-	 * Results: Returns a long value or raises a TclException to indicate that
-	 * the number can't be parsed as a Java long.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
-	 */
-
-	static long parseJavaLong(Interp interp, TclObject obj) throws TclException {
-		// No point in reparsing a "pure" integer.
-
-		if (obj.hasNoStringRep() && obj.isIntType()) {
-			return (long) TclInteger.getLong(interp, obj);
-		}
-
-		String srep = obj.toString();
-		String s = srep;
-		int len = s.length();
-		char c;
-		int startInd, endInd;
-		boolean isNegative = false;
-
-		// Trim whitespace off front of string
-
-		int i = 0;
-		while (i < len
-				&& (((c = s.charAt(i)) == ' ') || Character.isWhitespace(c))) {
-			i++;
-		}
-		if (i >= len) {
-			throw new TclException(interp, "expected integer but got \"" + s
-					+ "\"");
-		}
-		startInd = i;
-
-		// Trim whitespace off end of string
-
-		endInd = len - 1;
-		while (endInd > startInd
-				&& (((c = s.charAt(endInd)) == ' ') || Character
-						.isWhitespace(c))) {
-			endInd--;
-		}
-
-		// Check for optional '-' sign, needed for hex and octal parse.
-
-		c = s.charAt(i);
-		if (c == '-') {
-			isNegative = true;
-			i++;
-		}
-		if (i >= (endInd + 1)) {
-			throw new TclException(interp, "expected integer but got \"" + s
-					+ "\"");
-		}
-
-		// Check for hex or octal string prefix characters
-
-		int radix = Character.MIN_RADIX - 1; // An invalid value
-
-		c = s.charAt(i);
-		if (c == '0' && len > 1) {
-			// Either hex or octal
-			i++;
-			c = s.charAt(i);
-
-			if (len > 2 && (c == 'x' || c == 'X')) {
-				// Parse as hex
-				radix = 16;
-				i++;
-			} else {
-				// Parse as octal
-				radix = 8;
-			}
-
-			// Create string that contains a leading negative sign followed
-			// by the radix letters, leaving out the radix prefix.
-			// For example, "-0xFF" is parsed as "-FF".
-
-			if (isNegative) {
-				s = "-" + s.substring(i, endInd + 1);
-			} else {
-				s = s.substring(i, endInd + 1);
-			}
-		} else {
-			// Parse as decimal integer
-
-			if ((startInd > 0) || (endInd < (len - 1))) {
-				s = s.substring(startInd, endInd + 1);
-			}
-
-			radix = 10;
-		}
-
-		if (s.length() == 0) {
-			throw new TclException(interp, "expected integer but got \"" + srep
-					+ "\"");
-		}
-
-		long lval;
-		try {
-			lval = Long.parseLong(s, radix);
-		} catch (NumberFormatException nfe) {
-			// If one of the letters is not a valid radix character, then
-			// the number is not a valid. Otherwise, the number must be
-			// an integer value that is outside the valid range.
-
-			for (i = 0; i < s.length(); i++) {
-				c = s.charAt(i);
-				if (i == 0 && c == '-') {
-					continue; // Skip minus sign
-				}
-				if (Character.digit(c, radix) == -1) {
-					throw new TclException(interp,
-							"expected integer but got \"" + srep + "\"");
-				}
-			}
-
-			throw new TclException(interp,
-					"integer value too large to represent in a long");
-		}
-
-		return lval;
 	}
 
 } // end JavaInvoke

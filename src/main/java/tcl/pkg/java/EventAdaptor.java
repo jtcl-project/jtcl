@@ -583,7 +583,22 @@ public class EventAdaptor {
 	 */
 
 	public final long _return_long() {
-		return (long) _return_int();
+		if (exception != null) {
+			// An unexpected exception had happen during the execution of
+			// the binding. We return an "undefined" value without looking
+			// at interp.getResult().
+
+			return 0;
+		}
+		TclObject result = interp.getResult();
+		try {
+			return TclInteger.getLong(interp, result);
+		} catch (TclException e) {
+			interp
+					.addErrorInfo("\n    (attempting to return long number from binding)");
+			interp.backgroundError();
+			return 0;
+		}
 	}
 
 	/*

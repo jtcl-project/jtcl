@@ -397,8 +397,7 @@ public class JavaForCmd implements Command {
 			}
 			case ARRAY_LONG: {
 				longIndexValue = longArray[i];
-				// Can't represent long as TclInteger
-				wrapper = TclString.newInstance(String.valueOf(longIndexValue));
+				wrapper = TclInteger.newInstance(longIndexValue);
 				break;
 			}
 			case ARRAY_FLOAT: {
@@ -413,12 +412,12 @@ public class JavaForCmd implements Command {
 			}
 			case ARRAY_BYTE: {
 				byteIndexValue = byteArray[i];
-				wrapper = TclInteger.newInstance((int) byteIndexValue);
+				wrapper = TclInteger.newInstance((long) byteIndexValue);
 				break;
 			}
 			case ARRAY_SHORT: {
 				shortIndexValue = shortArray[i];
-				wrapper = TclInteger.newInstance((int) shortIndexValue);
+				wrapper = TclInteger.newInstance((long) shortIndexValue);
 				break;
 			}
 			case ARRAY_CHAR: {
