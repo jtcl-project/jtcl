@@ -21,9 +21,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
+import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CoderResult;
+import java.nio.charset.CodingErrorAction;
 
 import tcl.lang.Interp;
 import tcl.lang.TclByteArray;
@@ -1018,6 +1020,8 @@ class TclOutputStream {
 
 			Charset chrset = Charset.forName(encoding);
 			cse = chrset.newEncoder();
+			cse.onMalformedInput(CodingErrorAction.REPLACE);
+			cse.onUnmappableCharacter(CodingErrorAction.REPLACE);
 		}
 
 		int chars_read, bytes_written;
@@ -1047,6 +1051,8 @@ class TclOutputStream {
 		if (debug) {
 			System.out.println("encoded " + bytes_written + " bytes from "
 					+ chars_read + " chars (EOF flag was " + atEOF + ")");
+			System.out.println(cse);
+			
 		}
 
 		// For the case where an encoder needs to write bytes
