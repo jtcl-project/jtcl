@@ -292,16 +292,7 @@ public class InterpCmd implements Command {
 				throw new TclNumArgsException(interp, 2, objv,
 						"srcPath channelId destPath");
 			}
-			Interp masterInterp = getInterp(interp, objv[2]);
-
-			Channel chan = TclIO.getChannel(masterInterp, objv[3].toString());
-			if (chan == null) {
-				throw new TclException(interp, "can not find channel named \""
-						+ objv[3].toString() + "\"");
-			}
-
-			Interp slaveInterp = getInterp(interp, objv[4]);
-			TclIO.registerChannel(slaveInterp, chan);
+			TclIO.giveChannel(getInterp(interp, objv[2]), getInterp(interp,objv[4]), objv[3].toString(), false);
 			break;
 		}
 		case OPT_TARGET: {
@@ -330,17 +321,7 @@ public class InterpCmd implements Command {
 				throw new TclNumArgsException(interp, 2, objv,
 						"srcPath channelId destPath");
 			}
-			Interp masterInterp = getInterp(interp, objv[2]);
-
-			Channel chan = TclIO.getChannel(masterInterp, objv[3].toString());
-			if (chan == null) {
-				throw new TclException(interp, "can not find channel named \""
-						+ objv[3].toString() + "\"");
-			}
-
-			Interp slaveInterp = getInterp(interp, objv[4]);
-			TclIO.registerChannel(slaveInterp, chan);
-			TclIO.unregisterChannel(masterInterp, chan);
+			TclIO.giveChannel(getInterp(interp, objv[2]), getInterp(interp,objv[4]), objv[3].toString(), true);
 			break;
 		}
 		}

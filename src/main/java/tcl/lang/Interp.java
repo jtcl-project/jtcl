@@ -88,7 +88,7 @@ public class Interp extends EventuallyFreed {
 	/**
 	 * Table of channels currently registered in this interp.
 	 */
-	public HashMap interpChanTable;
+	public HashMap<String, Channel> interpChanTable;
 
 	/**
 	 *  The Notifier associated with this Interp.
@@ -2396,11 +2396,7 @@ public class Interp extends EventuallyFreed {
 		returnCode = TCL.OK;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * Tcl_AppendElement -> Interp.appendElement()
-	 * 
+	/**
 	 * Convert a string to a valid Tcl list element and append it to the result
 	 * (which is ostensibly a list).
 	 * 
@@ -2414,7 +2410,7 @@ public class Interp extends EventuallyFreed {
 	 * If the string result is empty, the object result is moved to the string
 	 * result, then the object result is reset.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param string String to append to list result
 	 */
 
 	public void appendElement(String string) /*

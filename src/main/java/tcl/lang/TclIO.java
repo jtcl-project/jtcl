@@ -22,8 +22,17 @@ import tcl.lang.channel.StdChannel;
 
 public class TclIO {
 
+	/**
+	 * Read the entire buffer
+	 */
 	public static final int READ_ALL = 1;
+	/**
+	 * Read up to end of line
+	 */
 	public static final int READ_LINE = 2;
+	/**
+	 * Read a specified number of bytes
+	 */
 	public static final int READ_N_BYTES = 3;
 
 	public static final int SEEK_SET = 1;
@@ -38,8 +47,17 @@ public class TclIO {
 	public static final int EXCL = 32;
 	public static final int TRUNC = 64;
 
+	/**
+	 * Do full buffering up to size of buffer
+	 */
 	public static final int BUFF_FULL = 0;
+	/**
+	 * Flush at end of line
+	 */
 	public static final int BUFF_LINE = 1;
+	/**
+	 * Flush after every write
+	 */
 	public static final int BUFF_NONE = 2;
 
 	public static final int TRANS_AUTO = 0;
@@ -48,6 +66,9 @@ public class TclIO {
 	public static final int TRANS_CR = 3;
 	public static final int TRANS_CRLF = 4;
 
+	/**
+	 * End-of-line translation for the current platform
+	 */
 	public static int TRANS_PLATFORM;
 
 	static {
@@ -70,30 +91,46 @@ public class TclIO {
 	private static StdChannel stderrChan = null;
 
 	/**
-	 * @param interp Interpreter context
-	 * @param chanName Name of channel
+	 * Return a registered Channel object, given its name.
+	 * 
+	 * @param interp
+	 *            Interpreter context
+	 * @param chanName
+	 *            Name of channel
 	 * @return Channel or null if chanName does not exist
 	 */
 	public static Channel getChannel(Interp interp, String chanName) {
-		return ((Channel) getInterpChanTable(interp).get(chanName));
+		HashMap<String, Channel> chanTable = getInterpChanTable(interp);
+
+		if (chanTable.containsKey(chanName)) {
+			return chanTable.get(chanName);
+		} else {
+			// channel may have been registered as one of the standard channels
+			for (String name : new String[] { "stdin", "stdout", "stderr" }) {
+				Channel std = chanTable.get(name);
+				if (std != null && std.getChanName().equals(chanName)) {
+					return std;
+				}
+			}
+		}
+		return null;
 	}
 
-	public static void getChannelNames(Interp interp, TclObject pattern)
-			throws TclException {
-		HashMap ht = getInterpChanTable(interp);
-		Iterator it = ht.keySet().iterator();
+	/**
+	 * Put all the channel names into the interpreter's result, as a list
+	 * 
+	 * @param interp
+	 *            this interpreter
+	 * @param pattern
+	 *            Return only channel names that match this patter, as in
+	 *            'string match', can be null to match all channels
+	 * @throws TclException
+	 */
+	public static void getChannelNames(Interp interp, TclObject pattern) throws TclException {
+		Iterator<String> it = getInterpChanTable(interp).keySet().iterator();
 
 		while (it.hasNext()) {
-			String chanName = (String) it.next();
-			Channel chan = (Channel) ht.get(chanName);
-
-			if (chan == stdinChan) {
-				chanName = "stdin";
-			} else if (chan == stdoutChan) {
-				chanName = "stdout";
-			} else if (chan == stderrChan) {
-				chanName = "stderr";
-			}
+			String chanName = it.next();
 
 			try {
 				if (pattern == null) {
@@ -107,37 +144,136 @@ public class TclIO {
 		}
 	}
 
+	/**
+	 * Register a channel in this interpreter's channel table. Any channel
+	 * opening or manipulation must be done by the caller. If one of stdin,
+	 * stdout or stderr is not defined in the channel table, the channel is
+	 * registered as the first non-defined standard channel.
+	 * 
+	 * @param interp
+	 *            This interpreter
+	 * @param chan
+	 *            channel to register
+	 */
 	public static void registerChannel(Interp interp, Channel chan) {
 
 		if (interp != null) {
-			HashMap chanTable = getInterpChanTable(interp);
-			chanTable.put(chan.getChanName(), chan);
+			HashMap<String, Channel> chanTable = getInterpChanTable(interp);
+			String registerName;
+
+			if (!chanTable.containsKey("stdin")) {
+				registerName = "stdin";
+			} else if (!chanTable.containsKey("stdout")) {
+				registerName = "stdout";
+			} else if (!chanTable.containsKey("stderr")) {
+				registerName = "stderr";
+			} else {
+				registerName = chan.getChanName();
+			}
+
+			chanTable.put(registerName, chan);
 			chan.refCount++;
 		}
 	}
 
+	/**
+	 * Give a channel to another interpreter, in exactly the same form it exists
+	 * in the master
+	 * 
+	 * @param master
+	 *            Interpreter giving the channel
+	 * @param slave
+	 *            Interpreter receiving the channel
+	 * @param chanName
+	 *            Name of channel to transfer
+	 * @param removeFromMaster
+	 *            If true, channel is unregistered from the master after being
+	 *            transferred
+	 * @throws TclException
+	 *             if channel cannot be found
+	 */
+	public static void giveChannel(Interp master, Interp slave, String chanName, boolean removeFromMaster)
+			throws TclException {
+
+		HashMap<String, Channel> masterTable = getInterpChanTable(master);
+		HashMap<String, Channel> slaveTable = getInterpChanTable(slave);
+
+		Channel channel = masterTable.get(chanName);
+		if (channel != null) {
+			/* Transfer channel directly */
+			slaveTable.put(chanName, channel);
+		} else {
+			/* May be posing as a std channel, so transfer likewise */
+			for (String name : new String[] { "stdin", "stdout", "stderr" }) {
+				channel = masterTable.get(name);
+				if (channel != null && channel.getChanName().equals(chanName)) {
+					slaveTable.put(name, channel);
+					break;
+				}
+				channel = null;
+			}
+
+		}
+		if (channel == null) {
+			throw new TclException(master, "can not find channel named \"" + chanName + "\"");
+		} else {
+			channel.refCount++;
+			if (removeFromMaster)
+				unregisterChannel(master, channel);
+		}
+
+	}
+
+	/**
+	 * Unregister a channel in this interpreter's channel table, and call
+	 * close() on that channel.
+	 * 
+	 * @param interp
+	 *            this interpreter
+	 * @param chan
+	 *            channel to unregister
+	 */
 	public static void unregisterChannel(Interp interp, Channel chan) {
-		HashMap chanTable = getInterpChanTable(interp);
-		chanTable.remove(chan.getChanName());
+		HashMap<String, Channel> chanTable = getInterpChanTable(interp);
+
+		if (chanTable.containsKey(chan.getChanName())) {
+			chanTable.remove(chan.getChanName());
+		} else {
+			// channel may have been registered as one of the standard channels
+			for (String name : new String[] { "stdin", "stdout", "stderr" }) {
+				Channel std = chanTable.get(name);
+				if (std != null && std.getChanName().equals(chan.getChanName())) {
+					chanTable.remove(name);
+					break;
+				}
+			}
+		}
 
 		if (--chan.refCount <= 0) {
 			try {
 				chan.close();
 			} catch (IOException e) {
 				// e.printStackTrace(System.err);
-				throw new TclRuntimeError(
-						"TclIO.unregisterChannel() Error: IOException when closing "
-								+ chan.getChanName() + ": " + e.getMessage());
+				throw new TclRuntimeError("TclIO.unregisterChannel() Error: IOException when closing "
+						+ chan.getChanName() + ": " + e.getMessage());
 			}
 		}
 	}
 
-	static HashMap getInterpChanTable(Interp interp) {
+	/**
+	 * Initialize this interpreter's channel table if it has not already been
+	 * initialized.
+	 * 
+	 * @param interp
+	 *            this interpreter
+	 * @return the interpreter's channel table
+	 */
+	static HashMap<String, Channel> getInterpChanTable(Interp interp) {
 		Channel chan;
 
 		if (interp.interpChanTable == null) {
 
-			interp.interpChanTable = new HashMap();
+			interp.interpChanTable = new HashMap<String, Channel>();
 
 			chan = getStdChannel(StdChannel.STDIN);
 			registerChannel(interp, chan);
@@ -152,6 +288,11 @@ public class TclIO {
 		return interp.interpChanTable;
 	}
 
+	/**
+	 * @param type
+	 *            one of StdChannel.STDIN, StdChannel.STDOUT, StdChannel.STDERR
+	 * @return the requested standard channel, creating it if required
+	 */
 	public static Channel getStdChannel(int type) {
 		Channel chan = null;
 
@@ -182,19 +323,18 @@ public class TclIO {
 	}
 
 	/**
-	 * Really ugly function that attempts to get the next available channelId
-	 * name. In C the FD returned in the native open call returns this value,
-	 * but we don't have that so we need to do this funky iteration over the
-	 * HashMap.
+	 * Given a prefix for a channel name (such as "file") returns the next
+	 * available channel name (such as "file5").
 	 * 
 	 * @param interp
-	 *            currrent interpreter.
-	 * @return the next integer to use in the channelId name.
+	 *            current interpreter.
+	 * @param prefix
+	 *            string portion of the channel name
+	 * @return the next name to use for a channel
 	 */
-
 	public static String getNextDescriptor(Interp interp, String prefix) {
 		int i;
-		HashMap htbl = getInterpChanTable(interp);
+		HashMap<String, Channel> htbl = getInterpChanTable(interp);
 
 		// The first available file identifier in Tcl is "file3"
 		if (prefix.equals("file"))
@@ -208,8 +348,10 @@ public class TclIO {
 		return prefix + i;
 	}
 
-	/*
-	 * Return a string description for a translation id defined above.
+	/**
+	 * @param translation
+	 *            one of the TRANS_* constances
+	 * @return a string description for a translation id defined above.
 	 */
 
 	public static String getTranslationString(int translation) {
@@ -229,8 +371,10 @@ public class TclIO {
 		}
 	}
 
-	/*
-	 * Return a numerical identifier for the given -translation string.
+	/**
+	 * @param translation
+	 *            one the fconfigure -translation strings
+	 * @return a numerical identifier for the given -translation string.
 	 */
 
 	public static int getTranslationID(String translation) {
@@ -250,8 +394,10 @@ public class TclIO {
 			return -1;
 	}
 
-	/*
-	 * Return a string description for a -buffering id defined above.
+	/**
+	 * @param buffering
+	 *            one of TclIO.BUFF_FULL, TclIO.BUFF_LINE, TclIO.BUFF_NONE
+	 * @return a string description for a -buffering id defined above.
 	 */
 
 	public static String getBufferingString(int buffering) {
@@ -267,8 +413,10 @@ public class TclIO {
 		}
 	}
 
-	/*
-	 * Return a numerical identifier for the given -buffering string.
+	/**
+	 * @param buffering
+	 *            a buffering string used in fconfigure
+	 * @return a numerical identifier for the given -buffering string.
 	 */
 
 	public static int getBufferingID(String buffering) {
