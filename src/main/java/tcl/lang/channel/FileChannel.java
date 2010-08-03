@@ -224,10 +224,7 @@ public class FileChannel extends Channel {
 
 		// The seekReset method will discard queued input and
 		// reset flags like EOF and BLOCKED.
-
-		if (input != null) {
-			input.seekReset();
-		}
+		seekReset();
 
 		// FIXME: Next block is disabled since non-blocking is not implemented.
 		// If the channel is in asynchronous output mode, switch it back
