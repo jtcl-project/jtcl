@@ -111,7 +111,7 @@ public class JavaProcess extends TclProcess {
 				stdinStream = new ManagedSystemInStream();
 				break;
 			case STREAM:
-				stdinStream = stdinRedirect.istream;
+				stdinStream = null;
 				break;
 			case TCL_CHANNEL:
 				// wrap channel in an inputStream
@@ -141,6 +141,8 @@ public class JavaProcess extends TclProcess {
 		if (stdinStream != null) {
 			Thread coupler = new Coupler(stdinStream, process.getOutputStream(), true, true);
 			coupler.start();
+		} else if (stdinRedirect!=null && stdinRedirect.getType() == Redirect.Type.STREAM) {
+			stdinRedirect.setOutputStream(process.getOutputStream());
 		} else {
 			// just close the output stream of the process, since it won't get any output anyway
 			process.getOutputStream().close();
@@ -161,8 +163,7 @@ public class JavaProcess extends TclProcess {
 				closeOutput = false;  // don't want to close FileDescriptor.out
 				break;
 			case STREAM:
-				stdoutStream = stdoutRedirect.ostream;
-				closeOutput = false;  // opener can close it
+				stdoutStream = null;
 				break;
 			case TCL_CHANNEL:
 				stdoutStream = new OutputStream() {
@@ -207,6 +208,8 @@ public class JavaProcess extends TclProcess {
 			stdoutCoupler = new Coupler(process.getInputStream(), stdoutStream,
 					closeOutput, stdoutRedirect.type == Redirect.Type.INHERIT);
 			stdoutCoupler.start();
+		} else if (stdoutRedirect!=null && stdoutRedirect.getType() == Redirect.Type.STREAM) {
+			stdoutRedirect.setInputStream(process.getInputStream());
 		}
 		/*
 		 * Connect process's stderr
@@ -223,8 +226,7 @@ public class JavaProcess extends TclProcess {
 				closeOutput = false;  // don't close FileDescriptor.err
 				break;
 			case STREAM:
-				stdoutStream = stdoutRedirect.ostream;
-				closeOutput = false;
+				stdoutStream = null;
 				break;
 			case TCL_CHANNEL:
 				stderrStream = new OutputStream() {
@@ -265,6 +267,8 @@ public class JavaProcess extends TclProcess {
 			stderrCoupler = new Coupler(process.getErrorStream(), stderrStream,
 					closeOutput, true);
 			stderrCoupler.start();
+		} else if (stderrRedirect!=null && stderrRedirect.getType() == Redirect.Type.STREAM) {
+			stderrRedirect.setInputStream(process.getErrorStream());
 		}
 
 	}
@@ -397,5 +401,7 @@ public class JavaProcess extends TclProcess {
 		}
 
 	}
+
+
 
 }

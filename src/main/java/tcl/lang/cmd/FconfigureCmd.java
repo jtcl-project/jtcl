@@ -209,7 +209,12 @@ public class FconfigureCmd implements Command {
 
 					interp.setResult(eofchar_pair);
 				} else {
-					// Not readable or writeable, do nothing
+					// not reading or writing, but test io-39.23 says it should return something
+					TclObject list = TclList.newInstance();
+					char eofChar = chan.getOutputEofChar();
+					TclList.append(interp,list, (eofChar == 0) ? TclString.newInstance("")
+							: TclString.newInstance(eofChar));
+					interp.setResult(list);
 				}
 
 				break;
@@ -233,7 +238,9 @@ public class FconfigureCmd implements Command {
 
 					interp.setResult(translation_pair);
 				} else {
-					// Not readable or writeable, do nothing
+					// not reading or writing, but test io-39.23 says it should return something
+					interp.setResult(TclIO.getTranslationString(chan
+							.getInputTranslation()));
 				}
 
 				break;

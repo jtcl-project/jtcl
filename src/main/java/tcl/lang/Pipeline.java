@@ -302,16 +302,16 @@ public class Pipeline implements Runnable {
 		for (int i = 0; i < processes.size(); i++) {
 			if (force)
 				processes.get(i).destroy();
-			try {
-				processes.get(i).waitFor();
-			} catch (InterruptedException e) {
-				processes.get(i).destroy();
-			} catch (IOException e1) {
-				throw new TclPosixException(interp, e1, true, "Error");
+			else {
+				try {
+					processes.get(i).waitFor();
+				} catch (InterruptedException e) {
+					processes.get(i).destroy();
+				} catch (IOException e1) {
+					throw new TclPosixException(interp, e1, true, "Error");
+				}
 			}
-
 		}
-
 	}
 
 	/**

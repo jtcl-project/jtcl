@@ -21,6 +21,7 @@ import tcl.lang.TclException;
 import tcl.lang.TclIO;
 import tcl.lang.TclNumArgsException;
 import tcl.lang.TclObject;
+import tcl.lang.TclPosixException;
 import tcl.lang.TclRuntimeError;
 import tcl.lang.channel.Channel;
 
@@ -57,10 +58,7 @@ public class FlushCmd implements Command {
 		try {
 			chan.flush(interp);
 		} catch (IOException e) {
-			e.printStackTrace();
-			throw new TclRuntimeError(
-					"FlushCmd.cmdProc() Error: IOException when flushing "
-							+ chan.getChanName());
+			throw new TclPosixException(interp, e, true, "error flushing \""+argv[1].toString()+"\"");
 		}
 	}
 }

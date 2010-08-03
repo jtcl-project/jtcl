@@ -36,15 +36,16 @@ public class Redirect {
 	 * If true, append to file
 	 */
 	protected boolean appendToFile = false;
+	
+	/**
+	 * An inputStream, for STREAM redirects
+	 */
+	protected InputStream inputStream = null;
+	/**
+	 * And output stream, for STREAM redirects
+	 */
+	protected OutputStream outputStream = null;
 
-	/**
-	 * An InputStream, for STREAM redirects
-	 */
-	protected InputStream istream = null;
-	/**
-	 * An OutputStream, for STREAM redirects
-	 */
-	protected OutputStream ostream = null;
 
 	/**
 	 * The types of redirection that can be defined
@@ -95,25 +96,10 @@ public class Redirect {
 	}
 
 	/**
-	 * Create an InputStream STREAM redirect
-	 * 
-	 * @param s
-	 *            InputStream to get bytes from
+	 * Create an  STREAM redirect
 	 */
-	public Redirect(InputStream s) {
-		this.istream = s;
-		this.type = Type.STREAM;
-	}
-
-	/**
-	 * Create an OutputStream STREAM redirect
-	 * 
-	 * @param s
-	 *            OutputStream to send bytes to
-	 */
-	public Redirect(OutputStream s) {
-		this.ostream = s;
-		this.type = Type.STREAM;
+	public static Redirect stream() {
+		return new Redirect(Type.STREAM);
 	}
 
 	/**
@@ -137,4 +123,33 @@ public class Redirect {
 	public Type getType() {
 		return this.type;
 	}
+
+	/**
+	 * @return the inputStream for STREAM redirects
+	 */
+	public InputStream getInputStream() {
+		return inputStream;
+	}
+
+	/**
+	 * @param inputStream the inputStream to set  for STREAM redirects.  Must be set by TclProcess subclass.
+	 */
+	public void setInputStream(InputStream inputStream) {
+		this.inputStream = inputStream;
+	}
+
+	/**
+	 * @return the outputStream for STREAM redirects
+	 */
+	public OutputStream getOutputStream() {
+		return outputStream;
+	}
+
+	/**
+	 * @param outputStream the outputStream to set for STREAM redirects. Must be set by TclProcess subclass.
+	 */
+	public void setOutputStream(OutputStream outputStream) {
+		this.outputStream = outputStream;
+	}
+	
 }

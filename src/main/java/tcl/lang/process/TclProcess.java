@@ -2,6 +2,8 @@ package tcl.lang.process;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
 
 import tcl.lang.Interp;
@@ -85,7 +87,7 @@ public abstract class TclProcess {
 	}
 
 	/**
-	 * Start the process executing
+	 * Start the process executing, and register streams with any STREAM redirects
 	 * 
 	 * @throws IOException
 	 */
@@ -156,7 +158,7 @@ public abstract class TclProcess {
 	public abstract void destroy();
 
 	/**
-	 * Return true if the this TclProcess subclass can actually inherit the open
+	 * @return true if the this TclProcess subclass can actually inherit the open
 	 * file descriptors, or false if it emulates inheritance
 	 */
 	public abstract boolean canInheritFileDescriptors();

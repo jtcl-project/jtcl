@@ -23,7 +23,7 @@ import tcl.lang.channel.StdChannel;
 public class TclIO {
 
 	/**
-	 * Read the entire buffer
+	 * Read all available input, until EOF
 	 */
 	public static final int READ_ALL = 1;
 	/**

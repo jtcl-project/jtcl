@@ -180,6 +180,8 @@ public class OpenCmd implements Command {
 				modeFlags = TclIO.WRONLY;
 			if ((modeFlags & TclIO.RDONLY)==TclIO.RDONLY)
 				modeFlags = TclIO.RDONLY;
+			if ((modeFlags & TclIO.RDWR)==TclIO.RDWR)
+				modeFlags = TclIO.RDWR;
 			
 			PipelineChannel pipelineChannel = new PipelineChannel();
 			try {

@@ -19,7 +19,7 @@ public class MiscCmdTest extends TclCmdTest {
 	
 	public void testIo() throws Exception {
 		String resName = "/tcl/lang/cmd/io.test";
-		tclTestResource(resName);
+		tclTestResource(TCLTEST_NAMEOFEXECUTABLE,resName, Collections.EMPTY_LIST);
 	}
 	
 	public void testUtil() throws Exception {
