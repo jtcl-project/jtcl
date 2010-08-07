@@ -35,14 +35,38 @@ public class TclIO {
 	 */
 	public static final int READ_N_BYTES = 3;
 
+	/**
+	 * Seek relative to the beginning of the file
+	 */
 	public static final int SEEK_SET = 1;
+	/**
+	 * Seek relative to the current position in the file
+	 */
 	public static final int SEEK_CUR = 2;
+	/**
+	 * Seek relative to the end of the file
+	 */
 	public static final int SEEK_END = 3;
 
+	/**
+	 * Open read-only
+	 */
 	public static final int RDONLY = 1;
+	/**
+	 * Open write-only
+	 */
 	public static final int WRONLY = 2;
+	/**
+	 * Open for reading and writing
+	 */
 	public static final int RDWR = 4;
+	/**
+	 * Append to end of file when writing
+	 */
 	public static final int APPEND = 8;
+	/**
+	 * Create a new file
+	 */
 	public static final int CREAT = 16;
 	public static final int EXCL = 32;
 	public static final int TRUNC = 64;
@@ -52,18 +76,34 @@ public class TclIO {
 	 */
 	public static final int BUFF_FULL = 0;
 	/**
-	 * Flush at end of line
+	 * Flush at end of line; buffer only one line on input
 	 */
 	public static final int BUFF_LINE = 1;
 	/**
-	 * Flush after every write
+	 * Flush after every write; don't buffer any input
 	 */
 	public static final int BUFF_NONE = 2;
 
+	/**
+	 * Translate \n, \r, \r\n to \n on input; translate \n to platform-specific
+	 * end of line on output
+	 */
 	public static final int TRANS_AUTO = 0;
+	/**
+	 * Don't translate end of line characters
+	 */
 	public static final int TRANS_BINARY = 1;
+	/**
+	 * Don't translate end of line characters
+	 */
 	public static final int TRANS_LF = 2;
+	/**
+	 * \n -> \r on output; \r -> \n on input
+	 */
 	public static final int TRANS_CR = 3;
+	/**
+	 * \n to \r\n on output; \r\n -> \n on input
+	 */
 	public static final int TRANS_CRLF = 4;
 
 	/**
@@ -173,6 +213,34 @@ public class TclIO {
 
 			chanTable.put(registerName, chan);
 			chan.refCount++;
+		}
+	}
+
+	/**
+	 * Call flush() for each currently registered open channel, ignoring
+	 * exceptions. Non-blocking channels are guaranteed to be flushed after this
+	 * call.
+	 * 
+	 * @param interp
+	 *            the current interpreter
+	 */
+	public static void flushAllOpenChannels(Interp interp) {
+		HashMap<String, Channel> chanTable = getInterpChanTable(interp);
+		Iterator<Channel> chanIt = chanTable.values().iterator();
+
+		while (chanIt.hasNext()) {
+			Channel channel = chanIt.next();
+			if (channel.isWriteOnly() || channel.isReadWrite()) {
+				boolean blockingMode = channel.getBlocking();
+				if (!blockingMode)
+					channel.setBlocking(true);
+				try {
+					channel.flush(interp);
+				} catch (Exception ignored) {
+				}
+				if (!blockingMode)
+					channel.setBlocking(false);
+			}
 		}
 	}
 

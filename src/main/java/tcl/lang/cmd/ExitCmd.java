@@ -17,6 +17,7 @@ package tcl.lang.cmd;
 import tcl.lang.Command;
 import tcl.lang.Interp;
 import tcl.lang.TclException;
+import tcl.lang.TclIO;
 import tcl.lang.TclInteger;
 import tcl.lang.TclNumArgsException;
 import tcl.lang.TclObject;
@@ -41,6 +42,13 @@ public class ExitCmd implements Command {
 			code = 0;
 		}
 
+		/*
+		 * Flush any open write channels.  Don't actually close all the 
+		 * channels here, because pipeline channels may cause a hang
+		 * if the process won't stop.
+		 */
+		TclIO.flushAllOpenChannels(interp);
+		
 		System.exit(code);
 	}
 }

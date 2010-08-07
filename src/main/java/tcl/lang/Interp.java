@@ -637,11 +637,7 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * Tcl_DeleteInterp -> dispose
-	 * 
+	/**
 	 * Invoked to indicate that the interp should be disposed of. If there are
 	 * no Tcl_Preserve calls in effect for this interpreter, it is deleted
 	 * immediately, otherwise the interpreter is deleted when the last
@@ -650,10 +646,7 @@ public class Interp extends EventuallyFreed {
 	 * Results: None.
 	 * 
 	 * Side effects: Cleans up the interpreter.
-	 * 
-	 * ----------------------------------------------------------------------
 	 */
-
 	public void dispose() {
 		final boolean debug = false;
 

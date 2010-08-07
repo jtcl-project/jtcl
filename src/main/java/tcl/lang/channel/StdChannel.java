@@ -13,16 +13,15 @@
 
 package tcl.lang.channel;
 
+import java.io.FileDescriptor;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
-import tcl.lang.Interp;
 import tcl.lang.ManagedSystemInStream;
-import tcl.lang.TclException;
 import tcl.lang.TclIO;
-import tcl.lang.TclObject;
 import tcl.lang.TclRuntimeError;
 
 /**
@@ -33,46 +32,74 @@ import tcl.lang.TclRuntimeError;
 public class StdChannel extends Channel {
 
 	/**
-	 * stdType store which type, of the three below, this StdChannel is.
+	 * Defines the type of Channel: STDIN, STDOUT or STDERR
 	 */
-
 	private int stdType = -1;
 
 	/**
-	 * Flags indicating the type of this StdChannel.
+	 * Used to indicate that this channel is a standard input channel
 	 */
-
 	public static final int STDIN = 0;
+	/**
+	 * Used to indicate that this channel is a standard output channel
+	 */
 	public static final int STDOUT = 1;
+	/**
+	 * Used to indicate that this channel is a standard error channel
+	 */
 	public static final int STDERR = 2;
 
 	/**
-	 * These static variables contain references to the actual in, out, and err
-	 * streams that are read from or written to when the "stdin", "stdout", or
-	 * "stderr" streams are read from or written to in Jacl. The user should
-	 * invoke the setIn(), setOut(), and setErr() methods in this class to
-	 * reassign to a specific Java stream.
+	 * Standard Input Stream to read from
 	 */
-
 	static InputStream _in = new ManagedSystemInStream();
-	static PrintStream _out = System.out;
-	static PrintStream _err = System.err;
+	/**
+	 * Standard output stream to read from
+	 */
+	static OutputStream _out = System.out;
+	/**
+	 * Standard error stream to read from
+	 */
+	static OutputStream _err = System.err;
 
 	/**
-	 * Reassign the static variables that reference the in, out, and err streams
-	 * used by Jacl. The user should note that these methods will change the
-	 * underlying Java stream in use for all Jacl interpreters in the current
-	 * process.
+	 * Reassign the standard input stream to a new stream. This will change the
+	 * underlying stream for all interpreters. This use is deprecated;
+	 * applications should unregister the stdin Channel and open a new Channel
+	 * to replace stdin.
+	 * 
+	 * @param in
+	 *            InputStream to replace standard input with
 	 */
-
+	@Deprecated
 	public static void setIn(InputStream in) {
 		_in = in;
 	}
 
+	/**
+	 * Reassign the standard output stream to a new stream. This will change the
+	 * underlying stream for all interpreters. This use is deprecated;
+	 * applications should unregister the stdout Channel and open a new Channel
+	 * to replace it.
+	 * 
+	 * @param in
+	 *            OutputStream to replace standard input with
+	 */
+	@Deprecated
 	public static void setOut(PrintStream out) {
 		_out = out;
 	}
 
+	/**
+	 * Reassign the standard error stream to a new stream. This will change the
+	 * underlying stream for all interpreters. This use is deprecated;
+	 * applications should unregister the stderr Channel and open a new Channel
+	 * to replace it.
+	 * 
+	 * @param in
+	 *            OutputStream to replace standard input with
+	 */
+	@Deprecated
 	public static void setErr(PrintStream err) {
 		_err = err;
 	}
@@ -89,7 +116,7 @@ public class StdChannel extends Channel {
 	 * Constructor that will automatically call open.
 	 * 
 	 * @param stdName
-	 *            name of the stdio channel; stdin, stderr or stdout.
+	 *            name of the stdio channel; "stdin", "stderr" or "stdout"
 	 */
 
 	StdChannel(String stdName) {
@@ -141,8 +168,7 @@ public class StdChannel extends Channel {
 			setChanName("stderr");
 			break;
 		default:
-			throw new RuntimeException(
-					"type does not match one of STDIN, STDOUT, or STDERR");
+			throw new RuntimeException("type does not match one of STDIN, STDOUT, or STDERR");
 		}
 
 		stdType = type;
@@ -150,53 +176,40 @@ public class StdChannel extends Channel {
 		return getChanName();
 	}
 
-	/**
-	 * Write to stdout or stderr. If the stdType is not set to STDOUT or STDERR
-	 * this is an error; either the stdType wasnt correctly initialized, or this
-	 * was called on a STDIN channel.
+	/*
+	 * (non-Javadoc)
 	 * 
-	 * @param interp
-	 *            the current interpreter.
-	 * @param s
-	 *            the string to write
-	 */
-
-	public void write(Interp interp, TclObject outData) throws IOException,
-			TclException {
-
-		checkWrite(interp);
-
-		if (stdType == STDERR) {
-			_err.print(outData.toString());
-		} else {
-			String s = outData.toString();
-			_out.print(s);
-			if (buffering == TclIO.BUFF_NONE
-					|| (buffering == TclIO.BUFF_LINE && s.endsWith("\n"))) {
-				_out.flush();
-			}
-		}
-	}
-
-
-	/* (non-Javadoc)
 	 * @see tcl.lang.channel.Channel#implClose()
 	 */
 	@Override
 	void implClose() throws IOException {
-		if (stdType == STDOUT)
-			_out.flush();
+		/*
+		 * don't actually close the various standard streams, because we can't
+		 * get them back
+		 */
 	}
 
+	@Override
 	String getChanType() {
 		return "tty";
 	}
 
+	@Override
 	protected InputStream getInputStream() throws IOException {
-		return _in;
+		if (stdType == STDIN)
+			return _in;
+		else
+			throw new RuntimeException("Should never be called");
 	}
 
+	@Override
 	protected OutputStream getOutputStream() throws IOException {
+		switch (stdType) {
+		case STDOUT:
+			return _out;
+		case STDERR:
+			return _err;
+		}
 		throw new RuntimeException("should never be called");
 	}
 }
