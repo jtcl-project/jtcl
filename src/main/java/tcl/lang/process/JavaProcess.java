@@ -226,9 +226,10 @@ public class JavaProcess extends TclProcess {
 				closeOutput = false;  // don't close FileDescriptor.err
 				break;
 			case STREAM:
-				stdoutStream = null;
+				stderrStream = null;
 				break;
 			case TCL_CHANNEL:
+				closeOutput = false;
 				stderrStream = new OutputStream() {
 					byte[] buf = new byte[1];
 					TclObject tclbuf;
@@ -274,21 +275,22 @@ public class JavaProcess extends TclProcess {
 	}
 
 	@Override
-	protected int _waitFor() throws InterruptedException, IOException {
+	protected int implWaitFor() throws InterruptedException, IOException {
 		if (process == null)
 			throw new IllegalThreadStateException("Process not yet started");
 		int rv = process.waitFor();
 		if (stdinRedirect != null && stdinRedirect.type == Redirect.Type.INHERIT && stdinStream != null)
 			stdinStream.close(); // so we don't keep sucking up stdin
+		
 		// wait for couplers to finish
 		if (stdoutCoupler != null) {
 			stdoutCoupler.join();
 		}
-		// wait for couplers to finish
 
 		if (stderrCoupler != null) {
 			stderrCoupler.join();
 		}
+		
 		return rv;
 	}
 

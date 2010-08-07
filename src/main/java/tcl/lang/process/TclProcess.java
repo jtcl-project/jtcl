@@ -113,7 +113,7 @@ public abstract class TclProcess {
 	public int waitFor() throws IllegalThreadStateException, InterruptedException, IOException {
 		if (!isStarted())
 			throw new IllegalThreadStateException("Process not yet started");
-		int rv = _waitFor();
+		int rv = implWaitFor();
 		if (stdoutRedirect != null && stdoutRedirect.type == Redirect.Type.TCL_CHANNEL && stdoutRedirect.closeChannel) {
 			TclIO.unregisterChannel(interp, stdoutRedirect.channel);
 		}
@@ -131,7 +131,7 @@ public abstract class TclProcess {
 	 * @throws InterruptedException
 	 *             if the process is interrupted
 	 */
-	protected abstract int _waitFor() throws InterruptedException, IOException;
+	protected abstract int implWaitFor() throws InterruptedException, IOException;
 
 	/**
 	 * @return The process identifier of this process, or -1 if it cannot be

@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.io.SyncFailedException;
+import java.io.Writer;
 
 import tcl.lang.Interp;
 import tcl.lang.TclByteArray;
@@ -55,14 +57,7 @@ public abstract class Channel {
 	public int refCount = 0;
 
 	/**
-	 * Tcl output object. These are like a mix between a Java Stream and a
-	 * Reader.
-	 */
-	protected TclOutputStream output = null;
-
-	/**
-	 * Set to false when channel is in non-blocking mode. Fixme: non-blocking
-	 * mode is not supported.
+	 * Set to false when channel is in non-blocking mode.
 	 */
 	protected boolean blocking = true;
 
@@ -72,12 +67,21 @@ public abstract class Channel {
 	protected InputBuffer inputBuffer = null;
 
 	/**
+	 * The underlying input stream offered by the implementation
+	 */
+	protected InputStream rawInputStream = null;
+	/**
+	 * The underlying output stream offered by the implementation
+	 */
+	protected OutputStream rawOutputStream = null;
+	/**
 	 * The EOL input filter for this channel.
 	 */
 	protected EolInputFilter eolInputFilter = null;
 
 	/**
-	 * The EOF input filter for this channel.
+	 * The EOF input filter for this channel, which translates the EOF
+	 * character.
 	 */
 	protected EofInputFilter eofInputFilter = null;
 
@@ -101,6 +105,45 @@ public abstract class Channel {
 	protected Reader finalReader = null;
 
 	/**
+	 * This Writer translates EOL characters on output, and performs BUFF_LINE
+	 * flushes
+	 */
+	protected EolOutputFilter eolOutputFilter = null;
+
+	/**
+	 * This Writer translates Unicode to bytes for output
+	 */
+	protected UnicodeEncoder unicodeEncoder = null;
+
+	/**
+	 * This OutputStream buffers output data for the Channel
+	 */
+	protected OutputBuffer outputBuffer = null;
+
+	/**
+	 * This OutputStream writes the EOF character, and prevents this Chanel's
+	 * getOutputStream() from being closed by the chain.
+	 */
+	protected EofOutputFilter eofOutputFilter = null;
+
+	/**
+	 * This OutputStream prevents outputs from blocking on a non-blocking
+	 * channel
+	 */
+	protected NonBlockingOutputStream nonBlockingOutputStream = null;
+
+	/**
+	 * This Writer is the Channel's entry into the output chain
+	 */
+	protected Writer firstWriter = null;
+
+	/**
+	 * This OutputStream is the Channel's entry into the output chain for
+	 * efficient byte writes
+	 */
+	protected OutputStream firstOutputStream = null;
+
+	/**
 	 * Buffering (full,line, or none)
 	 */
 	protected int buffering = TclIO.BUFF_FULL;
@@ -115,11 +158,6 @@ public abstract class Channel {
 	 * encoding (binary).
 	 */
 	protected String encoding;
-
-	/**
-	 * Number of bytes per character for the encoding
-	 */
-	protected int bytesPerChar;
 
 	/**
 	 * Input translation mode for end-of-line character
@@ -174,7 +212,6 @@ public abstract class Channel {
 	 *                is thrown when an IO error occurs that was not correctly
 	 *                tested for. Most cases should be caught.
 	 */
-
 	public int read(Interp interp, TclObject tobj, int readType, int numBytes) throws IOException, TclException {
 
 		checkRead(interp);
@@ -214,17 +251,20 @@ public abstract class Channel {
 			while (total < numBytes) {
 
 				if (readChars)
-					cnt = finalReader.read(buf);
+					cnt = finalReader.read(buf, 0, Math.min(buf.length, numBytes - total));
 				else {
 					/* resize array */
-					TclByteArray.setLength(interp, tobj, total + bufsize);
+					if (TclByteArray.getLength(interp, tobj) < total + bufsize) {
+						TclByteArray.setLength(interp, tobj, total + bufsize);
+					}
 
 					/*
 					 * if we are reading unprocessed bytes, this is more
 					 * efficient because it avoids UnicodeDecoder's byte -> char
 					 * conversion
 					 */
-					cnt = finalInputStream.read(TclByteArray.getBytes(interp, tobj), total, bufsize);
+					cnt = finalInputStream.read(TclByteArray.getBytes(interp, tobj), total, Math.min(bufsize, numBytes
+							- total));
 				}
 				if (cnt == -1) {
 					eofSeen = true;
@@ -291,9 +331,13 @@ public abstract class Channel {
 			}
 		}
 
-		// FIXME: Is it possible for a write to happen with a null output?
-		if (output != null) {
-			output.writeObj(outData);
+		if (outData.getInternalRep() instanceof TclByteArray && encoding == null && buffering != TclIO.BUFF_LINE
+				&& (outputTranslation == TclIO.TRANS_BINARY || outputTranslation == TclIO.TRANS_LF)) {
+			/* Can write with the more efficient firstOutputStream */
+			firstOutputStream.write(TclByteArray.getBytes(interp, outData), 0, TclByteArray.getLength(interp, outData));
+		} else {
+			char[] cbuf = outData.toString().toCharArray();
+			firstWriter.write(cbuf, 0, cbuf.length);
 		}
 	}
 
@@ -307,21 +351,32 @@ public abstract class Channel {
 	 * @param outStr
 	 *            the String object to write.
 	 */
-
 	public void write(Interp interp, String outStr) throws IOException, TclException {
 		write(interp, TclString.newInstance(outStr));
 	}
 
 	/**
+	 * Channels subclasses should override this to perform any specific close()
+	 * operations, including closing of the getInputStream() and
+	 * getOutputStream() streams if necessary. impClose() is called by
+	 * NonBlockingOutputStream.Transaction.perform() after the input and output
+	 * chain of readers, writers and streams are closed.
+	 * 
+	 * @throws IOException
+	 */
+	abstract void implClose() throws IOException;
+
+	/**
 	 * Close the Channel. The channel is only closed, it is the responsibility
-	 * of the "closer" to remove the channel from the channel table.  This does not
-	 * close() the Channel's getInputStream() or getOutputStream(); the Channel
-	 * subclass must close those streams itself after calling super.close()
+	 * of the "closer" to remove the channel from the channel table. Channel
+	 * subclass specific closing is done is impClose(), which is called on
+	 * behalf of this method by nonBlockingOutputStream.
 	 */
 
 	public void close() throws IOException {
 
 		IOException ex = null;
+		boolean implCloseCalled = false;
 
 		if (finalReader != null) {
 			try {
@@ -329,18 +384,37 @@ public abstract class Channel {
 			} catch (IOException e) {
 				ex = e;
 			}
+
 			finalReader = null;
 			finalInputStream = null;
+			eolInputFilter = null;
+			unicodeDecoder = null;
+			markableInputStream = null;
+			inputBuffer = null;
+			eofInputFilter = null;
+
 		}
 
-		if (output != null) {
+		if (firstWriter != null) {
 			try {
-				output.close();
+				firstWriter.close();
+				// nonBlockingOutputStream called implClose(), in a possibly
+				// non-blocking
+				implCloseCalled = true;
 			} catch (IOException e) {
 				ex = e;
 			}
-			output = null;
+			firstWriter = null;
+			firstOutputStream = null;
+			eolOutputFilter = null;
+			unicodeEncoder = null;
+			outputBuffer = null;
+			eofOutputFilter = null;
+			nonBlockingOutputStream = null;
 		}
+
+		if (!implCloseCalled)
+			implClose();
 
 		if (ex != null)
 			throw ex;
@@ -359,9 +433,18 @@ public abstract class Channel {
 
 		checkWrite(interp);
 
-		if (output != null) {
-			output.flush();
+		if (firstWriter != null) {
+			firstWriter.flush();
 		}
+	}
+
+	/**
+	 * Channel subclasses should override this to flush any operating system
+	 * buffers for this Channel out to the physical medium. The default
+	 * implementation here does nothing. FileChannel and similar classes should
+	 * override this to provide sync() capability.
+	 */
+	void sync() throws SyncFailedException, IOException {
 	}
 
 	/**
@@ -379,7 +462,6 @@ public abstract class Channel {
 	 *             if channel does not support seek
 	 * @throws IOException
 	 */
-
 	public void seek(Interp interp, long offset, int mode) throws IOException, TclException {
 		throw new TclPosixException(interp, TclPosixException.EINVAL, true, "error during seek on \"" + getChanName()
 				+ "\"");
@@ -425,13 +507,12 @@ public abstract class Channel {
 		 * channel implementation's InputStream -> eofInputFilter -> inputBuffer
 		 * -> MarkableInputStream -> unicodeEncoder -> eolInputFilter
 		 */
-		eofInputFilter = new EofInputFilter(getInputStream(), (byte) (inputEofChar & 0xff));
-		inputBuffer = new InputBuffer(eofInputFilter, bufferSize, buffering);
+		rawInputStream = getInputStream();
+		eofInputFilter = new EofInputFilter(rawInputStream, (byte) (inputEofChar & 0xff));
+		inputBuffer = new InputBuffer(eofInputFilter, bufferSize, buffering, blocking);
 		markableInputStream = new MarkableInputStream(inputBuffer);
 		unicodeDecoder = new UnicodeDecoder(markableInputStream, encoding);
 		eolInputFilter = new EolInputFilter(unicodeDecoder, inputTranslation);
-
-		inputBuffer.setBlockingMode(blocking);
 
 		/* read() gets characters from finalReader */
 		finalReader = eolInputFilter;
@@ -440,22 +521,29 @@ public abstract class Channel {
 	}
 
 	/**
-	 * Setup the TclOutputStream on the first call to write
+	 * Setup output stream chain on the first write
 	 */
 	protected void initOutput() throws IOException {
-		if (output != null)
+		if (firstWriter != null)
 			return;
 
-		output = new TclOutputStream(getOutputStream());
-		output.setEncoding(encoding);
-		output.setTranslation(outputTranslation);
-		output.setEofChar(outputEofChar);
-		output.setBuffering(buffering);
-		output.setBufferSize(bufferSize);
-		output.setBlocking(blocking);
-		if (getChanType().equals("file")) {
-			output.setSync(true);
-		}
+		/*
+		 * Set up the chain of Writers and OutputStreams: EolOutputFilter ->
+		 * UnicodeEncoder -> OutputBuffer -> EofOutputFilter
+		 * NonBlockingOutputStream -> Channel's getOutputStream()
+		 */
+		rawOutputStream = getOutputStream();
+		eofOutputFilter = new EofOutputFilter(rawOutputStream, (byte) (outputEofChar & 0xff));
+		nonBlockingOutputStream = new NonBlockingOutputStream(eofOutputFilter, blocking, this);
+		outputBuffer = new OutputBuffer(nonBlockingOutputStream, bufferSize, buffering);
+		unicodeEncoder = new UnicodeEncoder(outputBuffer, encoding);
+		eolOutputFilter = new EolOutputFilter(unicodeEncoder, outputTranslation);
+
+		/* Characters are written to firstWriter */
+		firstWriter = eolOutputFilter;
+
+		/* Bytes are more efficiently written to firstOutputStream */
+		firstOutputStream = outputBuffer;
 	}
 
 	/**
@@ -557,10 +645,6 @@ public abstract class Channel {
 		if (!isWriteOnly() && !isReadWrite()) {
 			throw new TclException(interp, "channel \"" + getChanName() + "\" wasn't opened for writing");
 		}
-		if (!blocking) {
-			throw new TclException(interp, "Non-blocking write I/O not yet implemented");
-		}
-
 	}
 
 	/**
@@ -606,8 +690,9 @@ public abstract class Channel {
 		if (inputBuffer != null) {
 			inputBuffer.setBuffering(inBuffering);
 		}
-		if (output != null)
-			output.setBuffering(buffering);
+		if (outputBuffer != null) {
+			outputBuffer.setBuffering(inBuffering);
+		}
 	}
 
 	/**
@@ -628,7 +713,7 @@ public abstract class Channel {
 	 */
 	public void setBufferSize(int size) {
 
-		// If the buffer size is smaller than 10 bytes or larger than 1 Meg
+		// If the buffer size is smaller than 1 byte or larger than 1 Meg
 		// do not accept the requested size and leave the current buffer size.
 
 		if ((size < 1) || (size > (1024 * 1024))) {
@@ -639,26 +724,24 @@ public abstract class Channel {
 		if (inputBuffer != null) {
 			inputBuffer.setBufferSize(size);
 		}
-		if (output != null)
-			output.setBufferSize(bufferSize);
+		if (outputBuffer != null) {
+			outputBuffer.setBufferSize(size);
+		}
 	}
 
 	/**
 	 * @return Number of bytes stored in the chain of readers and input streams
 	 *         that have already been read from the Channel's underlying input
-	 *         strem
+	 *         stream
 	 */
 	int getNumBufferedInputBytes() {
 		if (inputBuffer != null) {
 			try {
-				int cnt = unicodeDecoder.available();
 				/*
-				 * eofInputFilter() doesn't get available() called, because it
-				 * stops at InputBuffer
+				 * Calculate the number of bytes stored in the chain; don't
+				 * include anything below rawInputStream
 				 */
-				if (eofInputFilter.sawEofChar())
-					++cnt;
-				return cnt;
+				return unicodeDecoder.available() - rawInputStream.available();
 			} catch (IOException e) {
 				return 0;
 			}
@@ -673,8 +756,8 @@ public abstract class Channel {
 	 *         strem
 	 */
 	int getNumBufferedOutputBytes() {
-		if (output != null)
-			return output.getNumBufferedBytes();
+		if (outputBuffer != null)
+			return outputBuffer.getBufferedByteCount();
 		else
 			return 0;
 	}
@@ -698,14 +781,6 @@ public abstract class Channel {
 	}
 
 	/**
-	 * @return true if a background flush is waiting to happen.
-	 */
-	boolean isBgFlushScheduled() {
-		// FIXME: Need to query output here
-		return false;
-	}
-
-	/**
 	 * Query this Channel's encoding
 	 * 
 	 * @return Name of Channel's Java encoding (null if no encoding)
@@ -722,18 +797,13 @@ public abstract class Channel {
 	 */
 	public void setEncoding(String inEncoding) {
 		encoding = inEncoding;
-		if (encoding == null) {
-			bytesPerChar = 1;
-		} else {
-			bytesPerChar = EncodingCmd.getBytesPerChar(encoding);
-		}
 
 		if (unicodeDecoder != null) {
 			unicodeDecoder.setEncoding(encoding);
 		}
-		if (output != null)
-			output.setEncoding(encoding);
-
+		if (unicodeEncoder != null) {
+			unicodeEncoder.setEncoding(encoding);
+		}
 	}
 
 	/**
@@ -775,8 +845,8 @@ public abstract class Channel {
 		if (!(isWriteOnly() || isReadWrite()))
 			return;
 		outputTranslation = translation;
-		if (output != null)
-			output.setTranslation(outputTranslation);
+		if (eolOutputFilter != null)
+			eolOutputFilter.setTranslation(outputTranslation);
 	}
 
 	/**
@@ -832,8 +902,9 @@ public abstract class Channel {
 
 		// Store as a byte, not a unicode character
 		outputEofChar = (char) (outEof & 0xFF);
-		if (output != null)
-			output.setEofChar(outputEofChar);
+		if (eofOutputFilter != null) {
+			eofOutputFilter.setEofChar((byte) outputEofChar);
+		}
 	}
 
 }

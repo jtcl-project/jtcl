@@ -83,8 +83,9 @@ class EofInputFilter extends FilterInputStream {
 	 *            new input end of file character, or 0 for no eof character
 	 */
 	void setEofChar(byte eofChar) {
+		if (eofChar != this.eofchar)
+			cancelEof();
 		this.eofchar = eofChar;
-		cancelEof();
 	}
 
 	/**
@@ -93,6 +94,16 @@ class EofInputFilter extends FilterInputStream {
 	 */
 	boolean sawEofChar() {
 		return sawEofChar;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.io.FilterInputStream#available()
+	 */
+	@Override
+	public int available() throws IOException {
+		return in.available() + (sawEofChar ? 1 : 0);
 	}
 
 	/*

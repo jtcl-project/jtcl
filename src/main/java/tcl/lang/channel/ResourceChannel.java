@@ -88,23 +88,18 @@ public class ResourceChannel extends Channel {
 		return fName;
 	}
 
-	/**
-	 * Close the file. The file MUST be open or a TclRuntimeError is thrown.
-	 */
 
-	public void close() throws IOException {
+	/* (non-Javadoc)
+	 * @see tcl.lang.channel.Channel#implClose()
+	 */
+	@Override
+	void implClose() throws IOException {
 		if (file == null) {
 			throw new TclRuntimeError(
 					"ResourceChannel.close(): null file object");
 		}
-
-		// Invoke super.close() first since it might write an eof char
-		try {
-			super.close();
-		} finally {
-			file.close();
-			file = null;
-		}
+		file.close();
+		file = null;
 	}
 
 	/**

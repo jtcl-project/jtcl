@@ -88,6 +88,8 @@ public class Redirect {
 	 * 
 	 * @param channel
 	 *            to redirect bytes from/to
+	 * @param close
+	 *  		   if true, close channel on process exit
 	 */
 	public Redirect(Channel channel, boolean close) {
 		this.type = Type.TCL_CHANNEL;

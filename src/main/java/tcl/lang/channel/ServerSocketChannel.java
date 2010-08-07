@@ -123,7 +123,14 @@ public class ServerSocketChannel extends Channel {
 		acceptThread.pleaseStop();
 
 		super.close();
-		sock.close();
+	}
+
+	/* (non-Javadoc)
+	 * @see tcl.lang.channel.Channel#implClose()
+	 */
+	@Override
+	void implClose() throws IOException {
+		sock.close();		
 	}
 
 	/**

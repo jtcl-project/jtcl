@@ -2,12 +2,12 @@ package tcl.lang.channel;
 
 import java.io.FilterInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 import tcl.lang.TclIO;
 
 /**
- * Implements a resizeable buffer as an InputStream for Tcl Channels
+ * Implements a resizeable buffer as an InputStream for Tcl Channels.
+ * It is also responsible for non-blocking reads.
  * 
  * @author Dan Bodoh
  * 
@@ -17,6 +17,7 @@ class InputBuffer extends FilterInputStream implements Runnable {
 	 * Contains the buffered bytes
 	 */
 	private byte[] buffer = null;
+
 	/**
 	 * The last buffer size change requested
 	 */
@@ -28,11 +29,11 @@ class InputBuffer extends FilterInputStream implements Runnable {
 	/**
 	 * Next character position to read from buffer
 	 */
-	private  int position = 0;
+	private int position = 0;
 	/**
 	 * Last character in buffer + 1
 	 */
-	private  int limit = 0;
+	private int limit = 0;
 	/**
 	 * Marked position, or -1 of no current mark
 	 */
@@ -55,14 +56,14 @@ class InputBuffer extends FilterInputStream implements Runnable {
 	private boolean lastReadWouldHaveBlocked = false;
 
 	/**
-	 * If true, a  refill() operation is currently being executed
+	 * If true, a refill() operation is currently being executed
 	 */
 	private volatile boolean refillInProgress = false;
 	/**
 	 * Underlying stream, as an EofInputFilter
 	 */
 	private EofInputFilter eofInputFilter = null;
-	
+
 	/**
 	 * Construct a new InputBuffer in blocking mode
 	 * 
@@ -73,13 +74,16 @@ class InputBuffer extends FilterInputStream implements Runnable {
 	 * @param buffering
 	 *            Buffering mode: TclIO.BUFF_NONE, TclIO.BUFF_LINE or
 	 *            TclIO.BUFF_FULL
+	 * @param blockingMode
+	 *            Set to true for blocking input, false for non-blocking input
 	 */
-	InputBuffer(EofInputFilter in, int size, int buffering) {
-		super((InputStream)in);
+	InputBuffer(EofInputFilter in, int size, int buffering, boolean blockingMode) {
+		super(in);
 		eofInputFilter = in;
 		setBuffering(buffering);
 		setBlockingMode(true);
 		setBufferSize(size);
+		setBlockingMode(blockingMode);
 	}
 
 	/**
@@ -91,15 +95,18 @@ class InputBuffer extends FilterInputStream implements Runnable {
 	}
 
 	/**
-	 * Change the buffer size if there is no refill in progress and if it is actually empty.
+	 * Change the buffer size if there is no refill in progress and if it is
+	 * actually empty.
 	 */
 	private void resizeBuffer() {
 		synchronized (this) {
-			if (refillInProgress) return;
-			if (remaining() > 0 || (buffer!=null && buffer.length==requestedBufferSize))
+			if (refillInProgress)
+				return;
+			int size = buffering == TclIO.BUFF_NONE ? 0 : requestedBufferSize;
+			if (remaining() > 0 || (buffer != null && buffer.length == size))
 				return;
 			markedPosition = -1;
-			buffer = new byte[requestedBufferSize];
+			buffer = new byte[size];
 			limit = 0;
 			position = 0;
 		}
@@ -114,10 +121,7 @@ class InputBuffer extends FilterInputStream implements Runnable {
 	 */
 	void setBufferSize(int size) {
 		synchronized (this) {
-			if (size < 0 || buffering == TclIO.BUFF_NONE)
-				requestedBufferSize = 0;
-			else
-				requestedBufferSize = size;
+			requestedBufferSize = size;
 		}
 		resizeBuffer();
 	}
@@ -130,8 +134,7 @@ class InputBuffer extends FilterInputStream implements Runnable {
 	 */
 	void setBuffering(int buffering) {
 		this.buffering = buffering;
-		if (this.buffering == TclIO.BUFF_NONE)
-			setBufferSize(0);
+		resizeBuffer();
 	}
 
 	/**
@@ -147,11 +150,12 @@ class InputBuffer extends FilterInputStream implements Runnable {
 
 	/**
 	 * @return true if the channel is in non-blocking mode, and the last read
-	 * was terminated early because it would have blocked
+	 *         was terminated early because it would have blocked
 	 */
 	boolean lastReadWouldHaveBlocked() {
 		return lastReadWouldHaveBlocked;
 	}
+
 	/**
 	 * Sets the current eof state to false
 	 * 
@@ -171,9 +175,9 @@ class InputBuffer extends FilterInputStream implements Runnable {
 		}
 	}
 
-	/** 
-	 * Reads one byte from buffer or underlying stream.  Does not honor blockingMode; will block of no bytes
-	 * are in the buffer
+	/**
+	 * Reads one byte from buffer or underlying stream. Does not honor
+	 * blockingMode; will block of no bytes are in the buffer
 	 * 
 	 * @return next byte, or -1 if none available
 	 * 
@@ -210,44 +214,58 @@ class InputBuffer extends FilterInputStream implements Runnable {
 	 */
 	@Override
 	public int read(byte[] b, int off, int len) throws IOException {
-		lastReadWouldHaveBlocked = false;
 		
+		lastReadWouldHaveBlocked = false;
+
 		if (refillInProgress) {
 			lastReadWouldHaveBlocked = true;
 			return 0;
 		}
-		
+
 		if (eofSeen)
 			return -1;
-		
-		if (remaining() == 0) {
-			/* In non-blocking mode, return 0 if nothing available */
-			if (! blockingMode) {
-				lastReadWouldHaveBlocked = true;
-				/* And run refill() in the background */
-				Thread bkgndRefill = new Thread(this);
-				bkgndRefill.start();
-				return 0;
-			}
-			
 
-			/* If we are going to exceed the buffer length, just read directly */
-			if (len >= buffer.length && buffering != TclIO.BUFF_LINE) {
-				int cnt = super.read(b, off, len);
-				if (cnt == -1)
-					eofSeen = true;
+		if (remaining() == 0) {
+			
+			/* Can we satisfy the request, at least partially, from anything available 
+			 * in the underlying stream?  Don't try for line buffering, because we don't
+			 * want to accidently read past EOL.  And don't request any more than the
+			 * Tcl buffer size, because that would confuse test cases
+			 */
+			if (buffering != TclIO.BUFF_LINE && super.available() > 0) {
+
+				int directRequestSize = Math.min(len, super.available());
+				if (requestedBufferSize > 0 
+						&& directRequestSize > requestedBufferSize) directRequestSize = requestedBufferSize;
+				
+				int cnt = super.read(b, off, directRequestSize);
+				if (cnt==-1) eofSeen = true;
+				lastReadWouldHaveBlocked = ! blockingMode && (cnt < len) && ! eofSeen;
 				return cnt;
-			} else {
-				refill();
-				if (eofSeen)
-					return -1;
+
+			} else  {
+				/* couldn't get any bytes directly from stream without blocking */
+				
+				if (blockingMode) {
+					refill();
+					/* fall through when refill completes to copy data out of the buffer */
+				} else {
+					/*  run refill() in the background for non-blocking mode */
+					Thread bkgndRefill = new Thread(this);
+					bkgndRefill.start();
+					lastReadWouldHaveBlocked = true;
+					return 0;	
+				}
 			}
+
 		}
+		
+		/* Copy data out of the buffer */
 		int cnt = Math.min(len, remaining());
-		lastReadWouldHaveBlocked = (!blockingMode && cnt < len && ! eofSeen);
 		System.arraycopy(buffer, position, b, off, cnt);
 		position += cnt;
-		return cnt;
+		lastReadWouldHaveBlocked = (!blockingMode && cnt < len && !eofSeen);
+		return cnt;	
 	}
 
 	/*
@@ -257,15 +275,7 @@ class InputBuffer extends FilterInputStream implements Runnable {
 	 */
 	@Override
 	public int available() throws IOException {
-		/*
-		 * Note: available() stops here, because we are using it to determine
-		 * the number of bytes buffered in the input filter chain. But when
-		 * non-blocking I/O is done, we may want to propagate it down and use
-		 * some other method to figure out what is in our chain.
-		 */
-		if (eofSeen)
-			return 0;
-		return remaining();
+		return remaining() + in.available();
 	}
 
 	/*
@@ -278,8 +288,9 @@ class InputBuffer extends FilterInputStream implements Runnable {
 		return true;
 	}
 
-	
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see java.io.FilterInputStream#mark(int)
 	 */
 	@Override
@@ -289,12 +300,14 @@ class InputBuffer extends FilterInputStream implements Runnable {
 		}
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see java.io.FilterInputStream#reset()
 	 */
 	@Override
 	public synchronized void reset() throws IOException {
-		synchronized(this) {
+		synchronized (this) {
 			if (markedPosition >= 0) {
 				position = markedPosition;
 			} else {
@@ -310,11 +323,12 @@ class InputBuffer extends FilterInputStream implements Runnable {
 	 * 
 	 * @throws IOException
 	 */
-	private synchronized void  refill() throws IOException {
+	private synchronized void refill() throws IOException {
 		if (eofSeen)
 			return;
-		if (remaining() > 0) return;  // perhaps it was refilled in the background?
-		
+		if (remaining() > 0)
+			return; // perhaps it was refilled in the background?
+
 		// here's our chance to resize the buffer
 		synchronized (this) {
 			resizeBuffer();
@@ -322,16 +336,24 @@ class InputBuffer extends FilterInputStream implements Runnable {
 			limit = 0;
 			position = 0;
 			markedPosition = -1;
-			
+
 			if (buffer.length == 0) {
 				refillInProgress = false;
 				return;
 			}
 		}
 		if (buffering == TclIO.BUFF_FULL) {
-			// keep the blocking read out of the synchronized section.  The buffer is protected
+			/*
+			 * Get as many bytes as available in the underlying stream,
+			 * up to buffer.length.  But we must always get at least one character.
+			 */
+			int readSize = Math.min(buffer.length, super.available());
+			if (readSize < 1) readSize = 1;
+			
+			// keep the blocking read out of the synchronized section. The
+			// buffer is protected
 			// by refillInProgress
-			int cnt = super.read(buffer, 0, buffer.length);
+			int cnt = super.read(buffer, 0, readSize);
 			synchronized (this) {
 				refillInProgress = false;
 				if (cnt == -1) {
@@ -357,7 +379,7 @@ class InputBuffer extends FilterInputStream implements Runnable {
 						return;
 					}
 					buffer[limit++] = (byte) (c & 0xFF);
-					if (c==eolChar || limit >= buffer.length) {
+					if (c == eolChar || limit >= buffer.length) {
 						refillInProgress = false;
 						return;
 					}

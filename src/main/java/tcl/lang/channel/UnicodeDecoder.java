@@ -47,7 +47,7 @@ class UnicodeDecoder extends Reader {
 	 *            a Java encoding string name, or null for no encoding
 	 * @throws UnsupportedEncodingException
 	 */
-	UnicodeDecoder(MarkableInputStream in, String encoding) throws UnsupportedEncodingException {
+	UnicodeDecoder(MarkableInputStream in, String encoding) {
 		super();
 		this.in = in;
 		setEncoding(encoding, true);
@@ -60,7 +60,7 @@ class UnicodeDecoder extends Reader {
 	 * @param encoding
 	 *            a Java encoding string name, or null for no encoding
 	 */
-	void setEncoding(String encoding) {
+	void setEncoding(String encoding)   {
 		setEncoding(encoding, false);
 	}
 
@@ -74,7 +74,7 @@ class UnicodeDecoder extends Reader {
 	 *            the same 'encoding' value. If false, an existing encoder will
 	 *            not be destroyed if the encoding is not changed.
 	 */
-	private void setEncoding(String encoding, boolean force) {
+	private void setEncoding(String encoding, boolean force)   {
 		if (!force) {
 			if (encoding == null && this.encoding == null)
 				return;

@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.io.SyncFailedException;
 
 import tcl.lang.FileUtil;
 import tcl.lang.Interp;
@@ -163,22 +164,25 @@ public class FileChannel extends Channel {
 		return fName;
 	}
 
-	/**
-	 * Close the file. The file MUST be open or a TclRuntimeError is thrown.
-	 */
 
-	public void close() throws IOException {
+    /* (non-Javadoc)
+	 * @see tcl.lang.channel.Channel#implClose()
+	 */
+	@Override
+	void implClose() throws IOException {
 		if (file == null) {
 			throw new TclRuntimeError("FileChannel.close(): null file object");
 		}
+		file.close();
+		file = null;
+	}
 
-		// Invoke super.close() first since it might write an eof char
-		try {
-			super.close();
-		} finally {
-			file.close();
-			file = null;
-		}
+	/* (non-Javadoc)
+	 * @see tcl.lang.channel.Channel#getSync()
+	 */
+	@Override
+	void sync() throws SyncFailedException, IOException {
+		file.getFD().sync();
 	}
 
 	/**
@@ -226,77 +230,53 @@ public class FileChannel extends Channel {
 		// reset flags like EOF and BLOCKED.
 		seekReset();
 
-		// FIXME: Next block is disabled since non-blocking is not implemented.
 		// If the channel is in asynchronous output mode, switch it back
-		// to synchronous mode and cancel any async flush that may be
+		// to synchronous mode
 		// scheduled. After the flush, the channel will be put back into
 		// asynchronous output mode.
 
 		boolean wasAsync = false;
-		if (false && !getBlocking()) {
+		if (! getBlocking()) {
 			wasAsync = true;
 			setBlocking(true);
-			if (isBgFlushScheduled()) {
-				// scheduleBgFlush();
-			}
 		}
 
-		// If there is data buffered in curOut then mark the
-		// channel as ready to flush before invoking flushChannel.
+		if (firstWriter != null) flush(interp);
+		
+		// Now seek to the new position in the channel as requested by the
+		// caller.
 
-		if (output != null) {
-			output.seekCheckBuferReady();
+		long actual_offset;
+
+		switch (inmode) {
+		case TclIO.SEEK_SET: {
+			actual_offset = offset;
+			break;
+		}
+		case TclIO.SEEK_CUR: {
+			actual_offset = file.getFilePointer() + offset;
+			break;
+		}
+		case TclIO.SEEK_END: {
+			actual_offset = file.length() + offset;
+			break;
+		}
+		default: {
+			throw new TclRuntimeError("invalid seek mode");
+		}
 		}
 
-		// If the flush fails we cannot recover the original position. In
-		// that case the seek is not attempted because we do not know where
-		// the access position is - instead we return the error. FlushChannel
-		// has already called Tcl_SetErrno() to report the error upwards.
-		// If the flush succeeds we do the seek also.
+		// A negative offset to seek() would raise an IOException, but
+		// we want to raise an invalid argument error instead
 
-		if (output != null && output.flushChannel(null, false) != 0) {
-			// FIXME: IS this the proper action to take on error?
-			throw new IOException("flush error while seeking");
-		} else {
-			// Now seek to the new position in the channel as requested by the
-			// caller.
-
-			long actual_offset;
-
-			switch (inmode) {
-			case TclIO.SEEK_SET: {
-				actual_offset = offset;
-				break;
-			}
-			case TclIO.SEEK_CUR: {
-				actual_offset = file.getFilePointer() + offset;
-				break;
-			}
-			case TclIO.SEEK_END: {
-				actual_offset = file.length() + offset;
-				break;
-			}
-			default: {
-				throw new TclRuntimeError("invalid seek mode");
-			}
-			}
-
-			// A negative offset to seek() would raise an IOException, but
-			// we want to raise an invalid argument error instead
-
-			if (actual_offset < 0) {
-				throw new TclPosixException(interp, TclPosixException.EINVAL,
-						true, "error during seek on \"" + getChanName() + "\"");
-			}
-
-			file.seek(actual_offset);
+		if (actual_offset < 0) {
+			throw new TclPosixException(interp, TclPosixException.EINVAL,
+					true, "error during seek on \"" + getChanName() + "\"");
 		}
+
+		file.seek(actual_offset);
 
 		// Restore to nonblocking mode if that was the previous behavior.
-		//
-		// NOTE: Even if there was an async flush active we do not restore
-		// it now because we already flushed all the queued output, above.
-
 		if (wasAsync) {
 			setBlocking(false);
 		}
@@ -396,3 +376,4 @@ public class FileChannel extends Channel {
 		return new FileOutputStream(file.getFD());
 	}
 }
+

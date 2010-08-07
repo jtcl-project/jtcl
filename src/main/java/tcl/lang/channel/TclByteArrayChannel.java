@@ -92,6 +92,14 @@ public class TclByteArrayChannel extends Channel {
 		return "bytearray";
 	}
 
+	/* (non-Javadoc)
+	 * @see tcl.lang.channel.Channel#implClose()
+	 */
+	@Override
+	void implClose() throws IOException {
+		
+	}
+
 	@Override
 	protected InputStream getInputStream() throws IOException {
 		if (istream == null)

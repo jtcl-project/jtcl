@@ -164,11 +164,12 @@ public class PipelineChannel extends Channel {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see tcl.lang.channel.Channel#close()
+	 * @see tcl.lang.channel.Channel#implClose()
 	 */
 	@Override
-	public void close() throws IOException {
+	void implClose() throws IOException {
 		IOException ex = null;
+
 		if (pipeline.getStdinRedirect().getType() == Redirect.Type.STREAM) {
 			try {
 				pipeline.getStdinRedirect().getOutputStream().close();
@@ -183,16 +184,16 @@ public class PipelineChannel extends Channel {
 				ex = e;
 			}
 		}
-
-		if (this.blocking)
-			try {
-				pipeline.waitForExitAndCleanup(false);
-			} catch (TclException e) {
-				throw new IOException(e.getMessage());
-			}
+		
+		try {
+			pipeline.waitForExitAndCleanup(false);
+		} catch (TclException e) {
+			throw new IOException(e.getMessage());
+		}
 
 		if (ex != null)
 			throw ex;
+
 	}
 
 }

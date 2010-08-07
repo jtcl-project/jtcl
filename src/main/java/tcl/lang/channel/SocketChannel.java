@@ -87,20 +87,14 @@ public class SocketChannel extends Channel {
 
 		setChanName(TclIO.getNextDescriptor(interp, "sock"));
 	}
-
-	/**
-	 * Close the SocketChannel.
+	/* (non-Javadoc)
+	 * @see tcl.lang.channel.Channel#implClose()
 	 */
-
-	public void close() throws IOException {
-		// Invoke super.close() first since it might write an eof char
-		try {
-			super.close();
-		} finally {
-			sock.close();
-		}
+	@Override
+	void implClose() throws IOException {
+		sock.close();		
 	}
-
+	
 	String getChanType() {
 		return "tcp";
 	}

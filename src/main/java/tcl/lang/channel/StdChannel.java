@@ -178,14 +178,12 @@ public class StdChannel extends Channel {
 		}
 	}
 
-	/**
-	 * Check for any output that might still need to be flushed when the channel
-	 * is closed.
+
+	/* (non-Javadoc)
+	 * @see tcl.lang.channel.Channel#implClose()
 	 */
-
-	public void close() throws IOException {
-		super.close();
-
+	@Override
+	void implClose() throws IOException {
 		if (stdType == STDOUT)
 			_out.flush();
 	}

@@ -41,4 +41,9 @@ public class ReadInputStreamChannel extends Channel {
 	protected OutputStream getOutputStream() throws IOException {
 		throw new RuntimeException("should never be called");
 	}
+
+	@Override
+	void implClose() throws IOException {
+		// caller must close the input stream
+	}
 }
