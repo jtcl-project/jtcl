@@ -137,12 +137,15 @@ public class InterpCmd implements Command {
 				if ((!last) && (objv[i].toString().charAt(0) == '-')) {
 					int index = TclIndex.get(interp, objv[i], createOptions,
 							"option", 0);
-					if (index == OPT_CREATE_SAFE) {
+					switch (index) {
+					case OPT_CREATE_SAFE:
 						safe = true;
-						continue;
+						break;
+					case OPT_CREATE_LAST:
+						last = true;
+						break;
 					}
-					i++;
-					last = true;
+					continue;
 				}
 				if (slaveNameObj != null) {
 					throw new TclNumArgsException(interp, 2, objv,

@@ -117,12 +117,10 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 				InterpAliasCmd.describe(interp, slaveInterp, objv[2]);
 				return;
 			}
-			if ("".equals(objv[3].toString())) {
-				if (objv.length == 4) {
-					InterpAliasCmd.delete(interp, slaveInterp, objv[2]);
-					return;
-				}
-			} else {
+			if (objv.length==4 && "".equals(objv[3].toString())) {
+				InterpAliasCmd.delete(interp, slaveInterp, objv[2]);
+				return;
+			} else if (objv.length >= 4) {
 				InterpAliasCmd.create(interp, slaveInterp, interp, objv[2],
 						objv[3], 4, objv);
 				return;
