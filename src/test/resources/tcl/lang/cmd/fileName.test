@@ -1353,6 +1353,8 @@ test filename-11.17.7 {Tcl_GlobCmd: broken link and glob -l} {linkDirectory} {
 	cd $dir
     }
     file delete [file join $globname link]
+    file delete [file join $globname nonexistent]
+    cd $dir
     set ret
 } [list 0 [list [file join $globname link]]]
 test filename-11.17.8 {Tcl_GlobCmd: broken link and glob -l} {symbolicLinkFile} {
@@ -1371,6 +1373,8 @@ test filename-11.17.8 {Tcl_GlobCmd: broken link and glob -l} {symbolicLinkFile} 
 	cd $dir
     }
     file delete [file join $globname link]
+    file delete [file join $globname nonexistent]
+    cd $dir
     set ret
 } [list 0 [list [file join $globname link]]]
 test filename-11.18 {Tcl_GlobCmd} {unixOnly} {

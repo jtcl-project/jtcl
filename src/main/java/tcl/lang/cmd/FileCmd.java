@@ -1017,7 +1017,7 @@ public class FileCmd implements Command {
 					+ "\" to \"" + targetName + "\"");
 		}
 
-		if (sourceFileObj.isDirectory() && !targetFileObj.isDirectory()) {
+		if (sourceFileObj.isDirectory() && !targetFileObj.isDirectory() && targetFileObj.exists()) {
 			throw new TclPosixException(interp, TclPosixException.EISDIR, "can't overwrite file \"" + targetName
 					+ "\" with directory \"" + sourceName + "\"");
 		}

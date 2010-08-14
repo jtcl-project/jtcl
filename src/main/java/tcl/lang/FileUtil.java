@@ -17,7 +17,6 @@ package tcl.lang;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Set;
 
 /*
  * This class implements utility methods for file-related operations.
@@ -29,12 +28,7 @@ public class FileUtil {
 	public static final int PATH_VOLUME_RELATIVE = 1;
 	public static final int PATH_ABSOLUTE = 2;
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
-	 * 
-	 * getWinHomePath --
-	 * 
+	/**
 	 * In the Windows file system, one type of absolute path follows this
 	 * regular expression: ^(//+[a-zA-Z]+/+[a-zA-Z]+)
 	 * 
@@ -49,12 +43,14 @@ public class FileUtil {
 	 * the absolute path is coppied (without extra slashes) to "absBuf".
 	 * Otherwise, absBuf is set to "".
 	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
+	 * @param path
+	 *            Path to compute home path of
+	 * @param stopEarly
+	 *            set to true to skip side effect
+	 * @param absBuf
+	 *            buffer to store side effect
+	 * @return an integer index into the path
 	 */
-
 	private static int getWinHomePath(String path, // Path to compute home path
 			// of.
 			boolean stopEarly, // Flag to skip side effect.
@@ -127,31 +123,18 @@ public class FileUtil {
 		return 0;
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
+	/**
+	 * Determine whether a given windows path begins with [a-zA-Z]:
 	 * 
-	 * beginsWithLetterColon --
-	 * 
-	 * Determine whether a given windows path begins with [a-zA-Z]: Return O if
-	 * path doesn't begin with [a-zA-Z]: Return 3 if path begins with [a-zA-Z]:/
-	 * Otherwise, return 2.
-	 * 
-	 * Results: Returns an integer.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
+	 * @param path
+	 *            windows path to test
+	 * @return O if path doesn't begin with [a-zA-Z]: Return 3 if path begins
+	 *         with [a-zA-Z]:/ Otherwise, return 2.
 	 */
-
 	private static int beginsWithLetterColon(String path) // Path to check start
 	// pattern.
 	{
-		if ((path.length() > 1) && (Character.isLetter(path.charAt(0)))
-				&& (path.charAt(1) == ':')) {
+		if ((path.length() > 1) && (Character.isLetter(path.charAt(0))) && (path.charAt(1) == ':')) {
 
 			int pIndex;
 			for (pIndex = 2; pIndex < path.length(); pIndex++) {
@@ -164,26 +147,19 @@ public class FileUtil {
 		return 0;
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
-	 * 
-	 * getWinAbsPath --
-	 * 
-	 * If "path" begins with [A-Z]: or '/', return the index of the character
-	 * (or end of string) following the absolute (or volume realtive) path.
-	 * Otherwise, return 0.
-	 * 
-	 * Results: Returns an integer index in path.
-	 * 
+	/**
 	 * Side effects: If "path" begins with [A-Z]: or '/', copy the absolute (or
 	 * volume realtive) path up to the index returned into absBuf, removing
 	 * extra slashes.
 	 * 
+	 * @param path
+	 *            of which to get abs path
+	 * @param absBuf
+	 *            buffer to store side effect
 	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
+	 * @return If "path" begins with [A-Z]: or '/', return the index of the
+	 *         character (or end of string) following the absolute (or volume
+	 *         realtive) path. Otherwise, return 0.
 	 */
 
 	private static int getWinAbsPath(String path, // Path for which we find abs
@@ -224,27 +200,13 @@ public class FileUtil {
 		return 0;
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
-	 * 
-	 * getDegenerateUnixPath --
-	 * 
-	 * Returns the index of the 1st char (or end of string) which nolonger
-	 * follows the degenerate unix-style name pattern:
-	 * 
-	 * ^(/+([.][.]?/+)*([.][.]?)?)
-	 * 
-	 * Results: Returns an int index to "path".
-	 * 
-	 * Side effects: None.
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
+	/**
+	 * @param path
+	 *            to check
+	 * @return the index of the 1st char (or end of string) which nolonger
+	 *         follows the degenerate unix-style name pattern:
+	 *         ^(/+([.][.]?/+)*([.][.]?)?)
 	 */
-
 	private static int getDegenerateUnixPath(String path) // Path to check.
 	{
 		int pIndex = 0;
@@ -283,27 +245,16 @@ public class FileUtil {
 		return pIndex;
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
-	 * 
-	 * getPathType -- Tcl_FSGetPathType
-	 * 
-	 * Determine whether "path" is absolute, volumerelative, or relative. It is
-	 * necessary to perform system specific operations.
-	 * 
-	 * Results: Returns an integer value representing the path type.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
+	/**
+	 * @param path
+	 *            String path to test
+	 * @return PATH_RELATIVE if path is relative, PATH_ABSOLUTE if path is an
+	 *         absolute path, PATH_VOLUME_RELATIVE if path is relative to a
+	 *         volume
 	 */
 
 	public static int getPathType(String path) // Path for which we find
-												// pathtype.
+	// pathtype.
 	{
 		char c;
 		if (path.length() < 1) {
@@ -349,8 +300,7 @@ public class FileUtil {
 				// begins with '/' and is not degenerate. Otherwise, return
 				// relative.
 
-				if ((path.charAt(0) == '/')
-						&& (getDegenerateUnixPath(path) < path.length())) {
+				if ((path.charAt(0) == '/') && (getDegenerateUnixPath(path) < path.length())) {
 					return PATH_ABSOLUTE;
 				}
 				break;
@@ -377,24 +327,14 @@ public class FileUtil {
 		return PATH_RELATIVE;
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
-	 * 
-	 * getNewFileObj --
-	 * 
-	 * Create a new File object with the name "fileName".
-	 * 
-	 * Results: Returns the newly created File object.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
+	/**
+	 * @param interp
+	 *            current interpreter
+	 * @param fileName
+	 *            filename following Tcl rules
+	 * @return Java File object for given file, as an absolute file
+	 * @throws TclException
 	 */
-
 	public static File getNewFileObj(Interp interp, // Current interpreter.
 			String fileName) // File to create object for.
 			throws TclException {
@@ -419,8 +359,7 @@ public class FileUtil {
 			String cwd = interp.getWorkingDir().toString();
 			int index = beginsWithLetterColon(cwd);
 			if (index == 0) {
-				throw new TclRuntimeError("interp working directory \"" + cwd
-						+ "\" does not start with a drive letter");
+				throw new TclRuntimeError("interp working directory \"" + cwd + "\" does not start with a drive letter");
 			}
 
 			// We can not use the joinPath() method because joing("D:/",
@@ -441,8 +380,7 @@ public class FileUtil {
 			fileName = buff.toString();
 
 			if (debug) {
-				System.out.println("After PATH_VOLUME_RELATIVE join \""
-						+ fileName + "\"");
+				System.out.println("After PATH_VOLUME_RELATIVE join \"" + fileName + "\"");
 			}
 
 			return new File(fileName);
@@ -452,42 +390,35 @@ public class FileUtil {
 			}
 			return new File(fileName);
 		default:
-			throw new TclRuntimeError("type for fileName \"" + fileName
-					+ "\" not matched in case statement");
+			throw new TclRuntimeError("type for fileName \"" + fileName + "\" not matched in case statement");
 		}
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
-	 * 
-	 * appendComponent --
+	/**
 	 * 
 	 * Append "component" to "buf" while eliminating extra slashes.
 	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: A mangled version of "component" is appended to "buf".
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
+	 * @param component
+	 *            strin to append to buf,
+	 * @param compIndex
+	 *            Current index in the component.
+	 * @param compSize
+	 *            Index following last in component.
+	 * @param buf
+	 *            Buffer to append the component.
 	 */
-
 	private static void appendComponent(String component, // Component to
 			// append.
-			int compIndex, // Current index in the component.
-			int compSize, // Index following last in component.
-			StringBuffer buf) // Buffer to append the component.
+			int compIndex, // 
+			int compSize, // 
+			StringBuffer buf) // 
 	{
 		for (; compIndex < component.length(); compIndex++) {
 			char c = component.charAt(compIndex);
 			if (c == '/') {
 				// Eliminate duplicate slashes.
 
-				while ((compIndex < compSize)
-						&& (component.charAt(compIndex + 1) == '/')) {
+				while ((compIndex < compSize) && (component.charAt(compIndex + 1) == '/')) {
 					compIndex++;
 				}
 
@@ -504,30 +435,24 @@ public class FileUtil {
 		}
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
-	 * 
-	 * joinPath --
-	 * 
+	/**
 	 * Combine a list of pathes into one path. It is necessary to perform system
 	 * specific operations.
 	 * 
-	 * Results: Returns a path String.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
+	 * @param interp
+	 *            Current interpreter
+	 * @param argv
+	 *            List of pathes to be joined.
+	 * @param startIndex
+	 *            1st item in argv to join.
+	 * @param endIndex
+	 *            1st item to ignore.
+	 * @return a path String.
+	 * @throws TclException
 	 */
-
-	public static String joinPath(Interp interp, // Current interpreter for path
-													// join.
-			TclObject[] argv, // List of pathes to be joined.
-			int startIndex, // 1st item in argv to join.
-			int endIndex) // 1st item to ignore.
+	public static String joinPath(Interp interp, TclObject[] argv, // 
+			int startIndex, // 
+			int endIndex) // 
 			throws TclException // Thrown if TclList ops fail.
 	{
 		StringBuffer result = new StringBuffer();
@@ -567,8 +492,7 @@ public class FileUtil {
 					// prefixed
 					// elements unless it is the first component.
 
-					if ((result.length() != 0)
-							&& (p.regionMatches(pIndex, "./~", 0, 3))) {
+					if ((result.length() != 0) && (p.regionMatches(pIndex, "./~", 0, 3))) {
 						pIndex = 2;
 					}
 
@@ -599,8 +523,7 @@ public class FileUtil {
 			boolean needsSep = true;
 			for (int i = startIndex; i < endIndex; i++) {
 
-				TclObject splitArrayObj[] = TclList.getElements(interp,
-						splitPath(interp, argv[i].toString()));
+				TclObject splitArrayObj[] = TclList.getElements(interp, splitPath(interp, argv[i].toString()));
 
 				if (splitArrayObj.length == 0) {
 					continue;
@@ -691,15 +614,13 @@ public class FileUtil {
 					// prefixed
 					// elements unless it is the first component.
 
-					if ((result.length() != 0)
-							&& (p.regionMatches(pIndex, "./~", 0, 3))) {
+					if ((result.length() != 0) && (p.regionMatches(pIndex, "./~", 0, 3))) {
 						pIndex += 2;
 					}
 
 					// Append a separator if needed.
 
-					if ((result.length() != 0)
-							&& (result.charAt(result.length() - 1) != '/')) {
+					if ((result.length() != 0) && (result.charAt(result.length() - 1) != '/')) {
 						result.ensureCapacity(result.length() + 1);
 						result.append('/');
 					}
@@ -714,27 +635,20 @@ public class FileUtil {
 		return result.toString();
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
+	/**
+	 * Turn one path into a list of components.
 	 * 
-	 * splitPath --
+	 * @param interp
+	 *            current interpreter
+	 * @param path
+	 *            Path to split
+	 * @throws TclException
 	 * 
-	 * Turn one path into a list of components. It is necessary to perform
-	 * system specific operations.
-	 * 
-	 * Results: Returns a Tcl List Object.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
+	 * @return Tcl List Object containing the components of path
 	 */
 
 	public static TclObject splitPath(Interp interp, // Current interpreter for
-														// path
+			// path
 			// split.
 			String path) // Path to be split.
 			throws TclException // Thrown if TclList ops fail.
@@ -904,8 +818,7 @@ public class FileUtil {
 				component = tmpPath.substring(0, sIndex);
 			}
 
-			if (convertDotToColon
-					&& (component.equals(".") || component.equals(".."))) {
+			if (convertDotToColon && (component.equals(".") || component.equals(".."))) {
 				// If platform = MAC, convert .. to :: or . to :
 
 				component = component.replace('.', ':');
@@ -943,25 +856,17 @@ public class FileUtil {
 		return resultListObj;
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
-	 * 
-	 * doTildeSubst --
-	 * 
+	/**
 	 * Given a string following a tilde, this routine returns the corresponding
 	 * home directory.
 	 * 
-	 * Results: The result is a string containing the home directory in native
-	 * format. Throws an error if it can't find the env(HOME) variable or the
-	 * specified user doesn't exist..
-	 * 
-	 * Side effects: None.
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
+	 * @param interp
+	 *            interpreter
+	 * @param user
+	 *            username following the tilde
+	 * @throws TclException
+	 *             if env(HOME) is not set or if an unknown user is requested
+	 *@return A string containing the home directory in native format.
 	 */
 
 	public static String doTildeSubst(Interp interp, // Current interpreter.
@@ -975,8 +880,7 @@ public class FileUtil {
 			try {
 				dir = interp.getVar("env", "HOME", TCL.GLOBAL_ONLY).toString();
 			} catch (Exception e) {
-				throw new TclException(interp,
-						"couldn't find HOME environment variable to expand path");
+				throw new TclException(interp, "couldn't find HOME environment variable to expand path");
 			}
 			return dir;
 		}
@@ -989,31 +893,21 @@ public class FileUtil {
 		throw new TclException(interp, "user \"" + user + "\" doesn't exist");
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
-	 * 
-	 * translateFileName --
-	 * 
+	/**
 	 * If the path starts with a tilde, do tilde substitution on the first
 	 * component and join it with the remainder of the path. Otherwise, do
 	 * nothing.
 	 * 
-	 * Results: Returns the tilde-substituted path.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
+	 * @param interp
+	 *            current interpreter
+	 * @param path
+	 *            path to be translationed
+	 * @return the tilde-substituted path
 	 */
 
-	public static String translateFileName(Interp interp, // Current interpreter
-															// for
-			// path split.
-			String path) // Path to be split.
-			throws TclException // Thrown if tilde subst fails.
+	public static String translateFileName(Interp interp,
+			String path) 
+			throws TclException 
 	{
 		String fileName = "";
 
@@ -1023,8 +917,7 @@ public class FileUtil {
 			joinArrayObj[0] = TclString.newInstance(path);
 			fileName = joinPath(interp, joinArrayObj, 0, 1);
 		} else {
-			TclObject splitArrayObj[] = TclList.getElements(interp, splitPath(
-					interp, path));
+			TclObject splitArrayObj[] = TclList.getElements(interp, splitPath(interp, path));
 
 			String user = splitArrayObj[0].toString().substring(1);
 
@@ -1054,28 +947,20 @@ public class FileUtil {
 		return fileName;
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * ---
-	 * 
-	 * splitAndTranslate --
-	 * 
+	/**
 	 * Split the path. If there is only one component, and it starts with a
 	 * tilde, do tilde substitution and split its result.
 	 * 
-	 * Results: Returns a Tcl List Object.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * ---
+	 * @param interp
+	 *            current interpreter
+	 * @param path
+	 *            to be split
+	 * @return a TclList object containing the components of path
 	 */
 
 	public static TclObject splitAndTranslate(Interp interp, // Current
-																// interpreter
-																// for
+			// interpreter
+			// for
 			// path split.
 			String path) // Path to be split.
 			throws TclException // Thrown if tilde subst, which may be
@@ -1094,22 +979,11 @@ public class FileUtil {
 		return splitResult;
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
+	/**
 	 * 
-	 * getSeparators --
-	 * 
-	 * Returns the platform separator. Note that the separator is
-	 * platform-dependent. On MACs separator depends on the given path ('/' or
-	 * ':')
-	 * 
-	 * Results: Returns separators of the specific platform.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
+	 * @return the platform separator. Note that the separator is
+	 *         platform-dependent. On MACs separator depends on the given path
+	 *         ('/' or ':')
 	 */
 	public static final String getSeparators(String arg) {
 		String separators;
@@ -1132,27 +1006,17 @@ public class FileUtil {
 		return separators;
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * -
-	 * 
-	 * getNormalizedPath -- Tcl_FSGetNormalizedPath
-	 * 
+	/**
 	 * This important function attempts to extract from the given TclObject a
 	 * unique normalized path representation, whose string value can be used as
 	 * a unique identifier for the file.
 	 * 
-	 * Results: NULL or a valid path object reference.
+	 * @return NULL or a valid path object reference.
 	 * 
-	 * Side effects: none
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * -
+	 *         Side effects: none -
 	 */
 
-	public static final TclObject getNormalizedPath(Interp interp,
-			TclObject pathObj) {
+	public static final TclObject getNormalizedPath(Interp interp, TclObject pathObj) {
 
 		File file;
 
@@ -1164,34 +1028,6 @@ public class FileUtil {
 		} catch (IOException e) {
 			return null;
 		}
-	}
-
-	/*
-	 * --------------------------------------------------------------------------
-	 * 
-	 * addHiddenToDirList --
-	 * 
-	 * The method dirObj.list() returns a list of files in the directory. This
-	 * method adds the files "." and ".." to create a full list.
-	 * 
-	 * Results: Returns the full list of files in the directory dirObj.
-	 * 
-	 * Side effects: None.
-	 * ------------------------------------------------------
-	 * --------------------
-	 */
-
-	private static final String[] getFilesList(File dirObj, Set typesList) {
-		String[] dirListing; // Listing of files in dirObj
-		int i, arrayLen;
-
-		dirListing = dirObj.list();
-
-		if (!typesList.isEmpty()) {
-
-		}
-
-		return dirListing;
 	}
 
 } // end FileUtil class
