@@ -369,16 +369,21 @@ public class JavaProcess extends TclProcess {
 
 		@Override
 		public void run() {
+			byte [] buf = new byte [256];
 			while (true) {
 				int b = -1;
 				try {
-					b = in.read();
+					int avail = in.available();
+					avail = avail > buf.length ? buf.length : avail;
+					avail = avail == 0 ? 1 : avail;
+
+					b = in.read(buf, 0, avail);
 					if (b == -1) {
 						if (closeOut)
 							out.close();
 						break;
 					}
-					out.write(b);
+					out.write(buf, 0, b);
 					if (flushOut)
 						out.flush();
 
