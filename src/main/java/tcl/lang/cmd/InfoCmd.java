@@ -20,6 +20,7 @@ import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import tcl.lang.CallFrame;
 import tcl.lang.Command;
@@ -910,11 +911,7 @@ public class InfoCmd implements Command {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * InfoProcsCmd --
-	 * 
+	/**
 	 * Called to implement the "info procs" command that returns the procedures
 	 * in the current namespace that match an optional pattern. Handles the
 	 * following syntax:
@@ -924,21 +921,26 @@ public class InfoCmd implements Command {
 	 * Results: Returns if successful, raises TclException otherwise.
 	 * 
 	 * Side effects: Returns a result in the interpreter's result object.
-	 * 
-	 * ----------------------------------------------------------------------
 	 */
-
 	private static void InfoProcsCmd(Interp interp, TclObject[] objv)
 			throws TclException {
 		String cmdName, pattern;
-		Namespace currNs = Namespace.getCurrentNamespace(interp);
+		Namespace namespace = Namespace.getCurrentNamespace(interp);
 		WrappedCommand cmd, realCmd;
 		TclObject list;
+		String namespaceName = null;
 
 		if (objv.length == 2) {
 			pattern = null;
 		} else if (objv.length == 3) {
 			pattern = objv[2].toString();
+			/* Is the pattern qualified with a namespace? */
+			int nsEnd = pattern.lastIndexOf("::");
+			if (nsEnd >= 0) {
+				namespaceName = pattern.substring(0, nsEnd+2);
+				namespace = Namespace.findNamespace(interp, namespaceName, null, 0);
+				pattern = pattern.substring(nsEnd+2);
+			} 
 		} else {
 			throw new TclNumArgsException(interp, 2, objv, "?pattern?");
 		}
@@ -947,11 +949,11 @@ public class InfoCmd implements Command {
 		// of all procs that match the pattern.
 
 		list = TclList.newInstance();
-		for (Iterator iter = currNs.cmdTable.entrySet().iterator(); iter
+		for (Iterator<Entry<String,WrappedCommand>> iter = namespace.cmdTable.entrySet().iterator(); iter
 				.hasNext();) {
-			Map.Entry entry = (Map.Entry) iter.next();
-			cmdName = (String) entry.getKey();
-			cmd = (WrappedCommand) entry.getValue();
+			Map.Entry<String, WrappedCommand> entry =  iter.next();
+			cmdName =  entry.getKey();
+			cmd =  entry.getValue();
 
 			// If the command isn't itself a proc, it still might be an
 			// imported command that points to a "real" proc in a different
@@ -964,7 +966,7 @@ public class InfoCmd implements Command {
 				if ((pattern == null) || Util.stringMatch(cmdName, pattern)) {
 					TclList
 							.append(interp, list, TclString
-									.newInstance(cmdName));
+									.newInstance((namespaceName == null ? "" : namespace.toString()+"::") + cmdName));
 				}
 			}
 		}

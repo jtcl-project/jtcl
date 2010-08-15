@@ -63,17 +63,20 @@ public class Namespace {
 	// objects. The namespace can't be freed
 	// until refCount becomes zero.
 
-	public HashMap cmdTable; // Contains all the commands currently
-	// registered in the namespace. Indexed by
-	// strings; values have type (WrappedCommand).
-	// Commands imported by Tcl_Import have
-	// Command structures that point (via an
-	// ImportedCmdRef structure) to the
-	// Command structure in the source
-	// namespace's command table.
-	public HashMap varTable; // Contains all the (global) variables
-	// currently in this namespace. Indexed
-	// by strings; values have type (Var).
+	/**
+	 * Contains all the commands currently registered in the namespace. Indexed
+	 * by strings; values have type (WrappedCommand). Commands imported by
+	 * Tcl_Import have Command structures that point (via an ImportedCmdRef
+	 * structure) to the Command structure in the source namespace's command
+	 * table.
+	 */
+	public HashMap<String, WrappedCommand> cmdTable;
+	
+	/**
+	 * Contains all the (global) variables currently in this namespace. Indexed
+	 * by strings; values have type (Var).
+	 */
+	public HashMap<String, Var> varTable;
 
 	public String[] exportArray; // Reference to an array of string patterns
 	// specifying which commands are exported.
@@ -98,8 +101,11 @@ public class Namespace {
 	// resolve all command and variable references
 	// within the namespace.
 
-	// When printing out a Namespace use the full namespace name string
-
+	/** 
+     * @return the full namespace name string
+     * 
+	 * @see java.lang.Object#toString()
+	 */
 	public String toString() {
 		return fullName;
 	}
@@ -177,20 +183,13 @@ public class Namespace {
 
 	public static final int CREATE_NS_IF_UNKNOWN = 0x800;
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * Tcl_GetCurrentNamespace -> getCurrentNamespace
-	 * 
+	/**
 	 * Returns a reference to an interpreter's currently active namespace.
 	 * 
-	 * Results: Returns a reference to the interpreter's current namespace.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 *            the current interpreter
+	 * @return a reference to the interpreter's current namespace
 	 */
-
 	public static Namespace getCurrentNamespace(Interp interp) {
 		if (interp.varFrame != null) {
 			return interp.varFrame.ns;
@@ -199,21 +198,14 @@ public class Namespace {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * Tcl_GetGlobalNamespace -> getGlobalNamespace
-	 * 
+	
+	/**
 	 * Returns a reference to an interpreter's global :: namespace.
 	 * 
-	 * Results: Returns a reference to the specified interpreter's global
-	 * namespace.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 *            the current interpreter
+	 * @return a reference to the interpreter's current namespace
 	 */
-
 	public static Namespace getGlobalNamespace(Interp interp) {
 		return interp.globalNs;
 	}
@@ -1170,35 +1162,23 @@ public class Namespace {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * TclGetOriginalCommand -> getOriginalCommand
-	 * 
+	
+	/**
 	 * An imported command is created in a namespace when a "real" command is
 	 * imported from another namespace. If the specified command is an imported
 	 * command, this procedure returns the original command it refers to.
 	 * 
-	 * Results: If the command was imported into a sequence of namespaces a,
-	 * b,...,n where each successive namespace just imports the command from the
-	 * previous namespace, this procedure returns the Tcl_Command token in the
-	 * first namespace, a. Otherwise, if the specified command is not an
-	 * imported command, the procedure returns null.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param command
+	 *            the imported command for which the original command should be
+	 *            returned
+	 * @return If the command was imported into a sequence of namespaces a,
+	 *         b,...,n where each successive namespace just imports the command
+	 *         from the previous namespace, this procedure returns the
+	 *         Tcl_Command token in the first namespace, a. Otherwise, if the
+	 *         specified command is not an imported command, the procedure
+	 *         returns null.
 	 */
-
-	public static WrappedCommand getOriginalCommand(WrappedCommand command // The
-																			// imported
-																			// command
-																			// for
-																			// which
-																			// the
-																			// original
-	// command should be returned.
-	) {
+	public static WrappedCommand getOriginalCommand(WrappedCommand command ) {
 		WrappedCommand cmd = command;
 		ImportedCmdData data;
 
@@ -1602,38 +1582,31 @@ public class Namespace {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * Tcl_FindNamespace -> findNamespace
-	 * 
+
+	/**
 	 * Searches for a namespace.
 	 * 
-	 * Results: Returns a reference to the namespace if it is found. Otherwise,
-	 * returns null and leaves an error message in the interpreter's result
-	 * object if "flags" contains TCL.LEAVE_ERR_MSG.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 *            the interpreter in which to find the namespace
+	 * @param name
+	 *            Namespace name. If it starts with "::", will be looked up in
+	 *            global namespace. Else, looked up first in contextNs (current
+	 *            namespace if contextNs is null), then in global namespace.
+	 * @param contextNs
+	 *            Ignored if TCL.GLOBAL_ONLY flag is set or if the name starts
+	 *            with "::". Otherwise, points to namespace in which to resolve
+	 *            name; if null, look up name in the current namespace.
+	 * @param flags
+	 *            Flags controlling namespace lookup: an OR'd combination of
+	 *            TCL.GLOBAL_ONLY and TCL.LEAVE_ERR_MSG flags.
+	 * @return Returns a reference to the namespace if it is found. Otherwise,
+	 *         returns null and leaves an error message in the interpreter's
+	 *         result object if "flags" contains TCL.LEAVE_ERR_MSG.
 	 */
-
-	public static Namespace findNamespace(Interp interp, // The interpreter in
-															// which to find the
-			// namespace.
-			String name, // Namespace name. If it starts with "::",
-			// will be looked up in global namespace.
-			// Else, looked up first in contextNs
-			// (current namespace if contextNs is
-			// null), then in global namespace.
-			Namespace contextNs, // Ignored if TCL.GLOBAL_ONLY flag is set
-			// or if the name starts with "::".
-			// Otherwise, points to namespace in which
-			// to resolve name; if null, look up name
-			// in the current namespace.
-			int flags) // Flags controlling namespace lookup: an
-	// OR'd combination of TCL.GLOBAL_ONLY and
-	// TCL.LEAVE_ERR_MSG flags.
+	public static Namespace findNamespace(Interp interp, 
+			String name, 
+			Namespace contextNs,
+			int flags) 
 	{
 		Namespace ns;
 
