@@ -11,6 +11,6 @@ public class NamespaceCmdTest extends TclCmdTest {
 		fail("namespace-9.9 causes and endless loop!");
 		
 		String resName = "/tcl/lang/cmd/namespace.test";
-		tclTestResource(TCLTEST_VERBOSE, resName, Collections.EMPTY_LIST);
+		tclTestResource(resName, Collections.EMPTY_LIST);
 	}
 }

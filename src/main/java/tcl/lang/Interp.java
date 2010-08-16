@@ -2223,42 +2223,27 @@ public class Interp extends EventuallyFreed {
 	 *-----------------------------------------------------------------
 	 */
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
+	 * Queries the value of this interpreter's result value
 	 * 
-	 * getResult --
-	 * 
-	 * Queries the value of the result.
-	 * 
-	 * Results: The current result in the interpreter.
-	 * 
-	 * Side effects: None.InterpSlaveCmd
-	 * ----------------------------------------------------------------------
+	 * @return The current result in the interpreter.
+	 *
 	 */
 
 	public final TclObject getResult() {
 		return m_result;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * setResult --
-	 * 
+	/**
 	 * Arrange for the given Tcl Object to be placed as the result object for
 	 * the interpreter. Convenience functions are also available to create a Tcl
 	 * Object out of the most common Java types. Note that the ref count for
 	 * m_nullResult is not changed.
 	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: The object result for the interpreter is updated.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param newResult A Tcl Object to be set as the result of this interpreter
 	 */
 
-	public final void setResult(TclObject newResult) // A Tcl Object to be set
-														// as the result.
+	public final void setResult(TclObject newResult)
 	{
 		if (newResult == m_result) {
 			// Setting to current value (including m_nullResult) is a no-op.
@@ -2277,22 +2262,12 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * setResult --
-	 * 
-	 * Arrange for the given Tcl Object to be placed as the result object for
-	 * the interpreter. Convenience functions are also available to create a Tcl
-	 * Object out of the most common Java types.
-	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: The object result for the interpreter is updated.
-	 * 
-	 * ----------------------------------------------------------------------
-	 */
 
+	/**
+	 * Set this interpreter's result object to a String value.
+	 * 
+	 * @param r value to set result to
+	 */
 	public final void setResult(String r) // A string result.
 	{
 		setResult(checkCommonString(r));
@@ -2300,55 +2275,32 @@ public class Interp extends EventuallyFreed {
 
 
 	/**
-	 * Arrange for the given Tcl Object to be placed as the result object for
-	 * the interpreter. Convenience functions are also available to create a Tcl
-	 * Object out of the most common Java types.
+	 * Set this interpreter's result object to a long value.
 	 * 
-	 * @param r integer value to set result to
+	 * @param r value to set result to
 	 */
-
 	public final void setResult(final long r) // An int result.
 	{
 		setResult(checkCommonInteger(r));
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	
+	/**
+	 * Set this interpreter's result object to a double value.
 	 * 
-	 * setResult --
-	 * 
-	 * Arrange for the given Tcl Object to be placed as the result object for
-	 * the interpreter. Convenience functions are also available to create a Tcl
-	 * Object out of the most common Java types.
-	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: The object result for the interpreter is updated.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param r value to set result to
 	 */
-
 	public final void setResult(final double r) // A double result.
 	{
 		setResult(checkCommonDouble(r));
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * setResult --
-	 * 
-	 * Arrange for the given Tcl Object to be placed as the result object for
-	 * the interpreter. Convenience functions are also available to create a Tcl
-	 * Object out of the most common Java types.
-	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: The object result for the interpreter is updated.
-	 * 
-	 * ----------------------------------------------------------------------
-	 */
 
+	/**
+	 * Set this interpreter's result object to a boolean value.
+	 * 
+	 * @param r value to set result to
+	 */
 	public final void setResult(final boolean r) // A boolean result.
 	{
 		if (VALIDATE_SHARED_RESULTS) {
@@ -2358,21 +2310,14 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * resetResult --
-	 * 
-	 * This procedure resets the interpreter's result object.
+	/**
+	 * This procedure resets this interpreter's result object.
 	 * 
 	 * Results: None.
 	 * 
 	 * Side effects: It resets the result object to an unshared empty object. It
 	 * also clears any error information for the interpreter.
-	 * 
-	 * ----------------------------------------------------------------------
 	 */
-
 	public final void resetResult() {
 		if (m_result != m_nullResult) {
 			m_result.release();
@@ -3139,11 +3084,7 @@ public class Interp extends EventuallyFreed {
 		return Parser.backslash(script.array, script.index);
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * setErrorCode --
-	 * 
+	/**
 	 * This procedure is called to record machine-readable information about an
 	 * error that is about to be returned. The caller should build a list object
 	 * up and pass it to this routine.
@@ -3157,8 +3098,8 @@ public class Interp extends EventuallyFreed {
 	 * If the errorCode variable have write traces, any arbitrary side effects
 	 * may happen in those traces. TclException's caused by the traces, however,
 	 * are ignored and not passed back to the caller of this function.
-	 * 
-	 * ----------------------------------------------------------------------
+	 *
+	 * @param code the errorCode object
 	 */
 	public void setErrorCode(TclObject code) // The errorCode object.
 	{
@@ -3172,29 +3113,20 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * addErrorInfo --
-	 * 
+	/**
 	 * Add information to the "errorInfo" variable that describes the current
-	 * error.
-	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: The contents of message are added to the "errorInfo"
+	 * error. Side effects: The contents of message are added to the "errorInfo"
 	 * variable. If eval() has been called since the current value of errorInfo
 	 * was set, errorInfo is cleared before adding the new message. If we are
 	 * just starting to log an error, errorInfo is initialized from the error
-	 * message in the interpreter's result.
+	 * message in the interpreter's result. If the errorInfo variable have write
+	 * traces, any arbitrary side effects may happen in those traces.
+	 * TclException's caused by the traces, however, are ignored and not passed
+	 * back to the caller of this function.
 	 * 
-	 * If the errorInfo variable have write traces, any arbitrary side effects
-	 * may happen in those traces. TclException's caused by the traces, however,
-	 * are ignored and not passed back to the caller of this function.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param message
+	 *            message to record in errorInfo
 	 */
-
 	public void addErrorInfo(String message) // The message to record.
 	{
 		if (!errInProgress) {

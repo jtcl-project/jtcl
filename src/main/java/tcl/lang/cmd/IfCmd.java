@@ -29,15 +29,14 @@ public class IfCmd implements Command {
 
 	public void cmdProc(Interp interp, TclObject[] objv) throws TclException {
 		int i;
-		boolean value;
+		boolean value = false;
+		boolean executedBody= false;
 
 		i = 1;
 		while (true) {
-			// At this point in the loop, objv and argc refer to an
-			// expression to test, either for the main expression or
-			// an expression following an "elseif". The arguments
-			// after the expression must be "then" (optional) and a
-			// script to execute if the expression is true.
+			/*
+			 * objv[i] is an expression to test, from either 'if' or 'elseif'
+			 */
 
 			if (i >= objv.length) {
 				throw new TclException(interp,
@@ -45,7 +44,8 @@ public class IfCmd implements Command {
 								+ "\" argument");
 			}
 			try {
-				value = interp.expr.evalBoolean(interp, objv[i].toString());
+				if (! executedBody)
+					value = interp.expr.evalBoolean(interp, objv[i].toString());
 			} catch (TclException e) {
 				switch (e.getCompletionCode()) {
 				case TCL.ERROR:
@@ -56,15 +56,25 @@ public class IfCmd implements Command {
 			}
 
 			i++;
+
+			/*
+			 * objv[i] is either 'then' or the the body to execute
+			 */
 			if ((i < objv.length) && (objv[i].toString().equals("then"))) {
 				i++;
 			}
+			
+			/*
+			 * objv[i] is the body to execute
+			 */
+			
 			if (i >= objv.length) {
 				throw new TclException(interp,
 						"wrong # args: no script following \"" + objv[i - 1]
 								+ "\" argument");
 			}
-			if (value) {
+			if (value && ! executedBody) {
+				executedBody = true;
 				try {
 					interp.eval(objv[i], 0);
 				} catch (TclException e) {
@@ -76,15 +86,16 @@ public class IfCmd implements Command {
 					}
 					throw e;
 				}
-				return;
-			}
-
-			// The expression evaluated to false. Skip the command, then
-			// see if there is an "else" or "elseif" clause.
-
+			} 
+	
 			i++;
+			
+			/*
+			 * objv[i], if it exists, is either 'else' or 'elseif'.  If it doesn't exist,
+			 * we are done with the if command.
+			 */
 			if (i >= objv.length) {
-				interp.resetResult();
+				if (! executedBody) interp.resetResult();
 				return;
 			}
 			if (objv[i].toString().equals("elseif")) {
@@ -94,10 +105,9 @@ public class IfCmd implements Command {
 			break;
 		}
 
-		// Couldn't find a "then" or "elseif" clause to execute.
-		// Check now for an "else" clause. We know that there's at
-		// least one more argument when we get here.
-
+		/*
+		 * objv[i] must be 'else' or junk
+		 */
 		if (objv[i].toString().equals("else")) {
 			i++;
 			if (i >= objv.length) {
@@ -118,7 +128,10 @@ public class IfCmd implements Command {
 			}
 		}
 		try {
-			interp.eval(objv[i], 0);
+			if (! executedBody) {
+				executedBody = true;
+				interp.eval(objv[i], 0);
+			}
 		} catch (TclException e) {
 			switch (e.getCompletionCode()) {
 			case TCL.ERROR:

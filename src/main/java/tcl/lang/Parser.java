@@ -825,40 +825,40 @@ public class Parser {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * Tcl_LogCommandInfo -> logCommandInfo
-	 * 
+	
+	/**
 	 * This procedure is invoked after an error occurs in an interpreter. It
 	 * adds information to the "errorInfo" variable to describe the command that
-	 * was being executed when the error occurred.
+	 * was being executed when the error occurred. Side effects: Information
+	 * about the command is added to errorInfo and the line number stored
+	 * internally in the interpreter is set. If this is the first call to this
+	 * procedure or interp.addErrorInfo since an error occurred, then old
+	 * information in errorInfo is deleted.
 	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: Information about the command is added to errorInfo and the
-	 * line number stored internally in the interpreter is set. If this is the
-	 * first call to this procedure or interp.addErrorInfo since an error
-	 * occurred, then old information in errorInfo is deleted.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 *            current interpreter
+	 * @param script_array
+	 *            script to be logged
+	 * @param script_index
+	 *            first character in script containing command; must be <=
+	 *            cmdIndex
+	 * @param cmdIndex
+	 *            first character in command that generated the error
+	 * @param length
+	 *            number of bytes in command, or -1 to use all bytes up to first
+	 *            null byte
+	 * @param e
+	 *            exception caused by the script evaluation
 	 */
-
-	public static void logCommandInfo(Interp interp, // Interpreter in which to
-														// log information.
-			char[] script_array, // The script to be logged
-			int script_index, // First character in script containing
-			// command (must be <= cmdIndex).
-
-			int cmdIndex, // First character in command that
-			// generated the error.
-			int length, // Number of bytes in command (-1 means
-			// use all bytes up to first null byte).
-			TclException e) // The exception caused by the script
-	// evaluation.
+	public static void logCommandInfo(Interp interp, 
+			char[] script_array,
+			int script_index,
+			int cmdIndex,
+			int length,
+			TclException e) 
 	{
 		String ellipsis;
-		String msg;
+		String msg=null;
 		int offset;
 		int pIndex;
 
@@ -899,7 +899,16 @@ public class Parser {
 			ellipsis = "";
 		}
 
+
 		msg = new String(script_array, cmdIndex, offset);
+
+		/*
+		 * forceMessageWhileExecutingErrorInfo is set to true to force the
+		 * "whle executing" errorInfo, to make test cases pass and replicate an
+		 * apparent Tcl bug from back when the Tcl Tests were grabbed from CVS (Dec 2001?).
+		 * Since then, all these messages have been changed to
+		 * "while compiling".
+		 */
 		if (!(interp.errInProgress)) {
 			interp.addErrorInfo("\n    while executing\n\"" + msg + ellipsis
 					+ "\"");
