@@ -23,9 +23,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
 import tcl.lang.Command;
 import tcl.lang.FileUtil;
 import tcl.lang.Interp;
@@ -48,23 +45,6 @@ import tcl.lang.Util;
  */
 
 public class FileCmd implements Command {
-
-	/**
-	 * Reference to File.listRoots, null when JDK < 1.2
-	 */
-	private static Method listRootsMethod;
-
-	static {
-		// File.listRoots()
-		Class[] parameterTypes = new Class[0];
-		try {
-			listRootsMethod = File.class.getMethod("listRoots", parameterTypes);
-		} catch (NoSuchMethodException e) {
-			listRootsMethod = null;
-		}
-	}
-
-	static Class procClass = null;
 
 	static final private String validCmds[] = { "atime", "attributes", "channels", "copy", "delete", "dirname",
 			"executable", "exists", "extension", "isdirectory", "isfile", "join", "link", "lstat", "mtime", "mkdir",
@@ -126,15 +106,52 @@ public class FileCmd implements Command {
 		File fileObj = null;
 
 		switch (opt) {
+
 		case OPT_ATIME:
 			// FIXME: Java does not support retrieval of access time.
-
+			if (argv.length < 3 || argv.length > 4) {
+				throw new TclNumArgsException(interp, 2, argv, "name ?time?");
+			}
+			if (!FileUtil.getNewFileObj(interp, argv[2].toString()).exists() || argv[2].toString().length() == 0) {
+				throw new TclPosixException(interp, TclPosixException.ENOENT, true, "could not read \"" + argv[2]
+						+ "\"");
+			}
+			if (argv.length == 4) {
+				try {
+					int time = Integer.parseInt(argv[3].toString());
+				} catch (NumberFormatException e) {
+					throw new TclException(interp, "expected integer but got \"" + argv[3] + "\"");
+				}
+			}
 			throw new TclException(interp, "sorry, \"file atime\" is not available due to JVM restrictions.");
 
 		case OPT_ATTRIBUTES:
-			// FIXME: Java does not support retrieval of access time.
+			// FIXME: Java does not support file attribute retrieval (1.7
+			// might!)
+			fileObj = null;
+			if (argv.length >= 3) {
+				String fn = argv[2].toString();
+				fileObj = FileUtil.getNewFileObj(interp, fn);
+				if (fn.length() == 0 || !fileObj.exists()) {
+					throw new TclPosixException(interp, TclPosixException.ENOENT, true, "could not read \"" + fn + "\"");
+				}
+			}
+			switch (argv.length) {
+			case 3:
+				interp.setResult("-JTCL_DOES_NOT_SUPPORT_ATTRIBUTES FILE_ATTRIBUTES_NOT_SUPPORTED");
+				return;
+			case 4:
+			case 5:
+				if (argv[3].toString().equals("-JTCL_DOES_NOT_SUPPORT_ATTRIBUTES")) {
+					if (argv.length == 4)
+						interp.setResult("FILE_ATTRIBUTES_NOT_SUPPORTED");
+					return;
+				}
+				/* Else, fall through */
+			default:
+				throw new TclException(interp, "Sorry, \"file attributes\" is not available to due JVM restrictions");
+			}
 
-			throw new TclException(interp, "sorry, \"file attributes\" is not available due to JVM restrictions.");
 		case OPT_CHANNELS:
 			if (argv.length > 3) {
 				throw new TclNumArgsException(interp, 2, argv, "?pattern?");
@@ -166,11 +183,6 @@ public class FileCmd implements Command {
 			// return the current directory.
 
 			TclObject splitArrayObj[] = TclList.getElements(interp, FileUtil.splitAndTranslate(interp, path));
-			if (false) {
-				for (int ii = 0; ii < splitArrayObj.length; ii++) {
-					System.out.println("file path index " + ii + " is \"" + splitArrayObj[ii] + "\"");
-				}
-			}
 
 			if (splitArrayObj.length > 1) {
 				interp.setResult(FileUtil.joinPath(interp, splitArrayObj, 0, splitArrayObj.length - 1));
@@ -192,40 +204,7 @@ public class FileCmd implements Command {
 			if (argv[2].toString().length() == 0) {
 				interp.setResult(false);
 			} else {
-				boolean isExe = false;
-				fileObj = FileUtil.getNewFileObj(interp, argv[2].toString());
-
-				// A file must exist to be executable. Directories are always
-				// executable.
-
-				if (fileObj.exists()) {
-					isExe = fileObj.isDirectory();
-					if (isExe) {
-						interp.setResult(isExe);
-						return;
-					}
-
-					if (Util.isWindows()) {
-						// File that ends with .exe, .com, or .bat is
-						// executable.
-
-						String fileName = argv[2].toString();
-						isExe = (fileName.endsWith(".exe") || fileName.endsWith(".com") || fileName.endsWith(".bat"));
-					} else if (Util.isMac()) {
-						// FIXME: Not yet implemented on Mac. For now, return
-						// true.
-						// Java does not support executability checking.
-
-						isExe = true;
-					} else {
-						// FIXME: Not yet implemented on Unix. For now, return
-						// true.
-						// Java does not support executability checking.
-
-						isExe = true;
-					}
-				}
-				interp.setResult(isExe);
+				interp.setResult(FileUtil.isExecutable(FileUtil.getNewFileObj(interp, argv[2].toString())));
 			}
 			return;
 
@@ -236,8 +215,12 @@ public class FileCmd implements Command {
 			if (argv[2].toString().length() == 0) {
 				interp.setResult(false);
 			} else {
-				fileObj = FileUtil.getNewFileObj(interp, argv[2].toString());
-				interp.setResult(fileObj.exists());
+				try {
+					fileObj = FileUtil.getNewFileObj(interp, argv[2].toString());
+					interp.setResult(fileObj.exists());
+				} catch (TclException e) {
+					interp.setResult(false);
+				}
 			}
 			return;
 
@@ -276,14 +259,56 @@ public class FileCmd implements Command {
 			return;
 
 		case OPT_LINK:
-			// FIXME: Java does not support retrieval of access time.
+			// FIXME: Java doesn't support links, but we'll do what we can.
+			if (argv.length < 3 || argv.length > 5) {
+				throw new TclNumArgsException(interp, 2, argv, "?-linktype? linkname ?target?");
+			}
+			String linkName = null;
+			;
+			String targetName = null;
+			if ("-symbolic".equals(argv[2].toString()) || "-hard".equals(argv[2].toString())) {
+				linkName = argv[3].toString();
+				targetName = argv.length == 5 ? argv[4].toString() : null;
+				throw new TclException(interp,
+						"sorry, creating links with \"file link\" is not available due to JVM restrictions.");
+			} else if (argv.length == 5) {
+				throw new TclException(interp, "bad switch \"" + argv[2] + "\": must be -symbolic or -hard");
+			} else {
+				linkName = argv[2].toString();
+				targetName = argv.length == 4 ? argv[3].toString() : null;
+			}
+			File link = FileUtil.getNewFileObj(interp, linkName);
 
-			throw new TclException(interp, "sorry, \"file link\" is not available due to JVM restrictions.");
+			if (targetName != null) {
+				if (link.exists()) {
+					throw new TclException(interp, "could not create new link \"" + linkName
+							+ "\": that path already exists");
+				}
+				File target = FileUtil.getNewFileObj(interp, targetName);
+				if (!target.exists()) {
+					throw new TclException(interp, "could not create new link \"" + linkName + "\" since target \""
+							+ targetName + "\" doesn't exist");
+				}
+				throw new TclException(interp,
+						"sorry, creating a link with \"file link\" is not available due to JVM restrictions.");
+			} else {
+				/*
+				 * With 3 args, test if the link is really a link. FIXME: This
+				 * is an approximate test
+				 */
+				if (!link.exists() || linkName.length() == 0) {
+					throw new TclPosixException(interp, TclPosixException.ENOENT, true, "could not read link \""
+							+ linkName + "\"");
+				}
+				File targetOfLink = FileUtil.getLinkTarget(link);
+				if (targetOfLink == null) {
+					throw new TclException(interp, "could not read link \"" + linkName + "\": invalid argument");
+				}
+				interp.setResult(targetOfLink.getAbsolutePath());
+				return;
+			}
 
-		case OPT_LSTAT:
-			// FIXME: Java does not support retrieval of access time.
-
-			throw new TclException(interp, "sorry, \"file lstat\" is not available due to JVM restrictions.");
+			/* case LSTAT: see below for case STAT: */
 
 		case OPT_MTIME:
 			if (argv.length < 3 || argv.length > 4) {
@@ -373,9 +398,20 @@ public class FileCmd implements Command {
 			return;
 
 		case OPT_READLINK:
-			// FIXME: Java does not support retrieval of access time.
-
-			throw new TclException(interp, "sorry, \"file readlink\" is not available due to JVM restrictions.");
+			if (argv.length != 3) {
+				throw new TclNumArgsException(interp, 2, argv, "name");
+			}
+			fileObj = FileUtil.getNewFileObj(interp, argv[2].toString());
+			if (!fileObj.exists() || argv[2].toString().length() == 0) {
+				throw new TclPosixException(interp, TclPosixException.ENOENT, true, "could not readlink \"" + argv[2]
+						+ "\"");
+			}
+			File target = FileUtil.getLinkTarget(fileObj);
+			if (target == null) {
+				throw new TclException(interp, "could not readlink \"" + argv[2] + "\": invalid argument");
+			}
+			interp.setResult(target.getPath());
+			return;
 
 		case OPT_RENAME:
 			fileCopyRename(interp, argv, false);
@@ -433,19 +469,26 @@ public class FileCmd implements Command {
 			return;
 
 		case OPT_STAT:
+		case OPT_LSTAT:
 			if (argv.length != 4) {
 				throw new TclNumArgsException(interp, 2, argv, "name varName");
 			}
 			if (argv[2].toString().length() == 0) {
 				throw new TclException(interp, "could not read \"\": no such file or directory");
 			}
-			getAndStoreStatData(interp, argv[2].toString(), argv[3].toString());
+			getAndStoreStatData(interp, argv[2].toString(), argv[3].toString(), opt == OPT_LSTAT);
 			return;
 
 		case OPT_SYSTEM:
-			// FIXME: Java does not support retrieval of access time.
-
-			throw new TclException(interp, "sorry, \"file system\" is not available due to JVM restrictions.");
+			if (argv.length != 3) {
+				throw new TclNumArgsException(interp, 2, argv, "name");
+			}
+			if (!FileUtil.getNewFileObj(interp, argv[2].toString()).exists() || argv[2].toString().length() == 0) {
+				// this is the error message that test cases expect.
+				throw new TclException(interp, "Unrecognised path");
+			}
+			interp.setResult("native");
+			return;
 
 		case OPT_TAIL:
 			if (argv.length != 3) {
@@ -470,36 +513,17 @@ public class FileCmd implements Command {
 				throw new TclNumArgsException(interp, 2, argv, null);
 			}
 
-			// use Java 1.2's File.listRoots() method if available
-
-			if (listRootsMethod == null)
-				throw new TclException(interp, "\"file volumes\" is not supported");
-
-			try {
-				File[] roots = (File[]) listRootsMethod.invoke(null, new Object[0]);
-				if (roots != null) {
-					TclObject list = TclList.newInstance();
-					for (int i = 0; i < roots.length; i++) {
-						String root = roots[i].getPath();
-						TclList.append(interp, list, TclString.newInstance(root));
-					}
-					interp.setResult(list);
+			File[] roots = File.listRoots();
+			if (roots != null) {
+				TclObject list = TclList.newInstance();
+				for (int i = 0; i < roots.length; i++) {
+					String root = roots[i].getPath();
+					TclList.append(interp, list, TclString.newInstance(root));
 				}
-			} catch (IllegalAccessException ex) {
-				throw new TclRuntimeError("IllegalAccessException in volumes cmd");
-			} catch (IllegalArgumentException ex) {
-				throw new TclRuntimeError("IllegalArgumentException in volumes cmd");
-			} catch (InvocationTargetException ex) {
-				Throwable t = ex.getTargetException();
-
-				if (t instanceof Error) {
-					throw (Error) t;
-				} else {
-					throw new TclRuntimeError("unexected exception in volumes cmd");
-				}
+				interp.setResult(list);
 			}
-
 			return;
+
 		case OPT_WRITABLE:
 			if (argv.length != 3) {
 				throw new TclNumArgsException(interp, 2, argv, "name");
@@ -562,7 +586,6 @@ public class FileCmd implements Command {
 		return (int) (fileObj.lastModified() / 1000);
 	}
 
-
 	/**
 	 * Finds the type of file in fileObj. WARNING: Only checks for file and
 	 * directory status. If neither file or direcotry, return link. Java only
@@ -579,6 +602,9 @@ public class FileCmd implements Command {
 			throw new TclPosixException(interp, TclPosixException.ENOENT, true, "could not read \"" + fileName + "\"");
 		}
 
+		if (FileUtil.getLinkTarget(fileObj) != null) {
+			return "link";
+		}
 		if (fileObj.isFile()) {
 			return "file";
 		} else if (fileObj.isDirectory()) {
@@ -601,15 +627,24 @@ public class FileCmd implements Command {
 	 * modified.
 	 * 
 	 * @param interp
+	 *            current interpreter
 	 * @param fileName
+	 *            file to stat
 	 * @param varName
+	 *            variable name into which to put stat results
+	 * @param lstat
+	 *            if true, perform lstat instead of stat
 	 * @throws TclException
 	 */
-	private static void getAndStoreStatData(Interp interp, String fileName, String varName)
+	private static void getAndStoreStatData(Interp interp, String fileName, String varName, boolean lstat)
 
 	throws TclException {
 		File fileObj = FileUtil.getNewFileObj(interp, fileName);
-
+		if (lstat) {
+			File target = FileUtil.getLinkTarget(fileObj);
+			if (target != null)
+				fileObj = target;
+		}
 		if (!fileObj.exists()) {
 			throw new TclPosixException(interp, TclPosixException.ENOENT, true, "could not read \"" + fileName + "\"");
 		}
@@ -739,7 +774,6 @@ public class FileCmd implements Command {
 		return "";
 	}
 
-
 	/**
 	 * This procedure implements the "mkdir" subcommand of the "file" command.
 	 * Filename arguments need to be translated to native format before being
@@ -747,7 +781,9 @@ public class FileCmd implements Command {
 	 * WARNING: ignoring links because Java does not support them.
 	 * 
 	 * @param interp
+	 *            current interpreter
 	 * @param argv
+	 *            arguments to the 'file command
 	 * @throws TclException
 	 */
 	private static void fileMakeDirs(Interp interp, TclObject[] argv) throws TclException {
@@ -788,7 +824,9 @@ public class FileCmd implements Command {
 	 * This procedure implements the "delete" subcommand of the "file" command.
 	 * 
 	 * @param interp
+	 *            current interpreter
 	 * @param argv
+	 *            arguments to the 'file' command
 	 * @throws TclException
 	 */
 	private static void fileDelete(Interp interp, TclObject[] argv) throws TclException {
@@ -818,45 +856,41 @@ public class FileCmd implements Command {
 		}
 
 		for (int i = firstSource; i < argv.length; i++) {
-			deleteOneFile(interp, argv[i].toString(), force);
+			if (argv[i].toString().length() > 0)
+				deleteOneFile(interp, FileUtil.getNewFileObj(interp, argv[i].toString()), force);
 		}
 	}
 
 	/**
-	 * After performing error checking, deletes the specified file. WARNING:
-	 * ignoring links because Java does not support them.
+	 * After performing error checking, deletes the specified file.
 	 * 
 	 * @param interp
-	 * @param fileName
+	 *            the current interpreter
+	 * @param fileObj
+	 *            file object to delete
 	 * @param force
+	 *            if force, delete directories recursively
 	 * @throws TclException
 	 */
-	private static void deleteOneFile(Interp interp, String fileName, boolean force) throws TclException {
+	private static void deleteOneFile(Interp interp, File fileObj, boolean force) throws TclException {
 		boolean isDeleted = true;
-		File fileObj = FileUtil.getNewFileObj(interp, fileName);
+		String fileName = fileObj.getPath();
 
 		// Trying to delete a file that does not exist is not
 		// considered an error, just a no-op
 
-		if ((!fileObj.exists()) || (fileName.length() == 0)) {
+		if ((!fileObj.exists())) {
 			return;
 		}
 
 		// If the file is a non-empty directory, recursively delete its children
-		// if
-		// the -force option was chosen. Otherwise, throw an error.
+		// if the -force option was chosen. Otherwise, throw an error.
 
 		if (fileObj.isDirectory() && (fileObj.list().length > 0)) {
 			if (force) {
 				String fileList[] = fileObj.list();
 				for (int i = 0; i < fileList.length; i++) {
-
-					TclObject joinArrayObj[] = new TclObject[2];
-					joinArrayObj[0] = TclString.newInstance(fileName);
-					joinArrayObj[1] = TclString.newInstance(fileList[i]);
-
-					String child = FileUtil.joinPath(interp, joinArrayObj, 0, 2);
-					deleteOneFile(interp, child, force);
+					deleteOneFile(interp, new File(fileObj, fileList[i]), force);
 				}
 			} else {
 				throw new TclPosixException(interp, TclPosixException.ENOTEMPTY, "error deleting \"" + fileName
@@ -881,8 +915,11 @@ public class FileCmd implements Command {
 	 * functionality.
 	 * 
 	 * @param interp
+	 *            current interpreter
 	 * @param argv
+	 *            arguments to 'file' command
 	 * @param copyFlag
+	 *            if true, do a copy, else do a rename
 	 * @throws TclException
 	 */
 	private static void fileCopyRename(Interp interp, TclObject[] argv, boolean copyFlag) throws TclException {
@@ -977,7 +1014,7 @@ public class FileCmd implements Command {
 	 */
 	private static void copyRenameOneFile(Interp interp, String sourceName, String targetName, boolean copyFlag,
 			boolean force) throws TclException {
-		
+
 		// Copying or renaming a file onto itself is a no-op if force is chosen,
 		// otherwise, it will be caught later as an EEXISTS error.
 
@@ -1024,6 +1061,13 @@ public class FileCmd implements Command {
 		if (targetFileObj.isDirectory() && !sourceFileObj.isDirectory()) {
 			throw new TclPosixException(interp, TclPosixException.EISDIR, "can't overwrite directory \"" + targetName
 					+ "\" with file \"" + sourceName + "\"");
+		}
+		/* Does the target name a parent path? If so, that parent must exist */
+		if (targetFileObj.getParent() != null) {
+			if (!targetFileObj.getParentFile().exists()) {
+				throw new TclPosixException(interp, TclPosixException.ENOENT, true, "error " + action + " \""
+						+ sourceName + "\" to \"" + targetName + "\"");
+			}
 		}
 
 		if (!copyFlag) {

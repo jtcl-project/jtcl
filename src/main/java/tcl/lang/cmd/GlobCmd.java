@@ -731,11 +731,7 @@ public class GlobCmd implements Command {
 					 * This test will generate false positives, but it's the
 					 * best we can do in Java
 					 */
-					try {
-						typesTest = typesTest || !(testFile.getAbsolutePath().equals(testFile.getCanonicalPath()));
-					} catch (IOException e) {
-						typesTest = typesTest || false;
-					}
+					typesTest = typesTest || (FileUtil.getLinkTarget(testFile) != null);
 				}
 			} else {
 				typesTest = true;
@@ -748,7 +744,7 @@ public class GlobCmd implements Command {
 				typesTest = typesTest && testFile.canWrite();
 			}
 			if ((types & TYPE_PERM_X) != 0) {
-				typesTest = typesTest && testFile.canExecute();
+				typesTest = typesTest && FileUtil.isExecutable(testFile);
 			}
 			if ((types & TYPE_READONLY) != 0) {
 				/*

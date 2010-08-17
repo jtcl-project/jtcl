@@ -3193,30 +3193,22 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * TclUpdateReturnInfo -> updateReturnInfo
-	 * 
+	/**
 	 * This method is used by various parts of the Jacl and external packages.
 	 * interpreter when a TclException of TCL.RETURN is received. The most
 	 * common case is when the "return" command is executed inside a Tcl
 	 * procedure. This method examines fields such as interp.returnCode and
 	 * interp.errorCode and determines the real return status of the Tcl
-	 * procedure accordingly.
+	 * procedure accordingly. Side effects: The errorInfo and errorCode
+	 * variables may get modified.
 	 * 
-	 * Results: The return value is the true completion code to use for the Tcl
-	 * procedure, instead of TCL.RETURN. It's the same value that was given to
-	 * the "return -code" option.
+	 * @return The return value is the true completion code to use for the Tcl
+	 *         procedure, instead of TCL.RETURN. It's the same value that was
+	 *         given to the "return -code" option.
 	 * 
-	 * If TCL.OK is returned, it means than the caller of this method should
-	 * ignore any TclException that it has received.
-	 * 
-	 * Side effects: The errorInfo and errorCode variables may get modified.
-	 * 
-	 * ----------------------------------------------------------------------
+	 *         If TCL.OK is returned, it means than the caller of this method
+	 *         should ignore any TclException that it has received.
 	 */
-
 	public int updateReturnInfo() {
 		int code;
 
@@ -3294,20 +3286,12 @@ public class Interp extends EventuallyFreed {
 		return new CallFrame(this);
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
+	 * Retrieve the current working directory for this interpreter. Side
+	 * effects: If the working dir is null, set it to env(HOME)
 	 * 
-	 * getWorkingDir --
-	 * 
-	 * Retrieve the current working directory for this interpreter.
-	 * 
-	 * Results: Returns the File for the directory.
-	 * 
-	 * Side effects: If the working dir is null, set it.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @return the File for the current directory
 	 */
-
 	public File getWorkingDir() {
 		if (workingDir == null) {
 			try {
@@ -3321,20 +3305,11 @@ public class Interp extends EventuallyFreed {
 		return workingDir;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * setWorkingDir --
-	 * 
+	/**
 	 * Set the current working directory for this interpreter.
 	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: Set the working directory or throw a TclException.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param dirName name of directory that will become working directory
 	 */
-
 	public void setWorkingDir(String dirName) throws TclException {
 		File dirObj = FileUtil.getNewFileObj(this, dirName);
 
@@ -3345,7 +3320,7 @@ public class Interp extends EventuallyFreed {
 		} catch (IOException e) {
 		}
 
-		if (dirObj.isDirectory()) {
+		if (dirObj.isDirectory() && dirName.length()>0) {
 			workingDir = dirObj;
 		} else {
 			String dname = FileUtil.translateFileName(this, dirName);

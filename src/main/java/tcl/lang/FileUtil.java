@@ -15,8 +15,13 @@
 
 package tcl.lang;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Method;
+import java.util.HashMap;
 
 /*
  * This class implements utility methods for file-related operations.
@@ -27,6 +32,12 @@ public class FileUtil {
 	public static final int PATH_RELATIVE = 0;
 	public static final int PATH_VOLUME_RELATIVE = 1;
 	public static final int PATH_ABSOLUTE = 2;
+	/**
+	 * Stores the /etc/passwd file for lookup of user directories.
+	 * This should be replaced with a real native code lookup,
+	 * and also support other non-unix platforms.
+	 */
+	private static HashMap<String, String> userDirs = null;
 
 	/**
 	 * In the Windows file system, one type of absolute path follows this
@@ -885,10 +896,32 @@ public class FileUtil {
 			return dir;
 		}
 
-		// WARNING: Java does not support other users. "dir" is always null,
-		// but it should be the home directory (corresponding to the user name),
-		// as
-		// specified in the password file.
+		// Try to use /etc/passwd for users; this really should be done with native code and also
+		// should support other platforms
+		
+		if (Util.isUnix()) {
+			if (userDirs == null) {
+				try {
+					userDirs = new HashMap<String, String>();
+					File passwd = new File("/etc/passwd");
+					BufferedReader reader = new BufferedReader(new FileReader(passwd));
+					while (true) {
+						String line = reader.readLine();
+						if (line==null) break;
+						String [] fields = line.split(":");
+						if (fields.length >= 6 && fields[0].length() > 0 && fields[5].length() > 0) {
+							userDirs.put(fields[0], fields[5]);
+						}
+					}
+					reader.close();
+				} catch (IOException e) {
+						userDirs = null;
+				}
+			}
+			if (userDirs != null && userDirs.containsKey(user)) {
+				return userDirs.get(user);
+			}
+		}
 
 		throw new TclException(interp, "user \"" + user + "\" doesn't exist");
 	}
@@ -905,10 +938,7 @@ public class FileUtil {
 	 * @return the tilde-substituted path
 	 */
 
-	public static String translateFileName(Interp interp,
-			String path) 
-			throws TclException 
-	{
+	public static String translateFileName(Interp interp, String path) throws TclException {
 		String fileName = "";
 
 		if ((path.length() == 0) || (path.charAt(0) != '~')) {
@@ -1027,6 +1057,85 @@ public class FileUtil {
 			return null;
 		} catch (IOException e) {
 			return null;
+		}
+	}
+
+	/**
+	 * Get the target file of a link, or null if the specified file is not a
+	 * link. This method is a guess, which may return false positives. For
+	 * example, if "link" is "/usr/../usr/lib", this method will return
+	 * "/usr/lib" as if "link" were really a link. FIXME: Java 1.7 will provide
+	 * a better link test
+	 * 
+	 * @param link
+	 *            File to test
+	 * @return target of the 'link' File, if it is a link, or null if not.
+	 */
+	public static File getLinkTarget(File link) {
+		String absPath = link.getAbsolutePath();
+		File canFile;
+		try {
+			canFile = link.getCanonicalFile();
+		} catch (IOException e) {
+			return null;
+		}
+
+		/*
+		 * If absolute path is the same as canonical path, this cannot be a link
+		 */
+		if (absPath.equals(canFile.getPath())) {
+			return null;
+		} else {
+			/*
+			 * Otherwise, it's possible that we have a link; this could also be
+			 * true for "/usr/../usr/lib
+			 */
+			return canFile;
+		}
+	}
+
+	/**
+	 * Tests if the given file is executable by the current user. If Java 1.6+
+	 * File.canExecute() is not available, will make its best guess
+	 * 
+	 * @param fileObj
+	 *            File to test for executability
+	 * @return true if file is executable, false otherwise
+	 */
+	public static boolean isExecutable(File fileObj) {
+
+		/* It might be possible to use Java 1.6+ API */
+		try {
+			Method canExecute = fileObj.getClass().getMethod("canExecute");
+			Boolean result = (Boolean) canExecute.invoke(fileObj);
+			return result.booleanValue();
+
+		} catch (Exception e) {
+
+			/* Revert to pre-Java 1.6 guess */
+			boolean isExe = false;
+
+			// A file must exist to be executable. Directories are always
+			// executable.
+
+			if (fileObj.exists()) {
+				isExe = fileObj.isDirectory();
+				if (isExe)
+					return true;
+
+				if (Util.isWindows()) {
+					// File that ends with .exe, .com, or .bat is
+					// executable.
+					String fileName = fileObj.getName();
+					isExe = (fileName.endsWith(".exe") || fileName.endsWith(".com") || fileName.endsWith(".bat"));
+				} else {
+					/* Just return true for Mac and Unix */
+					isExe = true;
+				}
+				return isExe;
+			} else {
+				return false;
+			}
 		}
 	}
 
