@@ -65,8 +65,10 @@ public class Expression {
 	public static final int NOT = 32;
 	public static final int BIT_NOT = 33;
 
-	// Precedence table. The values for non-operator token types are ignored.
 
+	/**
+	 * Precedence table.  The values for non-operator token types are ignored.
+	 */
 	public static int precTable[] = { 0, 0, 0, 0, 0, 0, 0, 0, 12, 12, 12, // MULT,
 																			// DIVIDE,
 																			// MOD
@@ -86,13 +88,17 @@ public class Expression {
 	// BIT_NOT
 	};
 
-	// Mapping from operator numbers to strings; used for error messages.
-
+	/**
+	 *  Mapping from operator numbers to strings; used for error messages.
+	 */
 	public static String operatorStrings[] = { "VALUE", "(", ")", ",", "END",
 			"UNKNOWN", "6", "7", "*", "/", "%", "+", "-", "<<", ">>", "<", ">",
 			"<=", ">=", "==", "!=", "&", "^", "|", "&&", "||", "?", ":", "eq",
 			"ne", "-", "+", "!", "~" };
 
+	/**
+	 * Maps name of function to its implementation
+	 */
 	public HashMap<String, MathFunction> mathFuncTable;
 
 	/**
@@ -120,7 +126,6 @@ public class Expression {
 	 * Cache of ExprValue objects. These are cached on a per-interp basis to
 	 * speed up most expressions.
 	 */
-
 	private ExprValue[] cachedExprValue;
 	private int cachedExprIndex = 0;
 	private static final int cachedExprLength = 50;
@@ -281,6 +286,11 @@ public class Expression {
 	void SyntaxError(Interp interp) throws TclException {
 		throw new TclException(interp, "syntax error in expression \"" + m_expr
 				+ "\"");
+	}
+	
+	void SyntaxError(Interp interp, String whyMsg) throws TclException {
+		throw new TclException(interp, "syntax error in expression \"" + m_expr
+				+ "\": "+whyMsg);
 	}
 
 	static void DivideByZero(Interp interp) throws TclException {
@@ -617,7 +627,7 @@ public class Expression {
 
 			value = ExprGetValue(interp, -1);
 			if (m_token != CLOSE_PAREN) {
-				SyntaxError(interp);
+				SyntaxError(interp,"looking for close parenthesis");
 			}
 		} else {
 			if (m_token == MINUS) {
@@ -641,13 +651,19 @@ public class Expression {
 				// Caller needs to deal with close paren token.
 				return null;
 			} else if (m_token != VALUE) {
-				SyntaxError(interp);
+				if (m_token >= MULT)
+					SyntaxError(interp,"unexpected operator "+operatorStrings[m_token]);
+				else if (m_token == UNKNOWN) 
+					SyntaxError(interp,"character not legal in expressions");
+				else
+					SyntaxError(interp,"premature end of expression");
 			}
 		}
 		if (value == null) {
 			SyntaxError(interp);
 		}
 
+		
 		// Got the first operand. Now fetch (operator, operand) pairs.
 
 		if (!gotOp) {
@@ -661,7 +677,7 @@ public class Expression {
 						|| (operator == COMMA)) {
 					return value; // Goto Done
 				} else {
-					SyntaxError(interp);
+					SyntaxError(interp,"extra tokens at end of expression");
 				}
 			}
 			if (precTable[operator] <= prec) {
@@ -1702,18 +1718,21 @@ public class Expression {
 		// will not have trailing whitespace.
 
 		funcName = m_expr.substring(startIdx, m_ind);
+		mathFunc = (MathFunction) mathFuncTable.get(funcName);
 
 		// Parse errors are thrown BEFORE unknown function names
 
 		ExprLex(interp);
 		if (m_token != OPEN_PAREN) {
-			SyntaxError(interp);
+			if (mathFunc==null)
+				SyntaxError(interp,"variable references require preceding $");
+			else
+				SyntaxError(interp,"expected parenthesis enclosing function arguments");
 		}
 
 		// Now test for unknown funcName. Doing the above statements
 		// out of order will cause some tests to fail.
 
-		mathFunc = (MathFunction) mathFuncTable.get(funcName);
 		if (mathFunc == null) {
 			throw new TclException(interp, "unknown math function \""
 					+ funcName + "\"");
@@ -1726,7 +1745,7 @@ public class Expression {
 		if (numArgs == 0) {
 			ExprLex(interp);
 			if (m_token != CLOSE_PAREN) {
-				SyntaxError(interp);
+				SyntaxError(interp,"missing close parenthesis at end of function call");
 			}
 		} else {
 			values = new ExprValue[numArgs];
@@ -1758,7 +1777,7 @@ public class Expression {
 						throw new TclException(interp,
 								"too many arguments for math function");
 					} else {
-						SyntaxError(interp);
+						SyntaxError(interp,"missing close parenthesis at end of function call");
 					}
 				}
 				if (m_token != COMMA) {

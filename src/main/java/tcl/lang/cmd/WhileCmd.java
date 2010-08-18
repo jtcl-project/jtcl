@@ -46,7 +46,17 @@ public class WhileCmd implements Command {
 		TclObject command = argv[2];
 
 		loop: {
-			while (interp.expr.evalBoolean(interp, test)) {
+			while (true) {
+				boolean exprTest;
+				try {
+					exprTest = interp.expr.evalBoolean(interp, test);
+					if (! exprTest) break loop;
+				} catch (TclException e1) {
+					if (e1.getCompletionCode()==TCL.ERROR) {
+						if (interp.errInProgress) interp.addErrorInfo("\n    (\"while\" test expression)");
+					}
+					throw e1;
+				}
 				try {
 					interp.eval(command, 0);
 				} catch (TclException e) {

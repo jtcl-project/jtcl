@@ -7,10 +7,9 @@ import tcl.lang.TclCmdTest;
 
 public class WhileCmdTest extends TclCmdTest {
 	public void testCmd() throws Exception {
-		LinkedList expectedFailureList = new LinkedList(Arrays.asList( new String[] {
-			// differences between "compiling" and "executing" in error message:
-			// FIXME - change the error text in the WhileCmd to match 8.4
-			"while-1.2", "while-1.8", "while-4.3"
+		LinkedList<String> expectedFailureList = new LinkedList<String>(Arrays.asList( new String[] {
+			// widespread, pesky "invoked from within" instead of "while executing" in error message
+			"while-1.2", "while-1.8"
 		}));
 			
 		String resName = "/tcl/lang/cmd/while.test";
