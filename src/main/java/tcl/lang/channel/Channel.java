@@ -321,16 +321,7 @@ public abstract class Channel {
 
 		checkWrite(interp);
 		initOutput();
-
-		if ((mode & TclIO.APPEND) != 0) {
-			// Must always seek to end of file in append mode before writing
-			try {
-				seek(null, 0, TclIO.SEEK_END);
-			} catch (TclException e) {
-				// seek not supported, so ignore it
-			}
-		}
-
+		
 		if (outData.getInternalRep() instanceof TclByteArray && encoding == null && buffering != TclIO.BUFF_LINE
 				&& (outputTranslation == TclIO.TRANS_BINARY || outputTranslation == TclIO.TRANS_LF)) {
 			/* Can write with the more efficient firstOutputStream */
@@ -465,6 +456,18 @@ public abstract class Channel {
 	public void seek(Interp interp, long offset, int mode) throws IOException, TclException {
 		throw new TclPosixException(interp, TclPosixException.EINVAL, true, "error during seek on \"" + getChanName()
 				+ "\"");
+	}
+	
+	/**
+	 * Called just prior to each write to the getOutputStream() stream, if the channel is in TclIO.APPEND
+	 * mode.  Seek-able Channel implementations should override this and guarantee that the write
+	 * will append to the end of the output.  There is no need to flush any of the channel
+	 * buffers. The default implementation does nothing.
+	 * 
+	 * @throws IOException
+	 */
+	void prepareForAppendWrite() throws IOException {
+		
 	}
 
 	/**

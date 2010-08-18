@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import tcl.lang.TclIO;
+
 /**
  * This class implements non-blocking output for Tcl Channels
  * 
@@ -336,6 +338,8 @@ class NonBlockingOutputStream extends FilterOutputStream implements Runnable {
 		 * @throws IOException
 		 */
 		void perform() throws IOException {
+			if ((channel.mode & TclIO.APPEND)!=0)
+				channel.prepareForAppendWrite();
 			switch (type) {
 			case Write:
 				out.write(b, off, len);

@@ -17,6 +17,7 @@ import java.io.IOException;
 
 import tcl.lang.Command;
 import tcl.lang.Interp;
+import tcl.lang.TCL;
 import tcl.lang.TclException;
 import tcl.lang.TclIO;
 import tcl.lang.TclInteger;
@@ -104,7 +105,15 @@ public class OpenCmd implements Command {
 			} else {
 				modeFlags = 0;
 				boolean gotRorWflag = false;
-				final int mlen = TclList.getLength(interp, mode);
+				int mlen =0;
+				try {
+					mlen = TclList.getLength(interp, mode);
+				} catch (TclException e) {
+					if (e.getCompletionCode()==TCL.ERROR) {
+						interp.addErrorInfo("\n    while processing open access modes \""+mode+"\"");
+					}
+					throw e;
+				}
 				for (int i = 0; i < mlen; i++) {
 					TclObject marg = TclList.index(interp, mode, i);
 					if (marg.toString().equals("RDONLY")) {

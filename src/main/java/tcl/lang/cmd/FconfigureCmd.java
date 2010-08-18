@@ -160,7 +160,14 @@ public class FconfigureCmd implements Command {
 		if (argv.length == 3) {
 			// return value for supplied name
 
-			int index = TclIndex.get(interp, argv[2], validCmds, "option", 0);
+			int index = 0;
+			try {
+				index = TclIndex.get(interp, argv[2], validCmds, "option", 0);
+			} catch (TclException e) {
+				// custom error message
+				throw new TclException(interp,"bad option \""+argv[2]
+				                                                   +"\": should be one of -blocking, -buffering, -buffersize, -encoding, -eofchar, or -translation");
+			}
 
 			switch (index) {
 			case OPT_BLOCKING: { // -blocking
@@ -255,9 +262,14 @@ public class FconfigureCmd implements Command {
 			// Iterate through the list setting the name with the
 			// corresponding value.
 
-			int index = TclIndex.get(interp, argv[i - 1], validCmds, "option",
-					0);
-
+			int index;
+			try {
+				index = TclIndex.get(interp, argv[i-1], validCmds, "option", 0);
+			} catch (TclException e) {
+				// custom error message
+				throw new TclException(interp,"bad option \""+argv[i-1]
+				                                                   +"\": should be one of -blocking, -buffering, -buffersize, -encoding, -eofchar, or -translation");
+			}
 			switch (index) {
 			case OPT_BLOCKING: { // -blocking
 				chan.setBlocking(TclBoolean.get(interp, argv[i]));

@@ -184,6 +184,16 @@ public class FileChannel extends Channel {
 	void sync() throws SyncFailedException, IOException {
 		file.getFD().sync();
 	}
+	
+
+	/* (non-Javadoc)
+	 * @see tcl.lang.channel.Channel#prepareForAppendWrite()
+	 */
+	@Override
+	void prepareForAppendWrite() throws IOException {
+		if (file!=null) file.seek(file.length());
+	}
+
 
 	/**
 	 * Move the file pointer internal to the RandomAccessFile object. The file
