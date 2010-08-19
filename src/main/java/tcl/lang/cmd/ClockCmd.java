@@ -32,6 +32,7 @@ import java.util.TimeZone;
 
 import tcl.lang.Command;
 import tcl.lang.Interp;
+import tcl.lang.TCL;
 import tcl.lang.TclBoolean;
 import tcl.lang.TclException;
 import tcl.lang.TclIndex;
@@ -45,8 +46,7 @@ import tcl.lang.TclObject;
 
 public class ClockCmd implements Command {
 
-	static final private String[] validCmds = { "clicks", "format", "scan",
-			"seconds" };
+	static final private String[] validCmds = { "clicks", "format", "scan", "seconds" };
 
 	static final private int CMD_CLICKS = 0;
 	static final private int CMD_FORMAT = 1;
@@ -107,31 +107,29 @@ public class ClockCmd implements Command {
 		switch (cmd) {
 		case CMD_CLICKS: {
 			if (objv.length > 3) {
-				throw new TclNumArgsException(interp, 2, objv,
-						"?-milliseconds?");
+				throw new TclNumArgsException(interp, 2, objv, "?-milliseconds?");
 			}
 			if (objv.length == 3) {
 				// We can safely ignore the -milliseconds options, since
 				// we measure the clicks in milliseconds anyway...
-				int clicksOpt = TclIndex.get(interp, objv[2], clicksOpts,
-						"switch", 0);
+				TclIndex.get(interp, objv[2], clicksOpts, "switch", 0);
+				if (objv[2].toString().equals("-")) {
+					/* Special case - can't abbreviate this much */
+					throw new TclException(interp, "bad switch \"-\": must be -milliseconds");
+				}
 			}
-			long millis = System.currentTimeMillis();
-			int clicks = (int) (millis % Integer.MAX_VALUE);
-			interp.setResult(clicks);
+			interp.setResult(System.currentTimeMillis());
 			break;
 		}
 
 		case CMD_FORMAT: {
 			if ((objv.length < 3) || (objv.length > 7)) {
-				throw new TclNumArgsException(interp, 2, objv,
-						"clockval ?-format string? ?-gmt boolean?");
+				throw new TclNumArgsException(interp, 2, objv, "clockval ?-format string? ?-gmt boolean?");
 			}
 			clockVal = TclInteger.getInt(interp, objv[2]);
 
 			for (argIx = 3; argIx + 1 < objv.length; argIx += 2) {
-				int formatOpt = TclIndex.get(interp, objv[argIx], formatOpts,
-						"switch", 0);
+				int formatOpt = TclIndex.get(interp, objv[argIx], formatOpts, "switch", 0);
 				switch (formatOpt) {
 				case OPT_FORMAT_FORMAT: {
 					format = objv[argIx + 1].toString();
@@ -144,8 +142,7 @@ public class ClockCmd implements Command {
 				}
 			}
 			if (argIx < objv.length) {
-				throw new TclNumArgsException(interp, 2, objv,
-						"clockval ?-format string? ?-gmt boolean?");
+				throw new TclNumArgsException(interp, 2, objv, "clockval ?-format string? ?-gmt boolean?");
 			}
 			FormatClock(interp, clockVal, useGmt, format);
 			break;
@@ -153,14 +150,12 @@ public class ClockCmd implements Command {
 
 		case CMD_SCAN: {
 			if ((objv.length < 3) || (objv.length > 7)) {
-				throw new TclNumArgsException(interp, 2, objv,
-						"dateString ?-base clockValue? ?-gmt boolean?");
+				throw new TclNumArgsException(interp, 2, objv, "dateString ?-base clockValue? ?-gmt boolean?");
 			}
 			dateString = objv[2].toString();
 
 			for (argIx = 3; argIx + 1 < objv.length; argIx += 2) {
-				int scanOpt = TclIndex.get(interp, objv[argIx], scanOpts,
-						"switch", 0);
+				int scanOpt = TclIndex.get(interp, objv[argIx], scanOpts, "switch", 0);
 				switch (scanOpt) {
 				case OPT_SCAN_BASE: {
 					baseObj = objv[argIx + 1];
@@ -173,8 +168,7 @@ public class ClockCmd implements Command {
 				}
 			}
 			if (argIx < objv.length) {
-				throw new TclNumArgsException(interp, 2, objv,
-						"clockval ?-format string? ?-gmt boolean?");
+				throw new TclNumArgsException(interp, 2, objv, "clockval ?-format string? ?-gmt boolean?");
 			}
 			if (baseObj != null) {
 				long seconds = TclInteger.getLong(interp, baseObj);
@@ -185,9 +179,7 @@ public class ClockCmd implements Command {
 
 			date = GetDate(dateString, baseClock, useGmt);
 			if (date == null) {
-				throw new TclException(interp,
-						"unable to convert date-time string \"" + dateString
-								+ "\"");
+				throw new TclException(interp, "unable to convert date-time string \"" + dateString + "\"");
 			}
 
 			int seconds = (int) (date.getTime() / 1000);
@@ -208,28 +200,20 @@ public class ClockCmd implements Command {
 	}
 
 	/**
-	 *------------------------------------------------------------------------
-	 * -----
-	 * 
-	 * FormatClock --
-	 * 
 	 * Formats a time value based on seconds into a human readable string.
+	 * Formatted string is returned in the interpreter's result
 	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: The interpreter will contain the formatted string as
-	 * result.
-	 * 
-	 *------------------------------------------------------------------------
-	 * -----
+	 * @param interp
+	 *            interpreter into which to put result
+	 * @param clockVal
+	 *            Time in seconds.
+	 * @param useGMT
+	 *            true if use GMT, if false use environment's defined timezone
+	 * @param format
+	 *            format string
+	 * @throws TclException
 	 */
-
-	private void FormatClock(Interp interp, // Current interpreter.
-			int clockVal, // Time in seconds.
-			boolean useGMT, // Boolean
-			String format) // Format string
-			throws TclException // A standard Tcl exception.
-	{
+	private void FormatClock(Interp interp, int clockVal, boolean useGMT, String format) throws TclException {
 		Date date = new Date((long) clockVal * 1000);
 		GregorianCalendar calendar = new GregorianCalendar();
 		SimpleDateFormat fmt, locFmt;
@@ -242,6 +226,12 @@ public class ClockCmd implements Command {
 
 		if (useGMT) {
 			calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
+		} else {
+			try {
+				TclObject tz = interp.getVar("env", "TZ", TCL.GLOBAL_ONLY);
+				calendar.setTimeZone(TimeZone.getTimeZone(tz.toString()));
+			} catch (TclException e) {
+			}
 		}
 		calendar.setTime(date);
 		fmt = new SimpleDateFormat("mm.dd.yy", Locale.US);
@@ -250,13 +240,10 @@ public class ClockCmd implements Command {
 		if (format.equals("%Q")) { // Enterprise Stardate.
 			int trekYear = calendar.get(Calendar.YEAR) + 377 - 2323;
 			int trekDay = (calendar.get(Calendar.DAY_OF_YEAR) * 1000)
-					/ (calendar.isLeapYear(calendar.get(Calendar.YEAR)) ? 366
-							: 365);
-			int trekHour = (calendar.get(Calendar.HOUR_OF_DAY) * 60 + calendar
-					.get(Calendar.MINUTE)) / 144;
+					/ (calendar.isLeapYear(calendar.get(Calendar.YEAR)) ? 366 : 365);
+			int trekHour = (calendar.get(Calendar.HOUR_OF_DAY) * 60 + calendar.get(Calendar.MINUTE)) / 144;
 
-			interp.setResult("Stardate " + (trekYear < 10 ? "0" : "")
-					+ (trekYear * 1000 + trekDay) + '.' + trekHour);
+			interp.setResult("Stardate " + (trekYear < 10 ? "0" : "") + (trekYear * 1000 + trekDay) + '.' + trekHour);
 			return;
 		}
 
@@ -285,8 +272,7 @@ public class ClockCmd implements Command {
 					fmt.format(date, result, fp);
 					break;
 				case 'c': // Locale specific date and time.
-					locFmt = (SimpleDateFormat) DateFormat.getDateTimeInstance(
-							DateFormat.SHORT, DateFormat.SHORT);
+					locFmt = (SimpleDateFormat) DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT);
 					locFmt.setCalendar(calendar);
 					locFmt.format(date, result, fp);
 					break;
@@ -311,14 +297,13 @@ public class ClockCmd implements Command {
 					// ISO8601 week (%V),
 					// expressed as a two-digit year-of-the-century, with
 					// leading zero if necessary.
-					int isoYear = calendar.get(Calendar.YEAR);
-					result.append((isoYear % 1000 < 10 ? "0" : "") + isoYear
-							% 1000);
+					int isoYear = getISO8601Year(calendar);
+					result.append((isoYear % 1000 < 10 ? "0" : "") + isoYear % 1000);
 					break;
 				case 'G': // The ISO8601 year number corresponding to the
 					// ISO8601 week (%V),
 					// expressed as a four-digit number.
-					isoYear = calendar.get(Calendar.YEAR);
+					isoYear = getISO8601Year(calendar);
 					if (isoYear < 1000) {
 						result.append("0");
 					} else if (isoYear < 100) {
@@ -380,8 +365,7 @@ public class ClockCmd implements Command {
 					if (useGMT) {
 						Calendar localCalendar = Calendar.getInstance();
 						localCalendar.setTime(calendar.getTime());
-						millis -= localCalendar.get(Calendar.ZONE_OFFSET)
-								+ localCalendar.get(Calendar.DST_OFFSET);
+						millis -= localCalendar.get(Calendar.ZONE_OFFSET) + localCalendar.get(Calendar.DST_OFFSET);
 					}
 					result.append((int) (millis / 1000));
 					break;
@@ -421,14 +405,12 @@ public class ClockCmd implements Command {
 					result.append((weekM < 10 ? "0" : "") + weekM);
 					break;
 				case 'x': // Locale specific date format.
-					locFmt = (SimpleDateFormat) DateFormat
-							.getDateInstance(DateFormat.SHORT);
+					locFmt = (SimpleDateFormat) DateFormat.getDateInstance(DateFormat.SHORT);
 					locFmt.setCalendar(calendar);
 					locFmt.format(date, result, fp);
 					break;
 				case 'X': // Locale specific time format.
-					locFmt = (SimpleDateFormat) DateFormat
-							.getTimeInstance(DateFormat.SHORT);
+					locFmt = (SimpleDateFormat) DateFormat.getTimeInstance(DateFormat.SHORT);
 					locFmt.setCalendar(calendar);
 					locFmt.format(date, result, fp);
 					break;
@@ -456,24 +438,47 @@ public class ClockCmd implements Command {
 	}
 
 	/**
-	 *------------------------------------------------------------------------
-	 * -----
+	 * Calculate the correct year for an ISO8601 week
 	 * 
-	 * GetWeek --
-	 * 
+	 * @param calendar
+	 *            calendar with given date
+	 * @return year
+	 */
+	private int getISO8601Year(Calendar calendar) {
+		int fdow = calendar.getFirstDayOfWeek();
+		int mdfw = calendar.getMinimalDaysInFirstWeek();
+		calendar.setFirstDayOfWeek(Calendar.MONDAY);
+		calendar.setMinimalDaysInFirstWeek(4);
+		int week = calendar.get(Calendar.WEEK_OF_YEAR);
+		int year = calendar.get(Calendar.YEAR);
+		int month = calendar.get(Calendar.MONTH);
+		calendar.setFirstDayOfWeek(fdow);
+		calendar.setMinimalDaysInFirstWeek(mdfw);
+		calendar.setTime(calendar.getTime());
+		if (week == 1 && month == Calendar.DECEMBER) {
+			return year + 1;
+		}
+		if ((week == 52 || week == 53) && month == Calendar.JANUARY) {
+			return year - 1;
+		}
+		return year;
+	}
+
+	/**
 	 * Returns the week_of_year of the given date. The weekday considered as
 	 * start of the week is given as argument. Specify iso as true to get the
 	 * week_of_year accourding to ISO.
 	 * 
-	 * Results: Day of the week .
-	 * 
 	 * Side effects: The interpreter will contain the formatted string as
 	 * result.
 	 * 
-	 *------------------------------------------------------------------------
-	 * -----
+	 * @param calendar
+	 *            calendar containing the date
+	 * @param firstDayOfWeek
+	 *            this day starts a week
+	 * @param boolean iso if true, evaluate according to ISO8601
+	 * @return Day of the week .
 	 */
-
 	private int GetWeek(Calendar calendar, // Calendar containing Date.
 			int firstDayOfWeek, // this day starts a week (MONDAY/SUNDAY).
 			boolean iso) // evaluate according to ISO?
@@ -485,7 +490,8 @@ public class ClockCmd implements Command {
 		// After changing the firstDayOfWeek, we have to set the time value
 		// anew,
 		// so that the fields of the calendar are recalculated.
-
+		int fdow = calendar.getFirstDayOfWeek();
+		int mdfw = calendar.getMinimalDaysInFirstWeek();
 		calendar.setFirstDayOfWeek(firstDayOfWeek);
 		calendar.setMinimalDaysInFirstWeek(iso ? 4 : 7);
 		calendar.setTime(calendar.getTime());
@@ -500,26 +506,20 @@ public class ClockCmd implements Command {
 				week = 0;
 			}
 		}
-
+		calendar.setFirstDayOfWeek(fdow);
+		calendar.setMinimalDaysInFirstWeek(mdfw);
 		return week;
 	}
 
 	/**
-	 *------------------------------------------------------------------------
-	 * -----
-	 * 
-	 * SetWeekday --
-	 * 
 	 * The date of the given calendar will be incremented, so that it will match
 	 * the weekday in the diff object. If dayOrdinal is bigger than 1,
 	 * additional weeks will be added.
 	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: Modifies the given calendar.
-	 * 
-	 *------------------------------------------------------------------------
-	 * -----
+	 * @param calendar
+	 *            contains date
+	 * @param diff
+	 *            time difference to evaluate
 	 */
 
 	private void SetWeekday(Calendar calendar, // Calendar containing Date.
@@ -537,20 +537,12 @@ public class ClockCmd implements Command {
 	}
 
 	/**
-	 *------------------------------------------------------------------------
-	 * -----
-	 * 
-	 * SetOrdMonth --
-	 * 
 	 * The date of the given calendar will be incremented, so that it will match
 	 * the ordinal month in the diff object.
 	 * 
 	 * Results: None.
 	 * 
 	 * Side effects: Modifies the given calendar.
-	 * 
-	 *------------------------------------------------------------------------
-	 * -----
 	 */
 
 	private void SetOrdMonth(Calendar calendar, // Calendar containing Date.
@@ -573,19 +565,11 @@ public class ClockCmd implements Command {
 	}
 
 	/**
-	 *------------------------------------------------------------------------
-	 * -----
-	 * 
-	 * GetDate --
-	 * 
 	 * Scan a human readable date string and construct a Date.
 	 * 
 	 * Results: The scanned date (or null, if an error occured).
 	 * 
 	 * Side effects: None.
-	 * 
-	 *------------------------------------------------------------------------
-	 * -----
 	 */
 
 	private Date GetDate(String dateString, // Date string to scan
@@ -595,8 +579,7 @@ public class ClockCmd implements Command {
 		GregorianCalendar calendar = new GregorianCalendar();
 		Calendar now = Calendar.getInstance();
 		now.setTime(baseDate);
-		calendar.set(now.get(Calendar.YEAR), now.get(Calendar.MONTH), now
-				.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
+		calendar.set(now.get(Calendar.YEAR), now.get(Calendar.MONTH), now.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
 		if (useGMT) {
 			calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
 		}
@@ -627,8 +610,7 @@ public class ClockCmd implements Command {
 				hasOrdMonth++;
 			} else if (ParseRelSpec(dt, parsePos, diff)) {
 				hasRel++;
-			} else if (ParseNumber(dt, parsePos, calendar, hasDate > 0
-					&& hasTime > 0 && hasRel == 0)) {
+			} else if (ParseNumber(dt, parsePos, calendar, hasDate > 0 && hasTime > 0 && hasRel == 0)) {
 				if (hasDate == 0 || hasTime == 0 || hasRel > 0) {
 					hasTime++;
 				}
@@ -640,8 +622,7 @@ public class ClockCmd implements Command {
 			}
 		}
 
-		if (hasTime > 1 || hasZone > 1 || hasDate > 1 || hasDay > 1
-				|| hasOrdMonth > 1) {
+		if (hasTime > 1 || hasZone > 1 || hasDate > 1 || hasDay > 1 || hasOrdMonth > 1) {
 			return null;
 		}
 
@@ -704,11 +685,6 @@ public class ClockCmd implements Command {
 	}
 
 	/**
-	 *------------------------------------------------------------------------
-	 * -----
-	 * 
-	 * ParseTime --
-	 * 
 	 * Parse a time string and sets the Calendar. A time string is valid, if it
 	 * confirms to the following yacc rule: time : tUNUMBER tMERIDIAN | tUNUMBER
 	 * ':' tUNUMBER o_merid | tUNUMBER ':' tUNUMBER '-' tUNUMBER | tUNUMBER ':'
@@ -719,9 +695,6 @@ public class ClockCmd implements Command {
 	 * was set according to the read time); false otherwise.
 	 * 
 	 * Side effects: None.
-	 * 
-	 *------------------------------------------------------------------------
-	 * -----
 	 */
 
 	private boolean ParseTime(ClockToken[] dt, // Input as scanned array of
@@ -731,10 +704,8 @@ public class ClockCmd implements Command {
 	{
 		int pos = parsePos.getIndex();
 
-		if (pos + 6 < dt.length && dt[pos].isUNumber() && dt[pos + 1].is(':')
-				&& dt[pos + 2].isUNumber() && dt[pos + 3].is(':')
-				&& dt[pos + 4].isUNumber() && dt[pos + 5].is('-')
-				&& dt[pos + 6].isUNumber()) {
+		if (pos + 6 < dt.length && dt[pos].isUNumber() && dt[pos + 1].is(':') && dt[pos + 2].isUNumber()
+				&& dt[pos + 3].is(':') && dt[pos + 4].isUNumber() && dt[pos + 5].is('-') && dt[pos + 6].isUNumber()) {
 			ClockToken zone = GetTimeZoneFromRawOffset(-dt[pos + 6].getInt() / 100);
 			if (zone != null) {
 				calendar.set(Calendar.HOUR_OF_DAY, dt[pos].getInt());
@@ -745,18 +716,16 @@ public class ClockCmd implements Command {
 				return true;
 			}
 		}
-		if (pos + 4 < dt.length && dt[pos].isUNumber() && dt[pos + 1].is(':')
-				&& dt[pos + 2].isUNumber() && dt[pos + 3].is(':')
-				&& dt[pos + 4].isUNumber()) {
+		if (pos + 4 < dt.length && dt[pos].isUNumber() && dt[pos + 1].is(':') && dt[pos + 2].isUNumber()
+				&& dt[pos + 3].is(':') && dt[pos + 4].isUNumber()) {
 			parsePos.setIndex(pos + 5);
 			ParseMeridianAndSetHour(dt, parsePos, calendar, dt[pos].getInt());
 			calendar.set(Calendar.MINUTE, dt[pos + 2].getInt());
 			calendar.set(Calendar.SECOND, dt[pos + 4].getInt());
 			return true;
 		}
-		if (pos + 4 < dt.length && dt[pos].isUNumber() && dt[pos + 1].is(':')
-				&& dt[pos + 2].isUNumber() && dt[pos + 3].is('-')
-				&& dt[pos + 4].isUNumber()) {
+		if (pos + 4 < dt.length && dt[pos].isUNumber() && dt[pos + 1].is(':') && dt[pos + 2].isUNumber()
+				&& dt[pos + 3].is('-') && dt[pos + 4].isUNumber()) {
 			ClockToken zone = GetTimeZoneFromRawOffset(-dt[pos + 4].getInt() / 100);
 			if (zone != null) {
 				calendar.set(Calendar.HOUR_OF_DAY, dt[pos].getInt());
@@ -766,15 +735,13 @@ public class ClockCmd implements Command {
 				return true;
 			}
 		}
-		if (pos + 2 < dt.length && dt[pos].isUNumber() && dt[pos + 1].is(':')
-				&& dt[pos + 2].isUNumber()) {
+		if (pos + 2 < dt.length && dt[pos].isUNumber() && dt[pos + 1].is(':') && dt[pos + 2].isUNumber()) {
 			parsePos.setIndex(pos + 3);
 			ParseMeridianAndSetHour(dt, parsePos, calendar, dt[pos].getInt());
 			calendar.set(Calendar.MINUTE, dt[pos + 2].getInt());
 			return true;
 		}
-		if (pos + 1 < dt.length && dt[pos].isUNumber()
-				&& dt[pos + 1].is(ClockToken.MERIDIAN)) {
+		if (pos + 1 < dt.length && dt[pos].isUNumber() && dt[pos + 1].is(ClockToken.MERIDIAN)) {
 			parsePos.setIndex(pos + 1);
 			ParseMeridianAndSetHour(dt, parsePos, calendar, dt[pos].getInt());
 			return true;
@@ -808,8 +775,7 @@ public class ClockCmd implements Command {
 	{
 		int pos = parsePos.getIndex();
 
-		if (pos + 1 < dt.length && dt[pos].is(ClockToken.ZONE)
-				&& dt[pos + 1].is(ClockToken.DST)) {
+		if (pos + 1 < dt.length && dt[pos].is(ClockToken.ZONE) && dt[pos + 1].is(ClockToken.DST)) {
 			calendar.setTimeZone(dt[pos].getZone());
 			parsePos.setIndex(pos + 2);
 			return true;
@@ -853,32 +819,27 @@ public class ClockCmd implements Command {
 	{
 		int pos = parsePos.getIndex();
 
-		if (pos + 2 < dt.length && dt[pos].is('+') && dt[pos + 1].isUNumber()
-				&& dt[pos + 2].is(ClockToken.DAY)) {
+		if (pos + 2 < dt.length && dt[pos].is('+') && dt[pos + 1].isUNumber() && dt[pos + 2].is(ClockToken.DAY)) {
 			diff.setWeekday(dt[pos + 2].getInt(), dt[pos + 1].getInt());
 			parsePos.setIndex(pos + 3);
 			return true;
 		}
-		if (pos + 2 < dt.length && dt[pos].is('-') && dt[pos + 1].isUNumber()
-				&& dt[pos + 2].is(ClockToken.DAY)) {
+		if (pos + 2 < dt.length && dt[pos].is('-') && dt[pos + 1].isUNumber() && dt[pos + 2].is(ClockToken.DAY)) {
 			diff.setWeekday(dt[pos + 2].getInt(), -dt[pos + 1].getInt());
 			parsePos.setIndex(pos + 3);
 			return true;
 		}
-		if (pos + 1 < dt.length && dt[pos].is(ClockToken.NEXT)
-				&& dt[pos + 1].is(ClockToken.DAY)) {
+		if (pos + 1 < dt.length && dt[pos].is(ClockToken.NEXT) && dt[pos + 1].is(ClockToken.DAY)) {
 			diff.setWeekday(dt[pos + 1].getInt(), 2);
 			parsePos.setIndex(pos + 2);
 			return true;
 		}
-		if (pos + 1 < dt.length && dt[pos].is(ClockToken.DAY)
-				&& dt[pos + 1].is(',')) {
+		if (pos + 1 < dt.length && dt[pos].is(ClockToken.DAY) && dt[pos + 1].is(',')) {
 			diff.setWeekday(dt[pos].getInt());
 			parsePos.setIndex(pos + 2);
 			return true;
 		}
-		if (pos + 1 < dt.length && dt[pos].isUNumber()
-				&& dt[pos + 1].is(ClockToken.DAY)) {
+		if (pos + 1 < dt.length && dt[pos].isUNumber() && dt[pos + 1].is(ClockToken.DAY)) {
 			diff.setWeekday(dt[pos + 1].getInt(), dt[pos].getInt());
 			parsePos.setIndex(pos + 2);
 			return true;
@@ -920,35 +881,31 @@ public class ClockCmd implements Command {
 	{
 		int pos = parsePos.getIndex();
 
-		if (pos + 4 < dt.length && dt[pos].isUNumber() && dt[pos + 1].is('/')
-				&& dt[pos + 2].isUNumber() && dt[pos + 3].is('/')
-				&& dt[pos + 4].isUNumber()) {
+		if (pos + 4 < dt.length && dt[pos].isUNumber() && dt[pos + 1].is('/') && dt[pos + 2].isUNumber()
+				&& dt[pos + 3].is('/') && dt[pos + 4].isUNumber()) {
 			calendar.set(Calendar.DAY_OF_MONTH, dt[pos + 2].getInt());
 			calendar.set(Calendar.MONTH, dt[pos].getInt() - 1);
 			calendar.set(Calendar.YEAR, dt[pos + 4].getInt());
 			parsePos.setIndex(pos + 5);
 			return true;
 		}
-		if (pos + 4 < dt.length && dt[pos].isUNumber() && dt[pos + 1].is('-')
-				&& dt[pos + 2].is(ClockToken.MONTH) && dt[pos + 3].is('-')
-				&& dt[pos + 4].isUNumber()) {
+		if (pos + 4 < dt.length && dt[pos].isUNumber() && dt[pos + 1].is('-') && dt[pos + 2].is(ClockToken.MONTH)
+				&& dt[pos + 3].is('-') && dt[pos + 4].isUNumber()) {
 			calendar.set(Calendar.YEAR, dt[pos + 4].getInt());
 			calendar.set(Calendar.MONTH, dt[pos + 2].getInt());
 			calendar.set(Calendar.DAY_OF_MONTH, dt[pos].getInt());
 			parsePos.setIndex(pos + 5);
 			return true;
 		}
-		if (pos + 4 < dt.length && dt[pos].isUNumber() && dt[pos + 1].is('-')
-				&& dt[pos + 2].isUNumber() && dt[pos + 3].is('-')
-				&& dt[pos + 4].isUNumber()) {
+		if (pos + 4 < dt.length && dt[pos].isUNumber() && dt[pos + 1].is('-') && dt[pos + 2].isUNumber()
+				&& dt[pos + 3].is('-') && dt[pos + 4].isUNumber()) {
 			calendar.set(Calendar.YEAR, dt[pos].getInt());
 			calendar.set(Calendar.MONTH, dt[pos + 2].getInt() - 1);
 			calendar.set(Calendar.DAY_OF_MONTH, dt[pos + 4].getInt());
 			parsePos.setIndex(pos + 5);
 			return true;
 		}
-		if (pos + 3 < dt.length && dt[pos].is(ClockToken.MONTH)
-				&& dt[pos + 1].isUNumber() && dt[pos + 2].is(',')
+		if (pos + 3 < dt.length && dt[pos].is(ClockToken.MONTH) && dt[pos + 1].isUNumber() && dt[pos + 2].is(',')
 				&& dt[pos + 3].isUNumber()) {
 			calendar.set(Calendar.DAY_OF_MONTH, dt[pos + 1].getInt());
 			calendar.set(Calendar.MONTH, dt[pos].getInt());
@@ -956,30 +913,26 @@ public class ClockCmd implements Command {
 			parsePos.setIndex(pos + 4);
 			return true;
 		}
-		if (pos + 2 < dt.length && dt[pos].isUNumber() && dt[pos + 1].is('/')
-				&& dt[pos + 2].isUNumber()) {
+		if (pos + 2 < dt.length && dt[pos].isUNumber() && dt[pos + 1].is('/') && dt[pos + 2].isUNumber()) {
 			calendar.set(Calendar.DAY_OF_MONTH, dt[pos + 2].getInt());
 			calendar.set(Calendar.MONTH, dt[pos].getInt() - 1);
 			parsePos.setIndex(pos + 3);
 			return true;
 		}
-		if (pos + 2 < dt.length && dt[pos].isUNumber()
-				&& dt[pos + 1].is(ClockToken.MONTH) && dt[pos + 2].isUNumber()) {
+		if (pos + 2 < dt.length && dt[pos].isUNumber() && dt[pos + 1].is(ClockToken.MONTH) && dt[pos + 2].isUNumber()) {
 			calendar.set(Calendar.DAY_OF_MONTH, dt[pos].getInt());
 			calendar.set(Calendar.MONTH, dt[pos + 1].getInt());
 			calendar.set(Calendar.YEAR, dt[pos + 2].getInt());
 			parsePos.setIndex(pos + 3);
 			return true;
 		}
-		if (pos + 1 < dt.length && dt[pos].is(ClockToken.MONTH)
-				&& dt[pos + 1].isUNumber()) {
+		if (pos + 1 < dt.length && dt[pos].is(ClockToken.MONTH) && dt[pos + 1].isUNumber()) {
 			calendar.set(Calendar.DAY_OF_MONTH, dt[pos + 1].getInt());
 			calendar.set(Calendar.MONTH, dt[pos].getInt());
 			parsePos.setIndex(pos + 2);
 			return true;
 		}
-		if (pos + 1 < dt.length && dt[pos].isUNumber()
-				&& dt[pos + 1].is(ClockToken.MONTH)) {
+		if (pos + 1 < dt.length && dt[pos].isUNumber() && dt[pos + 1].is(ClockToken.MONTH)) {
 			calendar.set(Calendar.DAY_OF_MONTH, dt[pos].getInt());
 			calendar.set(Calendar.MONTH, dt[pos + 1].getInt());
 			parsePos.setIndex(pos + 2);
@@ -1108,14 +1061,12 @@ public class ClockCmd implements Command {
 	{
 		int pos = parsePos.getIndex();
 
-		if (pos + 2 < dt.length && dt[pos].is('+') && dt[pos + 1].isUNumber()
-				&& dt[pos + 2].isUnit()) {
+		if (pos + 2 < dt.length && dt[pos].is('+') && dt[pos + 1].isUNumber() && dt[pos + 2].isUnit()) {
 			diff.addUnit(dt[pos + 2], dt[pos + 1].getInt());
 			parsePos.setIndex(pos + 3);
 			return true;
 		}
-		if (pos + 2 < dt.length && dt[pos].is('-') && dt[pos + 1].isUNumber()
-				&& dt[pos + 2].isUnit()) {
+		if (pos + 2 < dt.length && dt[pos].is('-') && dt[pos + 1].isUNumber() && dt[pos + 2].isUnit()) {
 			diff.addUnit(dt[pos + 2], -dt[pos + 1].getInt());
 			parsePos.setIndex(pos + 3);
 			return true;
@@ -1124,14 +1075,13 @@ public class ClockCmd implements Command {
 			diff.addUnit(dt[pos + 1], dt[pos].getInt());
 			parsePos.setIndex(pos + 2);
 			return true;
-		} else if (pos + 2 < dt.length && dt[pos].is(ClockToken.NEXT)
-				&& dt[pos + 1].isUNumber() && dt[pos + 2].isUnit()) {
+		} else if (pos + 2 < dt.length && dt[pos].is(ClockToken.NEXT) && dt[pos + 1].isUNumber()
+				&& dt[pos + 2].isUnit()) {
 			diff.addUnit(dt[pos + 2], dt[pos + 1].getInt());
 			parsePos.setIndex(pos + 3);
 			return true;
 		}
-		if (pos + 1 < dt.length && dt[pos].is(ClockToken.NEXT)
-				&& dt[pos + 1].isUnit()) {
+		if (pos + 1 < dt.length && dt[pos].is(ClockToken.NEXT) && dt[pos + 1].isUnit()) {
 			diff.addUnit(dt[pos + 1]);
 			parsePos.setIndex(pos + 2);
 			return true;
@@ -1171,14 +1121,13 @@ public class ClockCmd implements Command {
 	{
 		int pos = parsePos.getIndex();
 
-		if (pos + 2 < dt.length && dt[pos].is(ClockToken.NEXT)
-				&& dt[pos + 1].isUNumber() && dt[pos + 2].is(ClockToken.MONTH)) {
+		if (pos + 2 < dt.length && dt[pos].is(ClockToken.NEXT) && dt[pos + 1].isUNumber()
+				&& dt[pos + 2].is(ClockToken.MONTH)) {
 			diff.addOrdMonth(dt[pos + 2].getInt(), dt[pos + 1].getInt());
 			parsePos.setIndex(pos + 3);
 			return true;
 		}
-		if (pos + 1 < dt.length && dt[pos].is(ClockToken.NEXT)
-				&& dt[pos + 1].is(ClockToken.MONTH)) {
+		if (pos + 1 < dt.length && dt[pos].is(ClockToken.NEXT) && dt[pos + 1].is(ClockToken.MONTH)) {
 			diff.addOrdMonth(dt[pos + 1].getInt(), 1);
 			parsePos.setIndex(pos + 2);
 			return true;
@@ -1214,10 +1163,8 @@ public class ClockCmd implements Command {
 	{
 		int pos = parsePos.getIndex();
 
-		if (pos + 6 < dt.length && dt[pos].isIsoBase()
-				&& dt[pos + 1].is(ClockToken.ZONE) && dt[pos + 2].isUNumber()
-				&& dt[pos + 3].is(':') && dt[pos + 4].isUNumber()
-				&& dt[pos + 5].is(':') && dt[pos + 6].isUNumber()) {
+		if (pos + 6 < dt.length && dt[pos].isIsoBase() && dt[pos + 1].is(ClockToken.ZONE) && dt[pos + 2].isUNumber()
+				&& dt[pos + 3].is(':') && dt[pos + 4].isUNumber() && dt[pos + 5].is(':') && dt[pos + 6].isUNumber()) {
 			calendar.set(Calendar.DAY_OF_MONTH, dt[pos].getInt() % 100);
 			calendar.set(Calendar.MONTH, (dt[pos].getInt() % 10000) / 100 - 1);
 			calendar.set(Calendar.YEAR, dt[pos].getInt() / 10000);
@@ -1227,10 +1174,8 @@ public class ClockCmd implements Command {
 			parsePos.setIndex(pos + 7);
 			return true;
 		}
-		if (pos + 2 < dt.length && dt[pos].isIsoBase()
-				&& dt[pos + 1].is(ClockToken.ZONE)
-				&& dt[pos + 1].getZone().getRawOffset() == -7 * MILLIS_PER_HOUR
-				&& dt[pos + 2].isIsoBase()) {
+		if (pos + 2 < dt.length && dt[pos].isIsoBase() && dt[pos + 1].is(ClockToken.ZONE)
+				&& dt[pos + 1].getZone().getRawOffset() == -7 * MILLIS_PER_HOUR && dt[pos + 2].isIsoBase()) {
 			calendar.set(Calendar.DAY_OF_MONTH, dt[pos].getInt() % 100);
 			calendar.set(Calendar.MONTH, (dt[pos].getInt() % 10000) / 100 - 1);
 			calendar.set(Calendar.YEAR, dt[pos].getInt() / 10000);
@@ -1240,8 +1185,7 @@ public class ClockCmd implements Command {
 			parsePos.setIndex(pos + 3);
 			return true;
 		}
-		if (pos + 1 < dt.length && dt[pos].isIsoBase()
-				&& dt[pos + 1].isIsoBase()) {
+		if (pos + 1 < dt.length && dt[pos].isIsoBase() && dt[pos + 1].isIsoBase()) {
 			calendar.set(Calendar.DAY_OF_MONTH, dt[pos].getInt() % 100);
 			calendar.set(Calendar.MONTH, (dt[pos].getInt() % 10000) / 100 - 1);
 			calendar.set(Calendar.YEAR, dt[pos].getInt() / 10000);
@@ -1280,12 +1224,10 @@ public class ClockCmd implements Command {
 	{
 		int pos = parsePos.getIndex();
 
-		if (pos + 3 < dt.length && dt[pos].is(ClockToken.STARDATE)
-				&& dt[pos + 1].isUNumber() && dt[pos + 2].is('.')
+		if (pos + 3 < dt.length && dt[pos].is(ClockToken.STARDATE) && dt[pos + 1].isUNumber() && dt[pos + 2].is('.')
 				&& dt[pos + 3].isUNumber()) {
 			int trekYear = dt[pos + 1].getInt() / 1000 + 2323 - 377;
-			int trekDay = 1 + ((dt[pos + 1].getInt() % 1000) * (calendar
-					.isLeapYear(trekYear) ? 366 : 365)) / 1000;
+			int trekDay = 1 + ((dt[pos + 1].getInt() % 1000) * (calendar.isLeapYear(trekYear) ? 366 : 365)) / 1000;
 			int trekSeconds = dt[pos + 3].getInt() * 144 * 60;
 			calendar.set(Calendar.YEAR, trekYear);
 			calendar.set(Calendar.DAY_OF_YEAR, trekDay);
@@ -1417,8 +1359,7 @@ public class ClockCmd implements Command {
 			if (Character.isDigit(c)) {
 				int number = 0;
 				int count = 0;
-				while (pos < in.length()
-						&& Character.isDigit(c = in.charAt(pos))) {
+				while (pos < in.length() && Character.isDigit(c = in.charAt(pos))) {
 					number = 10 * number + c - '0';
 					pos++;
 					count++;
@@ -1520,8 +1461,7 @@ public class ClockCmd implements Command {
 		zones = symbols.getZoneStrings();
 
 		for (ix = 0; ix < zones.length; ix++) {
-			if (withoutDots.equalsIgnoreCase(zones[ix][2])
-					|| withoutDots.equalsIgnoreCase(zones[ix][4])) {
+			if (withoutDots.equalsIgnoreCase(zones[ix][2]) || withoutDots.equalsIgnoreCase(zones[ix][4])) {
 				TimeZone zone = TimeZone.getTimeZone(zones[ix][0]);
 				return new ClockToken(ClockToken.ZONE, zone);
 			}
@@ -1628,8 +1568,7 @@ public class ClockCmd implements Command {
 	// GMT (in
 	// hours).
 	) {
-		String tzNames[] = TimeZone
-				.getAvailableIDs(rawOffset * MILLIS_PER_HOUR);
+		String tzNames[] = TimeZone.getAvailableIDs(rawOffset * MILLIS_PER_HOUR);
 
 		if (tzNames.length > 0) {
 			TimeZone zone = TimeZone.getTimeZone(tzNames[0]);
