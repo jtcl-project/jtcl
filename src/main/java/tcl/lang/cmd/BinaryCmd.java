@@ -140,7 +140,9 @@ public class BinaryCmd implements Command {
 				case 'i':
 				case 'I':
 				case 'f':
-				case 'd': {
+				case 'd':
+				case 'w':
+				case 'W': {
 					if (arg >= argv.length) {
 						missingArg(interp);
 					}
@@ -155,6 +157,10 @@ public class BinaryCmd implements Command {
 					case 'i':
 					case 'I':
 						size = 4;
+						break;
+					case 'w':
+					case 'W':
+						size = 8;
 						break;
 					case 'f':
 						size = 4;
@@ -390,7 +396,9 @@ public class BinaryCmd implements Command {
 				case 'i':
 				case 'I':
 				case 'f':
-				case 'd': {
+				case 'd':
+				case 'w':
+				case 'W': {
 					TclObject[] listv;
 
 					if (count == BINARY_NOCOUNT) {
@@ -588,7 +596,9 @@ public class BinaryCmd implements Command {
 				case 'i':
 				case 'I':
 				case 'f':
-				case 'd': {
+				case 'd':
+				case 'w': 
+				case 'W': {
 					if (arg >= argv.length) {
 						missingArg(interp);
 					}
@@ -608,6 +618,10 @@ public class BinaryCmd implements Command {
 						size = 4;
 						break;
 					case 'd':
+						size = 8;
+						break;
+					case 'w':
+					case 'W':
 						size = 8;
 						break;
 					}
@@ -810,26 +824,51 @@ public class BinaryCmd implements Command {
 				// Integer.toHexString(b & 0xff));
 			}
 		} else {
-			int value = TclInteger.getInt(interp, src);
-
-			if (type == 'c') {
+			long value = TclInteger.getLong(interp, src);
+			switch (type) {
+			case 'c':
 				resultBytes[cursor++] = (byte) value;
-			} else if (type == 's') {
+				break;
+			case 's':
 				resultBytes[cursor++] = (byte) value;
 				resultBytes[cursor++] = (byte) (value >> 8);
-			} else if (type == 'S') {
+				break;
+			case 'S':
 				resultBytes[cursor++] = (byte) (value >> 8);
 				resultBytes[cursor++] = (byte) value;
-			} else if (type == 'i') {
+				break;
+			case 'i':
 				resultBytes[cursor++] = (byte) value;
 				resultBytes[cursor++] = (byte) (value >> 8);
 				resultBytes[cursor++] = (byte) (value >> 16);
 				resultBytes[cursor++] = (byte) (value >> 24);
-			} else if (type == 'I') {
+				break;
+			case 'I':
 				resultBytes[cursor++] = (byte) (value >> 24);
 				resultBytes[cursor++] = (byte) (value >> 16);
 				resultBytes[cursor++] = (byte) (value >> 8);
 				resultBytes[cursor++] = (byte) value;
+				break;
+			case 'w':
+				resultBytes[cursor++] = (byte) value;
+				resultBytes[cursor++] = (byte) (value >> 8);
+				resultBytes[cursor++] = (byte) (value >> 16);
+				resultBytes[cursor++] = (byte) (value >> 24);
+				resultBytes[cursor++] = (byte) (value >> 32);
+				resultBytes[cursor++] = (byte) (value >> 40);
+				resultBytes[cursor++] = (byte) (value >> 48);
+				resultBytes[cursor++] = (byte) (value >> 56);
+				break;
+			case 'W':
+				resultBytes[cursor++] = (byte) (value >> 56);
+				resultBytes[cursor++] = (byte) (value >> 48);
+				resultBytes[cursor++] = (byte) (value >> 40);
+				resultBytes[cursor++] = (byte) (value >> 32);
+				resultBytes[cursor++] = (byte) (value >> 24);
+				resultBytes[cursor++] = (byte) (value >> 16);
+				resultBytes[cursor++] = (byte) (value >> 8);
+				resultBytes[cursor++] = (byte) value;
+				break;
 			}
 		}
 		return cursor;
@@ -871,6 +910,20 @@ public class BinaryCmd implements Command {
 		case 'I': {
 			int value = (src[pos + 3] & 0xff) + ((src[pos + 2] & 0xff) << 8) + ((src[pos + 1] & 0xff) << 16)
 					+ ((src[pos] & 0xff) << 24);
+			return TclInteger.newInstance(value);
+		}
+		case 'w': {
+			long value = (src[pos] & 0xffL) + ((src[pos + 1] & 0xffL) << 8) + ((src[pos + 2] & 0xffL) << 16)
+					+ ((src[pos + 3] & 0xffL) << 24) 
+					+  ((src[pos+4] & 0xffL) << 32) + ((src[pos + 5] & 0xffL) << 40) + ((src[pos + 6] & 0xffL) << 48)
+					+ ((src[pos + 7] & 0xffL) << 56);
+			return TclInteger.newInstance(value);
+		}
+		case 'W': {
+			long value = (src[pos + 7] & 0xffL) + ((src[pos + 6] & 0xffL) << 8) + ((src[pos + 5] & 0xffL) << 16)
+			+ ((src[pos + 4] & 0xffL) << 24)
+			+  ((src[pos + 3] & 0xffL) << 32) + ((src[pos + 2] & 0xffL) << 40) + ((src[pos + 1] & 0xffL) << 48)
+			+ ((src[pos] & 0xffL) << 56);
 			return TclInteger.newInstance(value);
 		}
 		case 'f': {
