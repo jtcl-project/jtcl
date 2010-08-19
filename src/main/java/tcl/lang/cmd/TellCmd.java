@@ -54,7 +54,7 @@ public class TellCmd implements Command {
 		}
 
 		try {
-			interp.setResult((int) chan.tell());
+			interp.setResult(chan.tell());
 		} catch (IOException e) {
 			throw new TclException(interp, "Error in TellCmd");
 		}
