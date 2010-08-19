@@ -91,6 +91,7 @@ public class FormatCmd implements Command {
 		// been seen.
 		boolean useShort; // Value to be printed is short
 		// (half word).
+		boolean useLong;  // Value to be printed is long
 		boolean precisionSet; // Used for f, e, and E conversions
 		boolean cont; // Used for phase 3
 
@@ -112,6 +113,7 @@ public class FormatCmd implements Command {
 			fmtFlags = phase = width = 0;
 			noPercent = true;
 			xpgSet = precisionSet = useShort = false;
+			useLong = false;
 			precision = -1;
 
 			// Append all characters to sbuf that are not used for the
@@ -298,8 +300,8 @@ public class FormatCmd implements Command {
 				} else {
 					// Format field had a '.' without an integer or '*'
 					// preceeding it (eg %2.d or %2.-5d)
-
-					errorBadField(interp, format[fmtIndex]);
+					precision = 0;
+					//errorBadField(interp, format[fmtIndex]);
 				}
 			}
 
@@ -313,8 +315,7 @@ public class FormatCmd implements Command {
 			} else if (format[fmtIndex] == 'l') {
 				fmtIndex++;
 				checkOverFlow(interp, format, fmtIndex);
-
-				// 'l' is ignored, but should still be processed.
+				useLong = true;
 			}
 
 			if ((argIndex < 2) || (argIndex >= argv.length)) {
@@ -352,31 +353,16 @@ public class FormatCmd implements Command {
 			case 'x':
 			case 'X':
 			case 'i': {
-				if (index == 'u') {
-					// Since Java does not provide unsigned ints we need to
-					// make our own. If the value is negative we need to
-					// clear out all of the leading bits from the 33rd bit
-					// and on. The result is a long value equal to that
-					// of an unsigned int.
-
-					lngValue = (long) TclInteger.getInt(interp, argv[argIndex]);
-					if (lngValue < 0) {
-						lngValue = (lngValue << 32);
-						lngValue = (lngValue >>> 32);
-					}
-				} else {
-					fmtFlags |= SIGNED_VALUE;
-					lngValue = (long) TclInteger.getInt(interp, argv[argIndex]);
-				}
+				lngValue = TclInteger.getLong(interp, argv[argIndex]);
+				if (index != 'u') fmtFlags |= SIGNED_VALUE;
 
 				// If the useShort option has been selected, we need
 				// to clear all but the first 16 bits.
 
 				if (useShort) {
-					lngValue = (lngValue << 48);
-					lngValue = (lngValue >> 48);
-				}
-
+					lngValue &= 0xFFFFL;
+				} 
+				
 				if (index == 'o') {
 					sbuf.append(cvtLngToStr(lngValue, width, precision,
 							fmtFlags, 8, "01234567".toCharArray(), "0"));
@@ -904,11 +890,7 @@ public class FormatCmd implements Command {
 		String right = "";
 		StringBuffer sbuf = new StringBuffer(100);
 
-		if (precision < 0) {
-			precision = 0;
-		}
-
-		if ((precision != 0) && (precision < strValue.length())) {
+		if (precision >= 0 && precision < strValue.length()) {
 			strValue = strValue.substring(0, precision);
 		}
 
