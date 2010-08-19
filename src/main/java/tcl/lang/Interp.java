@@ -1171,136 +1171,117 @@ public class Interp extends EventuallyFreed {
 	 *-----------------------------------------------------------------
 	 */
 
-	/*
-	 * ----------------------------------------------------------------------
+	
+	/**
+	 * Set the value of a variable
 	 * 
-	 * setVar --
-	 * 
-	 * Sets a variable whose name and value are stored in TclObject.
-	 * 
-	 * Results: The TclObject, as it was set is returned.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param nameObj
+	 *            name of variable, array or array element
+	 * @param value
+	 *            new value for variable
+	 * @param flags
+	 *            any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY, TCL.APPEND_VALUE,
+	 *            or TCL.LIST_ELEMENT.
+	 * @return new value for variable
+	 * @throws TclException
 	 */
-
-	public final TclObject setVar(TclObject nameObj, // Name of variable, array,
-														// or array element
-			// to set.
-			TclObject value, // New value for variable.
-			int flags) // Various flags that tell how to set value:
-			// any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY,
-			// TCL.APPEND_VALUE, or TCL.LIST_ELEMENT.
+	public final TclObject setVar(TclObject nameObj,
+			TclObject value,
+			int flags) 
 			throws TclException {
 		return Var.setVar(this, nameObj.toString(), null, value,
 				(flags | TCL.LEAVE_ERR_MSG));
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	
+	/**
+	 * Set the value of a variable
 	 * 
-	 * setVar --
-	 * 
-	 * Set the value of a variable.
-	 * 
-	 * Results: Returns the new value of the variable.
-	 * 
-	 * Side effects: May trigger traces.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param name
+	 *            name of variable, array or array element
+	 * @param value
+	 *            new value for variable
+	 * @param flags
+	 *            any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY, TCL.APPEND_VALUE,
+	 *            or TCL.LIST_ELEMENT.
+	 * @return new value for variable
+	 * @throws TclException
 	 */
-
-	public final TclObject setVar(String name, // Name of variable, array, or
-												// array element
-			// to set.
-			TclObject value, // New value for variable.
-			int flags) // Various flags that tell how to set value:
-			// any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY,
-			// TCL.APPEND_VALUE, or TCL.LIST_ELEMENT.
+	public final TclObject setVar(String name, 
+			TclObject value, 
+			int flags)
 			throws TclException {
 		return Var.setVar(this, name, null, value, (flags | TCL.LEAVE_ERR_MSG));
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * setVar --
-	 * 
-	 * Set the value of a variable.
-	 * 
-	 * Results: Returns the new value of the variable.
-	 * 
-	 * Side effects: May trigger traces.
-	 * 
-	 * ----------------------------------------------------------------------
-	 */
 
-	public final TclObject setVar(String name1, // If name2 is null, this is
-												// name of a scalar
-			// variable. Otherwise it is the name of an
-			// array.
-			String name2, // Name of an element within an array, or
-			// null.
-			TclObject value, // New value for variable.
-			int flags) // Various flags that tell how to set value:
-			// any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY,
-			// TCL.APPEND_VALUE or TCL.LIST_ELEMENT.
+	/**
+	 * Set the value of a variable
+	 * 
+	 * @param name1
+	 *            name of variable if name2 is null, or an array
+	 * @param name2
+	 *            name of an array element, or null
+	 * @param value
+	 *            new value for variable
+	 * @param flags
+	 *            any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY, TCL.APPEND_VALUE,
+	 *            or TCL.LIST_ELEMENT.
+	 * @return new value for variable
+	 * @throws TclException
+	 */
+	public final TclObject setVar(String name1, 
+			String name2, 
+			TclObject value,
+			int flags) 
 			throws TclException {
 		return Var.setVar(this, name1, name2, value,
 				(flags | TCL.LEAVE_ERR_MSG));
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * setVar --
-	 * 
-	 * Set the value of a variable.
-	 * 
-	 * Results: Returns the new value of the variable.
-	 * 
-	 * Side effects: May trigger traces.
-	 * 
-	 * ----------------------------------------------------------------------
-	 */
 
-	public final TclObject setVar(String name, // Name of variable, array, or
-												// array element
-			// to set.
-			String strValue, // New value for variable.
-			int flags) // Various flags that tell how to set value:
-			// any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY,
-			// TCL.APPEND_VALUE, or TCL.LIST_ELEMENT.
+	/**
+	 * Set the value of a variable
+	 * 
+	 * @param name
+	 *            name of variable, array or array element
+	 * @param strValue
+	 *            new value for variable
+	 * @param flags
+	 *            any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY, TCL.APPEND_VALUE,
+	 *            or TCL.LIST_ELEMENT.
+	 * @return new value for variable
+	 * @throws TclException
+	 */
+	public final TclObject setVar(String name,
+			String strValue, 
+			int flags) 
 			throws TclException {
 		return Var.setVar(this, name, null, checkCommonString(strValue),
 				(flags | TCL.LEAVE_ERR_MSG));
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	
+	/**
+	 * Set a variable to the value of a String
 	 * 
-	 * setVar --
-	 * 
-	 * Set a variable to the value in a String argument.
-	 * 
-	 * Results: Returns the new value of the variable.
-	 * 
-	 * Side effects: May trigger traces.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param name1
+	 *            If name2 is null, this is the name of a scalar variable;
+	 *            otherwise it is the name of an array
+	 * @param name2
+	 *            name of element within an array, or null
+	 * @param strValue
+	 *            new value for variable
+	 * @param flags
+	 *            any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY, TCL.APPEND_VALUE,
+	 *            or TCL.LIST_ELEMENT.
+	 * @return the new value of the variable
+	 * @throws TclException
 	 */
-
-	public final TclObject setVar(String name1, // If name2 is null, this is
-												// name of a scalar
-			// variable. Otherwise it is the name of an
-			// array.
-			String name2, // Name of an element within an array, or
-			// null.
-			String strValue, // New value for variable.
-			int flags) // Various flags that tell how to set value:
-			// any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY,
-			// TCL.APPEND_VALUE, or TCL.LIST_ELEMENT.
+	public final TclObject setVar(String name1, 
+			String name2, 
+			String strValue, 
+			int flags) 
 			throws TclException {
 		return Var.setVar(this, name1, name2, checkCommonString(strValue),
 				(flags | TCL.LEAVE_ERR_MSG));
@@ -1308,12 +1289,18 @@ public class Interp extends EventuallyFreed {
 
 	
 	/**
-	 *  Set a variable to the value in a long argument.
-	 *  
-	 * @param name1 name of scalar variable, or name of array if name2 is non-null
-	 * @param name2 Name of element within an array, or null if setting a scalar
-	 * @param intValue new value for avariable
-	 * @param flags Various flags that tell how to set valu any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY, TCL.APPEND_VALUE, or TCL.LIST_ELEMENT.
+	 * Set a variable to the value in a long argument.
+	 * 
+	 * @param name1
+	 *            name of scalar variable, or name of array if name2 is non-null
+	 * @param name2
+	 *            Name of element within an array, or null if setting a scalar
+	 * @param intValue
+	 *            new value for avariable
+	 * @param flags
+	 *            Various flags that tell how to set valu any of
+	 *            TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY, TCL.APPEND_VALUE, or
+	 *            TCL.LIST_ELEMENT.
 	 * @return Variable with new value
 	 * 
 	 * @throws TclException
@@ -1324,79 +1311,70 @@ public class Interp extends EventuallyFreed {
 				(flags | TCL.LEAVE_ERR_MSG));
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * setVar --
-	 * 
-	 * Set a variable to the value in a double argument.
-	 * 
-	 * Results: Returns the new value of the variable.
-	 * 
-	 * Side effects: May trigger traces.
-	 * 
-	 * ----------------------------------------------------------------------
-	 */
 
-	public final TclObject setVar(String name1, // If name2 is null, this is
-												// name of a scalar
-			// variable. Otherwise it is the name of an
-			// array.
-			String name2, // Name of an element within an array, or
-			// null.
-			double dValue, // New value for variable.
-			int flags) // Various flags that tell how to set value:
-			// any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY,
-			// TCL.APPEND_VALUE, or TCL.LIST_ELEMENT.
+	/**
+	 * Set a variable to the value of a double
+	 * 
+	 * @param name1
+	 *            If name2 is null, this is the name of a scalar variable;
+	 *            otherwise it is the name of an array
+	 * @param name2
+	 *            name of element within an array, or null
+	 * @param dValue
+	 *            new value for variable
+	 * @param flags
+	 *            any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY, TCL.APPEND_VALUE,
+	 *            or TCL.LIST_ELEMENT.
+	 * @return the new value of the variable
+	 * @throws TclException
+	 */
+	public final TclObject setVar(String name1,
+			String name2, 
+			double dValue, 
+			int flags) 
 			throws TclException {
 		return Var.setVar(this, name1, name2, checkCommonDouble(dValue),
 				(flags | TCL.LEAVE_ERR_MSG));
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * setVar --
-	 * 
-	 * Set a variable to the value in a boolean argument.
-	 * 
-	 * Results: Returns the new value of the variable.
-	 * 
-	 * Side effects: May trigger traces.
-	 * 
-	 * ----------------------------------------------------------------------
-	 */
 
-	public final TclObject setVar(String name1, // If name2 is null, this is
-												// name of a scalar
-			// variable. Otherwise it is the name of an
-			// array.
-			String name2, // Name of an element within an array, or
-			// null.
-			boolean bValue, // New value for variable.
-			int flags) // Various flags that tell how to set value:
-			// any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY,
-			// TCL.APPEND_VALUE, or TCL.LIST_ELEMENT.
+	/**
+	 * Set a variable to the value of a boolean
+	 * 
+	 * @param name1
+	 *            If name2 is null, this is the name of a scalar variable;
+	 *            otherwise it is the name of an array
+	 * @param name2
+	 *            name of element within an array, or null
+	 * @param bValue
+	 *            new value for variable
+	 * @param flags
+	 *            any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY, TCL.APPEND_VALUE,
+	 *            or TCL.LIST_ELEMENT.
+	 * @return the new value of the variable
+	 * @throws TclException
+	 */
+	public final TclObject setVar(String name1,
+			String name2,
+			boolean bValue, 
+			int flags) 
 			throws TclException {
 		return Var.setVar(this, name1, name2, checkCommonBoolean(bValue),
 				(flags | TCL.LEAVE_ERR_MSG));
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	
+	/**
+	 * Get the value of a variable. Side effects: May trigger traces.
 	 * 
-	 * getVar --
-	 * 
-	 * Get the value of a variable.
-	 * 
-	 * Results: Returns the value of the variable. If the variable is not
-	 * defined a TclException will be raised.
-	 * 
-	 * Side effects: May trigger traces.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param nameObj
+	 *            the name of a variable, array or array element
+	 * @param flags
+	 *            TCL.GLOBAL_ONLY or TCL.NAMESPACE_ONLY.
+	 * @return the value of the variable.
+	 * @throws TclException
+	 *             If the variable is not
 	 */
-
 	public final TclObject getVar(TclObject nameObj, // The name of a variable,
 														// array, or array
 			// element.
@@ -1407,126 +1385,94 @@ public class Interp extends EventuallyFreed {
 				(flags | TCL.LEAVE_ERR_MSG));
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
+	 * Get the value of a variable. Side effects: May trigger traces.
 	 * 
-	 * getVar --
-	 * 
-	 * Get the value of a variable.
-	 * 
-	 * Results: Returns the value of the variable. If the variable is not
-	 * defined a TclException will be raised.
-	 * 
-	 * Side effects: May trigger traces.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param name
+	 *            the name of a variable, array or array element
+	 * @param flags
+	 *            TCL.GLOBAL_ONLY or TCL.NAMESPACE_ONLY.
+	 * @return the value of the variable.
+	 * @throws TclException
+	 *             If the variable is not
 	 */
-
-	public final TclObject getVar(String name, // The name of a variable, array,
-												// or array
-			// element.
-			int flags) // Various flags that tell how to get value:
-			// any of TCL.GLOBAL_ONLY or TCL.NAMESPACE_ONLY.
+	public final TclObject getVar(String name, 
+			int flags) 
 			throws TclException {
 		return Var.getVar(this, name, null, (flags | TCL.LEAVE_ERR_MSG));
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
+	 * Get the value of a variable. Side effects: May trigger traces.
 	 * 
-	 * getVar --
-	 * 
-	 * Get the value of a variable.
-	 * 
-	 * Results: Returns the value of the variable. If the variable is not
-	 * defined a TclException will be raised.
-	 * 
-	 * Side effects: May trigger traces.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param name1
+	 *            if name2 is null, this is the name of a scalar. Otherwise, it
+	 *            is the name of an array
+	 * @param name2
+	 *            name of an element within an array, or null
+	 * @param flags
+	 *            TCL.GLOBAL_ONLY or TCL.NAMESPACE_ONLY.
+	 * @return the value of the variable.
+	 * @throws TclException
+	 *             If the variable is not
 	 */
 
-	public final TclObject getVar(String name1, // If name2 is null, this is
-												// name of a scalar
-			// variable. Otherwise it is the name of an
-			// array.
-			String name2, // Name of an element within an array, or
-			// null.
-			int flags) // Flags that tell how to get value:
-			// TCL.GLOBAL_ONLY or TCL.NAMESPACE_ONLY.
+	public final TclObject getVar(String name1, 
+			String name2, 
+			int flags) 
 			throws TclException {
 		return Var.getVar(this, name1, name2, (flags | TCL.LEAVE_ERR_MSG));
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	
+	/**
+	 * Unset a variable. May trigget traces.
 	 * 
-	 * unsetVar --
-	 * 
-	 * Unset a variable.
-	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: May trigger traces.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param nameObj
+	 *            name of a variable, array or array element
+	 * @param flags
+	 *            any of TCL.GLOBAL_ONLY or TCL.NAMESPACE_ONLY.
+	 * @throws TclException
 	 */
-
-	public final void unsetVar(TclObject nameObj, // The name of a variable,
-													// array, or array
-			// element.
-			int flags) // Various flags that tell how to get value:
-			// any of TCL.GLOBAL_ONLY or TCL.NAMESPACE_ONLY.
+	public final void unsetVar(TclObject nameObj, 
+			int flags)
 			throws TclException {
 		Var.unsetVar(this, nameObj.toString(), null,
 				(flags | TCL.LEAVE_ERR_MSG));
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	
+	/**
+	 * Unset a variable. May trigget traces.
 	 * 
-	 * unsetVar --
-	 * 
-	 * Unset a variable.
-	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: May trigger traces.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param name
+	 *            name of a variable, array or array element
+	 * @param flags
+	 *            any of TCL.GLOBAL_ONLY or TCL.NAMESPACE_ONLY.
+	 * @throws TclException
 	 */
-
-	public final void unsetVar(String name, // The name of a variable, array, or
-											// array
-			// element.
-			int flags) // Various flags that tell how to get value:
-			// any of TCL.GLOBAL_ONLY or TCL.NAMESPACE_ONLY.
+	public final void unsetVar(String name,
+			int flags)
 			throws TclException {
 		Var.unsetVar(this, name, null, (flags | TCL.LEAVE_ERR_MSG));
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	
+	/**
+	 * Unset a variable. May trigget traces.
 	 * 
-	 * unsetVar --
-	 * 
-	 * Unset a variable.
-	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: May trigger traces.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param name1
+	 *            if name2 is null, this is the name of a scalar. Otherwise it
+	 *            is the name of an array
+	 * @param name2
+	 *            name of an element within an array, or null
+	 * @param flags
+	 *            any of TCL.GLOBAL_ONLY or TCL.NAMESPACE_ONLY.
+	 * @throws TclException
 	 */
-
-	public final void unsetVar(String name1, // If name2 is null, this is name
-												// of a scalar
-			// variable. Otherwise it is the name of an
-			// array.
-			String name2, // Name of an element within an array, or
-			// null.
-			int flags) // Flags that tell how to get value:
-			// TCL.GLOBAL_ONLY or TCL.NAMESPACE_ONLY.
+	public final void unsetVar(String name1, 
+			String name2,
+			int flags) 
 			throws TclException {
 		Var.unsetVar(this, name1, name2, (flags | TCL.LEAVE_ERR_MSG));
 	}
