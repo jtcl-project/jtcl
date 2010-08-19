@@ -38,11 +38,21 @@ import tcl.lang.TclString;
  */
 
 public class EncodingCmd implements Command {
-	// Defaults to "file.encoding" property
 
+	/**
+	 * The encoding value set and returned by 'encoding system'
+	 */
 	public static String systemTclEncoding = null;
+	/**
+	 * The java equivalent name (either java.nio or java.io/java.lang) of the value
+	 * returned fomr 'encoding system'
+	 */
 	public static String systemJavaEncoding = null;
 
+	/**
+	 * Encapsulates both the tcl and the java
+	 * name for an encoding
+	 */
 	static class EncodingMap {
 		String tclName;
 		String javaName;
@@ -55,9 +65,14 @@ public class EncodingCmd implements Command {
 		}
 	}
 
-	// Supported encodings
 
-	static Hashtable encodeHash;
+	/**
+	 * Hashtable of all supported encodings, containing both java names
+	 * and tcl names.  "tcl," is prepended to Tcl names for the index; "java,"
+	 * is prepended to the java names.  The java names can be either the old-style
+	 * java.io/java.lang names, or the new style java.nio names.
+	 */
+	static Hashtable<String, EncodingMap> encodeHash;
 
 	static EncodingMap[] encodings = { new EncodingMap("identity", "UTF8", 1),
 			new EncodingMap("utf-8", "UTF8", 1),
@@ -101,16 +116,22 @@ public class EncodingCmd implements Command {
 			new EncodingMap("iso2022", "ISO2022JP", -1),
 			new EncodingMap("iso2022-jp", "ISO2022JP", -1),
 			new EncodingMap("iso2022-kr", "ISO2022KR", -1),
-			new EncodingMap("iso8859-1", "ISO8859_1", 1),
-			new EncodingMap("ansi_x3.4-1968", "ISO8859_1", 1),
-			new EncodingMap("iso8859-2", "ISO8859_2", 1),
-			new EncodingMap("iso8859-3", "ISO8859_3", 1),
-			new EncodingMap("iso8859-4", "ISO8859_4", 1),
-			new EncodingMap("iso8859-5", "ISO8859_5", 1),
-			new EncodingMap("iso8859-6", "ISO8859_6", 1),
-			new EncodingMap("iso8859-7", "ISO8859_7", 1),
-			new EncodingMap("iso8859-8", "ISO8859_8", 1),
-			new EncodingMap("iso8859-9", "ISO8859_9", 1),
+			new EncodingMap("iso8859-1", "ISO-8859-1", 1),
+			new EncodingMap("ansi_x3.4-1968", "ISO-8859-1", 1),
+			new EncodingMap("iso8859-2", "ISO-8859-2", 1),
+			new EncodingMap("iso8859-3", "ISO-8859-3", 1),
+			new EncodingMap("iso8859-4", "ISO-8859-4", 1),
+			new EncodingMap("iso8859-5", "ISO-8859-5", 1),
+			new EncodingMap("iso8859-6", "ISO-8859-6", 1),
+			new EncodingMap("iso8859-7", "ISO-8859-7", 1),
+			new EncodingMap("iso8859-8", "ISO-8859-8", 1),
+			new EncodingMap("iso8859-9", "ISO-8859-9", 1),
+			new EncodingMap("iso8859-10", "ISO-8859-10", 1),
+			new EncodingMap("iso8859-11", "ISO-8859-11", 1),
+			new EncodingMap("iso8859-12", "ISO-8859-12", 1),
+			new EncodingMap("iso8859-13", "ISO-8859-13", 1),
+			new EncodingMap("iso8859-14", "ISO-8859-14", 1),
+			new EncodingMap("iso8859-15", "ISO-8859-15", 1),
 			new EncodingMap("jis0201", "JIS0201", 1),
 			new EncodingMap("jis0208", "JIS0208", 2),
 			new EncodingMap("jis0212", "JIS0212", 2),
@@ -133,7 +154,7 @@ public class EncodingCmd implements Command {
 		// Store entries in a Hashtable, so that access from
 		// multiple threads will be synchronized.
 
-		encodeHash = new Hashtable();
+		encodeHash = new Hashtable<String, EncodingMap> ();
 
 		for (int i = 0; i < encodings.length; i++) {
 			EncodingMap map = encodings[i];
@@ -149,7 +170,7 @@ public class EncodingCmd implements Command {
 		// "iso8859-1" if default is not known.
 
 		// use Java 1.5 API.  Since the EncodingMap
-		// uses the Java historical names, look through
+		// uses some of the Java historical names, look through
 		// all the aliases to find a match to the defaultCharset
 		
 		Charset defaultCharset = Charset.defaultCharset();
@@ -175,13 +196,12 @@ public class EncodingCmd implements Command {
 			}
 		}
 
-		// Default to "iso8859-1" if the encoding
-		// indicated by "file.encoding" is not
+		// Default to "iso8859-1" if the encoding is not
 		// in the supported encoding table.
 
 		if (enc == null || enc.length() == 0) {
 			systemTclEncoding = "iso8859-1";
-			systemJavaEncoding = "ISO8859_1";
+			systemJavaEncoding = "ISO-8859-1";
 		}
 	}
 
@@ -246,7 +266,7 @@ public class EncodingCmd implements Command {
 				}
 
 			} catch (UnsupportedEncodingException ex) {
-				throw new TclRuntimeError("Encoding.cmdProc() error: "
+				throw new TclException(interp,"Encoding.cmdProc() error: "
 						+ "unsupported java encoding \"" + javaEncoding + "\"");
 			}
 
@@ -287,6 +307,9 @@ public class EncodingCmd implements Command {
 					throw new TclException(interp, "unknown encoding \""
 							+ tclEncoding + "\"");
 				}
+				if (! isSupported(javaEncoding))
+					throw new TclException(interp,"Encoding.cmdProc() error: "
+						+ "unsupported java encoding \"" + javaEncoding + "\"");
 
 				systemTclEncoding = tclEncoding;
 				systemJavaEncoding = javaEncoding;
@@ -301,11 +324,14 @@ public class EncodingCmd implements Command {
 		}
 	}
 
-	// FIXME: It is not clear that this field is even used in Jacl.
-	// Can it be removed here and in the IO layer?
 
-	// Given a Java encoding name return the average bytes per char
-
+	/**
+	 * Given a Java encoding name return the average bytes per char
+	 * 
+	 * @param name
+	 *            Java name of encoding as returned from getJavaName(
+	 * @return the average bytes per character
+	 */
 	public static int getBytesPerChar(String name) {
 		String key = "java," + name;
 		EncodingMap map = (EncodingMap) encodeHash.get(key);
@@ -315,8 +341,15 @@ public class EncodingCmd implements Command {
 		return map.bytesPerChar;
 	}
 
-	// Given a Tcl encoding name, return the Java encoding name
 
+	/**
+	 * Given a Tcl encoding name, return the Java encoding name
+	 * 
+	 * @param name
+	 *            Tcl name for encoding
+	 * @return java name for encoding, which may be either the new-style
+	 *         java.nio name, or the old style java.io/java.lang name
+	 */
 	public static String getJavaName(String name) {
 		String key = "tcl," + name;
 		EncodingMap map = (EncodingMap) encodeHash.get(key);
@@ -326,8 +359,12 @@ public class EncodingCmd implements Command {
 		return map.javaName;
 	}
 
-	// Given a Java encoding name, return the Tcl encoding name
-
+	/**
+	 * Given a Java encoding name, return the Tcl encoding name
+	 * 
+	 * @param name Java name, as specified from getJavaName()
+	 * @return Tcl name for the encoding
+	 */
 	static String getTclName(String name) {
 		String key = "java," + name;
 		EncodingMap map = (EncodingMap) encodeHash.get(key);
@@ -337,12 +374,11 @@ public class EncodingCmd implements Command {
 		return map.tclName;
 	}
 
-	// Return true if the Java encoding name is actually
-	// supported in this Java install. Both "western"
-	// and "international" options exist at Java install
-	// time and the "western" install does not support
-	// all the encodings that Tcl expects.
-
+	/**
+	 * 
+	 * @param name java encoding name, as from getJavaName()
+	 * @return true if the encoding is supported in this JRE
+	 */
 	static boolean isSupported(String name) {
 		String key = "java," + name;
 		EncodingMap map = (EncodingMap) encodeHash.get(key);
