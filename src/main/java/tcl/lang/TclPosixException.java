@@ -25,7 +25,7 @@ import java.util.regex.PatternSyntaxException;
  */
 
 public class TclPosixException extends TclException {
-
+	int errno = 0;
 	public static final int EPERM = 1; /* Operation not permitted */
 	public static final int ENOENT = 2; /* No such file or directory */
 	public static final int ESRCH = 3; /* No such process */
@@ -197,10 +197,18 @@ public class TclPosixException extends TclException {
 		}
 		init(interp, errno, appendPosixMsg, errorMessage);
 	}
+
+	/**
+	 * @return the error number for this TclPosixException
+	 */
+	public int getErrorNo() {
+		return this.errno;
+	}
 	
 	private void init(Interp interp, int errno, boolean appendPosixMsg, String errorMsg) throws TclException {
 		String msg = getPosixMsg(errno);
-
+		this.errno = errno;
+		
 		TclObject threeEltListObj = TclList.newInstance();
 		TclList.append(interp, threeEltListObj, TclString.newInstance("POSIX"));
 		TclList.append(interp, threeEltListObj, TclString

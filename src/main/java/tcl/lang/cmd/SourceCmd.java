@@ -76,12 +76,7 @@ public class SourceCmd implements Command {
 					e.setCompletionCode(realCode);
 					throw e;
 				}
-			} else if (code == TCL.ERROR) {
-				// Record information telling where the error occurred.
-
-				interp.addErrorInfo("\n    (file line " + interp.errorLine + ")");
-				throw e;
-			} else {
+			} else  {				
 				throw e;
 			}
 		}

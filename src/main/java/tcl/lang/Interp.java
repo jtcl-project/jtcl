@@ -2625,22 +2625,16 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * readScriptFromFile --
-	 * 
+	/**
 	 * Read the script file into a string.
 	 * 
-	 * Results: Returns the content of the script file.
+	 * @param s name of file
+	 * @returns script as a String, or null if it can't be read
 	 * 
-	 * Side effects: If a new File object cannot be created for s, the result is
-	 * reset.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @throws TclException on file errors
 	 */
 
-	private String readScriptFromFile(String s) // The name of the file.
+	private String readScriptFromFile(String s) throws TclException 
 	{
 		File sourceFile;
 		FileChannel fchan = new FileChannel();
@@ -2654,15 +2648,12 @@ public class Interp extends EventuallyFreed {
 			fchan.read(this, result, TclIO.READ_ALL, 0);
 			// return up to ^Z for tcl8.4 compatibility
 			return trimToCtrlZ(result.toString());
-		} catch (TclException e) {
-			resetResult();
-			return null;
-		} catch (FileNotFoundException e) {
-			return null;
+		} catch (TclPosixException e) {
+			throw new TclPosixException(this, e.getErrorNo(), true,"couldn't read file \""+s+"\"" );
 		} catch (IOException e) {
-			return null;
+			throw new TclPosixException(this, e, true, "couldn't read file \""+s+"\"");
 		} catch (SecurityException e) {
-			return null;
+			throw new TclException(this, e.getMessage());
 		} finally {
 			if (wasOpened) {
 				closeChannel(fchan);
