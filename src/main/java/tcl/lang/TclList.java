@@ -23,13 +23,13 @@ public class TclList implements InternalRep {
 	/**
 	 * Internal representation of a list value.
 	 */
-	private ArrayList alist;
+	private ArrayList<TclObject> alist;
 
 	/**
 	 * Create a new empty Tcl List.
 	 */
 	private TclList() {
-		alist = new ArrayList();
+		alist = new ArrayList<TclObject>();
 
 		if (TclObject.saveObjRecords) {
 			String key = "TclList";
@@ -51,7 +51,7 @@ public class TclList implements InternalRep {
 	 *            the number of slots pre-allocated in the alist.
 	 */
 	private TclList(int size) {
-		alist = new ArrayList(size);
+		alist = new ArrayList<TclObject>(size);
 
 		if (TclObject.saveObjRecords) {
 			String key = "TclList";
@@ -71,7 +71,7 @@ public class TclList implements InternalRep {
 	public void dispose() {
 		final int size = alist.size();
 		for (int i = 0; i < size; i++) {
-			((TclObject) alist.get(i)).release();
+			(alist.get(i)).release();
 		}
 		alist.clear();
 	}
@@ -122,7 +122,7 @@ public class TclList implements InternalRep {
 		StringBuffer sbuf = new StringBuffer((est > 64) ? est : 64);
 		try {
 			for (int i = 0; i < size; i++) {
-				Object elm = alist.get(i);
+				TclObject elm = alist.get(i);
 				if (elm != null) {
 					Util.appendElement(null, sbuf, elm.toString());
 				} else {
@@ -223,7 +223,7 @@ public class TclList implements InternalRep {
 	 * @exception TclException
 	 *                if the object doesn't contain a valid list.
 	 */
-	private static final void splitList(Interp interp, ArrayList alist, String s)
+	private static final void splitList(Interp interp, ArrayList<TclObject> alist, String s)
 			throws TclException {
 		int len = s.length();
 		int i = 0;
@@ -300,7 +300,7 @@ public class TclList implements InternalRep {
 		}
 		tobj.invalidateStringRep();
 
-		ArrayList alist = ((TclList) tobj.getInternalRep()).alist;
+		ArrayList<TclObject> alist = ((TclList) tobj.getInternalRep()).alist;
 
 		for (int i = startIdx; i < endIdx; i++) {
 			TclObject elemObj = objv[i];
@@ -603,6 +603,8 @@ public class TclList implements InternalRep {
 		}
 	}
 
+
+
 	/**
 	 * Sorts the list according to the sort mode and (optional) sort command. If
 	 * tobj is not a list object, an attempt will be made to convert it to a
@@ -626,7 +628,7 @@ public class TclList implements InternalRep {
 	 */
 
 	public static void sort(Interp interp, TclObject tobj, int sortMode,
-			int sortIndex, boolean sortIncreasing, boolean unique,
+			int sortIndex,  boolean sortIncreasing, boolean unique,
 			String command) throws TclException {
 		if (!tobj.isListType()) {
 			setListFromAny(interp, tobj);
@@ -635,21 +637,21 @@ public class TclList implements InternalRep {
 		TclList tlist = (TclList) tobj.getInternalRep();
 
 		TclObject objArray[] = TclList.getElements(interp, tobj);
-		;
 		tlist.alist.clear();
 
 		QSort s = new QSort();
 		s.sort(interp, objArray, sortMode, sortIndex, sortIncreasing, command);
 
 		for (int i = 0; i < objArray.length; i++) {
-			if (unique) {
-				TclObject o = objArray[i];
-				if (!tlist.alist.contains(o))
-					tlist.alist.add(objArray[i]);
-			} else {
-				tlist.alist.add(objArray[i]);
+			if (unique && i < objArray.length-1) {
+				TclObject o1 = objArray[i];
+				TclObject o2 = objArray[i+1];
+				if (s.compare(o1, o2)==0) {
+					/* don't add o1 now, it is not unique */
+					continue;
+				}
 			}
-
+			tlist.alist.add(objArray[i]);
 			objArray[i] = null;
 		}
 	}

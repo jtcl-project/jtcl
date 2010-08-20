@@ -116,8 +116,8 @@ public class LsortCmd implements Command {
 					throw new TclException(interp,
 							"\"-index\" option must be followed by list index");
 				}
+				// this caused 'end-1' to be reported as '-2 - 1' = -3.
 				sortIndex = Util.getIntForIndex(interp, argv[i + 1], -2);
-				command = argv[i + 1].toString();
 				i++;
 				break;
 

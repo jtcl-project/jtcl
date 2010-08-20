@@ -89,25 +89,27 @@ public final class QSort {
 		int lo = lo0;
 		int hi = hi0;
 		TclObject mid;
+		int midIndex;
 
 		if (hi0 > lo0) {
 			// Arbitrarily establishing partition element as the midpoint of
 			// the array.
-			mid = a[(lo0 + hi0) >>> 1];
+			midIndex = (lo0 + hi0) >>> 1;
+			mid = a[midIndex];
 
 			// loop through the array until indices cross
 			while (lo <= hi) {
 				// find the first element that is greater than or equal to
 				// the partition element starting from the left Index.
 
-				while ((lo < hi0) && (compare(a[lo], mid) < 0)) {
+				while ((lo < hi0) && lo!=midIndex && (compare(a[lo], mid) < 0)) {
 					++lo;
 				}
 
 				// find an element that is smaller than or equal to
 				// the partition element starting from the right Index.
 
-				while ((hi > lo0) && (compare(a[hi], mid) > 0)) {
+				while ((hi > lo0) && hi!=midIndex && (compare(a[hi], mid) > 0)) {
 					--hi;
 				}
 
@@ -161,6 +163,9 @@ public final class QSort {
 	 *            the array of TclObject's to sort.
 	 * @param mode
 	 *            the sortng mode.
+	 * @param index  If index >= 0, sort on the index'th element of the 
+	 * sublists; if index <= -2, sort on the lsitLength+index+1 element (end = -2);
+	 * if index==-1, sort on entire element.
 	 * @param increasing
 	 *            true if the sorted array should be in increasing order.
 	 * @param cmd
@@ -192,7 +197,7 @@ public final class QSort {
 	 * @exception TclException
 	 *                if an error occurs during sorting.
 	 */
-	private final int compare(TclObject obj1, TclObject obj2)
+	final int compare(TclObject obj1, TclObject obj2)
 			throws TclException {
 
 		int index;
@@ -202,15 +207,11 @@ public final class QSort {
 			// The "-index" option was specified. Treat each object as a
 			// list, extract the requested element from each list, and
 			// compare the elements, not the lists. The special index "end"
-			// is signaled here with a negative index (other than -1).
+			// is signaled here with (-2 - offset from end), so end-1 is -3.
 
 			TclObject obj;
 			if (sortIndex < -1) { // take the offset from end
-				String end = sortCommand.replaceAll("end", "");
-				Integer offset = Integer.valueOf(end.length() == 0 ? "0" : end);
-
-				index = TclList.getLength(sortInterp, obj1) + offset.intValue()
-						- 1;
+				index = TclList.getLength(sortInterp, obj1) + (sortIndex+1);
 			} else {
 				index = sortIndex;
 			}
@@ -223,11 +224,7 @@ public final class QSort {
 			obj1 = obj;
 
 			if (sortIndex < -1) { // take the offset from end
-				String end = sortCommand.replaceAll("end", "");
-				Integer offset = Integer.valueOf(end.length() == 0 ? "0" : end);
-
-				index = TclList.getLength(sortInterp, obj2) + offset.intValue()
-						- 1;
+				index = TclList.getLength(sortInterp, obj2) + (sortIndex+1);
 			} else {
 				index = sortIndex;
 			}
@@ -287,7 +284,7 @@ public final class QSort {
 				sortInterp.eval(sbuf.toString(), 0);
 			} catch (TclException e3) {
 				sortInterp
-						.addErrorInfo("\n    (user-defined comparison command)");
+						.addErrorInfo("\n    (-compare command)");
 				throw e3;
 			}
 
@@ -296,7 +293,7 @@ public final class QSort {
 			} catch (TclException e) {
 				sortInterp.resetResult();
 				TclException e4 = new TclException(sortInterp,
-						"comparison command returned non-numeric result");
+						"-compare command returned non-integer result");
 				throw e4;
 			}
 			break;
@@ -314,6 +311,7 @@ public final class QSort {
 		}
 	}
 
+	
 	/**
 	 * DictionaryCompare -> doDictionary
 	 * 
@@ -323,115 +321,65 @@ public final class QSort {
 	 *            first item.
 	 * @param str2
 	 *            second item.
+	 *      
 	 * @return 0 if they are equal, 1 if obj1 > obj2, -1 otherwise.
 	 */
 	private final int doDictionary(String str1, String str2) {
+		int index1 = 0;
+		int index2 = 0;
 		final int len1 = str1.length();
 		final int len2 = str2.length();
-		char c1, c2;
-		int i1 = 0, i2 = 0;
-
-		int diff = 0, zeros;
 		int secondaryDiff = 0;
+		
+		while (index1 < len1 && index2 < len2) {
+		
+			char c1 = str1.charAt(index1);
+			char c2 = str2.charAt(index2);
+			
+			if (Character.isDigit(c1) && Character.isDigit(c2)) {
+				int endNum1 = index1+1;
+				while (endNum1 < len1 && Character.isDigit(str1.charAt(endNum1)))
+					++endNum1;
+				int endNum2 = index2 + 1;
+				while (endNum2 < len2 && Character.isDigit(str2.charAt(endNum2)))
+					++endNum2;
+				long v1 = Long.parseLong(str1.substring(index1, endNum1));
+				long v2 = Long.parseLong(str2.substring(index2, endNum2));
+				
+				if (v1 < v2) return -1;
+				if (v1 > v2) return 1;
 
-		while (true) {
-			if (Character.isDigit(charAt(str2, i2, len2))
-					&& Character.isDigit(charAt(str1, i1, len1))) {
-
-				// There are decimal numbers embedded in the two
-				// strings. Compare them as numbers, rather than
-				// strings. If one number has more leading zeros than
-				// the other, the number with more leading zeros sorts
-				// later, but only as a secondary choice.
-
-				zeros = 0;
-				while (charAt(str2, i2, len2) == '0'
-						&& Character.isDigit(charAt(str2, i2 + 1, len2))) {
-					i2++;
-					zeros--;
-				}
-				while (charAt(str1, i1, len1) == '0'
-						&& Character.isDigit(charAt(str1, i1 + 1, len1))) {
-					i1++;
-					zeros++;
-				}
 				if (secondaryDiff == 0) {
-					secondaryDiff = zeros;
+					if (endNum1-index1 < endNum2-index2) secondaryDiff=-1;
+					else if (endNum1-index1 > endNum2-index2) secondaryDiff=1;
 				}
-
-				// The code below compares the numbers in the two
-				// strings without ever converting them to integers. It
-				// does this by first comparing the lengths of the
-				// numbers and then comparing the digit values.
-
-				diff = 0;
-				while (true) {
-					if (diff == 0) {
-						diff = charAt(str1, i1, len1) - charAt(str2, i2, len2);
-					}
-					i2++;
-					i1++;
-					if (!Character.isDigit(charAt(str2, i2, len2))) {
-						if (Character.isDigit(charAt(str1, i1, len1))) {
-							return 1;
-						} else {
-							// The two numbers have the same length. See
-							// if their values are different.
-
-							if (diff != 0) {
-								return diff;
-							}
-							break;
-						}
-					} else if (!Character.isDigit(charAt(str1, i1, len1))) {
-						return -1;
-					}
-				}
-				continue;
-			}
-
-			if (charAt(str1, i1, len1) != '\0'
-					&& charAt(str2, i2, len2) != '\0') {
-				c1 = charAt(str1, i1, len1);
-				i1++;
-				c2 = charAt(str2, i2, len2);
-				i2++;
-
+				
+				/* Otherwise, both equal, just adjust index and move on */
+				index1 = endNum1;
+				index2 = endNum2;
+			} else {
 				// Convert both chars to lower for the comparison, because
 				// dictionary sorts are case insensitve. Covert to lower, not
 				// upper, so chars between Z and a will sort before A (where
-				// most
-				// other interesting punctuations occur)
-
-				c1 = Character.toLowerCase(c1);
-				c2 = Character.toLowerCase(c2);
-			} else {
-				diff = (int) (charAt(str1, i1, len1) - charAt(str2, i2, len2));
-				break;
-			}
-
-			diff = (int) (c1 - c2);
-			if (diff != 0) {
-				return diff;
-			} else if (secondaryDiff == 0) {
-				if (Character.isUpperCase(c1) && Character.isLowerCase(c2)) {
-					secondaryDiff = -1;
-				} else if (Character.isUpperCase(c2)
-						&& Character.isLowerCase(c1)) {
-					secondaryDiff = 1;
+				// most other interesting punctuations occur)
+				char lc1 = Character.toLowerCase(c1);
+				char lc2	 = Character.toLowerCase(c2);
+				if (lc1 < lc2) return -1;
+				if (lc1 > lc2) return 1;
+				
+				if (secondaryDiff == 0) {
+					if (c1 < c2) secondaryDiff = -1;
+					if (c1 > c2) secondaryDiff = 1;
 				}
+				++index1;
+				++index2;
 			}
 		}
-		if (diff == 0) {
-			diff = secondaryDiff;
-		}
-		return diff;
+		
+		if (index1==len1 && index2 < len2) return -1;
+		if (index1 < len1 && index2==len2) return 1;
+		
+		return secondaryDiff;
 	}
-
-	// Like String.charAt() but returns '\0' if
-	// index is larger than len.
-
-	private final char charAt(final String str, final int index, final int len) {
-		return (index < len ? str.charAt(index) : '\0');
-	}
+	
 }
