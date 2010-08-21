@@ -1637,24 +1637,18 @@ public class Interp extends EventuallyFreed {
 		Var.untraceVar(this, part1, part2, flags, trace);
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
+	 * Define a new command in the interpreter. Side effects: If a command named
+	 * cmdName already exists for interp, it is deleted. In the future, when
+	 * cmdName is seen as the name of a command by eval(), cmd will be called.
+	 * When the command is deleted from the table, cmd.disposeCmd() be called if
+	 * cmd implements the CommandWithDispose interface.
 	 * 
-	 * Tcl_CreateCommand -> createCommand
-	 * 
-	 * Define a new command in the interpreter.
-	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: If a command named cmdName already exists for interp, it is
-	 * deleted. In the future, when cmdName is seen as the name of a command by
-	 * eval(), cmd will be called. When the command is deleted from the table,
-	 * cmd.disposeCmd() be called if cmd implements the CommandWithDispose
-	 * interface.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param cmdName
+	 *            name of the command
+	 * @param cmdImpl
+	 *            Command instance that implements the command
 	 */
-
 	public void createCommand(String cmdName, // Name of command.
 			Command cmdImpl) // Command object to associate with
 	// cmdName.
@@ -1747,23 +1741,16 @@ public class Interp extends EventuallyFreed {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * Tcl_GetCommandFullName -> getCommandFullName
-	 * 
+	/**
 	 * Given a token returned by, e.g., Tcl_CreateCommand or Tcl_FindCommand,
 	 * this procedure returns the command's full name, qualified by a sequence
 	 * of parent namespace names. The command's fully-qualified name may have
 	 * changed due to renaming.
 	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: The command's fully-qualified name is returned.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param cmd
+	 *            command of which to get the full name
+	 * @return full name, including namepaces, of the command
 	 */
-
 	public String getCommandFullName(WrappedCommand cmd) // Token for the
 															// command.
 	{
@@ -1788,20 +1775,14 @@ public class Interp extends EventuallyFreed {
 		return name.toString();
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * Tcl_GetCommandName -> getCommandName
-	 * 
+	/**
 	 * Given a token returned by, e.g., Tcl_CreateCommand or Tcl_FindCommand,
 	 * this procedure returns the command's name. The command's fully-qualified
 	 * name may have changed due to renaming.
 	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: The command's name is returned.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param cmd
+	 *            command of which to get the name of
+	 * @return name of the command
 	 */
 
 	public String getCommandName(WrappedCommand cmd) // Token for the command.
@@ -1816,20 +1797,16 @@ public class Interp extends EventuallyFreed {
 		return cmd.hashKey;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * Tcl_DeleteCommand -> deleteCommand
-	 * 
-	 * Remove the given command from the given interpreter.
-	 * 
-	 * Results: 0 is returned if the command was deleted successfully. -1 is
-	 * returned if there didn't exist a command by that name.
+	/**
+	 * Remove the given command from the this interpreter.
 	 * 
 	 * Side effects: CmdName will no longer be recognized as a valid command for
 	 * the interpreter.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param cmdName
+	 *            name of command to remove in this interpreter
+	 * @return 0 is returned if the command was deleted successfully. -1 is
+	 *         returned if there didn't exist a command by that name.
 	 */
 
 	public int deleteCommand(String cmdName) // Name of command to remove.
@@ -1850,20 +1827,16 @@ public class Interp extends EventuallyFreed {
 		return deleteCommandFromToken(cmd);
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * Tcl_DeleteCommandFromToken -> deleteCommandFromToken
-	 * 
+	/**
 	 * Remove the given command from the given interpreter.
-	 * 
-	 * Results: 0 is returned if the command was deleted successfully. -1 is
-	 * returned if there didn't exist a command by that name.
 	 * 
 	 * Side effects: cmdName will no longer be recognized as a valid command for
 	 * the interpreter.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param cmd
+	 *            wrapper token for the command to delete
+	 * @return 0 is returned if the command was deleted successfully. -1 is
+	 *         returned if there didn't exist a command by that name.
 	 */
 
 	public int deleteCommandFromToken(WrappedCommand cmd) // Wrapper Token for
@@ -1939,11 +1912,7 @@ public class Interp extends EventuallyFreed {
 		return 0;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * TclRenameCommand -> renameCommand
-	 * 
+	/**
 	 * Called to give an existing Tcl command a different name. Both the old
 	 * command name and the new command name can have "::" namespace qualifiers.
 	 * If the new command has a different namespace context, the command will be
@@ -1953,12 +1922,10 @@ public class Interp extends EventuallyFreed {
 	 * If the new command name is null or the empty string, the command is
 	 * deleted.
 	 * 
-	 * Results: Returns if successful, raises TclException if anything goes
-	 * wrong.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param oldName existing command name
+	 * @param newName new name
+	 * @throws TclException
 	 */
-
 	public void renameCommand(String oldName, // Existing command name.
 			String newName) // New command name.
 			throws TclException {

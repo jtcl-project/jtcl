@@ -58,11 +58,7 @@ public class AfterCmd implements Command {
 	static final int OPT_IDLE = 1;
 	static final int OPT_INFO = 2;
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * cmdProc --
-	 * 
+	/**
 	 * This procedure is invoked as part of the Command interface to process the
 	 * "after" Tcl command. See the user documentation for details on what it
 	 * does.
@@ -70,8 +66,6 @@ public class AfterCmd implements Command {
 	 * Results: None.
 	 * 
 	 * Side effects: See the user documentation.
-	 * 
-	 * ----------------------------------------------------------------------
 	 */
 
 	public void cmdProc(Interp interp, // Current interpreter.
@@ -106,15 +100,16 @@ public class AfterCmd implements Command {
 		 */
 
 		boolean isNumber = false;
-		int ms = 0;
+		long ms = 0;
 
+		/* Don't convert argv[1] to integer, if we can avoid it */
 		if (argv[1].isIntType()) {
-			ms = TclInteger.getInt(interp, argv[1]);
+			ms = TclInteger.getLong(interp, argv[1]);
 			isNumber = true;
 		} else {
 			String s = argv[1].toString();
-			if ((s.length() > 0) && (Character.isDigit(s.charAt(0)))) {
-				ms = TclInteger.getInt(interp, argv[1]);
+			if ((s.length() > 0) && (Character.isDigit(s.charAt(0)) || s.charAt(0)=='-')) {
+				ms = TclInteger.getLong(interp, argv[1]);
 				isNumber = true;
 			}
 		}
@@ -143,7 +138,7 @@ public class AfterCmd implements Command {
 						if (sysTime >= endTime) {
 							return;
 						}
-						ms = (int) (endTime - sysTime);
+						ms =  endTime - sysTime;
 						continue;
 					}
 				}
@@ -335,40 +330,38 @@ public class AfterCmd implements Command {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * getAfterEvent --
-	 * 
+	/**
 	 * This procedure parses an "after" id such as "after#4" and returns an
 	 * AfterInfo object.
 	 * 
-	 * Results: The return value is an AfterInfo object. if one is found that
-	 * corresponds to "string", or null if no corresponding after event can be
-	 * found.
+	 * @param interp
+	 *            current interpreter
+	 * @param string
+	 *            text identifier for event, such as "after#6"
 	 * 
-	 * Side effects: None.
+	 * @return an AfterInfo object. if one is found that corresponds to
+	 *         "string", or null if no corresponding after event can be found.
 	 * 
-	 * ----------------------------------------------------------------------
 	 */
-
 	private Object getAfterEvent(Interp interp, String string) // Textual
 	// identifier
 	// for after
 	// event, such
 	// as "after#6".
 	{
+	
 		if (!string.startsWith("after#")) {
 			return null;
 		}
-
-		StrtoulResult res = interp.strtoulResult;
-		Util.strtoul(string, 6, 10, res);
-		if (res.errno != 0) {
+		int id = 0;
+		try {
+			/* get the integer after "after#", throw exception
+			 * if the remainder of the string is not an integer
+			 */
+			id = Integer.parseInt(string.substring(6));
+		} catch (Exception e) {
 			return null;
 		}
-		int id = (int) res.value;
-
 		for (int i = 0; i < assocData.handlers.size(); i++) {
 			Object obj = assocData.handlers.get(i);
 			if (obj instanceof TimerInfo) {
@@ -385,7 +378,7 @@ public class AfterCmd implements Command {
 		return null;
 	}
 
-	/*
+	/**
 	 * This inner class manages the list of handlers created by the "after"
 	 * command. We keep the handler has an AssocData so that they will continue
 	 * to exist even if the "after" command is deleted.
@@ -393,23 +386,17 @@ public class AfterCmd implements Command {
 
 	class AfterAssocData implements AssocData {
 
-		/*
+		/**
 		 * The set of handlers created but not yet fired.
 		 */
-
 		ArrayList handlers = new ArrayList();
 
-		/*
+		/**
 		 * Timer identifier of most recently created timer.
 		 */
-
 		int lastAfterId = 0;
 
-		/*
-		 * ----------------------------------------------------------------------
-		 * 
-		 * disposeAssocData --
-		 * 
+		/**
 		 * This method is called when the interpreter is destroyed or when
 		 * Interp.deleteAssocData is called on a registered AssocData instance.
 		 * 
@@ -418,14 +405,9 @@ public class AfterCmd implements Command {
 		 * Side effects: All unfired handler are cancelled; their command
 		 * objects are released.
 		 * 
-		 * 
-		 * 
-		 * ----------------------------------------------------------------------
+		 * @param interp the interpreter in which this AssocData instance is registered in
 		 */
-
-		public void disposeAssocData(Interp interp) // The interpreter in which
-		// this AssocData
-		// instance is registered in.
+		public void disposeAssocData(Interp interp) 
 		{
 			for (int i = assocData.handlers.size() - 1; i >= 0; i--) {
 				Object info = assocData.handlers.get(i);
@@ -447,68 +429,42 @@ public class AfterCmd implements Command {
 
 	} // end AfterCmd.AfterAssocData
 
-	/*
+	/**
 	 * This inner class implement timer handlers for the "after" command. It
 	 * stores a script to be executed when the timer event is fired.
 	 */
-
 	class TimerInfo extends TimerHandler {
 
-		/*
+		/**
 		 * Interpreter in which the script should be executed.
 		 */
-
 		Interp interp;
 
-		/*
+		/**
 		 * Command to execute when the timer fires.
 		 */
-
 		TclObject command;
 
-		/*
+		/**
 		 * Integer identifier for command; used to cancel it.
 		 */
-
 		int id;
 
-		/*
-		 * ----------------------------------------------------------------------
-		 * 
-		 * TimerInfo --
-		 * 
+
+		/**
 		 * Constructs a new TimerInfo instance.
 		 * 
-		 * Side effects: The timer is initialized by the super class's
-		 * constructor.
-		 * 
-		 * 
-		 * 
-		 * ----------------------------------------------------------------------
+		 * @paran n The notifier to fire the event
+		 * @paran milliseconds number of milliseconds to wait before invoking
+		 *        processTimerEvent()
 		 */
-
-		TimerInfo(Notifier n, // The notifier to fire the event.
-				int milliseconds) // How many milliseconds to wait
-		// before invoking processTimerEvent().
+		TimerInfo(Notifier n, long milliseconds)
 		{
 			super(n, milliseconds);
 		}
 
-		/*
-		 * ----------------------------------------------------------------------
-		 * 
-		 * processTimerEvent --
-		 * 
-		 * Process the timer event.
-		 * 
-		 * Results: None.
-		 * 
-		 * Side effects: The command executed by this timer can have arbitrary
-		 * side effects.
-		 * 
-		 * 
-		 * 
-		 * ----------------------------------------------------------------------
+		/**
+		 *  Execute the command for this timer event
 		 */
 
 		public void processTimerEvent() {
@@ -541,68 +497,40 @@ public class AfterCmd implements Command {
 
 	} // end AfterCmd.AfterInfo
 
-	/*
+	/**
 	 * This inner class implement idle handlers for the "after" command. It
 	 * stores a script to be executed when the idle event is fired.
 	 */
-
 	class IdleInfo extends IdleHandler {
 
-		/*
+		/**
 		 * Interpreter in which the script should be executed.
 		 */
-
 		Interp interp;
 
-		/*
+		/**
 		 * Command to execute when the idle event fires.
 		 */
-
 		TclObject command;
 
-		/*
+		/**
 		 * Integer identifier for command; used to cancel it.
 		 */
-
 		int id;
 
-		/*
-		 * ----------------------------------------------------------------------
+		/**
+		 * Construct a new IdleInfo event
 		 * 
-		 * IdleInfo --
-		 * 
-		 * Constructs a new IdleInfo instance.
-		 * 
-		 * Side effects: The idle handler is initialized by the super class's
-		 * constructor.
-		 * 
-		 * 
-		 * 
-		 * ----------------------------------------------------------------------
+		 * @param n notifier to fire the event
 		 */
-
 		IdleInfo(Notifier n) // The notifier to fire the event.
 		{
 			super(n);
 		}
 
-		/*
-		 * ----------------------------------------------------------------------
-		 * 
-		 * processIdleEvent --
-		 * 
-		 * Process the idle event.
-		 * 
-		 * Results: None.
-		 * 
-		 * Side effects: The command executed by this idle handler can have
-		 * arbitrary side effects.
-		 * 
-		 * 
-		 * 
-		 * ----------------------------------------------------------------------
+		/**
+		 * Run the idle command
 		 */
-
 		public void processIdleEvent() {
 			try {
 				int index = assocData.handlers.indexOf(this);

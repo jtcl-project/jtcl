@@ -16,55 +16,42 @@
 
 package tcl.lang;
 
-/*
+/**
  * This abstract class is used to define timer handlers.
  */
-
 abstract public class TimerHandler {
 
-	/*
+	/**
 	 * Back pointer to the notifier that will fire this timer.
 	 */
-
 	Notifier notifier;
 
-	/*
+	/**
 	 * System time at (of after) which the timer should be fired.
 	 */
-
 	long atTime;
 
-	/*
+	/**
 	 * True if the cancel() method has been called.
 	 */
-
 	boolean isCancelled;
 
-	/*
+	/**
 	 * Used to distinguish older idle handlers from recently-created ones.
 	 */
-
 	int generation;
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * TimerHandler --
-	 * 
+	/**
 	 * Create a timer handler to be fired after the given time lapse.
-	 * 
-	 * Results: None.
-	 * 
 	 * Side effects: The timer is registered in the list of timers in the given
 	 * notifier. After milliseconds have elapsed, the processTimerEvent() method
 	 * will be invoked exactly once inside the primary thread of the notifier.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @paran n The notifier to fire the event
+	 * @paran milliseconds number of milliseconds to wait before invoking processTimerEvent()
 	 */
-
-	public TimerHandler(Notifier n, // The notifier to fire the event.
-			int milliseconds) // How many milliseconds to wait
-	// before invoking processTimerEvent().
+	public TimerHandler(Notifier n, 
+			long milliseconds) 
 	{
 		int i;
 
@@ -99,22 +86,12 @@ abstract public class TimerHandler {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * cancel --
-	 * 
+	/**
 	 * Mark this timer handler as cancelled so that it won't be invoked.
-	 * 
-	 * Results: None.
-	 * 
 	 * Side effects: The timer handler is marked as cancelled so that its
 	 * processTimerEvent() method will not be called. If the timer has already
 	 * fired, then nothing this call has no effect.
-	 * 
-	 * ----------------------------------------------------------------------
 	 */
-
 	public synchronized void cancel() {
 		if (isCancelled) {
 			return;
@@ -138,25 +115,16 @@ abstract public class TimerHandler {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * invoke --
-	 * 
+	/**
 	 * Execute the timer handler if it has not been cancelled. This method
 	 * should be called by the notifier only.
 	 * 
 	 * Because the timer handler may be being cancelled by another thread, both
 	 * this method and cancel() must be synchronized to ensure correctness.
 	 * 
-	 * Results: 0 if the handler was not executed because it was already
-	 * cancelled, 1 otherwise.
-	 * 
-	 * Side effects: The timer handler may have arbitrary side effects.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @return 0 if the handler was not executed because it was already
+	 * cancelled, 1 otherwise
 	 */
-
 	synchronized final int invoke() {
 		/*
 		 * The timer may be cancelled after it was put on the event queue. Check
@@ -171,21 +139,10 @@ abstract public class TimerHandler {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * processTimerEvent --
-	 * 
+	/**
 	 * This method is called when the timer is expired. Override This method to
 	 * implement your own timer handlers.
-	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: It can do anything.
-	 * 
-	 * ----------------------------------------------------------------------
 	 */
-
 	abstract public void processTimerEvent();
 
 } // end TimerHandler

@@ -881,11 +881,7 @@ public class NamespaceCmd implements InternalRep, Command {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * NamespaceOriginCmd -> originCmd
-	 * 
+	/**
 	 * Invoked to implement the "namespace origin" command to return the
 	 * fully-qualified name of the "real" command to which the specified
 	 * "imported command" refers. Handles the following syntax:
@@ -904,8 +900,6 @@ public class NamespaceCmd implements InternalRep, Command {
 	 * 
 	 * Side effects: If anything goes wrong, this procedure returns an error
 	 * message in the interpreter's result object.
-	 * 
-	 * ----------------------------------------------------------------------
 	 */
 
 	private static void originCmd(Interp interp, TclObject[] objv)

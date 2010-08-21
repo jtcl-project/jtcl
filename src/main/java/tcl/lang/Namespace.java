@@ -1633,44 +1633,39 @@ public class Namespace {
 		return null;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
+	/**
 	 * Tcl_FindCommand -> findCommand
 	 * 
 	 * Searches for a command.
 	 * 
-	 * Results: Returns a token for the command if it is found. Otherwise, if it
-	 * can't be found or there is an error, returns null and leaves an error
-	 * message in the interpreter's result object if "flags" contains
-	 * TCL.LEAVE_ERR_MSG.
+	 * @param interp
+	 *            the interpreter in which to find the command
+	 * @param name
+	 *            the commands name; if it starts with "::" it will be looked up
+	 *            in the global namespace, otherwise in contextNs, or the
+	 *            current namespace if contextNs is null, and then the global
+	 *            namespace
+	 * @param contextNs
+	 *            Ignored if TCL.GLOBAL_ONLY flag set. Otherwise, points to
+	 *            namespace in which to resolve name. If null, look up name in
+	 *            the current namespace.
+	 * @param flag
+	 *            An OR'd combination of flags: TCL.GLOBAL_ONLY (look up name
+	 *            only in global namespace), TCL.NAMESPACE_ONLY (look up only in
+	 *            contextNs, or the current namespace if contextNs is null), and
+	 *            TCL.LEAVE_ERR_MSG. If both TCL.GLOBAL_ONLY and
+	 *            TCL.NAMESPACE_ONLY are given, TCL.GLOBAL_ONLY is ignored.
 	 * 
-	 * Side effects: None.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @return a token for the command if it is found. Otherwise, if it can't be
+	 *         found or there is an error, returns null and leaves an error
+	 *         message in the interpreter's result object if "flags" contains
+	 *         TCL.LEAVE_ERR_MSG.
 	 */
 
-	public static WrappedCommand findCommand(Interp interp, // The interpreter
-															// in which to find
-															// the
-			// command.
-			String name, // Command's name. If it starts with "::",
-			// will be looked up in global namespace.
-			// Else, looked up first in contextNs
-			// (current namespace if contextNs is
-			// null), then in global namespace.
-			Namespace contextNs, // Ignored if TCL.GLOBAL_ONLY flag set.
-			// Otherwise, points to namespace in which
-			// to resolve name. If null, look up name
-			// in the current namespace.
-			int flags // An OR'd combination of flags:
-	// TCL.GLOBAL_ONLY (look up name only in
-	// global namespace), TCL.NAMESPACE_ONLY
-	// (look up only in contextNs, or the
-	// current namespace if contextNs is
-	// null), and TCL.LEAVE_ERR_MSG. If both
-	// TCL.GLOBAL_ONLY and TCL.NAMESPACE_ONLY
-	// are given, TCL.GLOBAL_ONLY is ignored.
+	public static WrappedCommand findCommand(Interp interp,
+			String name,
+			Namespace contextNs,
+			int flags //
 	) throws TclException {
 		Interp.ResolverScheme res;
 		Namespace cxtNs;
