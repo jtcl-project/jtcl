@@ -26,32 +26,45 @@ import java.util.HashMap;
  */
 
 public class WrappedCommand {
-	public HashMap table; // Reference to the table that this command is
-	// defined inside. The hashKey member can be
-	// used to lookup this WrappedCommand instance
-	// in the table of WrappedCommands. The table
-	// member combined with the hashKey member are
-	// are equivilent to the C version's Command->hPtr.
-	public String hashKey; // A string that stores the name of the command.
-	// This name is NOT fully qualified.
+	/**
+	 *  Reference to the table that this command is defined inside. The
+	 * hashKey member can be // used to lookup this WrappedCommand instance //
+	 * in the table of WrappedCommands. The table  member combined with the
+	 * hashKey member are  are equivilent to the C version's Command->hPtr.
+	 */
+	public HashMap table; 
+	/**
+	 * A string that stores the name of the command.  This name is NOT fully
+	 * qualified.
+	 */
+	public String hashKey; 
 
-	public Namespace ns; // The namespace where the command is located
+	/**
+	 *  The namespace where the command is located
+	 */
+	public Namespace ns;
+	/**
+	 * The actual command interface that is being wrapped
+	 */
+	public Command cmd;
+	/**
+	 * Means that the command is in the process  of being deleted. Other
+	 * attempts to  delete the command should be ignored.
+	 */
+	public boolean deleted; // 
 
-	public Command cmd; // The actual Command interface that we are wrapping.
+	/**
+	 * List of each imported Command created in another namespace when this
+	 * command is  imported. These imported commands  redirect invocations
+	 * back to this  command. The list is used to remove all  those imported
+	 * commands when deleting  this "real" command.
+	 */
+	ImportRef importRef;
 
-	public boolean deleted; // Means that the command is in the process
-	// of being deleted. Other attempts to
-	// delete the command should be ignored.
-
-	ImportRef importRef; // List of each imported Command created in
-	// another namespace when this command is
-	// imported. These imported commands
-	// redirect invocations back to this
-	// command. The list is used to remove all
-	// those imported commands when deleting
-	// this "real" command.
-
-	public int cmdEpoch; // Incremented to invalidate any references
+	/**
+	 * incremented to invalidate any references
+	 */
+	public int cmdEpoch; 
 
 	// that point to this command when it is
 	// renamed, deleted, hidden, or exposed.

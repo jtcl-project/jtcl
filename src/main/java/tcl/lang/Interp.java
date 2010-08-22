@@ -829,11 +829,7 @@ public class Interp extends EventuallyFreed {
 		resetResult();
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * finalize --
-	 * 
+	/**
 	 * Interpreter finalization method. We print a message to stderr if the user
 	 * neglected to dispose of an Interp properly. The Interp should have been
 	 * disposed of in the thread that created it.
@@ -841,8 +837,6 @@ public class Interp extends EventuallyFreed {
 	 * Results: Prints to stderr.
 	 * 
 	 * Side effects: None.
-	 * 
-	 * ----------------------------------------------------------------------
 	 */
 
 	protected void finalize() throws Throwable {
@@ -853,21 +847,14 @@ public class Interp extends EventuallyFreed {
 		super.finalize();
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * TclInterpReady -- ready
-	 * 
+	/**
 	 * Check if an interpreter is ready to eval commands or scripts, i.e., if it
 	 * was not deleted and if the nesting level is not too high.
 	 * 
 	 * Results: Raises a TclExcetpion is the interp is not ready.
 	 * 
 	 * Side effects: The interpreters result is cleared.
-	 * 
-	 * ----------------------------------------------------------------------
 	 */
-
 	public void ready() throws TclException {
 		// Reset the interpreter's result and clear out
 		// any previous error information.
@@ -891,22 +878,11 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * createCommands --
-	 * 
+	/**
 	 * Create the build-in commands. These commands are loaded on demand -- the
 	 * class file of a Command class are loaded into the JVM the first time the
 	 * given command is executed.
-	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: Commands are registered.
-	 * 
-	 * ----------------------------------------------------------------------
 	 */
-
 	protected void createCommands() {
 		Extension.loadOnDemand(this, "after", "tcl.lang.cmd.AfterCmd");
 		Extension.loadOnDemand(this, "append", "tcl.lang.cmd.AppendCmd");

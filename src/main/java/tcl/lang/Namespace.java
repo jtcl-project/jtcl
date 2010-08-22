@@ -21,6 +21,7 @@
 
 package tcl.lang;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.ListIterator;
@@ -873,11 +874,7 @@ public class Namespace {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * Tcl_Import -> importList
-	 * 
+	/**
 	 * Imports all of the commands matching a pattern into the namespace
 	 * specified by namespace (or the current namespace if namespace is null).
 	 * This is done by creating a new command (the "imported command") that
@@ -885,30 +882,29 @@ public class Namespace {
 	 * 
 	 * If matching commands are on the autoload path but haven't been loaded
 	 * yet, this command forces them to be loaded, then creates the links to
-	 * them.
-	 * 
-	 * Results: Returns if successful, raises TclException if something goes
-	 * wrong.
-	 * 
-	 * Side effects: Creates new commands in the importing namespace. These
-	 * indirect calls back to the real command and are deleted if the real
+	 * them. Side effects: Creates new commands in the importing namespace.
+	 * These indirect calls back to the real command and are deleted if the real
 	 * commands are deleted.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 *            current interpreter
+	 * @param namespace
+	 *            reference to the namespace into which the commands are to be
+	 *            imported. null for the current namespace.
+	 * @param pattern
+	 *            String pattern indicating which commands to import. This
+	 *            pattern should be qualified by the name of the namespace from
+	 *            which to import the command(s).
+	 * @param allowOverwrite
+	 *            If true, allow existing commands to  be overwritten by
+	 *            imported commands. If 0, return an error if an imported 
+	 *            cmd conflicts with an existing one. 
 	 */
 
-	public static void importList(Interp interp, // Current interpreter.
-			Namespace namespace, // reference to the namespace into which the
-			// commands are to be imported. null for
-			// the current namespace.
-			String pattern, // String pattern indicating which commands
-			// to import. This pattern should be
-			// qualified by the name of the namespace
-			// from which to import the command(s).
-			boolean allowOverwrite // If true, allow existing commands to
-	// be overwritten by imported commands.
-	// If 0, return an error if an imported
-	// cmd conflicts with an existing one.
+	public static void importList(Interp interp, 
+			Namespace namespace, // 
+			String pattern, // 
+			boolean allowOverwrite // 
 	) throws TclException {
 		Namespace ns, importNs;
 		Namespace currNs = getCurrentNamespace(interp);
@@ -985,15 +981,37 @@ public class Namespace {
 			}
 		}
 
+		/* Scan through the command table and make a list of any built-in
+		 * commands that should be loaded before we import
+		 */
+		HashMap<String, AutoloadStub> toBeLoaded = new HashMap<String, AutoloadStub>();
+		for (Iterator<Map.Entry<String, WrappedCommand>> iter = importNs.cmdTable.entrySet().iterator(); iter.hasNext();) {
+			Map.Entry<String, WrappedCommand> entry = iter.next();
+			cmdName = entry.getKey();
+			if (Util.stringMatch(cmdName, simplePattern)) {
+				cmd = (WrappedCommand) importNs.cmdTable.get(cmdName);
+				if (cmd.cmd instanceof AutoloadStub) {
+					AutoloadStub autoloadCmd = (AutoloadStub) cmd.cmd;
+					toBeLoaded.put(cmdName,autoloadCmd);
+				}
+			}
+		}
+		
+		/* Now load all the commands that were found */
+		
+		for (Iterator<Map.Entry<String, AutoloadStub>> iter = toBeLoaded.entrySet().iterator(); iter.hasNext();) {
+			Map.Entry<String, AutoloadStub> entry = iter.next();
+			cmdName = entry.getKey();
+			AutoloadStub stubcmd = entry.getValue();
+			stubcmd.load(interp, cmdName);
+		}
 		// Scan through the command table in the source namespace and look for
 		// exported commands that match the string pattern. Create an "imported
 		// command" in the current namespace for each imported command; these
 		// commands redirect their invocations to the "real" command.
-
-		for (Iterator iter = importNs.cmdTable.entrySet().iterator(); iter
-				.hasNext();) {
-			Map.Entry entry = (Map.Entry) iter.next();
-			cmdName = (String) entry.getKey();
+		for (Iterator<Map.Entry<String, WrappedCommand>> iter = importNs.cmdTable.entrySet().iterator(); iter.hasNext();) {
+			Map.Entry<String, WrappedCommand> entry = iter.next();
+			cmdName = entry.getKey();
 
 			if (Util.stringMatch(cmdName, simplePattern)) {
 				// The command cmdName in the source namespace matches the
@@ -1015,6 +1033,8 @@ public class Namespace {
 				// in the current namespace that refers to cmdPtr.
 
 				if ((ns.cmdTable.get(cmdName) == null) || allowOverwrite) {
+					
+				
 					// Create the imported command and its client data.
 					// To create the new command in the current namespace,
 					// generate a fully qualified name for it.
@@ -1027,13 +1047,15 @@ public class Namespace {
 						ds.append("::");
 					}
 					ds.append(cmdName);
+					
+					cmd = (WrappedCommand) importNs.cmdTable.get(cmdName);
 
+					
 					// Check whether creating the new imported command in the
 					// current namespace would create a cycle of imported->real
 					// command references that also would destroy an existing
 					// "real" command already in the current namespace.
 
-					cmd = (WrappedCommand) importNs.cmdTable.get(cmdName);
 
 					if (cmd.cmd instanceof ImportedCmdData) {
 						// This is actually an imported command, find
