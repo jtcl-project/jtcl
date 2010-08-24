@@ -20,6 +20,7 @@ import java.io.OutputStream;
 import tcl.lang.Interp;
 import tcl.lang.TclException;
 import tcl.lang.TclIO;
+import tcl.lang.TclPosixException;
 import tcl.lang.TclRuntimeError;
 
 /**
@@ -70,12 +71,12 @@ public class ResourceChannel extends Channel {
 		try {
 			file = interp.getClassLoader().getResourceAsStream(fileName);
 		} catch (java.lang.NullPointerException npe) {
-			throw new TclException(interp,
+			throw new TclPosixException(interp,TclPosixException.ENOENT, true,
 					"ResourceChannel.open: no file specified for \"resource:\" ");
 		}
 
 		if (file == null) {
-			throw new TclException(interp,
+			throw new TclPosixException(interp,TclPosixException.ENOENT, true,
 					"ResourceChannel.open: cannot find \"resource:" + fileName
 							+ "\"");
 		}
