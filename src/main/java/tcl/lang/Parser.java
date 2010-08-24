@@ -729,11 +729,7 @@ public class Parser {
 		return parse;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * TclEvalObjvInternal -> evalObjv
-	 * 
+	/**
 	 * This procedure evaluates a Tcl command that has already been parsed into
 	 * words, with one TclObject holding each word.
 	 * 
@@ -741,23 +737,21 @@ public class Parser {
 	 * error occurs, this procedure does NOT add any information to the
 	 * errorInfo variable.
 	 * 
-	 * Side effects: Depends on the command.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 *            Interpreter in which to evaluate the ommand. Also used for
+	 *            errorreporting.
+	 *@param objv
+	 *            An array of pointers to objects that are the words that make
+	 *            up the command.
+	 * @param length
+	 *            Number of characters in command; if -1, all characters up to
+	 *            the first null character are used. Currently unused.
+	 * @param flags
+	 *            Collection of OR-ed bits that control the evaluation of the
+	 *            script. Only TCL.EVAL_GLOBAL is currently supported.
 	 */
 
-	static void evalObjv(Interp interp, // Interpreter in which to evaluate the
-			// command. Also used for error
-			// reporting.
-			TclObject[] objv, // An array of pointers to objects that are
-			// the words that make up the command.
-			int length, // Number of characters in command; if -1, all
-			// characters up to the first null character are
-			// used. Currently unused.
-			int flags) // Collection of OR-ed bits that control
-			// the evaluation of the script. Only
-			// TCL.EVAL_GLOBAL is currently
-			// supported.
+	static void evalObjv(Interp interp, TclObject[] objv, int length,  int flags)
 			throws TclException {
 		Command cmd;
 		TclObject[] newObjv = null;
@@ -790,13 +784,14 @@ public class Parser {
 				for (i = (objv.length - 1); i >= 0; i--) {
 					newObjv[i + 1] = objv[i];
 				}
-				newObjv[0] = TclString.newInstance("unknown");
+				newObjv[0] = TclString.newInstance("::unknown");
 				newObjv[0].preserve();
-				cmd = interp.getCommand("unknown");
+				cmd = interp.getCommand("::unknown");
 				if (cmd == null) {
 					throw new TclException(interp, "invalid command name \""
 							+ objv[0].toString() + "\"");
 				} else {
+					
 					evalObjv(interp, newObjv, length, 0);
 				}
 				newObjv[0].release();

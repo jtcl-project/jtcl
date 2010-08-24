@@ -25,12 +25,15 @@ package tcl.lang;
  */
 
 class ImportRef {
-	WrappedCommand importedCmd; // Points to the imported command created in
-	// an importing namespace; this command
-	// redirects its invocations to the "real" cmd.
-	ImportRef next; // Next element on the linked list of
-	// imported commands that refer to the
-	// "real" command. The real command deletes
-	// these imported commands on this list when
-	// it is deleted.
+	/**
+	 * Points to the imported command created in an importing namespace; this
+	 * command  redirects its invocations to the "real" cmd.
+	 */
+	WrappedCommand importedCmd; 
+	/**
+	 * Next element on the linked list of  imported commands that refer to the
+	 *  "real" command. The real command deletes  these imported commands on
+	 * this list when  it is deleted.
+	 */
+	ImportRef next; 
 }

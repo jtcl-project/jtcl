@@ -6,10 +6,6 @@ import tcl.lang.TclCmdTest;
 
 public class NamespaceCmdTest extends TclCmdTest {
 	public void testCmd() throws Exception {
-		
-		// FIXME: namespace-9.9 causes and endless loop!!
-		fail("namespace-9.9 causes and endless loop!");
-		
 		String resName = "/tcl/lang/cmd/namespace.test";
 		tclTestResource(resName, Collections.EMPTY_LIST);
 	}

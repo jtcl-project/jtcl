@@ -2054,22 +2054,15 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * getCommand --
-	 * 
+	/**
 	 * Returns the command procedure of the given command.
 	 * 
-	 * Results: The command procedure of the given command, or null if the
+	 * @param cmdName string name of the command
+	 * 
+	 * @return The command procedure of the given command, or null if the
 	 * command doesn't exist.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * ----------------------------------------------------------------------
 	 */
-
-	public Command getCommand(String cmdName) // String name of the command.
+	public Command getCommand(String cmdName) 
 	{
 		// Find the desired command and return it.
 

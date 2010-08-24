@@ -172,11 +172,7 @@ public class NamespaceCmd implements InternalRep, Command {
 
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * NamespaceChildrenCmd -> childrenCmd
-	 * 
+	/**
 	 * Invoked to implement the "namespace children" command that returns a list
 	 * containing the fully-qualified names of the child namespaces of a given
 	 * namespace. Handles the following syntax:
@@ -187,8 +183,7 @@ public class NamespaceCmd implements InternalRep, Command {
 	 * 
 	 * Side effects: Returns a result in the interpreter's result object. If
 	 * anything goes wrong, the result is an error message.
-	 * 
-	 * ----------------------------------------------------------------------
+	
 	 */
 
 	private static void childrenCmd(Interp interp, TclObject[] objv)
@@ -253,9 +248,7 @@ public class NamespaceCmd implements InternalRep, Command {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
+	/**
 	 * NamespaceCodeCmd -> codeCmd
 	 * 
 	 * Invoked to implement the "namespace code" command to capture the
@@ -275,8 +268,7 @@ public class NamespaceCmd implements InternalRep, Command {
 	 * 
 	 * Side effects: If anything goes wrong, this procedure returns an error
 	 * message as the result in the interpreter's result object.
-	 * 
-	 * ----------------------------------------------------------------------
+	
 	 */
 
 	private static void codeCmd(Interp interp, TclObject[] objv)
@@ -317,7 +309,7 @@ public class NamespaceCmd implements InternalRep, Command {
 		// by the "namespace inscope" command.
 
 		list = TclList.newInstance();
-		TclList.append(interp, list, TclString.newInstance("namespace"));
+		TclList.append(interp, list, TclString.newInstance("::namespace"));
 		TclList.append(interp, list, TclString.newInstance("inscope"));
 
 		currNs = Namespace.getCurrentNamespace(interp);
@@ -334,11 +326,7 @@ public class NamespaceCmd implements InternalRep, Command {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * NamespaceCurrentCmd -> currentCmd
-	 * 
+	/**
 	 * Invoked to implement the "namespace current" command which returns the
 	 * fully-qualified name of the current namespace. Handles the following
 	 * syntax:
@@ -350,8 +338,6 @@ public class NamespaceCmd implements InternalRep, Command {
 	 * 
 	 * Side effects: Returns a result in the interpreter's result object. If
 	 * anything goes wrong, the result is an error message.
-	 * 
-	 * ----------------------------------------------------------------------
 	 */
 
 	private static void currentCmd(Interp interp, TclObject[] objv)
@@ -383,11 +369,7 @@ public class NamespaceCmd implements InternalRep, Command {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * NamespaceDeleteCmd -> deleteCmd
-	 * 
+	/**
 	 * Invoked to implement the "namespace delete" command to delete
 	 * namespace(s). Handles the following syntax:
 	 * 
@@ -409,8 +391,6 @@ public class NamespaceCmd implements InternalRep, Command {
 	 * Side effects: Deletes the specified namespaces. If anything goes wrong,
 	 * this procedure returns an error message in the interpreter's result
 	 * object.
-	 * 
-	 * ----------------------------------------------------------------------
 	 */
 
 	private static void deleteCmd(Interp interp, TclObject[] objv)
@@ -449,11 +429,7 @@ public class NamespaceCmd implements InternalRep, Command {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * NamespaceEvalCmd -> evalCmd
-	 * 
+	/**
 	 * Invoked to implement the "namespace eval" command. Executes commands in a
 	 * namespace. If the namespace does not already exist, it is created.
 	 * Handles the following syntax:
@@ -470,8 +446,7 @@ public class NamespaceCmd implements InternalRep, Command {
 	 * Side effects: Returns the result of the command in the interpreter's
 	 * result object. If anything goes wrong, this procedure returns an error
 	 * message as the result.
-	 * 
-	 * ----------------------------------------------------------------------
+	
 	 */
 
 	private static void evalCmd(Interp interp, TclObject[] objv)
@@ -537,9 +512,7 @@ public class NamespaceCmd implements InternalRep, Command {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
+	/**
 	 * NamespaceExistsCmd -> existsCmd
 	 * 
 	 * Invoked to implement the "namespace exists" command that returns true if
@@ -553,8 +526,6 @@ public class NamespaceCmd implements InternalRep, Command {
 	 * 
 	 * Side effects: Returns a result in the interpreter's result object. If
 	 * anything goes wrong, the result is an error message.
-	 * 
-	 * ----------------------------------------------------------------------
 	 */
 	private static void existsCmd(Interp interp, TclObject[] objv)
 			throws TclException {
@@ -576,11 +547,7 @@ public class NamespaceCmd implements InternalRep, Command {
 		interp.setResult(namespace != null);
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * NamespaceExportCmd -> exportCmd
-	 * 
+	/**
 	 * Invoked to implement the "namespace export" command that specifies which
 	 * commands are exported from a namespace. The exported commands are those
 	 * that can be imported into another namespace using "namespace import".
@@ -606,8 +573,7 @@ public class NamespaceCmd implements InternalRep, Command {
 	 * 
 	 * Side effects: Returns a result in the interpreter's result object. If
 	 * anything goes wrong, the result is an error message.
-	 * 
-	 * ----------------------------------------------------------------------
+	
 	 */
 
 	private static void exportCmd(Interp interp, TclObject[] objv)
@@ -658,11 +624,7 @@ public class NamespaceCmd implements InternalRep, Command {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * NamespaceForgetCmd -> forgetCmd
-	 * 
+	/**
 	 * Invoked to implement the "namespace forget" command to remove imported
 	 * commands from a namespace. Handles the following syntax:
 	 * 
@@ -682,8 +644,7 @@ public class NamespaceCmd implements InternalRep, Command {
 	 * Side effects: Imported commands are removed from the current namespace.
 	 * If anything goes wrong, this procedure returns an error message in the
 	 * interpreter's result object.
-	 * 
-	 * ----------------------------------------------------------------------
+	
 	 */
 
 	private static void forgetCmd(Interp interp, TclObject[] objv)

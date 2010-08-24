@@ -23,46 +23,71 @@ package tcl.lang;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
-// This structure contains a cached pointer to a namespace that is the
-// result of resolving the namespace's name in some other namespace. It is
-// the internal representation for a nsName object. It contains the
-// pointer along with some information that is used to check the cached
-// pointer's validity. (ported Tcl_Namespace to Namespace)
+/**
+ * This structure contains a cached pointer to a namespace that is the result of
+ * resolving the namespace's name in some other namespace. It is the internal
+ * representation for a nsName object. It contains the pointer along with some
+ * information that is used to check the cached pointer's validity. (ported
+ * Tcl_Namespace to Namespace)
+ */
 
 public class Namespace {
-	public String name; // The namespace's simple (unqualified)
-	// name. This contains no ::'s. The name of
-	// the global namespace is "" although "::"
-	// is an synonym.
-	public String fullName; // The namespace's fully qualified name.
-	// This starts with ::.
-	public DeleteProc deleteProc; // method to invoke when namespace is deleted
+	/**
+	 * /The namespace's simple (unqualified)  name. This contains no ::'s.
+	 * The name of the global namespace is "" although "::" is an synonym.
+	 */
+	public String name; 
+	/**
+	 * The namespace's fully qualified name.  This starts with ::.
+	 */
+	public String fullName; 
+	/**
+	 * method to invoke when namespace is deleted
+	 */
+	public DeleteProc deleteProc; 
 
-	public Namespace parent; // reference to the namespace that contains
-	// this one. null is this is the global namespace.
-	public HashMap childTable; // Contains any child namespaces. Indexed
-	// by strings; values are references to
-	// Namespace objects
-	public long nsId; // Unique id for the namespace.
+	/**
+	 * reference to the namespace that contains this one. null is this is the global namespace.
+	 */
+	public Namespace parent;
+	
+	/**
+	 * Contains any child namespaces.
+	 */
+	public HashMap<String, Namespace> childTable;
+	
+	/**
+	 * unique id for the namespace
+	 */
+	public long nsId; 
 
-	public Interp interp; // The interpreter containing this namespace.
+	/**
+	 * The interpreter containing this namespace.
+	 */
+	public Interp interp; 
 
-	public int flags; // OR-ed combination of the namespace
-	// status flags NS_DYING and NS_DEAD (listed below)
+	/**
+	 *  OR-ed combination of the namespace status flags NS_DYING and NS_DEAD (listed below)
+	 */
+	public int flags;
 
-	public int activationCount; // Number of "activations" or active call
-	// frames for this namespace that are on
-	// the Tcl call stack. The namespace won't
-	// be freed until activationCount becomes zero.
+	/**
+	 * Number of "activations" or active call frames for this namespace that
+	 * are on the Tcl call stack. The namespace won't be freed until
+	 * activationCount becomes zero.
+	 */
+	public int activationCount;
 
-	public int refCount; // Count of references by nsName
-	// objects. The namespace can't be freed
-	// until refCount becomes zero.
+	/**
+	 * Count of references by nsName  objects. The namespace can't be freed until refCount becomes zero.
+	 */
+	public int refCount; 
 
 	/**
 	 * Contains all the commands currently registered in the namespace. Indexed
@@ -79,28 +104,34 @@ public class Namespace {
 	 */
 	public HashMap<String, Var> varTable;
 
-	public String[] exportArray; // Reference to an array of string patterns
-	// specifying which commands are exported.
-	// A pattern may include "string match"
-	// style wildcard characters to specify
-	// multiple commands; however, no namespace
-	// qualifiers are allowed. null if no
-	// export patterns are registered.
+	/**
+	 * Reference to an array of string patterns specifying which commands are
+	 * exported.  A pattern may include "string match" style wildcard
+	 * characters to specify multiple commands; however, no namespace //
+	 * qualifiers are allowed. null if no export patterns are registered.
+	 */
+	public String[] exportArray;
 
-	public int numExportPatterns; // Number of export patterns currently
-	// registered using "namespace export".
+	/**
+	 * Number of export patterns currently registered using
+	 * "namespace export".
+	 */
+	public int numExportPatterns; 
 
-	public int maxExportPatterns; // Mumber of export patterns for which
-	// space is currently allocated.
+	/**
+	 * Mumber of export patterns for which space is currently allocated.
+	 */
+	public int maxExportPatterns;
 
+	/**
+	 * If non-null, this object overrides the  usual command and variable
+	 * resolution  mechanism in Tcl. This procedure is invoked within
+	 * findCommand and findNamespaceVar to esolve all command and variable
+	 * references  within the namespace.
+	 */
 	public Resolver resolver;
 
-	// If non-null, this object overrides the
-	// usual command and variable resolution
-	// mechanism in Tcl. This procedure is invoked
-	// within findCommand and findNamespaceVar to
-	// resolve all command and variable references
-	// within the namespace.
+
 
 	/** 
      * @return the full namespace name string
@@ -111,8 +142,9 @@ public class Namespace {
 		return fullName;
 	}
 
-	// This interface is used to provide a callback when a namespace is deleted
-	// (ported Tcl_NamespaceDeleteProc to Namespace.DeleteProc)
+	/**
+	 *  This interface is used to provide a callback when a namespace is deleted
+	 */
 
 	public static interface DeleteProc {
 		public void delete();
@@ -121,21 +153,28 @@ public class Namespace {
 	// (ported ResolvedNsName to Namespace.ResolvedNsName)
 
 	public static class ResolvedNsName {
-		public Namespace ns; // reference to namespace object
-		public long nsId; // sPtr's unique namespace id. Used to
-		// verify that ns is still valid
-		// (e.g., it's possible that the namespace
-		// was deleted and a new one created at
-		// the same address).
+		/**
+		 * Reference to the namespace object
+		 */
+		public Namespace ns;
+		/**
+		 * sPtr's unique namespace id. Used to verify that ns is still valid
+		 * (e.g., it's possible that the namespace was deleted and a new
+		 * one created at the same address).
+		 */
+		public long nsId;
 
-		public Namespace refNs; // reference to the namespace containing the
-		// reference (not the namespace that
-		// contains the referenced namespace).
-		public int refCount; // Reference count: 1 for each nsName
-		// object that has a pointer to this
-		// ResolvedNsName structure as its internal
-		// rep. This structure can be freed when
-		// refCount becomes zero.
+		/**
+		 * reference to the namespace containing the reference (not the
+		 * namespace that contains the referenced namespace).
+		 */
+		public Namespace refNs; 
+		/**
+		 * Reference count: 1 for each nsName  object that has a pointer to
+		 * this  ResolvedNsName structure as its internal  rep. This
+		 * structure can be freed when refCount becomes zero.
+		 */
+		public int refCount; 
 	}
 
 	// Flag passed to getNamespaceForQualName to indicate that it should
@@ -155,33 +194,34 @@ public class Namespace {
 	private static long numNsCreated = 0;
 	private static Object nsMutex = new Object();
 
-	//
-	// Flags used to represent the status of a namespace:
-	//
-	// NS_DYING - 1 means deleteNamespace has been called to delete the
-	// namespace but there are still active call frames on the Tcl
-	// stack that refer to the namespace. When the last call frame
-	// referring to it has been popped, it's variables and command
-	// will be destroyed and it will be marked "dead" (NS_DEAD).
-	// The namespace can no longer be looked up by name.
-	// NS_DEAD - 1 means deleteNamespace has been called to delete the
-	// namespace and no call frames still refer to it. Its
-	// variables and command have already been destroyed. This bit
-	// allows the namespace resolution code to recognize that the
-	// namespace is "deleted". When the last namespaceName object
-	// in any byte code code unit that refers to the namespace has
-	// been freed (i.e., when the namespace's refCount is 0), the
-	// namespace's storage will be freed.
-
+	/**
+	 * NS_DYING - 1 means deleteNamespace has been called to delete the
+	 * namespace but there are still active call frames on the Tcl stack that
+	 * refer to the namespace. When the last call frame referring to it has been
+	 * popped, it's variables and command will be destroyed and it will be
+	 * marked "dead" (NS_DEAD). The namespace can no longer be looked up by
+	 * name.
+	 */
 	static final int NS_DYING = 0x01;
+	
+	/**
+	 * NS_DEAD - 1 means deleteNamespace has been called to delete the namespace
+	 * and no call frames still refer to it. Its variables and command have
+	 * already been destroyed. This bit allows the namespace resolution code to
+	 * recognize that the namespace is "deleted". When the last namespaceName
+	 * object in any byte code code unit that refers to the namespace has been
+	 * freed (i.e., when the namespace's refCount is 0), the namespace's storage
+	 * will be freed.
+	 */
 	public static final int NS_DEAD = 0x02;
 
-	// Flag passed to getNamespaceForQualName to have it create all namespace
-	// components of a namespace-qualified name that cannot be found. The new
-	// namespaces are created within their specified parent. Note that this
-	// flag's value must not conflict with the values of the flags
-	// TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY, and FIND_ONLY_NS
-
+	/**
+	 * Flag passed to getNamespaceForQualName to have it create all namespace
+	 * components of a namespace-qualified name that cannot be found. The new
+	 * namespaces are created within their specified parent. Note that this
+	 * flag's value must not conflict with the values of the flags
+	 * TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY, and FIND_ONLY_NS
+	 */
 	public static final int CREATE_NS_IF_UNKNOWN = 0x800;
 
 	/**
@@ -355,34 +395,32 @@ public class Namespace {
 		frame.ns = null;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * Tcl_CreateNamespace --
-	 * 
+	/**
 	 * Creates a new namespace with the given name. If there is no active
 	 * namespace (i.e., the interpreter is being initialized), the global ::
 	 * namespace is created and returned.
 	 * 
-	 * Results: Returns a reference to the new namespace if successful. If the
-	 * namespace already exists or if another error occurs, this routine returns
-	 * null, along with an error message in the interpreter's result object.
+	 * @param interp
+	 *            interpreter in which to create new namespace
+	 * @param name
+	 *            name for the new namespace; may be a qualified name with the
+	 *            ancestors separated with ::'s
+	 * @param deleteProc
+	 *            procedure called when namespace is deleted, or null if none
+	 *            should be called
 	 * 
-	 * Side effects: If the name contains "::" qualifiers and a parent namespace
-	 * does not already exist, it is automatically created.
+	 * @return a reference to the new namespace if successful. If the namespace
+	 *         already exists or if another error occurs, this routine returns
+	 *         null, along with an error message in the interpreter's result
+	 *         object.
 	 * 
-	 * ----------------------------------------------------------------------
+	 *         Side effects: If the name contains "::" qualifiers and a parent
+	 *         namespace does not already exist, it is automatically created.
 	 */
 
-	public static Namespace createNamespace(Interp interp, // Interpreter in
-															// which a new
-															// namespace
-			// is being created
-			String name, // Name for the new namespace. May be a
-			// qualified name with names of ancestor
-			// namespaces separated by "::"s.
-			DeleteProc deleteProc // Procedure called when namespace is deleted.
-	// null if no procedure should be called
+	public static Namespace createNamespace(Interp interp, 
+			String name,
+			DeleteProc deleteProc 
 	) {
 		Namespace ns, ancestor;
 		Namespace parent;
@@ -731,11 +769,7 @@ public class Namespace {
 		ns.fullName = null;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * Tcl_Export -> exportList
-	 * 
+	/**
 	 * Makes all the commands matching a pattern available to later be imported
 	 * from the namespace specified by namespace (or the current namespace if
 	 * namespace is null). The specified pattern is appended onto the
@@ -747,22 +781,25 @@ public class Namespace {
 	 * Side effects: Appends the export pattern onto the namespace's export
 	 * list. Optionally reset the namespace's export pattern list.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interpreter
+	 *            current interpreter
+	 * @param namespace
+	 *            export commands from this namespace, or null for the current
+	 *            namespace
+	 * @param pattern
+	 *            String pattern indicating which commands to export. This
+	 *            pattern may not include any namespace qualifiers; only
+	 *            commands // in the specified namespace may be exported.
+	 * @param resetListFirst
+	 *            If true, resets the namespace's export list before
+	 *            appending. If false, return an error if an imported  cmd
+	 *            conflicts
 	 */
 
-	public static void exportList(Interp interp, // current interpreter
-			Namespace namespace, // Points to the namespace from which
-			// commands are to be exported. null for
-			// the current namespace.
-			String pattern, // String pattern indicating which commands
-			// to export. This pattern may not include
-			// any namespace qualifiers; only commands
-			// in the specified namespace may be
-			// exported.
-			boolean resetListFirst // If true, resets the namespace's
-	// export list before appending
-	// If false, return an error if an imported
-	// cmd conflicts
+	public static void exportList(Interp interp,
+			Namespace namespace,
+			String pattern, 
+			boolean resetListFirst 
 	) throws TclException {
 		final int INIT_EXPORT_PATTERNS = 5;
 		Namespace ns, exportNs;
@@ -828,11 +865,7 @@ public class Namespace {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * Tcl_AppendExportList -> appendExportList
-	 * 
+	/**
 	 * Appends onto the argument object the list of export patterns for the
 	 * specified namespace.
 	 * 
@@ -843,17 +876,16 @@ public class Namespace {
 	 * Side effects: If necessary, the object referenced by obj is converted
 	 * into a list object.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 *            the interpreter used for error reporting
+	 * @param namespace
+	 *            points to the namespace whose export pattern list is appended
+	 *            onto obj; null for current namespace
+	 * @param obj
+	 *            Tcl object onto which current export pattern list is appended
 	 */
 
-	public static void appendExportList(Interp interp, // Interpreter used for
-														// error reporting.
-			Namespace namespace, // Points to the namespace whose export
-			// pattern list is appended onto obj.
-			// null for the current namespace.
-			TclObject obj // Points to the Tcl object onto which the
-	// export pattern list is appended.
-	) throws TclException {
+	public static void appendExportList(Interp interp, Namespace namespace, TclObject obj ) throws TclException {
 		Namespace ns;
 		int i;
 
@@ -865,11 +897,16 @@ public class Namespace {
 			ns = namespace;
 		}
 
-		// Append the export pattern list onto objPtr.
-
+		if (ns.exportArray==null) return;
+		
+		/* Unique-fy the list */
+		HashSet<String> unique = new HashSet<String>( ns.exportArray.length);
 		for (i = 0; i < ns.numExportPatterns; i++) {
-			TclList.append(interp, obj, TclString
-					.newInstance(ns.exportArray[i]));
+			unique.add(ns.exportArray[i]);
+		}
+		// Append the export pattern list onto objPtr.
+		for (String export : unique) {
+			TclList.append(interp, obj, TclString.newInstance(export));
 		}
 		return;
 	}
@@ -901,11 +938,7 @@ public class Namespace {
 	 *            cmd conflicts with an existing one. 
 	 */
 
-	public static void importList(Interp interp, 
-			Namespace namespace, // 
-			String pattern, // 
-			boolean allowOverwrite // 
-	) throws TclException {
+	public static void importList(Interp interp, Namespace namespace, String pattern, boolean allowOverwrite) throws TclException {
 		Namespace ns, importNs;
 		Namespace currNs = getCurrentNamespace(interp);
 		String simplePattern, cmdName;
@@ -948,8 +981,7 @@ public class Namespace {
 				objv[0].release();
 				objv[1].release();
 			}
-
-			interp.resetResult();
+			interp.setResult("");
 		}
 
 		// From the pattern, find the namespace from which we are importing
@@ -1031,8 +1063,8 @@ public class Namespace {
 
 				// Unless there is a name clash, create an imported command
 				// in the current namespace that refers to cmdPtr.
-
-				if ((ns.cmdTable.get(cmdName) == null) || allowOverwrite) {
+				WrappedCommand oldCommand = ns.cmdTable.get(cmdName);
+				if (oldCommand == null || allowOverwrite) {
 					
 				
 					// Create the imported command and its client data.
@@ -1050,27 +1082,40 @@ public class Namespace {
 					
 					cmd = (WrappedCommand) importNs.cmdTable.get(cmdName);
 
-					
 					// Check whether creating the new imported command in the
 					// current namespace would create a cycle of imported->real
 					// command references that also would destroy an existing
 					// "real" command already in the current namespace.
-
-
-					if (cmd.cmd instanceof ImportedCmdData) {
-						// This is actually an imported command, find
-						// the real command it references
-						realCmd = getOriginalCommand(cmd);
-						if ((realCmd != null) && (realCmd.ns == currNs)
-								&& (currNs.cmdTable.get(cmdName) != null)) {
-							throw new TclException(
-									interp,
-									"import pattern \""
-											+ pattern
-											+ "\" would create a loop containing command \""
-											+ ds.toString() + "\"");
+					realCmd = cmd;
+					ArrayList<String> importPath = new ArrayList<String>();
+					importPath.add(ns.fullName+"::"+cmdName);
+					while (realCmd.cmd instanceof ImportedCmdData) {
+						realCmd = ((ImportedCmdData)realCmd.cmd).realCmd;
+						/* What's the name of realCmd in it's namespace?  We could try the obvious */
+						String cmdPath = "";
+						WrappedCommand testcmd = realCmd.ns.cmdTable.get(cmdName);
+						if (testcmd != realCmd) {
+							/* Need to actually search for it */
+							for (Iterator<Map.Entry<String, WrappedCommand>> itr = realCmd.ns.cmdTable.entrySet().iterator();
+									itr.hasNext();) {
+								Map.Entry<String, WrappedCommand> entr = itr.next();
+								if (entr.getValue() == realCmd) {
+									cmdPath = realCmd.ns.fullName + "::" + entr.getKey();
+									break;
+								}
+							}
+						} else {
+							cmdPath = realCmd.ns.fullName + "::" + cmdName;
 						}
+						
+						if (importPath.contains(cmdPath)) {
+							throw new TclException(interp,
+									"import pattern \""+ pattern+ "\" would create a loop containing command \""
+											+ cmdPath + "\"");
+						}
+						importPath.add(cmdPath);
 					}
+
 
 					data = new ImportedCmdData();
 
@@ -1093,7 +1138,20 @@ public class Namespace {
 					ref.next = cmd.importRef;
 					cmd.importRef = ref;
 				} else {
-					throw new TclException(interp, "can't import command \""
+					/* Don't throw exception if oldCommand that already exists
+					 * is simply this command, already imported into this namespace
+					 * We should be allowed to do 'namespace import exported::*' twice without error
+					 */
+					boolean throwException = true;
+					if (oldCommand.cmd instanceof ImportedCmdData) {
+						WrappedCommand realOldCmd = getOriginalCommand(oldCommand);
+						cmd = importNs.cmdTable.get(cmdName);
+						if (realOldCmd == cmd) {
+							throwException = false;
+						}
+					}
+					if (throwException )
+						throw new TclException(interp, "can't import command \""
 							+ cmdName + "\": already exists");
 				}
 			}
@@ -1101,58 +1159,40 @@ public class Namespace {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
+	 * Deletes previously imported commands. 
 	 * 
-	 * Tcl_ForgetImport -> forgetImport
-	 * 
-	 * Deletes previously imported commands. Given a pattern that may include
-	 * the name of an exporting namespace, this procedure first finds all
-	 * matching exported commands. It then looks in the namespace specified by
-	 * namespace for any corresponding previously imported commands, which it
-	 * deletes. If namespace is null, commands are deleted from the current
-	 * namespace.
-	 * 
-	 * Results: Returns if successful, raises TclException if something goes
-	 * wrong.
-	 * 
-	 * Side effects: May delete commands.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 *            current interpreter
+	 * @param namespace
+	 *            Points to the namespace from which previously imported
+	 *            commands should be removed. null for current namespace.
+	 * @param pattern
+	 *            String pattern indicating which importedcommands to
+	 *            remove. This pattern may be qualified by the name of the
+	 *            namespace from which the command(s) were imported.
 	 */
-
-	public static void forgetImport(Interp interp, // Current interpreter.
-			Namespace namespace, // Points to the namespace from which
-			// previously imported commands should be
-			// removed. null for current namespace.
-			String pattern // String pattern indicating which imported
-	// commands to remove. This pattern should
-	// be qualified by the name of the
-	// namespace from which the command(s) were
-	// imported.
-	) throws TclException {
-		Namespace ns, importNs, actualCtx;
+	public static void forgetImport(Interp interp, Namespace namespace, String pattern) throws TclException {
+		Namespace ns, importNs;
 		String simplePattern, cmdName;
 		WrappedCommand cmd;
 
-		// If the specified namespace is null, use the current namespace.
-
+		// set 'ns' to the namespace from which imported commands are to be forgotten.
 		if (namespace == null) {
 			ns = getCurrentNamespace(interp);
 		} else {
 			ns = namespace;
 		}
 
-		// From the pattern, find the namespace from which we are importing
+		// From the pattern, find the namespace from the to-be-deleted commands were imported
 		// and get the simple pattern (no namespace qualifiers or ::'s) at
-		// the end.
-
+		// the end.  If no namespace was specified in the pattern, 'importNs' becomes the same
+		// as 'ns'.
 		GetNamespaceForQualNameResult gnfqnr = interp.getnfqnResult;
 		getNamespaceForQualName(interp, pattern, ns, TCL.LEAVE_ERR_MSG, gnfqnr);
 		importNs = gnfqnr.ns;
-		actualCtx = gnfqnr.actualCxt;
 		simplePattern = gnfqnr.simpleName;
-
+		
 		// FIXME : the above call passes TCL.LEAVE_ERR_MSG, but
 		// it seems like this will be a problem when exception is raised!
 		if (importNs == null) {
@@ -1160,27 +1200,62 @@ public class Namespace {
 					"unknown namespace in namespace forget pattern \""
 							+ pattern + "\"");
 		}
+		
+		// Scan through the command table in the 'importNs'  namespace and look for
+		// exported commands that match the string pattern.   The 'importNs' namespace
+		// may actually be 'ns', if the pattern was not qualified with
+		// a namespace.  Place commands that match the pattern in matchingCommands.
+		
+		ArrayList<WrappedCommand> matchingCommands = new ArrayList<WrappedCommand>();
 
-		// Scan through the command table in the source namespace and look for
-		// exported commands that match the string pattern. If the current
-		// namespace has an imported command that refers to one of those real
-		// commands, delete it. The importNs.cmdTable should not change during
-		// this iteration.
-
-		for (Iterator iter = importNs.cmdTable.entrySet().iterator(); iter
+		for (Iterator<Map.Entry <String, WrappedCommand>> iter = importNs.cmdTable.entrySet().iterator(); iter
 				.hasNext();) {
-			Map.Entry entry = (Map.Entry) iter.next();
-			cmdName = (String) entry.getKey();
+			Map.Entry<String, WrappedCommand> entry = iter.next();
+			cmdName = entry.getKey();
+			cmd = entry.getValue();
 
-			if (Util.stringMatch(cmdName, simplePattern)) {
-				cmd = (WrappedCommand) ns.cmdTable.get(cmdName);
-				if (cmd != null) { // cmd of same name in current namespace
-					if (cmd.cmd instanceof ImportedCmdData) {
-						interp.deleteCommandFromToken(cmd);
-					}
-				}
+			if (Util.stringMatch(cmdName, simplePattern)  && cmd!=null) {
+				matchingCommands.add(cmd);
 			}
 		}
+		
+		if (ns == importNs) { /* If the imported namespace was not specified, just delete all matching commands and return  */
+			for (WrappedCommand c : matchingCommands) {
+				interp.deleteCommandFromToken(c);
+			}
+
+		} else {  /* importNs was specified as part of the pattern, so only delete commands that are imported from it */
+			
+			/* Go through all the commands in 'ns' and find imported commands that are imported from importNs and
+			 * are listed in the matchingCommands list
+			 */
+			ArrayList<WrappedCommand> commandsToDelete = new ArrayList<WrappedCommand>(matchingCommands.size());
+			for (Iterator<Map.Entry<String, WrappedCommand>> iter = ns.cmdTable.entrySet().iterator(); iter
+					.hasNext();) {
+				Map.Entry<String, WrappedCommand> entry = iter.next();
+				cmd = entry.getValue();
+				
+				if (cmd.cmd instanceof ImportedCmdData) {
+					ImportedCmdData importedCmdData = (ImportedCmdData) cmd.cmd;
+					WrappedCommand originalCommand = getOriginalCommand(cmd);
+					/* Delete command if the command was directly imported from importNs, or if the original command
+					 * exists in importNs
+					 */
+					if ( (importedCmdData.realCmd.ns == importNs && matchingCommands.contains(importedCmdData.realCmd))
+							|| (originalCommand.ns == importNs && matchingCommands.contains(originalCommand))) {
+
+						commandsToDelete.add(cmd);
+					}
+					
+				}
+			}
+			/* Finally, delete the commands */			
+			for (WrappedCommand c : commandsToDelete) {
+				interp.deleteCommandFromToken(c);
+			}
+
+		}
+		
 		return;
 	}
 
@@ -1215,11 +1290,7 @@ public class Namespace {
 		return cmd;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * InvokeImportedCmd -> invokeImportedCmd
-	 * 
+	/**
 	 * Invoked by Tcl whenever the user calls an imported command that was
 	 * created by Tcl_Import. Finds the "real" command (in another namespace),
 	 * and passes control to it.
@@ -1230,9 +1301,10 @@ public class Namespace {
 	 * Side effects: Returns a result in the interpreter's result object. If
 	 * anything goes wrong, the result object is set to an error message.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 * @param data the data object for this imported command
+	 * @param objv argument objects
 	 */
-
 	static void invokeImportedCmd(Interp interp, // Current interpreter.
 			ImportedCmdData data, // The data object for this imported command
 			TclObject[] objv // Argument objects
@@ -1241,11 +1313,7 @@ public class Namespace {
 		realCmd.cmd.cmdProc(interp, objv);
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * DeleteImportedCmd -> deleteImportedCmd
-	 * 
+	/**
 	 * Invoked by Tcl whenever an imported command is deleted. The "real"
 	 * command keeps a list of all the imported commands that refer to it, so
 	 * those imported commands can be deleted when the real command is deleted.
@@ -1258,11 +1326,10 @@ public class Namespace {
 	 * Side effects: Removes the imported command from the real command's import
 	 * list.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param data the data object for the imported command
 	 */
 
-	static void deleteImportedCmd(ImportedCmdData data) // The data object for
-														// this imported command
+	static void deleteImportedCmd(ImportedCmdData data)
 	{
 		WrappedCommand realCmd = data.realCmd;
 		WrappedCommand self = data.self;

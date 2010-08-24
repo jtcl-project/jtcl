@@ -24,14 +24,18 @@ package tcl.lang;
  */
 
 class ImportedCmdData implements Command, CommandWithDispose {
-	WrappedCommand realCmd; // "Real" command that this imported command
-	// refers to.
-	WrappedCommand self; // Pointer to this imported WrappedCommand. Needed
-
-	// only when deleting it in order to remove
-	// it from the real command's linked list of
-	// imported commands that refer to it.
-
+	/**
+	 * "Real" command that this imported command refers to.
+	 */
+	WrappedCommand realCmd;
+	/**
+	 * Pointer to this imported WrappedCommand. Needed
+	 * only when deleting it in order to remove  it from the real command's
+	 * linked list of  imported commands that refer to it.
+	 */
+	WrappedCommand self;
+	
+	
 	public String toString() {
 		return "ImportedCmd for " + realCmd;
 	}
