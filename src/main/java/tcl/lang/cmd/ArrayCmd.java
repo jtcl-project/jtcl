@@ -293,6 +293,11 @@ public class ArrayCmd implements Command {
 			String name1 = objv[2].toString();
 			String name2, strValue;
 
+			/* verify that name1 is not an array.  Var.lookupVar can does this, but requires a part2 */
+			if (name1.endsWith(")") && name1.contains("(")) {
+				throw new TclVarException(interp, name1, null, "set", "variable isn't array"	);
+			}
+			
 			// Set each of the array variable names in the interp
 
 			for (i = 0; i < size; i++) {

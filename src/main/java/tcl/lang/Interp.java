@@ -1453,44 +1453,42 @@ public class Interp extends EventuallyFreed {
 		Var.unsetVar(this, name1, name2, (flags | TCL.LEAVE_ERR_MSG));
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * traceVar --
-	 * 
+	/**
 	 * Add a trace to a variable.
 	 * 
 	 * Results: None.
 	 * 
 	 * Side effects: None.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * 	@param nameObj
+	 *            name of variable, may contain a parenthesized index value
+	 * @param trace
+	 *            object to notify when specified ops are invoked upon the
+	 *            variable
+	 * @param flags
+	 *             OR-ed collection of bits, including any  of
+	 *            TCL.TRACE_READS, TCL.TRACE_WRITES, TCL.TRACE_UNSETS,
+	 *            TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY.
 	 */
 
-	void traceVar(TclObject nameObj, // Name of variable; may end with "(index)"
-			// to signify an array reference.
-			VarTrace trace, // Object to notify when specified ops are
-			// invoked upon varName.
-			int flags) // OR-ed collection of bits, including any
-			// of TCL.TRACE_READS, TCL.TRACE_WRITES,
-			// TCL.TRACE_UNSETS, TCL.GLOBAL_ONLY,
-			// TCL.NAMESPACE_ONLY.
+	void traceVar(TclObject nameObj,
+			VarTrace trace, 
+			int flags) 
 			throws TclException {
 		Var.traceVar(this, nameObj.toString(), null, flags, trace);
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * traceVar --
-	 * 
+	/**
 	 * Add a trace to a variable.
 	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param name
+	 *            name of variable, may contain a parenthesized index value
+	 * @param trace
+	 *            object to notify when specified ops are invoked upon the
+	 *            variable
+	 * @param flags
+	 *             OR-ed collection of bits, including any  of
+	 *            TCL.TRACE_READS, TCL.TRACE_WRITES, TCL.TRACE_UNSETS,
+	 *            TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY.
 	 */
 
 	public void traceVar(String name, // Name of variable; may end with
@@ -1498,38 +1496,32 @@ public class Interp extends EventuallyFreed {
 			// to signify an array reference.
 			VarTrace trace, // Object to notify when specified ops are
 			// invoked upon varName.
-			int flags) // OR-ed collection of bits, including any
-			// of TCL.TRACE_READS, TCL.TRACE_WRITES,
-			// TCL.TRACE_UNSETS, TCL.GLOBAL_ONLY,
-			// TCL.NAMESPACE_ONLY.
+			int flags)
 			throws TclException {
 		Var.traceVar(this, name, null, flags, trace);
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
+	 * Add a trace to a variable.  
 	 * 
-	 * traceVar --
+	 * @param part1 name of variable
 	 * 
-	 * Add a trace to a variable.
-	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param part2
+	 *            name of element in within an array, null means part1 is a
+	 *            scalar or entire array
+	 * @param trace
+	 *            object to notify when specified ops are invoked upon the
+	 *            variable
+	 * @param flags
+	 *            OR-ed collection of bits, including any of TCL.TRACE_READS,
+	 *            TCL.TRACE_WRITES, TCL.TRACE_UNSETS, TCL.GLOBAL_ONLY,
+	 *            TCL.NAMESPACE_ONLY.
 	 */
 
-	public void traceVar(String part1, // Name of scalar variable or array.
-			String part2, // Name of element within array; null means
-			// trace applies to scalar variable or array
-			// as-a-whole.
-			VarTrace trace, // Object to notify when specified ops are
-			// invoked upon varName.
-			int flags) // OR-ed collection of bits, including any
-			// of TCL.TRACE_READS, TCL.TRACE_WRITES,
-			// TCL.TRACE_UNSETS, TCL.GLOBAL_ONLY, and
-			// TCL.NAMESPACE_ONLY.
+	public void traceVar(String part1, 
+			String part2,
+			VarTrace trace, 
+			int flags) 
 			throws TclException {
 		Var.traceVar(this, part1, part2, flags, trace);
 	}
@@ -2304,7 +2296,6 @@ public class Interp extends EventuallyFreed {
 			// TCL.OK.
 
 			int result = e.getCompletionCode();
-
 			if (result == TCL.RETURN) {
 				result = updateReturnInfo();
 			}
@@ -3032,11 +3023,7 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * ProcessUnexpectedResult -> processUnexpectedResult
-	 * 
+	/**
 	 * Procedure called by Tcl_EvalObj to set the interpreter's result value to
 	 * an appropriate error message when the code it evaluates returns an
 	 * unexpected result code (not TCL_OK and not TCL_ERROR) to the topmost
@@ -3047,11 +3034,10 @@ public class Interp extends EventuallyFreed {
 	 * Side effects: The interpreter result is set to an error message
 	 * appropriate to the result code.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param returnCode the unexpected result code
 	 */
 
-	public void processUnexpectedResult(int returnCode) // The unexpected result
-														// code.
+	public void processUnexpectedResult(int returnCode) 
 			throws TclException // A standard Tcl exception.
 	{
 		resetResult();
@@ -3495,8 +3481,8 @@ public class Interp extends EventuallyFreed {
 		// lets prevent "::" in the token too. --dl
 
 		if (hiddenCmdToken.indexOf("::") >= 0) {
-			throw new TclException(this, "cannot use namespace qualifiers as "
-					+ "hidden commandtoken (rename)");
+			throw new TclException(this, "cannot use namespace qualifiers in "
+					+ "hidden command token (rename)");
 		}
 
 		// Find the command to hide. An error is returned if cmdName can't
@@ -3704,27 +3690,20 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * TclObjInvoke -> invoke
-	 * 
+	/**
 	 * Invokes a Tcl command, given an objv/objc, from either the exposed or the
 	 * hidden sets of commands in the given interpreter.
 	 * 
-	 * Results: A standard Tcl object result.
-	 * 
-	 * Side effects: Whatever the command does.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param objv
+	 *            argument objects, objv[0] is the name of the command to invoke
+	 * @param flags
+	 *            Combination of flags controlling the call: 
+	 *            INVOKE_HIDDEN,_INVOKE_NO_UNKNOWN,  or INVOKE_NO_TRACEBACK.
+	 * @return A standard Tcl object result.
 	 */
 
-	public int invoke(TclObject[] objv, // Argument objects; objv[0] points to
-										// the
-			// name of the command to invoke.
-			int flags) // Combination of flags controlling the call:
-			// INVOKE_HIDDEN,_INVOKE_NO_UNKNOWN,
-			// or INVOKE_NO_TRACEBACK.
+	public int invoke(TclObject[] objv,
+			int flags) 
 			throws TclException {
 		if ((objv.length < 1) || (objv == null)) {
 			throw new TclException(this, "illegal argument vector");

@@ -1862,12 +1862,11 @@ final class PrecTraceProc implements VarTrace {
 	public void traceProc(Interp interp, String name1, String name2, int flags) throws TclException {
 		// If the variable is unset, then recreate the trace and restore
 		// the default value of the format string.
-
 		if ((flags & TCL.TRACE_UNSETS) != 0) {
 			if (((flags & TCL.TRACE_DESTROYED) != 0) && ((flags & TCL.INTERP_DESTROYED) == 0)) {
 				interp.traceVar(name1, name2, new PrecTraceProc(), TCL.GLOBAL_ONLY | TCL.TRACE_WRITES | TCL.TRACE_READS
 						| TCL.TRACE_UNSETS);
-				Util.precision = Util.DEFAULT_PRECISION;
+				// unset doesn't change value of precision
 			}
 			return;
 		}
@@ -1885,10 +1884,12 @@ final class PrecTraceProc implements VarTrace {
 		// The variable is being written. Check the new value and disallow
 		// it if it isn't reasonable.
 		//
-		// (ToDo) Disallow it if this is a safe interpreter (we don't want
+		// Disallow it if this is a safe interpreter (we don't want
 		// safe interpreters messing up the precision of other
 		// interpreters).
-
+		if (interp.isSafe) {
+			throw new TclException(interp,"can't modify precision from a safe interpreter");
+		}
 		TclObject tobj = null;
 		try {
 			tobj = interp.getVar(name1, name2, (flags & TCL.GLOBAL_ONLY));

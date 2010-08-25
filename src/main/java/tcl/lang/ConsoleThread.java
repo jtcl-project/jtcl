@@ -120,6 +120,9 @@ public class ConsoleThread extends Thread {
 								System.out
 										.println("eval returned exceptional condition");
 							}
+							
+							// copy result into errorInfo by using addErrorInfo
+							interp.addErrorInfo("");
 
 							int code = e.getCompletionCode();
 							switch (code) {

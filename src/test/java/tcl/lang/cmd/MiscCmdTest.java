@@ -9,8 +9,7 @@ import tcl.lang.TclCmdTest;
 public class MiscCmdTest extends TclCmdTest {
 	public void testBasic() throws Exception {
 		LinkedList<String> expectedFailureList = new LinkedList<String>(Arrays.asList( new String[] {
-				// FIXME: error message differ
-				"basic-12.1" 
+				"basic-24.3" // 'info commands' result in a different order; this is not a bug
 			}));
 		
 		String resName = "/tcl/lang/cmd/basic.test";

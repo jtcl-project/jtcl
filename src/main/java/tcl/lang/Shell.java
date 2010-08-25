@@ -109,7 +109,12 @@ public class Shell {
 						exitCode = 2;
 					}
 				} else if (code == TCL.ERROR) {
-					System.err.println(interp.getResult().toString());
+					try {
+						TclObject errorInfo = interp.getVar("errorInfo",TCL.GLOBAL_ONLY);
+						System.err.println(errorInfo.toString());
+					} catch (TclException e1) {
+						System.err.println(interp.getResult().toString());				
+					}
 					exitCode = 1;
 				} else {
 					System.err.println("command returned bad code: " + code);

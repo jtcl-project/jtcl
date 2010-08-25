@@ -66,11 +66,18 @@ public class VariableCmd implements Command {
 		TclObject varValue;
 		int i;
 
+		if (objv.length==1) {
+			throw new TclException(interp,"wrong # args: should be \"variable ?name value...? name ?value?\"");
+		}
 		for (i = 1; i < objv.length; i = i + 2) {
 			// Look up each variable in the current namespace context, creating
 			// it if necessary.
 
 			varName = objv[i].toString();
+			if (varName.endsWith(")") && varName.contains("(")) {
+				throw new TclException(interp, "can't define \""+varName+"\": name refers to an element in an array");					
+				
+			}
 			Var[] result = Var.lookupVar(interp, varName, null,
 					(TCL.NAMESPACE_ONLY | TCL.LEAVE_ERR_MSG), "define", true,
 					false);
@@ -81,7 +88,7 @@ public class VariableCmd implements Command {
 
 			var = result[0];
 			array = result[1];
-
+			
 			// Mark the variable as a namespace variable and increment its
 			// reference count so that it will persist until its namespace is
 			// destroyed or until the variable is unset.

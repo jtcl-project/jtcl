@@ -429,7 +429,7 @@ public class Var {
 	 * @param part1
 	 *            if part2 isn't NULL, this is the name of an array. Otherwise,
 	 *            this is a full variable name that could include a
-	 *            parenthesized array elemnt or a scalar.
+	 *            parenthesized array element or a scalar.
 	 * @param part2
 	 *            Name of an element within array, or null.
 	 * @param flags
@@ -439,9 +439,6 @@ public class Var {
 	 * @param create
 	 *            OR'ed combination of CRT_PART1 and CRT_PART2. Tells which
 	 *            entries to create if they don't already exist.
-	 * @param throwException
-	 *            true if an exception should be throw if the variable cannot be
-	 *            found.
 	 * @return a two element array. a[0] is the variable indicated by part1 and
 	 *         part2, or null if the variable couldn't be found and
 	 *         throwException is false.
@@ -463,24 +460,7 @@ public class Var {
 	 * 
 	 */
 
-	public static Var[] lookupVar(Interp interp, // Interpreter to use for
-													// lookup.
-			String part1, // If part2 isn't null, this is the name of
-			// an array. Otherwise, this
-			// is a full variable name that could
-			// include a parenthesized array element.
-			String part2, // Name of element within array, or null.
-			int flags, // Only TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY,
-			// and TCL.LEAVE_ERR_MSG bits matter.
-			String msg, // Verb to use in error messages, e.g.
-			// "read" or "set". Only needed if
-			// TCL.LEAVE_ERR_MSG is set in flags.
-			boolean createPart1, // If true, create hash table entry for part 1
-			// of name, if it doesn't already exist. If
-			// false, return error if it doesn't exist.
-			boolean createPart2 // If true, create hash table entry for part 2
-	// of name, if it doesn't already exist. If
-	// false, throw exception if it doesn't exist.
+	public static Var[] lookupVar(Interp interp, String part1, String part2, int flags,String msg, boolean createPart1,boolean createPart2
 	) throws TclException {
 		CallFrame varFrame = interp.varFrame;
 		// Reference to the procedure call frame whose
@@ -949,19 +929,7 @@ public class Var {
 	 * new Tcl object value. See the setVarPtr() method for the arguments to be
 	 * passed to this method.
 	 */
-
-	public static TclObject setVar(Interp interp, // interp to search for the
-													// var in
-			String part1, // Name of an array (if part2 is non-null)
-			// or the name of a variable.
-			String part2, // If non-null, gives the name of an element
-			// in the array part1.
-			TclObject newValue, // New value for variable.
-			int flags // Various flags that tell how to set value:
-	// any of TCL.GLOBAL_ONLY,
-	// TCL.NAMESPACE_ONLY, TCL.APPEND_VALUE,
-	// TCL.LIST_ELEMENT or TCL.LEAVE_ERR_MSG.
-	) throws TclException {
+	public static TclObject setVar(Interp interp, String part1,String part2, TclObject newValue, int flags) throws TclException {
 		Var[] result = lookupVar(interp, part1, part2, flags, "set", true, true);
 		if (result == null) {
 			return null;
@@ -2006,25 +1974,18 @@ public class Var {
 	 * @param part1
 	 *            1st part of the variable name.
 	 * @param part2
-	 *            2nd part of the variable name.
+	 *            2nd part of the variable name. null means part1 is a scalar or
+	 *            whole array.
 	 * @param flags
-	 *            misc flags that control the actions of this method.
+	 *            misc flags that control the actions of this method. OR-ed
+	 *            collection of bits, including any  of TCL.TRACE_READS,
+	 *            TCL.TRACE_WRITES,  TCL.TRACE_UNSETS, TCL.GLOBAL_ONLY, // and
+	 *            TCL.NAMESPACE_ONLY.
 	 * @param trace
 	 *            the trace to comand to add.
 	 */
 
-	public static void traceVar(Interp interp, // interp in which var is located
-			String part1, // Name of scalar variable or array.
-			String part2, // Name of element within array; null means
-			// trace applies to scalar variable or array
-			// as-a-whole.
-			int flags, // OR-ed collection of bits, including any
-			// of TCL.TRACE_READS, TCL.TRACE_WRITES,
-			// TCL.TRACE_UNSETS, TCL.GLOBAL_ONLY,
-			// and TCL.NAMESPACE_ONLY.
-			VarTrace proc // Procedure to call when specified ops are
-	// invoked upon var.
-	) throws TclException {
+	public static void traceVar(Interp interp, String part1, String part2, int flags, VarTrace proc) throws TclException {
 		Var[] result;
 		Var var;
 
@@ -2317,8 +2278,7 @@ public class Var {
 				ns = altNs;
 			}
 			if (ns == null) {
-				throw new TclException(interp, "bad variable name \"" + myName
-						+ "\": unknown namespace");
+				throw new TclException(interp,"can't create \"" + myName + "\": parent namespace doesn't exist");
 			}
 
 			// Check that we are not trying to create a namespace var linked to

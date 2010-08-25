@@ -1060,34 +1060,32 @@ public class Parser {
 		return result;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * eval2 --
-	 * 
+	/**
 	 * This procedure evaluates a Tcl script without using the compiler or
 	 * byte-code interpreter. It just parses the script, creates values for each
 	 * word of each command, then calls evalObjv to execute each command.
 	 * 
 	 * Results: A result or error message is left in interp's result.
 	 * 
-	 * Side effects: Depends on the script.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 *            interpreter in which to evaluate the script and report errors
+	 * @param script_array
+	 *            array of characters containing script
+	 * @param script_index
+	 *            starting index into script array
+	 * @param numChars
+	 *            number of characters in script; if < 0, the script consists of
+	 *            all characters up to the end
+	 * @param flags
+	 *            Tcl.EVAL_GLOBAL or 0
+	 * @throws TclException          
 	 */
 
-	static void eval2(Interp interp, // Interpreter in which to evaluate the
-			// script. Also used for error reporting.
-			char[] script_array, // the array of charcters
-			int script_index, // the starting index into this array
-
-			int numChars, // Number of characters in script. If < 0, the
-			// script consists of all characters up to the
-			// first end of script.
-			int flags) // Collection of OR-ed bits that control
-			// the evaluation of the script. Only
-			// TCL.EVAL_GLOBAL is currently
-			// supported.
+	static void eval2(Interp interp,
+			char[] script_array,
+			int script_index, 
+			int numChars,
+			int flags) 
 			throws TclException {
 		int i;
 		int objUsed = 0;
