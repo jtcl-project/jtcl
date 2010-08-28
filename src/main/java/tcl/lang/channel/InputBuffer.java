@@ -102,7 +102,8 @@ class InputBuffer extends FilterInputStream implements Runnable {
 		synchronized (this) {
 			if (refillInProgress)
 				return;
-			int size = buffering == TclIO.BUFF_NONE ? 0 : requestedBufferSize;
+			// must grab at least one byte, so we can detect EOF
+			int size = buffering == TclIO.BUFF_NONE ? 1 : requestedBufferSize;
 			if (remaining() > 0 || (buffer != null && buffer.length == size))
 				return;
 			markedPosition = -1;
@@ -260,6 +261,8 @@ class InputBuffer extends FilterInputStream implements Runnable {
 
 		}
 		
+		if (remaining()==0 && eofSeen) return -1;
+		
 		/* Copy data out of the buffer */
 		int cnt = Math.min(len, remaining());
 		System.arraycopy(buffer, position, b, off, cnt);
@@ -342,7 +345,7 @@ class InputBuffer extends FilterInputStream implements Runnable {
 				return;
 			}
 		}
-		if (buffering == TclIO.BUFF_FULL) {
+		if (buffering == TclIO.BUFF_FULL || buffering == TclIO.BUFF_NONE) {
 			/*
 			 * Get as many bytes as available in the underlying stream,
 			 * up to buffer.length.  But we must always get at least one character.

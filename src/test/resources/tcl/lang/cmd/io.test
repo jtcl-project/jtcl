@@ -70,7 +70,16 @@ set path(cat) [makeFile {
     vwait forever
 } cat]
 
-set thisScript [file join [pwd] [info script]]
+#set thisScript [file join [pwd] [info script]]
+# In JTCL, script io.test is from a Java resource,
+# so tests that do [file size $thisScript] fail.
+# So copy io.test to a real file
+set thisScript [info script]
+set scriptchan [open [info script]]
+set script [read $scriptchan]
+close $scriptchan
+set thisScript [makeFile $script thisScript]
+unset script
 
 proc contents {file} {
     set f [open $file]
@@ -6912,8 +6921,7 @@ proc doFcopy {in out {bytes 0} {error {}}} {
 	    set fcopyTestDone 0
     } else {
         # Delay next fcopy to wait for size>0 input bytes
-        after 100 [list 
-            fcopy $in $out -size 1000 \
+        after 100 [list fcopy $in $out -size 1000 \
 		    -command [namespace code [list doFcopy $in $out]]
         ]
     }
@@ -7071,7 +7079,7 @@ test io-53.9 {CopyData: -size and event interaction, Bug 780533} -setup {
     }
     set ::forever {}
     set out [open $out w]
-} -constraints {stdio openpipe fcopy} -body {
+} -constraints {stdio openpipe fcopy fileevent} -body {
     fcopy $pipe $out -size 6 -command ::done
     set token [after 5000 {
 	set ::forever {fcopy hangs}
@@ -7140,7 +7148,7 @@ test io-53.10 {Bug 1350564, multi-directional fcopy} -setup {
     fconfigure $b -translation binary -buffering none
     fileevent  $a readable [list ::done $a]
     fileevent  $b readable [list ::done $b]
-} -constraints {stdio openpipe fcopy} -body {
+} -constraints {stdio openpipe fcopy fileevent} -body {
     # Now pass data through the server in both directions.
     set ::forever {}
     puts $a AB

@@ -122,26 +122,14 @@ public class Notifier implements EventDeleter {
 		refCount = 0;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * getNotifierForThread --
-	 * 
+	/**
 	 * Get the notifier for this thread, creating the Notifier, when necessary.
 	 * 
-	 * Results: The Notifier for this thread.
-	 * 
-	 * Side effects: The Notifier is created when necessary.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param thread the thread that owns this notifier
+	 * @return The Notifier for this thread.
 	 */
 
-	public static synchronized Notifier getNotifierForThread(Thread thread) // The
-																			// thread
-																			// that
-																			// owns
-																			// this
-																			// Notifier.
+	public static synchronized Notifier getNotifierForThread(Thread thread) 
 	{
 		Notifier notifier = (Notifier) notifierTable.get(thread);
 		if (notifier == null) {
@@ -206,11 +194,7 @@ public class Notifier implements EventDeleter {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * queueEvent --
-	 * 
+	/**
 	 * Insert an event into the event queue at one of three positions: the head,
 	 * the tail, or before a floating marker. Events inserted before the marker
 	 * will be processed in first-in-first-out order, but before any events
@@ -222,13 +206,11 @@ public class Notifier implements EventDeleter {
 	 * Side effects: If this method is invoked by a non-primary thread, the
 	 * primaryThread of this Notifier will be notified about the new event.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param evt the event to be put on the queue
+	 * @param position one of  TCL.QUEUE_TAIL, TCL.QUEUE_HEAD or TCL.QUEUE_MARK.
 	 */
 
-	public synchronized void queueEvent(TclEvent evt, // The event to put in the
-														// queue.
-			int position) // One of TCL.QUEUE_TAIL,
-	// TCL.QUEUE_HEAD or TCL.QUEUE_MARK.
+	public synchronized void queueEvent(TclEvent evt, int position) 
 	{
 		if (primaryThread == null) {
 			// queueEvent() invoked after the Notifier has been

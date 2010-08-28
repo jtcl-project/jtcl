@@ -33,6 +33,10 @@ class OutputBuffer extends FilterOutputStream {
 	 * output stream, as a NonBlockingOutputStream
 	 */
 	private NonBlockingOutputStream nonBlockingOutputStream = null;
+	/**
+	 * number of bytes received by this OutputBuffer
+	 */
+	private long receivedByteCount = 0;
 	
 	/**
 	 * Create a new OutputBuffer
@@ -89,6 +93,13 @@ class OutputBuffer extends FilterOutputStream {
 		return position;
 	}
 
+	/**
+	 * @return number of bytes received through the write() methods
+	 */
+	long getReceivedByteCount() {
+		return receivedByteCount;
+		
+	}
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -127,6 +138,8 @@ class OutputBuffer extends FilterOutputStream {
 	@Override
 	public void write(byte[] b, int off, int len) throws IOException {
 
+		receivedByteCount += len;
+		
 		// if there was a switch to BUFF_NONE,   flush out the buffer
 		if (bufferingMode == TclIO.BUFF_NONE && buffer.length > 0) {
 			flush();

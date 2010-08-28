@@ -99,7 +99,7 @@ public class Interp extends EventuallyFreed {
 	 *  Hash table for associating data with this interpreter. Cleaned up 
 	 *  when this interpreter is deleted
 	 */
-	HashMap assocData;
+	HashMap<String, AssocData> assocData;
 
 	/**
 	 * Current working directory.
@@ -908,6 +908,7 @@ public class Interp extends EventuallyFreed {
 		Extension.loadOnDemand(this, "fblocked", "tcl.lang.cmd.FblockedCmd");
 		Extension
 				.loadOnDemand(this, "fconfigure", "tcl.lang.cmd.FconfigureCmd");
+		Extension.loadOnDemand(this, "fcopy", "tcl.lang.cmd.FcopyCmd");
 		Extension.loadOnDemand(this, "file", "tcl.lang.cmd.FileCmd");
 		Extension.loadOnDemand(this, "flush", "tcl.lang.cmd.FlushCmd");
 		Extension.loadOnDemand(this, "for", "tcl.lang.cmd.ForCmd");
@@ -1034,11 +1035,7 @@ public class Interp extends EventuallyFreed {
 
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * setAssocData --
-	 * 
+	/**
 	 * Creates a named association between user-specified data and this
 	 * interpreter. If the association already exists the data is overwritten
 	 * with the new data. The data.deleteAssocData() method will be invoked when
@@ -1053,11 +1050,12 @@ public class Interp extends EventuallyFreed {
 	 * Side effects: Sets the associated data, creates the association if
 	 * needed.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param name name for the association
+	 * @param data Object associated with the name
 	 */
 
-	public void setAssocData(String name, // Name for association.
-			AssocData data) // Object associated with the name.
+	public void setAssocData(String name,
+			AssocData data) 
 	{
 		if (assocData == null) {
 			assocData = new HashMap();
@@ -1065,11 +1063,7 @@ public class Interp extends EventuallyFreed {
 		assocData.put(name, data);
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * deleteAssocData --
-	 * 
+	/**
 	 * Deletes a named association of user-specified data with the specified
 	 * interpreter.
 	 * 
@@ -1077,10 +1071,9 @@ public class Interp extends EventuallyFreed {
 	 * 
 	 * Side effects: Deletes the association.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param name name of the association
 	 */
-
-	public void deleteAssocData(String name) // Name of association.
+	public void deleteAssocData(String name) 
 	{
 		if (assocData == null) {
 			return;
@@ -1089,11 +1082,7 @@ public class Interp extends EventuallyFreed {
 		assocData.remove(name);
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * getAssocData --
-	 * 
+	/**
 	 * Returns the AssocData instance associated with this name in the specified
 	 * interpreter.
 	 * 
@@ -1102,7 +1091,8 @@ public class Interp extends EventuallyFreed {
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param name name of the association
+	 * @return AssocData instance indicated by name, or null if it does not exist
 	 */
 
 	public AssocData getAssocData(String name) // Name of association.
@@ -1114,11 +1104,7 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * backgroundError --
-	 * 
+	/**
 	 * This procedure is invoked to handle errors that occur in Tcl commands
 	 * that are invoked in "background" (e.g. from event or timer bindings).
 	 * 
@@ -1127,10 +1113,7 @@ public class Interp extends EventuallyFreed {
 	 * Side effects: The command "bgerror" is invoked later as an idle handler
 	 * to process the error, passing it the error message. If that fails, then
 	 * an error message is output on stderr.
-	 * 
-	 * ----------------------------------------------------------------------
 	 */
-
 	public void backgroundError() {
 		BgErrorMgr mgr = (BgErrorMgr) getAssocData("tclBgError");
 		if (mgr == null) {
@@ -2719,22 +2702,16 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
+	/**
 	 * readScriptFromInputStream --
 	 * 
 	 * Read a script from a Java InputStream into a string.
 	 * 
-	 * Results: Returns the content of the script.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param s
+	 *            Java InputStream containing script
+	 *@return the content of the script.
 	 */
-
-	private String readScriptFromInputStream(InputStream s) // Java InputStream
-															// containing script
+	private String readScriptFromInputStream(InputStream s)
 	{
 		TclObject result = TclString.newInstance(new StringBuffer(64));
 		ReadInputStreamChannel rc = new ReadInputStreamChannel(this, s);
@@ -2758,20 +2735,11 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * closeInputStream --
-	 * 
+	/**
 	 * Close the InputStream; catch any IOExceptions and ignore them.
 	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param fs input stream to close
 	 */
-
 	private void closeInputStream(InputStream fs) {
 		try {
 			fs.close();
@@ -2780,20 +2748,11 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * closeChannel --
-	 * 
+	/**
 	 * Close the Channel; catch any IOExceptions and ignore them.
 	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param chan Channel to close
 	 */
-
 	private void closeChannel(Channel chan) {
 		try {
 			chan.close();
@@ -2801,11 +2760,7 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * evalResource --
-	 * 
+	/**
 	 * Execute a Tcl script stored in the given Java resource location.
 	 * 
 	 * Results: The return value is void. However, a standard Tcl Exception may
@@ -2816,14 +2771,13 @@ public class Interp extends EventuallyFreed {
 	 * Side effects: The side effects will be determined by the exact Tcl code
 	 * to be evaluated.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param resName
+	 *            the location of the Java resource. See the Java
+	 *            documentation of Class.getResourceAsStream() for details
+	 *            on resource naming.
 	 */
 
-	public void evalResource(String resName) // The location of the Java
-												// resource. See
-			// the Java documentation of
-			// Class.getResourceAsStream()
-			// for details on resource naming.
+	public void evalResource(String resName)
 			throws TclException {
 		final boolean debug = false;
 		final boolean USE_SCRIPT_CACHE = true;

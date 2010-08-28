@@ -182,7 +182,7 @@ public class FileChannel extends Channel {
 	 */
 	@Override
 	void sync() throws SyncFailedException, IOException {
-		file.getFD().sync();
+		if (file!=null) file.getFD().sync();
 	}
 	
 

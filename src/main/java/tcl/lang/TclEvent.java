@@ -17,7 +17,7 @@
 
 package tcl.lang;
 
-/*
+/**
  * This is an abstract class that describes an event in the Jacl
  * implementation of the notifier. It contains package protected
  * fields and methods that are accessed by the Jacl notifier. Tcl Blend
@@ -30,72 +30,57 @@ package tcl.lang;
 
 public abstract class TclEvent {
 
-	/*
+	/**
 	 * The notifier in which this event is queued.
 	 */
 
 	Notifier notifier = null;
 
-	/*
+	/**
 	 * This flag is true if sync() has been called on this object.
 	 */
 
 	boolean needsNotify = false;
 
-	/*
+	/**
 	 * True if this event is current being processing. This flag provents an
 	 * event to be processed twice when the event loop is entered recursively.
 	 */
 
 	boolean isProcessing = false;
 
-	/*
+	/**
 	 * True if this event has been processed.
 	 */
 
 	boolean isProcessed = false;
 
-	/*
+	/**
 	 * Links to the next event in the event queue.
 	 */
 
 	TclEvent next;
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * processEvent --
-	 * 
+	/**
 	 * Process the event. Override this method to implement new types of events.
 	 * 
 	 * Note: this method is called by the primary thread of the notifier.
 	 * 
-	 * Results: 1 means the event has been processed and can be removed from the
-	 * event queue. 0 means the event should be deferred for processing later.
-	 * 
-	 * Side effects: This method may have arbitrary side effects while
-	 * processing the event.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param Miscellaneous flag values: may be any combination of
+	 *        TCL.DONT_WAIT,  TCL.WINDOW_EVENTS, TCL.FILE_EVENTS, 
+	 *        TCL.TIMER_EVENTS, TCL.IDLE_EVENTS, or others defined by event
+	 *        sources - this is the same as the flags passed to Notifier.doOneEvent()
+	 *        
+	 * @return 1 means the event has been processed and can be removed from the
+	 *         event queue. 0 means the event should be deferred for processing
+	 *         later.
 	 */
 
-	public abstract int processEvent(int flags); // Same as flags passed to
-													// Notifier.doOneEvent.
+	public abstract int processEvent(int flags); 
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * sync --
-	 * 
-	 * Wait until the event is processed.
-	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: Arbitrary things may happen while this thread is waiting.
-	 * 
-	 * ----------------------------------------------------------------------
+	/**
+	 * Wait until this event has been processed.
 	 */
-
 	public final void sync() {
 		if (notifier == null) {
 			throw new TclRuntimeError(

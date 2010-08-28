@@ -183,6 +183,16 @@ public abstract class Channel {
 	 * Set to true when eof is seen
 	 */
 	boolean eofSeen = false;
+	
+	/**
+	 * Thread id of owning thread, or -1 if no owner
+	 */
+	long owningThread = -1;
+	
+	/**
+	 * Set to true after close() is called
+	 */
+	volatile boolean closed = false;
 
 	Channel() {
 		setEncoding(EncodingCmd.systemJavaEncoding);
@@ -213,96 +223,112 @@ public abstract class Channel {
 	 *                tested for. Most cases should be caught.
 	 */
 	public int read(Interp interp, TclObject tobj, int readType, int numBytes) throws IOException, TclException {
-
-		checkRead(interp);
-		initInput();
-
-		if (eofSeen)
-			return -1;
-
-		/* do we read characters or bytes? */
-		boolean readChars = (encoding != null || (inputTranslation != TclIO.TRANS_BINARY || inputTranslation != TclIO.TRANS_LF));
-		if (readChars) {
-			TclString.empty(tobj);
-		} else {
-			TclByteArray.setLength(interp, tobj, 0);
+	
+		if (! setOwnership(true)) {
+			throw new TclException(interp, "channel is busy");
 		}
+		
+		try {
+			checkRead(interp);
+			initInput();
 
-		switch (readType) {
-		case TclIO.READ_ALL:
-			/*
-			 * Read the whole of the input (or at least Integer.MAX_VALUE bytes,
-			 * which won't read large files)
-			 */
-			numBytes = Integer.MAX_VALUE;
-			// and fall through to READ_N_BYTES
-		case TclIO.READ_N_BYTES: {
-			/*
-			 * Read a specific number of bytes from the input
-			 */
-			int cnt = 0;
-			int total = 0;
-			char[] buf = null;
-			int bufsize = numBytes < 8192 ? numBytes : 8192;
-			if (readChars)
-				buf = new char[bufsize];
-			else
-				TclByteArray.setLength(interp, tobj, 0);
-			while (total < numBytes) {
-
-				if (readChars)
-					cnt = finalReader.read(buf, 0, Math.min(buf.length, numBytes - total));
-				else {
-					/* resize array */
-					if (TclByteArray.getLength(interp, tobj) < total + bufsize) {
-						TclByteArray.setLength(interp, tobj, total + bufsize);
-					}
-
-					/*
-					 * if we are reading unprocessed bytes, this is more
-					 * efficient because it avoids UnicodeDecoder's byte -> char
-					 * conversion
-					 */
-					cnt = finalInputStream.read(TclByteArray.getBytes(interp, tobj), total, Math.min(bufsize, numBytes
-							- total));
-				}
-				if (cnt == -1) {
-					eofSeen = true;
-					break;
-				}
-				if (cnt == 0 && !blocking) {
-					break;
-				}
-				if (readChars)
-					TclString.append(tobj, buf, 0, cnt);
-				total += cnt;
-			}
-			if (eofSeen && total == 0)
+			if (eofSeen) {
+				setOwnership(false);
 				return -1;
-			if (!readChars) {
-				// trim the TclByteArray
-				TclByteArray.setLength(interp, tobj, total);
 			}
-			return total;
-		}
-		case TclIO.READ_LINE: {
 
-			if (finalReader != eolInputFilter) {
-				throw new TclRuntimeError("finalReader != eolInputFilter, programmer error!");
+			/* do we read characters or bytes? */
+			boolean readChars = (encoding != null || (inputTranslation != TclIO.TRANS_BINARY || inputTranslation != TclIO.TRANS_LF));
+			if (readChars) {
+				TclString.empty(tobj);
+			} else {
+				TclByteArray.setLength(interp, tobj, 0);
 			}
-			String line = eolInputFilter.readLine(blocking);
-			if (line == null) {
-				eofSeen = true;
-				return -1; // eof
-			}
-			eofSeen = eolInputFilter.eofSeen();
 
-			TclString.empty(tobj);
-			TclString.append(tobj, line);
-			return line.length();
-		}
-		default:
-			throw new TclRuntimeError("Channel.read: Invalid read mode.");
+			switch (readType) {
+			case TclIO.READ_ALL:
+				/*
+				 * Read the whole of the input (or at least Integer.MAX_VALUE bytes,
+				 * which won't read large files)
+				 */
+				numBytes = Integer.MAX_VALUE;
+				// and fall through to READ_N_BYTES
+			case TclIO.READ_N_BYTES: {
+				/*
+				 * Read a specific number of bytes from the input
+				 */
+				int cnt = 0;
+				int total = 0;
+				char[] buf = null;
+				int bufsize = numBytes < 8192 ? numBytes : 8192;
+				if (readChars)
+					buf = new char[bufsize];
+				else
+					TclByteArray.setLength(interp, tobj, 0);
+				while (total < numBytes) {
+
+					if (readChars)
+						cnt = finalReader.read(buf, 0, Math.min(buf.length, numBytes - total));
+					else {
+						/* resize array */
+						if (TclByteArray.getLength(interp, tobj) < total + bufsize) {
+							TclByteArray.setLength(interp, tobj, total + bufsize);
+						}
+
+						/*
+						 * if we are reading unprocessed bytes, this is more
+						 * efficient because it avoids UnicodeDecoder's byte -> char
+						 * conversion
+						 */
+						cnt = finalInputStream.read(TclByteArray.getBytes(interp, tobj), total, Math.min(bufsize, numBytes
+								- total));
+					}
+					if (cnt == -1) {
+						eofSeen = true;
+						break;
+					}
+					if (cnt == 0 && !blocking) {
+						break;
+					}
+					if (readChars)
+						TclString.append(tobj, buf, 0, cnt);
+					total += cnt;
+				}
+				if (eofSeen && total == 0) {
+					setOwnership(false);
+					return -1;
+				}
+
+				if (!readChars) {
+					// trim the TclByteArray
+					TclByteArray.setLength(interp, tobj, total);
+				}
+				setOwnership(false);
+				return total;
+			}
+			case TclIO.READ_LINE: {
+
+				if (finalReader != eolInputFilter) {
+					throw new TclRuntimeError("finalReader != eolInputFilter, programmer error!");
+				}
+				String line = eolInputFilter.readLine(blocking);
+				if (line == null) {
+					eofSeen = true;
+					setOwnership(false);
+					return -1; // eof
+				}
+				eofSeen = eolInputFilter.eofSeen();
+
+				TclString.empty(tobj);
+				TclString.append(tobj, line);
+				setOwnership(false);
+				return line.length();
+			}
+			default:
+				throw new TclRuntimeError("Channel.read: Invalid read mode.");
+			}
+		} finally {
+			setOwnership(false);
 		}
 	}
 
@@ -318,17 +344,23 @@ public abstract class Channel {
 	 */
 
 	public void write(Interp interp, TclObject outData) throws IOException, TclException {
-
-		checkWrite(interp);
-		initOutput();
+		if (! setOwnership(true)) {
+			throw new TclException(interp, "channel is busy");
+		}
+		try {
+			checkWrite(interp);
+			initOutput();
 		
-		if (outData.getInternalRep() instanceof TclByteArray && encoding == null && buffering != TclIO.BUFF_LINE
-				&& (outputTranslation == TclIO.TRANS_BINARY || outputTranslation == TclIO.TRANS_LF)) {
-			/* Can write with the more efficient firstOutputStream */
-			firstOutputStream.write(TclByteArray.getBytes(interp, outData), 0, TclByteArray.getLength(interp, outData));
-		} else {
-			char[] cbuf = outData.toString().toCharArray();
-			firstWriter.write(cbuf, 0, cbuf.length);
+			if (outData.getInternalRep() instanceof TclByteArray && encoding == null && buffering != TclIO.BUFF_LINE
+					&& (outputTranslation == TclIO.TRANS_BINARY || outputTranslation == TclIO.TRANS_LF)) {
+				/* Can write with the more efficient firstOutputStream */
+				firstOutputStream.write(TclByteArray.getBytes(interp, outData), 0, TclByteArray.getLength(interp, outData));
+			} else {
+				char[] cbuf = outData.toString().toCharArray();
+				firstWriter.write(cbuf, 0, cbuf.length);
+			}
+		} finally {
+			setOwnership(false);
 		}
 	}
 
@@ -347,11 +379,55 @@ public abstract class Channel {
 	}
 
 	/**
+	 * ask for or give up ownership to channel
+	 * 
+	 * @param takeOwnership
+	 *            if true, give Channel ownership to the current thread if no
+	 *            other thread owns it; otherwise, give up ownership if the
+	 *            current thread owns it
+	 * 
+	 * @return If takeOwnership is true, returns true if the current thread
+	 *         successfully received ownership. If takeOwnership is false,
+	 *         returns true if the current thread was the owner of the channel.
+	 */
+	public synchronized boolean setOwnership(boolean takeOwnership) {
+		return setOwnership(takeOwnership, Thread.currentThread().getId());
+	}
+
+	/**
+	 * ask for or give up ownership to channel
+	 * 
+	 * @param takeOwnership
+	 *            if true, give Channel ownership to the current thread if no
+	 *            other thread owns it; otherwise, give up ownership if the
+	 *            current thread owns it
+	 * @param threadId
+	 *            Thread.getId() of thread that should own the channel
+	 * 
+	 * @return If takeOwnership is true, returns true if the current thread
+	 *         successfully received ownership. If takeOwnership is false,
+	 *         returns true if the current thread was the owner of the channel.
+	 */
+	public synchronized boolean setOwnership(boolean takeOwnership, long threadId) {
+		if (owningThread < 0 || threadId==owningThread) {
+			if (takeOwnership) {
+				owningThread = threadId;
+			} else {
+				owningThread = -1;
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/**
 	 * Channels subclasses should override this to perform any specific close()
 	 * operations, including closing of the getInputStream() and
 	 * getOutputStream() streams if necessary. impClose() is called by
 	 * NonBlockingOutputStream.Transaction.perform() after the input and output
-	 * chain of readers, writers and streams are closed.
+	 * chain of readers, writers and streams are closed, or directly by Channel.close()
+	 * if the channel is read-only.
 	 * 
 	 * @throws IOException
 	 */
@@ -361,11 +437,14 @@ public abstract class Channel {
 	 * Close the Channel. The channel is only closed, it is the responsibility
 	 * of the "closer" to remove the channel from the channel table. Channel
 	 * subclass specific closing is done is impClose(), which is called on
-	 * behalf of this method by nonBlockingOutputStream.
+	 * behalf of this method by nonBlockingOutputStream for writable channels.
+	 * Note that any thread can close the channel, even if it is not the owner.
 	 */
+	public synchronized void close() throws IOException {
 
-	public void close() throws IOException {
-
+		if (closed) return;
+		closed = true;
+		
 		IOException ex = null;
 		boolean implCloseCalled = false;
 
@@ -419,13 +498,18 @@ public abstract class Channel {
 	 * @exception IOEcception
 	 *                is thrown for all other flush errors.
 	 */
-
 	public void flush(Interp interp) throws IOException, TclException {
 
 		checkWrite(interp);
-
-		if (firstWriter != null) {
-			firstWriter.flush();
+		if (!setOwnership(true)) {
+			throw new TclException(interp, "channel is busy");
+		}
+		try {
+			if (firstWriter != null) {
+				firstWriter.flush();
+			}
+		} finally {
+			setOwnership(false);
 		}
 	}
 
@@ -521,6 +605,8 @@ public abstract class Channel {
 		finalReader = eolInputFilter;
 		/* read() gets bytes from finalInputStream */
 		finalInputStream = markableInputStream;
+		
+		closed = false;
 	}
 
 	/**
@@ -547,6 +633,8 @@ public abstract class Channel {
 
 		/* Bytes are more efficiently written to firstOutputStream */
 		firstOutputStream = outputBuffer;
+		
+		closed = false;
 	}
 
 	/**
@@ -554,6 +642,13 @@ public abstract class Channel {
 	 */
 	public final boolean eof() {
 		return eofSeen;
+	}
+	
+	/**
+	 * Returns true of close() has been called
+	 */
+	public boolean isClosed() {
+		return closed;
 	}
 
 	/**
@@ -662,12 +757,15 @@ public abstract class Channel {
 	 * 
 	 * @param blocking
 	 *            True for blocking mode, false for non-blocking mode.
-	 *            Non-blocking is not yet supported
+	 *           
 	 */
 	public void setBlocking(boolean inBlocking) {
 		blocking = inBlocking;
 		if (inputBuffer != null) {
 			inputBuffer.setBlockingMode(blocking);
+		}
+		if (nonBlockingOutputStream != null) {
+			nonBlockingOutputStream.setBlocking(blocking);
 		}
 	}
 
@@ -847,7 +945,10 @@ public abstract class Channel {
 	public void setOutputTranslation(int translation) {
 		if (!(isWriteOnly() || isReadWrite()))
 			return;
-		outputTranslation = translation;
+		if (translation==TclIO.TRANS_AUTO)
+			outputTranslation = TclIO.TRANS_PLATFORM;
+		else
+			outputTranslation = translation;
 		if (eolOutputFilter != null)
 			eolOutputFilter.setTranslation(outputTranslation);
 	}

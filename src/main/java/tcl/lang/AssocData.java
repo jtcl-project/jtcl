@@ -23,23 +23,11 @@ package tcl.lang;
 
 public interface AssocData {
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * disposeAssocData --
-	 * 
+	/**
 	 * This method is called when the interpreter is destroyed or when
 	 * Interp.deleteAssocData is called on a registered AssocData instance.
 	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: This method may cause any arbitrary side effects.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp the interpreter in which this AssocData instance is registered in
 	 */
-
-	public void disposeAssocData(Interp interp); // The interpreter in which
-													// this AssocData
-	// instance is registered in.
-
+	public void disposeAssocData(Interp interp); 
 }
