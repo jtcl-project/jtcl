@@ -37,7 +37,7 @@ testConstraint fcopy [llength [info commands fcopy]]
 
 # You need a *very* special environment to do some tests.  In
 # particular, many file systems do not support large-files...
-testConstraint largefileSupport 0
+testConstraint largefileSupport 1
 
 # set up a long data file for some of the following tests
 
@@ -4457,10 +4457,10 @@ test io-34.21 {Tcl_Seek and Tcl_Tell on large files} {largefileSupport} {
     puts -nonewline $f abcdef
     lappend l [tell $f]
     close $f
-    lappend l [file size $f]
+    lappend l [file size $path(test3)]
     # truncate...
     close [open $path(test3) w]
-    lappend l [file size $f]
+    lappend l [file size $path(test3)]
     set l
 } {0 6 6 4294967296 4294967302 4294967302 0}
 

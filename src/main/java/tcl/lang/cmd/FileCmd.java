@@ -458,7 +458,7 @@ public class FileCmd implements Command {
 				throw new TclPosixException(interp, TclPosixException.ENOENT, true, "could not read \""
 						+ argv[2].toString() + "\"");
 			}
-			interp.setResult((int) fileObj.length());
+			interp.setResult(fileObj.length());
 			return;
 
 		case OPT_SPLIT:
@@ -664,7 +664,7 @@ public class FileCmd implements Command {
 		}
 
 		try {
-			TclObject sizeObj = TclInteger.newInstance((int) fileObj.length());
+			TclObject sizeObj = TclInteger.newInstance(fileObj.length());
 			interp.setVar(varName, "size", sizeObj, 0);
 		} catch (Exception e) {
 			// Do nothing.

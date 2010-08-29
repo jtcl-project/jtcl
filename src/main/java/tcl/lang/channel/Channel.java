@@ -190,6 +190,11 @@ public abstract class Channel {
 	long owningThread = -1;
 	
 	/**
+	 * This object is notified when the channel is no longer owned
+	 */
+	Object ownershipNotifier = new Object();
+	
+	/**
 	 * Set to true after close() is called
 	 */
 	volatile boolean closed = false;
@@ -408,16 +413,33 @@ public abstract class Channel {
 	 *         successfully received ownership. If takeOwnership is false,
 	 *         returns true if the current thread was the owner of the channel.
 	 */
-	public synchronized boolean setOwnership(boolean takeOwnership, long threadId) {
-		if (owningThread < 0 || threadId==owningThread) {
-			if (takeOwnership) {
-				owningThread = threadId;
+	public boolean setOwnership(boolean takeOwnership, long threadId) {
+		synchronized (ownershipNotifier) {
+			if (owningThread < 0 || threadId==owningThread) {
+				if (takeOwnership) {
+					owningThread = threadId;
+				} else {
+					owningThread = -1;
+					ownershipNotifier.notifyAll();
+				}
+				return true;
 			} else {
-				owningThread = -1;
+				return false;
 			}
-			return true;
-		} else {
-			return false;
+		}
+	}
+	
+	/**
+	 * Block until ownership to this channel is granted to the current thread
+	 * 
+	 * @throws InterruptedException
+	 */
+	public void waitForOwnership() throws InterruptedException {
+		long threadId = Thread.currentThread().getId();
+		synchronized (ownershipNotifier) {
+			while (! setOwnership(true, threadId)) {
+				ownershipNotifier.wait();
+			}
 		}
 	}
 

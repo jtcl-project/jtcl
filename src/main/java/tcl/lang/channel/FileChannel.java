@@ -182,7 +182,7 @@ public class FileChannel extends Channel {
 	 */
 	@Override
 	void sync() throws SyncFailedException, IOException {
-		if (file!=null) file.getFD().sync();
+		if (file!=null) file.getChannel().force(closed);
 	}
 	
 
@@ -383,7 +383,27 @@ public class FileChannel extends Channel {
 	}
 
 	protected OutputStream getOutputStream() throws IOException {
-		return new FileOutputStream(file.getFD());
+		
+		// wrap the RandomAccessFile object in an OutputStream, because
+		// FileOutputStream(file.getFD()) doesn't appear writes after a seek
+		// past EOF - it simply writes at the EOF.  No implementation is provided
+		// for close() or flush() because those are handled by FileChannel directly.
+		return new OutputStream() {
+
+			@Override
+			public void write(int b) throws IOException {
+				if (file!=null) file.write(b);				
+			}
+
+			/* (non-Javadoc)
+			 * @see java.io.OutputStream#write(byte[], int, int)
+			 */
+			@Override
+			public void write(byte[] b, int off, int len) throws IOException {
+				if (file!=null) file.write(b, off, len);
+			}
+			
+		};
 	}
 }
 

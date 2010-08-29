@@ -239,9 +239,36 @@ public class JavaProcess extends TclProcess {
 						buf[0] = (byte) (b & 0xFF);
 						tclbuf = TclByteArray.newInstance(buf);
 						try {
+							try {
+								stderrRedirect.channel.waitForOwnership();
+							} catch (InterruptedException e) {
+							}
 							stderrRedirect.channel.write(interp, tclbuf);
 						} catch (TclException e) {
 							throw new IOException(e.getMessage());
+						} finally {
+							stderrRedirect.channel.setOwnership(false);
+						}
+					}
+					
+					
+
+					/* (non-Javadoc)
+					 * @see java.io.OutputStream#write(byte[], int, int)
+					 */
+					@Override
+					public void write(byte[] b, int off, int len) throws IOException {
+						tclbuf = TclByteArray.newInstance(b, off, len);
+						try {
+							try {
+								stderrRedirect.channel.waitForOwnership();
+							} catch (InterruptedException e) {
+							}
+							stderrRedirect.channel.write(interp, tclbuf);
+						} catch (TclException e) {
+							throw new IOException(e.getMessage());
+						} finally {
+							stderrRedirect.channel.setOwnership(false);
 						}
 					}
 
@@ -254,9 +281,15 @@ public class JavaProcess extends TclProcess {
 					public void flush() throws IOException {
 						super.flush();
 						try {
+							try {
+								stderrRedirect.channel.waitForOwnership();
+							} catch (InterruptedException e) {
+							}
 							stderrRedirect.channel.flush(interp);
 						} catch (TclException e) {
 							throw new IOException(e.getMessage());
+						} finally {
+							stderrRedirect.channel.setOwnership(false);
 						}
 					}
 
