@@ -12,17 +12,18 @@ import java.nio.charset.CoderResult;
 import java.nio.charset.CodingErrorAction;
 
 /**
- * Encodes Unicode characters into the requested encoding.  Supports Tcl's 'binary' encoding.
- * Similar to a OutputStreamWriter, but prevents any internal buffering.
+ * Encodes Unicode characters into the requested encoding. Supports Tcl's
+ * 'binary' encoding. Similar to a OutputStreamWriter, but prevents any internal
+ * buffering.
  * 
  * @author Dan Bodoh
  */
 class UnicodeEncoder extends Writer {
 	private String encoding = null;
+	private String requestedEncoding = null;
 	private OutputStream out;
 	private CharsetEncoder cse = null;
-	
-	
+
 	/**
 	 * Create a new UnicodeEncoder with the specified encoding
 	 * 
@@ -32,24 +33,34 @@ class UnicodeEncoder extends Writer {
 	 *            a Java encoding string name, or null for no encoding
 	 * @throws UnsupportedEncodingException
 	 */
-	UnicodeEncoder(OutputStream out, String encoding)  {
+	UnicodeEncoder(OutputStream out, String encoding) {
 		this.out = out;
 		setEncoding(encoding);
 	}
-	
-	
+
 	/**
 	 * Set the encoding for this encoder
 	 * 
-	 * @param encoding a Java encoding string name, or null for no encoding
+	 * @param encoding
+	 *            a Java encoding string name, or null for no encoding
 	 * 
 	 * @throws UnsupportedEncodingException
 	 */
-	void setEncoding(String encoding)  {
-		if (this.encoding == null && encoding == null) return;
-		if (this.encoding != null && this.encoding.equals(encoding)) return;
-		
-		this.encoding = encoding;
+	void setEncoding(String encoding) {
+		requestedEncoding = encoding;
+	}
+
+	/**
+	 * Set the encoding to the requestedEncoding, if it is different than the
+	 * current encoding
+	 */
+	private void setEncoding() {
+		if (encoding == null && requestedEncoding == null)
+			return;
+		if (encoding != null && encoding.equals(requestedEncoding))
+			return;
+
+		encoding = requestedEncoding;
 		if (encoding == null)
 			cse = null;
 		else {
@@ -59,7 +70,6 @@ class UnicodeEncoder extends Writer {
 		}
 	}
 
-	
 	@Override
 	public void close() throws IOException {
 		if (cse != null) {
@@ -81,37 +91,40 @@ class UnicodeEncoder extends Writer {
 
 	@Override
 	public void write(char[] cbuf, int off, int len) throws IOException {
+		setEncoding(); // encoding might have changed
 		if (cse != null) {
-			byte [] bbuf = new byte[(int)(Math.ceil(len * cse.averageBytesPerChar()))];
+			byte[] bbuf = new byte[(int) (Math.ceil(len * cse.averageBytesPerChar()))];
 			ByteBuffer bb = ByteBuffer.wrap(bbuf);
 			CharBuffer cb = CharBuffer.wrap(cbuf, off, len);
-			
+
 			CoderResult result = CoderResult.OVERFLOW;
-			
+
 			while (result == CoderResult.OVERFLOW) {
 				result = cse.encode(cb, bb, false);
 				bb.flip();
 				out.write(bb.array(), bb.position(), bb.limit());
 				bb.clear();
 			}
-			
+
 			if (cb.remaining() > 0) {
-				/* JTCL's original TclOutputStream didn't test for this condition.  It's probably not possible,
-				 * since there there is no multi-character unicode characters.  But we'll throw an exception
-				 * in case it does 
+				/*
+				 * JTCL's original TclOutputStream didn't test for this
+				 * condition. It's probably not possible, since there there is
+				 * no multi-character unicode characters. But we'll throw an
+				 * exception in case it does
 				 */
 				throw new RuntimeException("Unicode Encoder did not consume all of the input, this is unexpected: pos="
-						+bb.position()+" limit="+bb.limit()+" result="+result);
+						+ bb.position() + " limit=" + bb.limit() + " result=" + result);
 			}
-			
+
 		} else {
 			/*
-			 * cse is null, which means we are doing a binary encoding - just move chars to bytes
-			 * 
+			 * cse is null, which means we are doing a binary encoding - just
+			 * move chars to bytes
 			 */
-			byte [] bbuf = new byte[len];
-			for (int i=0; i<len; i++) {
-				bbuf[i] = (byte)(cbuf[i+off] & 0xff);
+			byte[] bbuf = new byte[len];
+			for (int i = 0; i < len; i++) {
+				bbuf[i] = (byte) (cbuf[i + off] & 0xff);
 			}
 			out.write(bbuf, 0, len);
 		}

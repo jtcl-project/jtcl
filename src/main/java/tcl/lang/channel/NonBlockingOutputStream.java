@@ -338,8 +338,9 @@ class NonBlockingOutputStream extends FilterOutputStream implements Runnable {
 		 * @throws IOException
 		 */
 		void perform() throws IOException {
-			if ((channel.mode & TclIO.APPEND)!=0)
-				channel.prepareForAppendWrite();
+			if (channel instanceof SeekableChannel && (channel.mode & TclIO.APPEND)!=0) {
+				((SeekableChannel)channel).prepareForAppendWrite();
+			}
 			switch (type) {
 			case Write:
 				out.write(b, off, len);

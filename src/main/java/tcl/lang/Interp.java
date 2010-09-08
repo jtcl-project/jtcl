@@ -910,6 +910,7 @@ public class Interp extends EventuallyFreed {
 				.loadOnDemand(this, "fconfigure", "tcl.lang.cmd.FconfigureCmd");
 		Extension.loadOnDemand(this, "fcopy", "tcl.lang.cmd.FcopyCmd");
 		Extension.loadOnDemand(this, "file", "tcl.lang.cmd.FileCmd");
+		Extension.loadOnDemand(this, "fileevent", "tcl.lang.cmd.FileeventCmd");
 		Extension.loadOnDemand(this, "flush", "tcl.lang.cmd.FlushCmd");
 		Extension.loadOnDemand(this, "for", "tcl.lang.cmd.ForCmd");
 		Extension.loadOnDemand(this, "foreach", "tcl.lang.cmd.ForeachCmd");
@@ -1058,7 +1059,7 @@ public class Interp extends EventuallyFreed {
 			AssocData data) 
 	{
 		if (assocData == null) {
-			assocData = new HashMap();
+			assocData = new HashMap<String, AssocData>();
 		}
 		assocData.put(name, data);
 	}
@@ -1073,13 +1074,14 @@ public class Interp extends EventuallyFreed {
 	 * 
 	 * @param name name of the association
 	 */
-	public void deleteAssocData(String name) 
+	public synchronized void  deleteAssocData(String name) 
 	{
 		if (assocData == null) {
 			return;
 		}
 
-		assocData.remove(name);
+		AssocData d = assocData.remove(name);
+		if (d!=null) d.disposeAssocData(this);
 	}
 
 	/**
@@ -3148,23 +3150,14 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * getNotifier --
-	 * 
+	/**
 	 * Retrieve the Notifier associated with this Interp. This method can safely
 	 * be invoked from a thread other than the thread the Interp was created in.
 	 * If this method is invoked after the Interp object has been disposed of
 	 * then null will be returned.
 	 * 
-	 * Results: Returns the Notifier for the thread the interp was created in.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @return the Notifier for the thread the interp was created in.
 	 */
-
 	public Notifier getNotifier() {
 		return notifier;
 	}

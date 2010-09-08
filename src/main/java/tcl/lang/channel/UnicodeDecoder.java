@@ -31,6 +31,10 @@ class UnicodeDecoder extends Reader {
 	 * The Java string name for the charset, or null for binary encoding
 	 */
 	String encoding = null;
+	/**
+	 * The Java string name for the requested charset, which may not yet be set
+	 */
+	String requestedEncoding = null;
 
 	/**
 	 * Set to true when the end of file is seen
@@ -50,37 +54,30 @@ class UnicodeDecoder extends Reader {
 	UnicodeDecoder(MarkableInputStream in, String encoding) {
 		super();
 		this.in = in;
-		setEncoding(encoding, true);
+		setEncoding(encoding);
 	}
 
 	/**
-	 * Set a new encoding for this channel. The current encoding state will not
-	 * be destroyed if the value of 'encoding' is the same as its previous value
+	 * Set a new encoding for this channel.
 	 * 
 	 * @param encoding
 	 *            a Java encoding string name, or null for no encoding
 	 */
-	void setEncoding(String encoding)   {
-		setEncoding(encoding, false);
+	void setEncoding(String encoding) {
+		requestedEncoding = encoding;
 	}
 
 	/**
-	 * Set a new encoding for this channel
-	 * 
-	 * @param encoding
-	 *            a Java encoding string name, or null for no encoding
-	 * @param force
-	 *            if true,, an existing encoder will be destroyed even if it has
-	 *            the same 'encoding' value. If false, an existing encoder will
-	 *            not be destroyed if the encoding is not changed.
+	 * Set a new encoding for this channel, based on the requestedEncoding
 	 */
-	private void setEncoding(String encoding, boolean force)   {
-		if (!force) {
-			if (encoding == null && this.encoding == null)
-				return;
-			if (encoding != null && this.encoding != null && this.encoding.equals(encoding))
-				return;
-		}
+	private void setEncoding() {
+
+		if (encoding == null && requestedEncoding == null)
+			return;
+		if (encoding != null && encoding.equals(requestedEncoding))
+			return;
+		encoding = requestedEncoding;
+
 		if (encoding != null) {
 			Charset cs = Charset.forName(encoding);
 			csd = cs.newDecoder();
@@ -114,8 +111,8 @@ class UnicodeDecoder extends Reader {
 	}
 
 	/**
-	 * Take a look at the next byte in the stream, bypassing the unicode decoder.
-	 * Used to look for the \n or a \r\n sequence.
+	 * Take a look at the next byte in the stream, bypassing the unicode
+	 * decoder. Used to look for the \n or a \r\n sequence.
 	 * 
 	 * @param consume
 	 *            if true, consume the next byte in the input stream
@@ -207,6 +204,9 @@ class UnicodeDecoder extends Reader {
 
 	@Override
 	public int read(char[] cbuf, int off, int len) throws IOException {
+
+		setEncoding(); // encoding may have changed since last read()
+
 		if (csd != null) {
 			/*
 			 * Use a raw Charset decoder, instead of something easier like an
@@ -224,9 +224,8 @@ class UnicodeDecoder extends Reader {
 			}
 
 			/*
-			 * Use all the leftover bytes from the last read call. Possibly add
-			 * some bytes if len is too small, to fit at least one char worth of
-			 * bytes
+			 * Possibly add some bytes if len is too small, to fit at least one
+			 * char worth of bytes
 			 */
 			int byteArraySize = len < 16 ? 16 : len;
 			byte[] byteArray = new byte[byteArraySize];

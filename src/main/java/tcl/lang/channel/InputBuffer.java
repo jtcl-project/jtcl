@@ -6,13 +6,13 @@ import java.io.IOException;
 import tcl.lang.TclIO;
 
 /**
- * Implements a resizeable buffer as an InputStream for Tcl Channels.
- * It is also responsible for non-blocking reads.
+ * Implements a resizeable buffer as an InputStream for Tcl Channels. It is also
+ * responsible for non-blocking reads.
  * 
  * @author Dan Bodoh
  * 
  */
-class InputBuffer extends FilterInputStream implements Runnable {
+class InputBuffer extends FilterInputStream {
 	/**
 	 * Contains the buffered bytes
 	 */
@@ -34,10 +34,7 @@ class InputBuffer extends FilterInputStream implements Runnable {
 	 * Last character in buffer + 1
 	 */
 	private int limit = 0;
-	/**
-	 * Marked position, or -1 of no current mark
-	 */
-	private int markedPosition = -1;
+
 	/**
 	 * Set to true when end of file is encountered
 	 */
@@ -63,6 +60,14 @@ class InputBuffer extends FilterInputStream implements Runnable {
 	 * Underlying stream, as an EofInputFilter
 	 */
 	private EofInputFilter eofInputFilter = null;
+	/**
+	 * Set to true when a refill is requested
+	 */
+	boolean requestRefill = false;
+	/**
+	 * This thread refills the buffer
+	 */
+	Refiller refiller = null;
 
 	/**
 	 * Construct a new InputBuffer in blocking mode
@@ -76,14 +81,19 @@ class InputBuffer extends FilterInputStream implements Runnable {
 	 *            TclIO.BUFF_FULL
 	 * @param blockingMode
 	 *            Set to true for blocking input, false for non-blocking input
+	 * @param channel
+	 *            Channel which contains this InputBuffer
 	 */
-	InputBuffer(EofInputFilter in, int size, int buffering, boolean blockingMode) {
+	InputBuffer(EofInputFilter in, int size, int buffering, boolean blockingMode, Channel channel) {
 		super(in);
 		eofInputFilter = in;
 		setBuffering(buffering);
 		setBlockingMode(true);
 		setBufferSize(size);
 		setBlockingMode(blockingMode);
+		refiller = new Refiller();
+		resizeBuffer();
+		refiller.start();
 	}
 
 	/**
@@ -99,14 +109,13 @@ class InputBuffer extends FilterInputStream implements Runnable {
 	 * actually empty.
 	 */
 	private void resizeBuffer() {
-		synchronized (this) {
+		synchronized (getRefillerNotifier()) {
 			if (refillInProgress)
 				return;
 			// must grab at least one byte, so we can detect EOF
 			int size = buffering == TclIO.BUFF_NONE ? 1 : requestedBufferSize;
 			if (remaining() > 0 || (buffer != null && buffer.length == size))
 				return;
-			markedPosition = -1;
 			buffer = new byte[size];
 			limit = 0;
 			position = 0;
@@ -121,10 +130,13 @@ class InputBuffer extends FilterInputStream implements Runnable {
 	 *            new requested size. If size < 0 it is set to 0.
 	 */
 	void setBufferSize(int size) {
-		synchronized (this) {
+		if (refiller == null)
 			requestedBufferSize = size;
-		}
-		resizeBuffer();
+		else
+			synchronized (getRefillerNotifier()) {
+				requestedBufferSize = size;
+				resizeBuffer();
+			}
 	}
 
 	/**
@@ -134,15 +146,21 @@ class InputBuffer extends FilterInputStream implements Runnable {
 	 *            TclIO.BUFF_FULL, TclIO.BUFF_NONE or TclIO.BUFF_LINE
 	 */
 	void setBuffering(int buffering) {
-		this.buffering = buffering;
-		resizeBuffer();
+		if (refiller == null) {
+			this.buffering = buffering;
+		} else {
+			synchronized (getRefillerNotifier()) {
+				this.buffering = buffering;
+				resizeBuffer();
+			}
+		}
 	}
 
 	/**
 	 * Throw away any buffered data and reset internal state
 	 */
 	void seekReset() {
-		synchronized (this) {
+		synchronized (getRefillerNotifier()) {
 			position = 0;
 			limit = 0;
 			cancelEof();
@@ -158,6 +176,13 @@ class InputBuffer extends FilterInputStream implements Runnable {
 	}
 
 	/**
+	 * @return true if the EOF was seen
+	 */
+	boolean eof() {
+		return eofSeen;
+	}
+
+	/**
 	 * Sets the current eof state to false
 	 * 
 	 * @param eof
@@ -170,9 +195,71 @@ class InputBuffer extends FilterInputStream implements Runnable {
 	/**
 	 * @return number of bytes currently in the buffer
 	 */
-	public final int remaining() {
-		synchronized (this) {
+	final int remaining() {
+		synchronized (getRefillerNotifier()) {
 			return limit - position;
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.io.FilterInputStream#available()
+	 */
+	@Override
+	public int available() throws IOException {
+		/*
+		 * If there is a refill in progress, we don't want to block in
+		 * remaining()
+		 */
+		if (isRefillInProgress())
+			return 0;
+		return remaining() + eofInputFilter.available();
+	}
+
+	/**
+	 * @return the object on which refills are requested and acknowledges
+	 */
+	final Object getRefillerNotifier() {
+		return refiller;
+	}
+
+	/**
+	 * @return true if a refill is currently in progress
+	 * @throws IOException
+	 *             if refill is not in progress, and an exception was detected
+	 */
+	final boolean isRefillInProgress() throws IOException {
+		synchronized (getRefillerNotifier()) {
+			if (requestRefill || refillInProgress) {
+				return true;
+			} else {
+				refiller.throwIOExceptionIfCaught();
+				return false;
+			}
+		}
+	}
+
+	/**
+	 * Request that the InputBuffer be refiiled.
+	 * 
+	 * @param wait
+	 *            if true, this method does not return until the refill
+	 *            operation is complete
+	 * @throws IOException
+	 */
+	void requestRefill(boolean wait) throws IOException {
+		synchronized (getRefillerNotifier()) {
+			requestRefill = true;
+			refiller.notifyAll();
+			if (wait) {
+				while (isRefillInProgress()) {
+					try {
+						getRefillerNotifier().wait();
+					} catch (InterruptedException e) {
+					}
+				}
+			}
 		}
 	}
 
@@ -186,17 +273,28 @@ class InputBuffer extends FilterInputStream implements Runnable {
 	 */
 	@Override
 	public int read() throws IOException {
-		if (remaining() == 0)
-			refill();
-		if (eofSeen)
-			return -1;
-		if (buffer.length == 0) {
-			int c = super.read();
-			if (c == -1)
-				eofSeen = true;
-			return c;
+		synchronized (getRefillerNotifier()) {
+			while (isRefillInProgress()) {
+				try {
+					getRefillerNotifier().wait();
+				} catch (InterruptedException e) {
+				}
+			}
+			if (remaining() == 0)
+				requestRefill(true);
+			else
+				refiller.throwIOExceptionIfCaught();
+			if (eofSeen)
+				return -1;
+			if (buffer.length == 0) {
+				int c = super.read();
+				if (c == -1)
+					eofSeen = true;
+				return c;
+			}
+
+			return buffer[position++];
 		}
-		return buffer[position++];
 	}
 
 	/**
@@ -215,190 +313,185 @@ class InputBuffer extends FilterInputStream implements Runnable {
 	 */
 	@Override
 	public int read(byte[] b, int off, int len) throws IOException {
-		
-		lastReadWouldHaveBlocked = false;
+		synchronized (getRefillerNotifier()) {
+			lastReadWouldHaveBlocked = false;
 
-		if (refillInProgress) {
-			lastReadWouldHaveBlocked = true;
-			return 0;
-		}
+			if (refillInProgress) {
+				lastReadWouldHaveBlocked = true;
+				return 0;
+			}
 
-		if (eofSeen)
-			return -1;
+			if (eofSeen)
+				return -1;
 
-		if (remaining() == 0) {
-			
-			/* Can we satisfy the request, at least partially, from anything available 
-			 * in the underlying stream?  Don't try for line buffering, because we don't
-			 * want to accidently read past EOL.  And don't request any more than the
-			 * Tcl buffer size, because that would confuse test cases
-			 */
-			if (buffering != TclIO.BUFF_LINE && super.available() > 0) {
+			refiller.throwIOExceptionIfCaught();
 
-				int directRequestSize = Math.min(len, super.available());
-				if (requestedBufferSize > 0 
-						&& directRequestSize > requestedBufferSize) directRequestSize = requestedBufferSize;
-				
-				int cnt = super.read(b, off, directRequestSize);
-				if (cnt==-1) eofSeen = true;
-				lastReadWouldHaveBlocked = ! blockingMode && (cnt < len) && ! eofSeen;
-				return cnt;
+			if (remaining() == 0) {
 
-			} else  {
-				/* couldn't get any bytes directly from stream without blocking */
-				
-				if (blockingMode) {
-					refill();
-					/* fall through when refill completes to copy data out of the buffer */
+				/*
+				 * Can we satisfy the request, at least partially, from anything
+				 * available in the underlying stream? Don't try for line
+				 * buffering, because we don't want to accidently read past EOL.
+				 * And don't request any more than the Tcl buffer size, because
+				 * that would confuse test cases
+				 */
+				if (buffering != TclIO.BUFF_LINE && super.available() > 0) {
+
+					int directRequestSize = Math.min(len, super.available());
+					if (requestedBufferSize > 0 && directRequestSize > requestedBufferSize)
+						directRequestSize = requestedBufferSize;
+
+					int cnt = super.read(b, off, directRequestSize);
+					if (cnt == -1)
+						eofSeen = true;
+					lastReadWouldHaveBlocked = !blockingMode && (cnt < len) && !eofSeen;
+					return cnt;
+
 				} else {
-					/*  run refill() in the background for non-blocking mode */
-					Thread bkgndRefill = new Thread(this);
-					bkgndRefill.start();
-					lastReadWouldHaveBlocked = true;
-					return 0;	
+					/*
+					 * couldn't get any bytes directly from stream without
+					 * blocking
+					 */
+
+					if (blockingMode) {
+						requestRefill(true);
+						/*
+						 * fall through when refill completes to copy data out
+						 * of the buffer
+						 */
+					} else {
+						/* run refill() in the background for non-blocking mode */
+						requestRefill(false);
+						lastReadWouldHaveBlocked = true;
+						return 0;
+					}
 				}
+
 			}
 
+			if (remaining() == 0 && eofSeen)
+				return -1;
+			/* Copy data out of the buffer */
+			int cnt = Math.min(len, remaining());
+			System.arraycopy(buffer, position, b, off, cnt);
+			position += cnt;
+			lastReadWouldHaveBlocked = (!blockingMode && cnt < len && !eofSeen);
+			return cnt;
 		}
-		
-		if (remaining()==0 && eofSeen) return -1;
-		
-		/* Copy data out of the buffer */
-		int cnt = Math.min(len, remaining());
-		System.arraycopy(buffer, position, b, off, cnt);
-		position += cnt;
-		lastReadWouldHaveBlocked = (!blockingMode && cnt < len && !eofSeen);
-		return cnt;	
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.io.FilterInputStream#available()
-	 */
-	@Override
-	public int available() throws IOException {
-		return remaining() + in.available();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.io.FilterInputStream#markSupported()
-	 */
-	@Override
-	public boolean markSupported() {
-		return true;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.io.FilterInputStream#mark(int)
-	 */
-	@Override
-	public synchronized void mark(int readlimit) {
-		synchronized (this) {
-			markedPosition = position;
-		}
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.io.FilterInputStream#reset()
-	 */
-	@Override
-	public synchronized void reset() throws IOException {
-		synchronized (this) {
-			if (markedPosition >= 0) {
-				position = markedPosition;
-			} else {
-				throw new IOException("Marked position is not longer valid, it is possible that a refill() was called");
-			}
-		}
-		eofInputFilter.seekReset();
 	}
 
 	/**
-	 * Refill the buffer from the underlying input stream. Any data in the
-	 * buffer is lost.
-	 * 
-	 * @throws IOException
+	 * Runs refill in the background
 	 */
-	private synchronized void refill() throws IOException {
-		if (eofSeen)
-			return;
-		if (remaining() > 0)
-			return; // perhaps it was refilled in the background?
+	private class Refiller extends Thread {
+		IOException ioException = null;
 
-		// here's our chance to resize the buffer
-		synchronized (this) {
-			resizeBuffer();
-			refillInProgress = true;
-			limit = 0;
-			position = 0;
-			markedPosition = -1;
+		/**
+		 * @throws IOException
+		 *             if there was an exception caught during refill
+		 */
+		void throwIOExceptionIfCaught() throws IOException {
+			synchronized (getRefillerNotifier()) {
+				if (ioException != null) {
+					IOException e = ioException;
+					ioException = null;
+					throw e;
+				}
+			}
+		}
 
-			if (buffer.length == 0) {
-				refillInProgress = false;
+		/**
+		 * Refill the buffer from the underlying input stream. Any data in the
+		 * buffer is lost.
+		 * 
+		 * @throws IOException
+		 */
+		private void refill() throws IOException {
+			if (eofSeen)
 				return;
-			}
-		}
-		if (buffering == TclIO.BUFF_FULL || buffering == TclIO.BUFF_NONE) {
-			/*
-			 * Get as many bytes as available in the underlying stream,
-			 * up to buffer.length.  But we must always get at least one character.
-			 */
-			int readSize = Math.min(buffer.length, super.available());
-			if (readSize < 1) readSize = 1;
-			
-			// keep the blocking read out of the synchronized section. The
-			// buffer is protected
-			// by refillInProgress
-			int cnt = super.read(buffer, 0, readSize);
-			synchronized (this) {
-				refillInProgress = false;
-				if (cnt == -1) {
-					eofSeen = true;
-					limit = 0;
-					refillInProgress = false;
-					return;
-				} else {
-					limit = cnt;
-					refillInProgress = false;
-					return;
-				}
-			}
-		} else {
-			/* line buffering, look for first eolChar */
-			while (true) {
-				int c = super.read();
-				synchronized (this) {
-					if (c == -1) {
-						if (limit == 0)
-							eofSeen = true;
-						refillInProgress = false;
-						return;
-					}
-					buffer[limit++] = (byte) (c & 0xFF);
-					if (c == eolChar || limit >= buffer.length) {
-						refillInProgress = false;
-						return;
-					}
-				}
-			}
-		}
-	}
+			if (remaining() > 0)
+				return; // perhaps it was refilled in the background?
 
-	/**
-	 * Runs refill in the background, for non-blocking I/O
-	 */
-	public void run() {
-		try {
-			refill();
-		} catch (IOException e) {
-			// do nothing
+			if (buffering == TclIO.BUFF_FULL || buffering == TclIO.BUFF_NONE) {
+				/*
+				 * Get as many bytes as available in the underlying stream, up
+				 * to buffer.length. But we must always get at least one
+				 * character.
+				 */
+				int readSize = Math.min(buffer.length, eofInputFilter.available());
+				if (readSize < 1)
+					readSize = 1;
+
+				// keep the blocking read out of the synchronized section. The
+				// buffer is protected
+				// by refillInProgress
+				int cnt = eofInputFilter.read(buffer, 0, readSize);
+				synchronized (getRefillerNotifier()) {
+					if (cnt == -1) {
+						eofSeen = true;
+						position = 0;
+						limit = 0;
+						return;
+					} else {
+						position = 0;
+						limit = cnt;
+						return;
+					}
+				}
+			} else {
+				/* line buffering, look for first eolChar */
+				synchronized (getRefillerNotifier()) {
+					limit = 0;
+					position = 0;
+				}
+				while (true) {
+					/* don't put blocking read in synchronized section */
+					int c = eofInputFilter.read();
+					synchronized (getRefillerNotifier()) {
+						if (c == -1) {
+							if (limit == 0)
+								eofSeen = true;
+							return;
+						}
+						buffer[limit++] = (byte) (c & 0xFF);
+						if (c == eolChar || limit >= buffer.length) {
+							return;
+						}
+					}
+				}
+			}
+		}
+
+		@Override
+		public void run() {
+			ioException = null;
+			while (true) {
+				synchronized (getRefillerNotifier()) {
+					while (!requestRefill) {
+						try {
+							getRefillerNotifier().wait();
+						} catch (InterruptedException e) {
+							return;
+						}
+					}
+					ioException = null;
+					resizeBuffer();
+					refillInProgress = true;
+				}
+
+				try {
+					refill();
+				} catch (IOException e) {
+					synchronized (getRefillerNotifier()) {
+						ioException = e;
+					}
+				}
+				synchronized (getRefillerNotifier()) {
+					refillInProgress = false;
+					requestRefill = false;
+					getRefillerNotifier().notifyAll();
+				}
+			}
 		}
 	}
 }

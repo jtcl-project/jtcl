@@ -103,7 +103,13 @@ class EofInputFilter extends FilterInputStream {
 	 */
 	@Override
 	public int available() throws IOException {
-		return in.available() + (sawEofChar ? 1 : 0);
+		int avail = 0;
+		try {
+			avail = in.available();
+		} catch (IOException e) {
+			avail = 0;
+		}
+		return avail + (sawEofChar ? 1 : 0);
 	}
 
 	/*

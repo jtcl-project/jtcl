@@ -18,6 +18,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import tcl.lang.channel.Channel;
+import tcl.lang.channel.FileEvent;
+import tcl.lang.channel.FileEventScript;
 import tcl.lang.channel.StdChannel;
 
 public class TclIO {
@@ -293,7 +295,7 @@ public class TclIO {
 	}
 
 	/**
-	 * Unregister a channel in this interpreter's channel table, and call
+	 * Unregister a channel and it's FileEventScripts in this interpreter's channel table, and call
 	 * close() on that channel.
 	 * 
 	 * @param interp
@@ -303,7 +305,10 @@ public class TclIO {
 	 */
 	public static void unregisterChannel(Interp interp, Channel chan) {
 		HashMap<String, Channel> chanTable = getInterpChanTable(interp);
-
+		
+		FileEventScript.dispose(interp, chan, FileEvent.READABLE);
+		FileEventScript.dispose(interp, chan, FileEvent.WRITABLE);
+		
 		if (chanTable.containsKey(chan.getChanName())) {
 			chanTable.remove(chan.getChanName());
 		} else {

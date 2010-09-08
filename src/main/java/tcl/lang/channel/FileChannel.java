@@ -15,7 +15,6 @@ package tcl.lang.channel;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -30,18 +29,16 @@ import tcl.lang.TclPosixException;
 import tcl.lang.TclRuntimeError;
 
 /**
- * Subclass of the abstract class Channel. It implements all of the methods to
- * perform read, write, open, close, etc on a file.
+ * Subclass of the abstract class SeekableChannel. It implements all of the
+ * methods to perform read, write, open, close, etc on a file.
  */
-
-public class FileChannel extends Channel {
+public class FileChannel extends SeekableChannel {
 
 	/**
 	 * The file needs to have a file pointer that can be moved randomly within
 	 * the file. The RandomAccessFile is the only java.io class that allows this
 	 * behavior.
 	 */
-
 	private RandomAccessFile file = null;
 
 	/**
@@ -65,18 +62,15 @@ public class FileChannel extends Channel {
 	 *                tested for. Most cases should be caught.
 	 */
 
-	public String open(Interp interp, String fileName, int modeFlags)
-			throws IOException, TclException {
+	public String open(Interp interp, String fileName, int modeFlags) throws IOException, TclException {
 
 		mode = modeFlags;
 		File fileObj = FileUtil.getNewFileObj(interp, fileName);
 
 		// Raise error if file exists and both CREAT and EXCL are set
 
-		if (((modeFlags & TclIO.CREAT) != 0) && ((modeFlags & TclIO.EXCL) != 0)
-				&& fileObj.exists()) {
-			throw new TclException(interp, "couldn't open \"" + fileName
-					+ "\": file exists");
+		if (((modeFlags & TclIO.CREAT) != 0) && ((modeFlags & TclIO.EXCL) != 0) && fileObj.exists()) {
+			throw new TclException(interp, "couldn't open \"" + fileName + "\": file exists");
 		}
 
 		if (((modeFlags & TclIO.CREAT) != 0) && !fileObj.exists()) {
@@ -94,8 +88,7 @@ public class FileChannel extends Channel {
 			checkReadWritePerm(interp, fileObj, 0);
 
 			if (fileObj.isDirectory()) {
-				throw new TclException(interp, "couldn't open \"" + fileName
-						+ "\": illegal operation on a directory");
+				throw new TclException(interp, "couldn't open \"" + fileName + "\": illegal operation on a directory");
 			}
 
 			file = new RandomAccessFile(fileObj, "rw");
@@ -107,8 +100,7 @@ public class FileChannel extends Channel {
 			checkReadWritePerm(interp, fileObj, -1);
 
 			if (fileObj.isDirectory()) {
-				throw new TclException(interp, "couldn't open \"" + fileName
-						+ "\": illegal operation on a directory");
+				throw new TclException(interp, "couldn't open \"" + fileName + "\": illegal operation on a directory");
 			}
 
 			file = new RandomAccessFile(fileObj, "r");
@@ -120,8 +112,7 @@ public class FileChannel extends Channel {
 			checkReadWritePerm(interp, fileObj, 1);
 
 			if (fileObj.isDirectory()) {
-				throw new TclException(interp, "couldn't open \"" + fileName
-						+ "\": illegal operation on a directory");
+				throw new TclException(interp, "couldn't open \"" + fileName + "\": illegal operation on a directory");
 			}
 
 			// Currently there is a limitation in the Java API.
@@ -131,9 +122,8 @@ public class FileChannel extends Channel {
 			// limitation.
 
 			if (!fileObj.canRead()) {
-				throw new TclException(interp,
-						"Java IO limitation: Cannot open a file "
-								+ "that has only write permissions set.");
+				throw new TclException(interp, "Java IO limitation: Cannot open a file "
+						+ "that has only write permissions set.");
 			}
 			file = new RandomAccessFile(fileObj, "rw");
 
@@ -164,8 +154,9 @@ public class FileChannel extends Channel {
 		return fName;
 	}
 
-
-    /* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see tcl.lang.channel.Channel#implClose()
 	 */
 	@Override
@@ -177,151 +168,59 @@ public class FileChannel extends Channel {
 		file = null;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see tcl.lang.channel.Channel#getSync()
 	 */
 	@Override
 	void sync() throws SyncFailedException, IOException {
-		if (file!=null) file.getChannel().force(closed);
+		if (file != null)
+			file.getChannel().force(closed);
 	}
-	
-
-	/* (non-Javadoc)
-	 * @see tcl.lang.channel.Channel#prepareForAppendWrite()
-	 */
-	@Override
-	void prepareForAppendWrite() throws IOException {
-		if (file!=null) file.seek(file.length());
-	}
-
 
 	/**
 	 * Move the file pointer internal to the RandomAccessFile object. The file
 	 * MUST be open or a TclRuntimeError is thrown.
 	 * 
 	 * @param offset
-	 *            The number of bytes to move the file pointer.
-	 * @param inmode
-	 *            to begin incrementing the file pointer; beginning, current, or
-	 *            end of the file.
+	 *            The number of bytes to move the file pointer
 	 */
 
-	public void seek(Interp interp, long offset, int inmode)
-			throws IOException, TclException {
-
+	@Override
+	void implSeek(long offset) throws IOException {
 		if (file == null) {
 			throw new TclRuntimeError("FileChannel.seek(): null file object");
 		}
-
-		// FIXME: Disallow seek on dead channels (raise TclPosixException ??)
-		// if (CheckForDeadChannel(NULL, statePtr)) {
-		// return Tcl_LongAsWide(-1);
-		// }
-
-		// Compute how much input and output is buffered. If both input and
-		// output is buffered, cannot compute the current position.
-
-		int inputBuffered = getNumBufferedInputBytes();
-		int outputBuffered = getNumBufferedOutputBytes();
-
-		if ((inputBuffered != 0) && (outputBuffered != 0)) {
-			throw new TclPosixException(interp, TclPosixException.EFAULT, true,
-					"error during seek on \"" + getChanName() + "\"");
-		}
-
-		// If we are seeking relative to the current position, compute the
-		// corrected offset taking into account the amount of unread input.
-
-		if (inmode == TclIO.SEEK_CUR) {
-			offset -= inputBuffered;
-		}
-
-		// The seekReset method will discard queued input and
-		// reset flags like EOF and BLOCKED.
-		seekReset();
-
-		// If the channel is in asynchronous output mode, switch it back
-		// to synchronous mode
-		// scheduled. After the flush, the channel will be put back into
-		// asynchronous output mode.
-
-		boolean wasAsync = false;
-		if (! getBlocking()) {
-			wasAsync = true;
-			setBlocking(true);
-		}
-
-		if (firstWriter != null) flush(interp);
-		
-		// Now seek to the new position in the channel as requested by the
-		// caller.
-
-		long actual_offset;
-
-		switch (inmode) {
-		case TclIO.SEEK_SET: {
-			actual_offset = offset;
-			break;
-		}
-		case TclIO.SEEK_CUR: {
-			actual_offset = file.getFilePointer() + offset;
-			break;
-		}
-		case TclIO.SEEK_END: {
-			actual_offset = file.length() + offset;
-			break;
-		}
-		default: {
-			throw new TclRuntimeError("invalid seek mode");
-		}
-		}
-
-		// A negative offset to seek() would raise an IOException, but
-		// we want to raise an invalid argument error instead
-
-		if (actual_offset < 0) {
-			throw new TclPosixException(interp, TclPosixException.EINVAL,
-					true, "error during seek on \"" + getChanName() + "\"");
-		}
-
-		file.seek(actual_offset);
-
-		// Restore to nonblocking mode if that was the previous behavior.
-		if (wasAsync) {
-			setBlocking(false);
-		}
+		file.seek(offset);
 	}
 
 	/**
-	 * Tcl_Tell -> tell
-	 * 
 	 * Return the current offset of the file pointer in number of bytes from the
 	 * beginning of the file. The file MUST be open or a TclRuntimeError is
 	 * thrown.
 	 * 
 	 * @return The current value of the file pointer.
 	 */
-
-	public long tell() throws IOException {
+	@Override
+	long implTell() throws IOException {
 		if (file == null) {
-			throw new TclRuntimeError("FileChannel.tell(): null file object");
+			throw new TclRuntimeError("FileChannel.implTell(): null file object");
 		}
-		int inputBuffered = getNumBufferedInputBytes();
-		int outputBuffered = getNumBufferedOutputBytes();
+		return file.getFilePointer();
+	}
 
-		if ((inputBuffered != 0) && (outputBuffered != 0)) {
-			// FIXME: Posix error EFAULT ?
-			return -1;
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see tcl.lang.channel.SeekableChannel#maxSeek()
+	 */
+	@Override
+	long getMaxSeek() throws IOException {
+		if (file == null) {
+			throw new TclRuntimeError("FileChannel.getMaxSeek(): null file object");
 		}
-		long curPos = file.getFilePointer();
-		if (curPos == -1) {
-			// FIXME: Set errno here?
-			return -1;
-		}
-		if (inputBuffered != 0) {
-			return curPos - inputBuffered;
-		}
-		return curPos + outputBuffered;
+		return file.length();
 	}
 
 	/**
@@ -333,11 +232,10 @@ public class FileChannel extends Channel {
 	 *            a java.io.File object of the file for this channel.
 	 */
 
-	private void checkFileExists(Interp interp, File fileObj)
-			throws TclException {
+	private void checkFileExists(Interp interp, File fileObj) throws TclException {
 		if (!fileObj.exists()) {
-			throw new TclPosixException(interp, TclPosixException.ENOENT, true,
-					"couldn't open \"" + fileObj.getName() + "\"");
+			throw new TclPosixException(interp, TclPosixException.ENOENT, true, "couldn't open \"" + fileObj.getName()
+					+ "\"");
 		}
 	}
 
@@ -354,8 +252,7 @@ public class FileChannel extends Channel {
 	 *            what permissions to check for.
 	 */
 
-	private void checkReadWritePerm(Interp interp, File fileObj, int inmode)
-			throws TclException {
+	private void checkReadWritePerm(Interp interp, File fileObj, int inmode) throws TclException {
 		boolean error = false;
 
 		if (inmode <= 0) {
@@ -369,41 +266,50 @@ public class FileChannel extends Channel {
 			}
 		}
 		if (error) {
-			throw new TclPosixException(interp, TclPosixException.EACCES, true,
-					"couldn't open \"" + fileObj.getName() + "\"");
+			throw new TclPosixException(interp, TclPosixException.EACCES, true, "couldn't open \"" + fileObj.getName()
+					+ "\"");
 		}
 	}
 
+	@Override
 	String getChanType() {
 		return "file";
 	}
 
+	@Override
 	protected InputStream getInputStream() throws IOException {
+		if (file == null)
+			throw new IOException("file has not been opened, or has been closed");
 		return new FileInputStream(file.getFD());
 	}
 
+	@Override
 	protected OutputStream getOutputStream() throws IOException {
-		
+
 		// wrap the RandomAccessFile object in an OutputStream, because
 		// FileOutputStream(file.getFD()) doesn't appear writes after a seek
-		// past EOF - it simply writes at the EOF.  No implementation is provided
-		// for close() or flush() because those are handled by FileChannel directly.
+		// past EOF - it simply writes at the EOF. No implementation is provided
+		// for close() or flush() because those are handled by FileChannel
+		// directly.
 		return new OutputStream() {
 
 			@Override
 			public void write(int b) throws IOException {
-				if (file!=null) file.write(b);				
+				if (file != null)
+					file.write(b);
 			}
 
-			/* (non-Javadoc)
+			/*
+			 * (non-Javadoc)
+			 * 
 			 * @see java.io.OutputStream#write(byte[], int, int)
 			 */
 			@Override
 			public void write(byte[] b, int off, int len) throws IOException {
-				if (file!=null) file.write(b, off, len);
+				if (file != null)
+					file.write(b, off, len);
 			}
-			
+
 		};
 	}
 }
-

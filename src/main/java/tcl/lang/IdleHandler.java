@@ -36,6 +36,16 @@ public abstract class IdleHandler {
 	int generation;
 
 	/**
+	 * Create an idle handler.  Must call register(Notifier) before the handler
+	 * will be called.
+	 */
+	public IdleHandler() {
+		isCancelled = false;
+		generation = 0;
+		notifier = null;	
+	}
+	
+	/**
 	 * Create a idle handler to be fired when the notifier is idle.
 	 * Side effects: The idle is registered in the list of idle handlers in the
 	 * given notifier. When the notifier is idle, the processIdleEvent() method
@@ -46,6 +56,15 @@ public abstract class IdleHandler {
 
 	public IdleHandler(Notifier n) // The notifier to fire the event.
 	{
+		register(n);
+	}
+	
+	/**
+	 * Register Idle handler in the list of handlers for the given Notifier
+	 * 
+	 * @param n the notifier to fire the events
+	 */
+	public void register(Notifier n) {
 		notifier = (Notifier) n;
 		isCancelled = false;
 

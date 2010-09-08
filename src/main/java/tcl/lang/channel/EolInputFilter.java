@@ -12,7 +12,21 @@ import tcl.lang.TclIO;
  * 
  */
 class EolInputFilter extends FilterReader {
-
+	/**
+	 * readline() return value on end-of-file
+	 */
+	final static int EOF = -1;
+	/**
+	 * readline() return value if blocking is true and 
+	 * a complete line was not available
+	 */
+	final static int INCOMPLETE_LINE = -2;
+	/**
+	 * readLine() return value if the stringbuffer contains
+	 * a valid line.
+	 */
+	final static int COMPLETE_LINE = 0;
+	
 	/**
 	 * The filter's translation property - one of TclIO.TRANS_*
 	 */
@@ -28,14 +42,6 @@ class EolInputFilter extends FilterReader {
 	 */
 	private UnicodeDecoder unicodeDecoder = null;
 
-	/**
-	 * Create an EolInputFilter with translation set to TclIO.TRANS_AUTO
-	 * 
-	 * @param in
-	 */
-	EolInputFilter(UnicodeDecoder in) {
-		this(in, TclIO.TRANS_AUTO);
-	}
 
 	/**
 	 * Create an EolInputFilter
@@ -77,17 +83,18 @@ class EolInputFilter extends FilterReader {
 	/**
 	 * Read one line of input. The end of line characters are not returned.
 	 * 
+	 * @param sb
+	 * 			  An empty stringbuffer that will contain the the line of
+	 * 			 data, without EOL characters.
 	 * @param block
 	 *            if true, block for an entire line of input, possibly blocking
 	 *            for input. If false, return an empty string if input would
 	 *            block, and don't consume any input.
 	 * 
-	 * @return line of text from underlying Reader, without the EOL characters.
-	 *         Returns null on EOF.
+	 * @return COMPLETE_LINE, INCOMPLETE_LINE or EOF
 	 * @throws IOException
 	 */
-	public String readLine(boolean block) throws IOException {
-		StringBuffer sb = new StringBuffer();
+	int readLine(StringBuffer sb, boolean block) throws IOException {
 		char[] cbuf = new char[1];
 		boolean sawEol = false;
 		/*
@@ -145,19 +152,19 @@ class EolInputFilter extends FilterReader {
 		}
 
 		if (eofSeen && sb.length() == 0)
-			return null;
+			return EOF;
 
 		if (block) {
-			return sb.toString();
+			return COMPLETE_LINE;
 		} else {
 			/* non-blocking, don't return partial line */
 			if (sawEol || eofSeen) {
 				unicodeDecoder.mark(0); // cancel mark
-				return sb.toString();
+				return COMPLETE_LINE;
 			} else {
 				unicodeDecoder.reset(); // read this substring again when more
 										// data is available
-				return "";
+				return INCOMPLETE_LINE;
 			}
 		}
 	}

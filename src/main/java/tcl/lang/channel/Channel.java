@@ -183,21 +183,26 @@ public abstract class Channel {
 	 * Set to true when eof is seen
 	 */
 	boolean eofSeen = false;
-	
+
 	/**
 	 * Thread id of owning thread, or -1 if no owner
 	 */
 	long owningThread = -1;
-	
+
 	/**
 	 * This object is notified when the channel is no longer owned
 	 */
 	Object ownershipNotifier = new Object();
-	
+
 	/**
 	 * Set to true after close() is called
 	 */
 	volatile boolean closed = false;
+
+	/**
+	 * Set to true when the encoding changes between reads
+	 */
+	boolean encodingChangedSinceLastRead = false;
 
 	Channel() {
 		setEncoding(EncodingCmd.systemJavaEncoding);
@@ -228,14 +233,15 @@ public abstract class Channel {
 	 *                tested for. Most cases should be caught.
 	 */
 	public int read(Interp interp, TclObject tobj, int readType, int numBytes) throws IOException, TclException {
-	
-		if (! setOwnership(true)) {
+
+		if (!setOwnership(true)) {
 			throw new TclException(interp, "channel is busy");
 		}
-		
 		try {
 			checkRead(interp);
 			initInput();
+
+			encodingChangedSinceLastRead = false;
 
 			if (eofSeen) {
 				setOwnership(false);
@@ -253,8 +259,8 @@ public abstract class Channel {
 			switch (readType) {
 			case TclIO.READ_ALL:
 				/*
-				 * Read the whole of the input (or at least Integer.MAX_VALUE bytes,
-				 * which won't read large files)
+				 * Read the whole of the input (or at least Integer.MAX_VALUE
+				 * bytes, which won't read large files)
 				 */
 				numBytes = Integer.MAX_VALUE;
 				// and fall through to READ_N_BYTES
@@ -282,17 +288,17 @@ public abstract class Channel {
 
 						/*
 						 * if we are reading unprocessed bytes, this is more
-						 * efficient because it avoids UnicodeDecoder's byte -> char
-						 * conversion
+						 * efficient because it avoids UnicodeDecoder's byte ->
+						 * char conversion
 						 */
-						cnt = finalInputStream.read(TclByteArray.getBytes(interp, tobj), total, Math.min(bufsize, numBytes
-								- total));
+						cnt = finalInputStream.read(TclByteArray.getBytes(interp, tobj), total, Math.min(bufsize,
+								numBytes - total));
 					}
 					if (cnt == -1) {
 						eofSeen = true;
 						break;
 					}
-					if (cnt == 0 && !blocking) {
+					if (cnt == 0 && (!blocking)) {
 						break;
 					}
 					if (readChars)
@@ -316,18 +322,26 @@ public abstract class Channel {
 				if (finalReader != eolInputFilter) {
 					throw new TclRuntimeError("finalReader != eolInputFilter, programmer error!");
 				}
-				String line = eolInputFilter.readLine(blocking);
-				if (line == null) {
-					eofSeen = true;
-					setOwnership(false);
-					return -1; // eof
-				}
-				eofSeen = eolInputFilter.eofSeen();
-
+				StringBuffer sb = new StringBuffer(64);
+				int rv = eolInputFilter.readLine(sb, blocking);
 				TclString.empty(tobj);
-				TclString.append(tobj, line);
 				setOwnership(false);
-				return line.length();
+
+				switch (rv) {
+
+				case EolInputFilter.COMPLETE_LINE:
+					TclString.append(tobj, sb.toString());
+					eofSeen = eolInputFilter.eofSeen();
+					return sb.length();
+
+				case EolInputFilter.EOF:
+					eofSeen = true;
+					return -1;
+
+				case EolInputFilter.INCOMPLETE_LINE:
+					return -1;
+				}
+
 			}
 			default:
 				throw new TclRuntimeError("Channel.read: Invalid read mode.");
@@ -349,17 +363,18 @@ public abstract class Channel {
 	 */
 
 	public void write(Interp interp, TclObject outData) throws IOException, TclException {
-		if (! setOwnership(true)) {
+		if (!setOwnership(true)) {
 			throw new TclException(interp, "channel is busy");
 		}
 		try {
 			checkWrite(interp);
 			initOutput();
-		
+
 			if (outData.getInternalRep() instanceof TclByteArray && encoding == null && buffering != TclIO.BUFF_LINE
 					&& (outputTranslation == TclIO.TRANS_BINARY || outputTranslation == TclIO.TRANS_LF)) {
 				/* Can write with the more efficient firstOutputStream */
-				firstOutputStream.write(TclByteArray.getBytes(interp, outData), 0, TclByteArray.getLength(interp, outData));
+				firstOutputStream.write(TclByteArray.getBytes(interp, outData), 0, TclByteArray.getLength(interp,
+						outData));
 			} else {
 				char[] cbuf = outData.toString().toCharArray();
 				firstWriter.write(cbuf, 0, cbuf.length);
@@ -384,7 +399,7 @@ public abstract class Channel {
 	}
 
 	/**
-	 * ask for or give up ownership to channel
+	 * Ask for or give up ownership to channel
 	 * 
 	 * @param takeOwnership
 	 *            if true, give Channel ownership to the current thread if no
@@ -400,7 +415,7 @@ public abstract class Channel {
 	}
 
 	/**
-	 * ask for or give up ownership to channel
+	 * Ask for or give up ownership to channel
 	 * 
 	 * @param takeOwnership
 	 *            if true, give Channel ownership to the current thread if no
@@ -415,7 +430,7 @@ public abstract class Channel {
 	 */
 	public boolean setOwnership(boolean takeOwnership, long threadId) {
 		synchronized (ownershipNotifier) {
-			if (owningThread < 0 || threadId==owningThread) {
+			if (owningThread < 0 || threadId == owningThread) {
 				if (takeOwnership) {
 					owningThread = threadId;
 				} else {
@@ -428,7 +443,7 @@ public abstract class Channel {
 			}
 		}
 	}
-	
+
 	/**
 	 * Block until ownership to this channel is granted to the current thread
 	 * 
@@ -437,7 +452,7 @@ public abstract class Channel {
 	public void waitForOwnership() throws InterruptedException {
 		long threadId = Thread.currentThread().getId();
 		synchronized (ownershipNotifier) {
-			while (! setOwnership(true, threadId)) {
+			while (!setOwnership(true, threadId)) {
 				ownershipNotifier.wait();
 			}
 		}
@@ -448,8 +463,8 @@ public abstract class Channel {
 	 * operations, including closing of the getInputStream() and
 	 * getOutputStream() streams if necessary. impClose() is called by
 	 * NonBlockingOutputStream.Transaction.perform() after the input and output
-	 * chain of readers, writers and streams are closed, or directly by Channel.close()
-	 * if the channel is read-only.
+	 * chain of readers, writers and streams are closed, or directly by
+	 * Channel.close() if the channel is read-only.
 	 * 
 	 * @throws IOException
 	 */
@@ -463,12 +478,10 @@ public abstract class Channel {
 	 * Note that any thread can close the channel, even if it is not the owner.
 	 */
 	public synchronized void close() throws IOException {
-
-		if (closed) return;
-		closed = true;
-		
 		IOException ex = null;
 		boolean implCloseCalled = false;
+
+		closed = true;
 
 		if (finalReader != null) {
 			try {
@@ -515,10 +528,10 @@ public abstract class Channel {
 	/**
 	 * Flush the Channel.
 	 * 
-	 * @exception TclException
-	 *                is thrown when attempting to flush a read only channel.
-	 * @exception IOEcception
-	 *                is thrown for all other flush errors.
+	 * @throws TclException
+	 *             when attempting to flush a read only channel.
+	 * @throws IOException
+	 *             for all other flush errors.
 	 */
 	public void flush(Interp interp) throws IOException, TclException {
 
@@ -545,8 +558,8 @@ public abstract class Channel {
 	}
 
 	/**
-	 * Move the current file pointer.A subclass should override this method if
-	 * it supports the seek operation.
+	 * Move the current file pointer. Channels that support seek and tell should
+	 * use SeekableChannel.
 	 * 
 	 * @param interp
 	 *            currrent interpreter.
@@ -563,41 +576,11 @@ public abstract class Channel {
 		throw new TclPosixException(interp, TclPosixException.EINVAL, true, "error during seek on \"" + getChanName()
 				+ "\"");
 	}
-	
-	/**
-	 * Called just prior to each write to the getOutputStream() stream, if the channel is in TclIO.APPEND
-	 * mode.  Seek-able Channel implementations should override this and guarantee that the write
-	 * will append to the end of the output.  There is no need to flush any of the channel
-	 * buffers. The default implementation does nothing.
-	 * 
-	 * @throws IOException
-	 */
-	void prepareForAppendWrite() throws IOException {
-		
-	}
-
-	/**
-	 * Reset all internal state that is out-of-date after a seek()
-	 */
-	void seekReset() {
-		if (inputBuffer != null)
-			inputBuffer.seekReset();
-		if (eolInputFilter != null)
-			eolInputFilter.seekReset();
-		if (eofInputFilter != null)
-			eofInputFilter.seekReset();
-		if (unicodeDecoder != null)
-			unicodeDecoder.seekReset();
-		if (markableInputStream != null) {
-			markableInputStream.seekReset();
-		}
-		eofSeen = false;
-	}
 
 	/**
 	 * @returns the current file position. If tell is not supported on the given
-	 *          channel then -1 will be returned. A subclass should override
-	 *          this method if it supports the tell operation.
+	 *          channel then -1 will be returned. Subclasses should use the
+	 *          SeekableChannel class to provide tell() capability.
 	 */
 	public long tell() throws IOException {
 		return -1;
@@ -618,7 +601,7 @@ public abstract class Channel {
 		 */
 		rawInputStream = getInputStream();
 		eofInputFilter = new EofInputFilter(rawInputStream, (byte) (inputEofChar & 0xff));
-		inputBuffer = new InputBuffer(eofInputFilter, bufferSize, buffering, blocking);
+		inputBuffer = new InputBuffer(eofInputFilter, bufferSize, buffering, blocking, this);
 		markableInputStream = new MarkableInputStream(inputBuffer);
 		unicodeDecoder = new UnicodeDecoder(markableInputStream, encoding);
 		eolInputFilter = new EolInputFilter(unicodeDecoder, inputTranslation);
@@ -627,7 +610,9 @@ public abstract class Channel {
 		finalReader = eolInputFilter;
 		/* read() gets bytes from finalInputStream */
 		finalInputStream = markableInputStream;
-		
+
+		encodingChangedSinceLastRead = false;
+
 		closed = false;
 	}
 
@@ -655,8 +640,60 @@ public abstract class Channel {
 
 		/* Bytes are more efficiently written to firstOutputStream */
 		firstOutputStream = outputBuffer;
-		
+
 		closed = false;
+	}
+
+	/**
+	 * @return true if the channel is writable, according to the 'fileevent'
+	 *         definition
+	 */
+	boolean isWritable() {
+		if (outputBuffer == null && !closed)
+			return true;
+		if (outputBuffer.getBufferedByteCount() >= bufferSize)
+			return false;
+		return true;
+	}
+
+	/**
+	 * @return true if the channel is readable, according to the 'fileevent'
+	 *         definition
+	 */
+	boolean isReadable() {
+		if (inputBuffer == null)
+			return false;
+		if (encodingChangedSinceLastRead)
+			return true;
+		if (inputBuffer.eof())
+			return true;
+		try {
+			return (inputBuffer.available() > 0);
+		} catch (IOException e) {
+			/*
+			 * Don't consider 'stream closed' a readable trigger. This exception
+			 * is probably due to a pipeline whose process terminated early
+			 */
+			if (e.getMessage().toLowerCase().contains("closed"))
+				return false;
+			else
+				return true;
+		}
+	}
+
+	/**
+	 * Force a non-blocking refill of the InputBuffer
+	 * 
+	 */
+	void fillInputBuffer() throws IOException {
+		if (isReadOnly() || isReadWrite()) {
+			if (!closed) {
+				initInput();
+				if (inputBuffer != null) {
+					inputBuffer.requestRefill(false);
+				}
+			}
+		}
 	}
 
 	/**
@@ -665,7 +702,7 @@ public abstract class Channel {
 	public final boolean eof() {
 		return eofSeen;
 	}
-	
+
 	/**
 	 * Returns true of close() has been called
 	 */
@@ -779,7 +816,7 @@ public abstract class Channel {
 	 * 
 	 * @param blocking
 	 *            True for blocking mode, false for non-blocking mode.
-	 *           
+	 * 
 	 */
 	public void setBlocking(boolean inBlocking) {
 		blocking = inBlocking;
@@ -913,7 +950,7 @@ public abstract class Channel {
 	}
 
 	/**
-	 * Set new Java encoding. FIXME: Should it be set after first read/write?
+	 * Set new Java encoding.
 	 * 
 	 * @param inEncoding
 	 *            Java-style encoding string
@@ -923,6 +960,7 @@ public abstract class Channel {
 
 		if (unicodeDecoder != null) {
 			unicodeDecoder.setEncoding(encoding);
+			encodingChangedSinceLastRead = true;
 		}
 		if (unicodeEncoder != null) {
 			unicodeEncoder.setEncoding(encoding);
@@ -967,7 +1005,7 @@ public abstract class Channel {
 	public void setOutputTranslation(int translation) {
 		if (!(isWriteOnly() || isReadWrite()))
 			return;
-		if (translation==TclIO.TRANS_AUTO)
+		if (translation == TclIO.TRANS_AUTO)
 			outputTranslation = TclIO.TRANS_PLATFORM;
 		else
 			outputTranslation = translation;
