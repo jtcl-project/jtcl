@@ -18,89 +18,101 @@ package tcl.lang;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-// Implements the Jacl version of the Notifier class. The Notifier is
-// the lowest-level part of the event system. It is used by
-// higher-level event sources such as file, JavaBean and timer
-// events. The Notifier manages an event queue that holds TclEvent
-// objects.
-//
-// The Jacl notifier is designed to run in a multi-threaded
-// environment. Each notifier instance is associated with a primary
-// thread. Any thread can queue (or dequeue) events using the
-// queueEvent (or deleteEvents) call. However, only the primary thread
-// may process events in the queue using the doOneEvent()
-// call. Attepmts to call doOneEvent from a non-primary thread will
-// cause a TclRuntimeError.
-//
-// This class does not have a public constructor and thus cannot be
-// instantiated. The only way to for a Tcl extension to get an
-// Notifier is to call Interp.getNotifier() (or
-// Notifier.getNotifierForThread() ), which returns the Notifier for that
-// interpreter (thread).
-
+/**
+ * Implements the Jacl version of the Notifier class. The Notifier is the
+ * lowest-level part of the event system. It is used by higher-level event
+ * sources such as file, JavaBean and timer events. The Notifier manages an
+ * event queue that holds TclEvent objects.
+ * 
+ * The Jacl notifier is designed to run in a multi-threaded environment. Each
+ * notifier instance is associated with a primary thread. Any thread can queue
+ * (or dequeue) events using the queueEvent (or deleteEvents) call. However,
+ * only the primary thread may process events in the queue using the
+ * doOneEvent() call. Attepmts to call doOneEvent from a non-primary thread will
+ * cause a TclRuntimeError.
+ * 
+ * This class does not have a public constructor and thus cannot be
+ * instantiated. The only way to for a Tcl extension to get an Notifier is to
+ * call Interp.getNotifier() (or Notifier.getNotifierForThread() ), which
+ * returns the Notifier for that interpreter (thread).
+ */
 public class Notifier implements EventDeleter {
 
-	// First pending event, or null if none.
+	/**
+	 *  First pending event, or null if none.
+	 */
 
 	private TclEvent firstEvent;
 
-	// Last pending event, or null if none.
+	/**
+	 *  Last pending event, or null if none.
+	 */
 
 	private TclEvent lastEvent;
 
-	// Last high-priority event in queue, or null if none.
+	/**
+	 *  Last high-priority event in queue, or null if none.
+	 */
 
 	private TclEvent markerEvent;
 
-	// Event that was just processed by serviceEvent
+	/**
+	 *  Event that was just processed by serviceEvent
+	 */
 
 	private TclEvent servicedEvent = null;
 
-	// The primary thread of this notifier. Only this thread should process
-	// events from the event queue.
+	/**
+	 * The primary thread of this notifier. Only this thread should process
+	 * 	events from the event queue.
+	 */
 
 	Thread primaryThread;
 
-	// Stores the Notifier for each thread.
+	/**
+	 *  Stores the Notifier for each thread.
+	 */
 
-	private static HashMap notifierTable = new HashMap();
+	private static HashMap<Thread, Notifier> notifierTable = new HashMap<Thread, Notifier>();
 
-	// List of registered timer handlers.
+	/**
+	 *  List of registered timer handlers.
+	 */
 
-	ArrayList timerList;
+	ArrayList<TimerHandler> timerList;
 
-	// Used to distinguish older timer handlers from recently-created ones.
+	/**
+	 *  Used to distinguish older timer handlers from recently-created ones.
+	 */
 
 	int timerGeneration;
 
-	// True if there is a pending timer event in the event queue, false
-	// otherwise.
-
+	/** True if there is a pending timer event in the event queue, false
+	 * otherwise.
+	 */
 	boolean timerPending;
 
-	// List of registered idle handlers.
+	/**
+	 *  List of registered idle handlers.
+	 */
+	ArrayList<IdleHandler> idleList;
 
-	ArrayList idleList;
-
-	// Used to distinguish older idle handlers from recently-created ones.
+	/**
+	 *  Used to distinguish older idle handlers from recently-created ones.
+	 */
 
 	int idleGeneration;
 
-	// Reference count of the notifier. It's used to tell when a notifier
-	// is no longer needed.
+	/**
+	 *  Reference count of the notifier. It's used to tell when a notifier is no longer needed
+	 */
 
 	int refCount;
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * Notifier --
-	 * 
+	/**
 	 * Creates a Notifier instance.
 	 * 
-	 * Side effects: Member fields are initialized.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param primaryThread the primary thread for this notifier
 	 */
 
 	private Notifier(Thread primaryThread) // The primary thread for this
@@ -114,9 +126,9 @@ public class Notifier implements EventDeleter {
 		lastEvent = null;
 		markerEvent = null;
 
-		timerList = new ArrayList();
+		timerList = new ArrayList<TimerHandler>();
 		timerGeneration = 0;
-		idleList = new ArrayList();
+		idleList = new ArrayList<IdleHandler>();
 		idleGeneration = 0;
 		timerPending = false;
 		refCount = 0;
@@ -140,22 +152,11 @@ public class Notifier implements EventDeleter {
 		return notifier;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * preserve --
-	 * 
+	/**
 	 * Increment the reference count of the notifier. The notifier will be kept
 	 * in the notifierTable (and alive) as long as its reference count is
 	 * greater than zero.
-	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: The refCount is incremented.
-	 * 
-	 * ----------------------------------------------------------------------
 	 */
-
 	public synchronized void preserve() {
 		if (refCount < 0) {
 			throw new TclRuntimeError("Attempting to preserve a freed Notifier");
@@ -163,20 +164,11 @@ public class Notifier implements EventDeleter {
 		++refCount;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * release --
-	 * 
+	/**
 	 * Decrement the reference count of the notifier. The notifier will be freed
 	 * when its refCount goes from one to zero.
-	 * 
-	 * Results: None.
-	 * 
 	 * Side effects: The notifier may be removed from the notifierTable when its
 	 * refCount reaches zero.
-	 * 
-	 * ----------------------------------------------------------------------
 	 */
 
 	public synchronized void release() {
@@ -272,11 +264,7 @@ public class Notifier implements EventDeleter {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * deleteEvents --
-	 * 
+	/**
 	 * Calls an EventDeleter for each event in the queue and deletes those for
 	 * which deleter.deleteEvent() returns 1. Events for which the deleter
 	 * returns 0 are left in the queue. This method includes code to handle the
@@ -288,14 +276,9 @@ public class Notifier implements EventDeleter {
 	 * Side effects: Potentially removes one or more events from the event
 	 * queue.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param deleter the deleter that checks whether an event should be removed
 	 */
-
-	public synchronized void deleteEvents(EventDeleter deleter) // The deleter
-																// that checks
-																// whether an
-																// event
-	// should be removed.
+	public synchronized void deleteEvents(EventDeleter deleter) 
 	{
 		TclEvent evt, prev;
 		TclEvent servicedEvent = null;
@@ -339,22 +322,12 @@ public class Notifier implements EventDeleter {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * deleteEvent --
-	 * 
+	/**
 	 * This method is required to implement the EventDeleter interface It is not
 	 * actually used though, see deleteEvents method for special casing of the
 	 * deletion of a specific event.
-	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * ----------------------------------------------------------------------
 	 */
-
+	@Deprecated
 	public int deleteEvent(TclEvent evt) {
 		throw new TclRuntimeError(
 				"The Notifier.deleteEvent() method should not be called");
@@ -482,33 +455,28 @@ public class Notifier implements EventDeleter {
 		return null;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * doOneEvent --
-	 * 
+	/**
 	 * Process a single event of some sort. If there's no work to do, wait for
 	 * an event to occur, then process it. May delay execution of process while
 	 * waiting for an event, unless TCL.DONT_WAIT is set in the flags argument.
-	 * 
-	 * Results: The return value is 1 if the procedure actually found an event
-	 * to process. If no processing occurred, then 0 is returned (this can
-	 * happen if the TCL.DONT_WAIT flag is set or if there are no event handlers
-	 * to wait for in the set specified by flags).
 	 * 
 	 * Side effects: May delay execution of process while waiting for an event,
 	 * unless TCL.DONT_WAIT is set in the flags argument. Event sources are
 	 * invoked to check for and queue events. Event handlers may produce
 	 * arbitrary side effects.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param flags
+	 *            Miscellaneous flag values: may be any combination of
+	 *            TCL.DONT_WAIT, TCL.WINDOW_EVENTS, TCL.FILE_EVENTS, 
+	 *            TCL.TIMER_EVENTS, TCL.IDLE_EVENTS, or others defined by
+	 *            event sources.
+	 * @return 1 if the procedure actually found an event to process. If no
+	 *         processing occurred, then 0 is returned (this can happen if the
+	 *         TCL.DONT_WAIT flag is set or if there are no event handlers to
+	 *         wait for in the set specified by flags).
 	 */
 
-	public int doOneEvent(int flags) // Miscellaneous flag values: may be any
-	// combination of TCL.DONT_WAIT,
-	// TCL.WINDOW_EVENTS, TCL.FILE_EVENTS,
-	// TCL.TIMER_EVENTS, TCL.IDLE_EVENTS,
-	// or others defined by event sources.
+	public int doOneEvent(int flags)
 	{
 		final boolean debug = false;
 

@@ -66,7 +66,7 @@ public abstract class TclEvent {
 	 * 
 	 * Note: this method is called by the primary thread of the notifier.
 	 * 
-	 * @param Miscellaneous flag values: may be any combination of
+	 * @param flags Miscellaneous flag values: may be any combination of
 	 *        TCL.DONT_WAIT,  TCL.WINDOW_EVENTS, TCL.FILE_EVENTS, 
 	 *        TCL.TIMER_EVENTS, TCL.IDLE_EVENTS, or others defined by event
 	 *        sources - this is the same as the flags passed to Notifier.doOneEvent()

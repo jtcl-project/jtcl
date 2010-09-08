@@ -15,7 +15,7 @@
 
 package tcl.lang;
 
-/*
+/**
  * This is the interface for deleting events in the notifier's event
  * queue. It's used together with the Notifier.deleteEvents() method.
  *
@@ -23,28 +23,18 @@ package tcl.lang;
 
 public interface EventDeleter {
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * deleteEvent --
-	 * 
+	/**
 	 * This method is called once for each event in the event queue. It returns
 	 * 1 for all events that should be deleted and 0 for events that should
 	 * remain in the queue.
 	 * 
 	 * If this method determines that an event should be removed, it should
 	 * perform appropriate clean up on the event object.
-	 * 
-	 * Results: 1 means evt should be removed from the event queue. 0 otherwise.
-	 * 
-	 * Side effects: After this method returns 1, the event will be removed from
-	 * the event queue and will not be processed.
-	 * 
-	 * ----------------------------------------------------------------------
+	 *
+	 * @param evt Event to test whether it should be removed
+	 * @return 1 means evt should be removed from the event queue. 0 otherwise.
 	 */
-
-	public int deleteEvent(TclEvent evt); // Check whether this event should be
-											// removed.
+	public int deleteEvent(TclEvent evt);
 
 } // end EventDeleter
 
