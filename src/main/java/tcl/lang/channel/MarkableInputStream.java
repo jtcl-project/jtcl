@@ -118,16 +118,17 @@ class MarkableInputStream extends FilterInputStream {
 	}
 
 	/**
-	 * Put a character back into the stream
+	 * Put a byte back into the stream
 	 * 
 	 * @param c
-	 *            character to put back into the stream
+	 *            byte to put back into the stream
 	 */
 	public void unread(int c) {
 		if (c != -1) {
 			byte[] b = new byte[1];
 			b[0] = (byte) (c & 0xff);
-			saveBytes(b, 0, 1);
+			if (!marked)
+				saveBytes(b, 0, 1);
 			--readPos;
 		}
 	}
