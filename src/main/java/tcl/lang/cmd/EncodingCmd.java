@@ -14,7 +14,11 @@
 package tcl.lang.cmd;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.ArrayList;
@@ -258,7 +262,14 @@ public class EncodingCmd implements Command {
 				if (index == OPT_CONVERTFROM) {
 					// Treat the string as binary data
 					byte[] bytes = TclByteArray.getBytes(interp, data);
-					interp.setResult(new String(bytes, javaEncoding));
+					CharsetDecoder csd = Charset.forName(javaEncoding).newDecoder();
+					try {
+						CharBuffer cb = csd.decode(ByteBuffer.wrap(bytes));
+						csd.flush(cb);
+						interp.setResult(cb.toString());
+					} catch (CharacterCodingException e) {
+						interp.setResult(TclByteArray.newInstance(bytes));
+					}
 				} else {
 					// Store the result as binary data
 					byte[] bytes = data.toString().getBytes(javaEncoding);
