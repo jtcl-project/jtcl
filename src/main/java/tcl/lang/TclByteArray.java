@@ -16,6 +16,14 @@
 
 package tcl.lang;
 
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
+
+import tcl.lang.cmd.EncodingCmd;
 
 /**
  * This class implements the binary data object type in Tcl.
@@ -94,8 +102,11 @@ public class TclByteArray implements InternalRep {
 	 * Called to query the string representation of the Tcl object. This method
 	 * is called only by TclObject.toString() when TclObject.stringRep is null.
 	 * 
-	 * @return the string representation of the Tcl object.
+	 * @return the string representation of the TclByteArray, calculated by
+	 *         copying each byte into the lower byte of each character (Tcl's
+	 *         'identity' encoding)
 	 */
+	@Override
 	public String toString() {
 		char[] c = new char[used];
 		for (int ix = 0; ix < used; ix++) {
@@ -167,12 +178,21 @@ public class TclByteArray implements InternalRep {
 	 * requested size. When growing the array, the old array is copied to the
 	 * new array; new bytes are undefined. When shrinking, the old array is
 	 * truncated to the specified length.
+	 * 
+	 * @param interp
+	 *            the current interpreter
+	 * @param tobj
+	 *            object in which to change the byte array length. Object is
+	 *            converted to a TclByteArray
+	 * @param length
+	 *            new length of the array
+	 * 
+	 * @returns the byte array
 	 */
 
 	public static byte[] setLength(Interp interp, TclObject tobj, int length) {
 		if (tobj.isShared()) {
-			throw new TclRuntimeError(
-					"TclByteArray.setLength() called with shared object");
+			throw new TclRuntimeError("TclByteArray.setLength() called with shared object");
 		}
 		setByteArrayFromAny(interp, tobj);
 		TclByteArray tbyteArray = (TclByteArray) tobj.getInternalRep();
@@ -224,4 +244,41 @@ public class TclByteArray implements InternalRep {
 		TclByteArray tbyteArray = (TclByteArray) tobj.getInternalRep();
 		return tbyteArray.bytes;
 	}
+
+	/**
+	 * Interpret the bytes in the byte array according to the specified tcl
+	 * encoding and return the corresponding string.
+	 * 
+	 * @param interp
+	 *            the current interpreter
+	 * @param tobj
+	 *            the object, which is converted to a TclByteArray if necessary
+	 * @param tclEncoding
+	 *            Tcl encoding in which to decode to String. 'identity',
+	 *            'binary' and null all imply that the string will be made of
+	 *            chars whose lower byte is the corresponding byte from the
+	 *            array.
+	 * @return the decoded string
+	 */
+	public static String decodeToString(Interp interp, TclObject tobj, String tclEncoding) {
+		setByteArrayFromAny(interp, tobj);
+		TclByteArray tbyteArray = (TclByteArray) tobj.getInternalRep();
+		if (tclEncoding == null || tclEncoding.equals("identity") || tclEncoding.equals("binary")) {
+			return tobj.toString();
+		}
+		String javaEncoding = EncodingCmd.getJavaName(tclEncoding);
+		CharsetDecoder csd = Charset.forName(javaEncoding).newDecoder();
+		csd.onMalformedInput(CodingErrorAction.IGNORE);
+		csd.onUnmappableCharacter(CodingErrorAction.REPLACE);
+		CharBuffer cb = null;
+		try {
+			cb = csd.decode(ByteBuffer.wrap(tbyteArray.bytes, 0, tbyteArray.used));
+		} catch (CharacterCodingException e) {
+		}
+		if (cb == null)
+			return "";
+		else
+			return cb.toString();
+	}
+
 }

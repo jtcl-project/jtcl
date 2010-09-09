@@ -370,13 +370,33 @@ public abstract class Channel {
 			checkWrite(interp);
 			initOutput();
 
-			if (outData.getInternalRep() instanceof TclByteArray && encoding == null && buffering != TclIO.BUFF_LINE
+			if (outData.isByteArrayType() && encoding == null 
 					&& (outputTranslation == TclIO.TRANS_BINARY || outputTranslation == TclIO.TRANS_LF)) {
 				/* Can write with the more efficient firstOutputStream */
 				firstOutputStream.write(TclByteArray.getBytes(interp, outData), 0, TclByteArray.getLength(interp,
 						outData));
+				/* Step in to do line buffering, since we bypassed EolOutputFilter */
+				if (buffering == TclIO.BUFF_LINE) {
+					byte [] bytes = TclByteArray.getBytes(interp, outData);
+					for (byte b : bytes) {
+						if (b==0x0A) {
+							firstOutputStream.flush();
+							break;
+						}
+					}
+				}
 			} else {
-				char[] cbuf = outData.toString().toCharArray();
+				char [] cbuf;
+				if (outData.isByteArrayType() && encoding != null) {
+					/* Read the bytearray according to the system encoding */
+					cbuf = TclByteArray.decodeToString(interp, outData, EncodingCmd.systemTclEncoding).toCharArray();
+					if (cbuf.length==0 && TclByteArray.getLength(interp, outData) > 0) {
+						/* Must have had a bad encoding translation; throw an exception.  This is based on io.test io-60.1 */
+						throw new TclException(interp,"error writing \""+getChanName()+"\": invalid argument");
+					}
+				} else {
+					cbuf = outData.toString().toCharArray();
+				}
 				firstWriter.write(cbuf, 0, cbuf.length);
 			}
 		} finally {

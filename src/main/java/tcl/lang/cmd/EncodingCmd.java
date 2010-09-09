@@ -14,11 +14,8 @@
 package tcl.lang.cmd;
 
 import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.CharacterCodingException;
+
 import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.ArrayList;
@@ -78,7 +75,7 @@ public class EncodingCmd implements Command {
 	 */
 	static Hashtable<String, EncodingMap> encodeHash;
 
-	static EncodingMap[] encodings = { new EncodingMap("identity", "UTF8", 1),
+	static EncodingMap[] encodings = { new EncodingMap("identity", "ISO-8859-1", 1),
 			new EncodingMap("utf-8", "UTF8", 1),
 			new EncodingMap("utf-16", "UTF16", 2),
 			new EncodingMap("unicode", "ISO-10646-UCS-2", 2),
@@ -260,20 +257,23 @@ public class EncodingCmd implements Command {
 
 			try {
 				if (index == OPT_CONVERTFROM) {
-					// Treat the string as binary data
-					byte[] bytes = TclByteArray.getBytes(interp, data);
-					CharsetDecoder csd = Charset.forName(javaEncoding).newDecoder();
-					try {
-						CharBuffer cb = csd.decode(ByteBuffer.wrap(bytes));
-						csd.flush(cb);
-						interp.setResult(cb.toString());
-					} catch (CharacterCodingException e) {
-						interp.setResult(TclByteArray.newInstance(bytes));
+					// this doesn't preserve tclbytearray on identity
+					if (tclEncoding.equals("identity")) {
+						// preserve the original bytes as a TclByteArray
+						TclByteArray.getLength(interp, data);
+						interp.setResult(data);
+					} else { 
+						interp.setResult(TclByteArray.decodeToString(interp, data, tclEncoding));
 					}
 				} else {
-					// Store the result as binary data
-					byte[] bytes = data.toString().getBytes(javaEncoding);
-					interp.setResult(TclByteArray.newInstance(bytes));
+					byte[] bytes;
+					if (tclEncoding.equals("identity")) {
+						// convert to TclByteArray
+						TclByteArray.getLength(interp, data);
+						interp.setResult(data);
+					} else {
+						interp.setResult(TclByteArray.newInstance(data.toString().getBytes(javaEncoding)));
+					}
 				}
 
 			} catch (UnsupportedEncodingException ex) {

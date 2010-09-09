@@ -116,34 +116,48 @@ abstract class TclObjectBase {
 	// should not need to query the internal rep of
 	// a TclObject before operating on it.
 
-	// Return true if the TclObject contains an int.
-
+	/**
+	 * @return true if the TclObject contains an int.
+	 */
 	public final boolean isIntType() {
 		return (internalRep == TclInteger.dummy);
 	}
 
-	// Return true if the TclObject contains a TclString.
-
+	/**
+	 *  @return true if the TclObject contains a TclString.
+	 */
 	public final boolean isStringType() {
 		return (internalRep instanceof TclString);
 	}
 
-	// Return true if the TclObject contains a TclDouble.
-
+	/**
+	 *@return true if the TclObject contains a TclDouble
+	 */
 	public final boolean isDoubleType() {
 		return (internalRep instanceof TclDouble);
 	}
 
-	// Return true if the TclObject contains a TclWideInteger.
-
+	/**
+	 * @return true if the TclObject contains a TclWideInteger.
+	 * 
+	 */
 	public final boolean isWideIntType() {
 		return isIntType();
 	}
 
-	// Return true if the TclObject contains a TclList.
-
+	/**
+	 * @return true if the TclObject contains a TclList.
+	 * 
+	 */
 	public final boolean isListType() {
 		return (internalRep instanceof TclList);
+	}
+	
+	/**
+	 * @return true if the TclObject contains a TclByteArray
+	 */
+	public final boolean isByteArrayType() {
+		return (internalRep instanceof TclByteArray);
 	}
 
 	/**

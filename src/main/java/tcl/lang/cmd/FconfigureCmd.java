@@ -294,7 +294,7 @@ public class FconfigureCmd implements Command {
 			case OPT_ENCODING: { // -encoding
 				String tclEncoding = argv[i].toString();
 
-				if (tclEncoding.equals("") || tclEncoding.equals("binary")) {
+				if (tclEncoding.equals("") || tclEncoding.equals("binary") || tclEncoding.equals("identity")) {
 					chan.setEncoding(null);
 				} else {
 					String javaEncoding = EncodingCmd.getJavaName(tclEncoding);
