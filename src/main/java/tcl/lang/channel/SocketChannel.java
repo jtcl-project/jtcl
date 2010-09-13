@@ -15,13 +15,15 @@ import java.net.UnknownHostException;
 import tcl.lang.Interp;
 import tcl.lang.TclException;
 import tcl.lang.TclIO;
+import tcl.lang.TclObject;
+import tcl.lang.TclString;
 
 /**
  * The SocketChannel class implements a channel object for Socket connections,
  * created using the socket command.
  **/
 
-public class SocketChannel extends Channel {
+public class SocketChannel extends AbstractSocketChannel  {
 
 	/**
 	 * The java Socket object associated with this Channel
@@ -41,6 +43,9 @@ public class SocketChannel extends Channel {
 		InetAddress addr = null;
 
 		if (async)
+			/* NOTE: When async sockets are supported, return error
+			 * in connection with getError(Interp) below
+			 */
 			throw new TclException(interp,
 					"Asynchronous socket connection not "
 							+ "currently implemented");
@@ -94,10 +99,6 @@ public class SocketChannel extends Channel {
 	void implClose() throws IOException {
 		sock.close();		
 	}
-	
-	String getChanType() {
-		return "tcp";
-	}
 
 	protected InputStream getInputStream() throws IOException {
 		return sock.getInputStream();
@@ -106,4 +107,31 @@ public class SocketChannel extends Channel {
 	protected OutputStream getOutputStream() throws IOException {
 		return sock.getOutputStream();
 	}
+
+	@Override
+	public TclObject getError(Interp interp) throws TclException {
+		/* FIXME: return async errors when it is implemented */
+		return TclString.newInstance("");
+	}
+
+	@Override
+	InetAddress getLocalAddress() {
+		return sock.getLocalAddress();
+	}
+
+	@Override
+	int getLocalPort() {
+		return sock.getLocalPort();
+	}
+
+	@Override
+	InetAddress getPeerAddress() {
+		return sock.getInetAddress();
+	}
+
+	@Override
+	int getPeerPort() {
+		return sock.getPort();
+	}
+	
 }

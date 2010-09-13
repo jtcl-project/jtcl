@@ -26,6 +26,7 @@ import tcl.lang.TclNumArgsException;
 import tcl.lang.TclObject;
 import tcl.lang.TclRuntimeError;
 import tcl.lang.TclString;
+import tcl.lang.channel.AbstractSocketChannel;
 import tcl.lang.channel.Channel;
 
 /**
@@ -34,8 +35,10 @@ import tcl.lang.channel.Channel;
 
 public class FconfigureCmd implements Command {
 
-	static final private String validCmds[] = { "-blocking", "-buffering",
-			"-buffersize", "-encoding", "-eofchar", "-translation", };
+	static final private String commonValidCommands[] = { "-blocking", "-buffering",
+			"-buffersize", "-encoding", "-eofchar", "-translation"};
+	static final private String socketValidCommands[] = { "-blocking", "-buffering",
+		"-buffersize", "-encoding", "-eofchar", "-translation", "-peername", "-sockname"};
 
 	static final int OPT_BLOCKING = 0;
 	static final int OPT_BUFFERING = 1;
@@ -43,6 +46,8 @@ public class FconfigureCmd implements Command {
 	static final int OPT_ENCODING = 3;
 	static final int OPT_EOFCHAR = 4;
 	static final int OPT_TRANSLATION = 5;
+	static final int OPT_PEERNAME = 6;
+	static final int OPT_SOCKNAME = 7;
 
 	/**
 	 * This procedure is invoked to process the "fconfigure" Tcl command. See
@@ -55,7 +60,7 @@ public class FconfigureCmd implements Command {
 	 */
 
 	public void cmdProc(Interp interp, TclObject argv[]) throws TclException {
-
+		
 		Channel chan; // The channel being operated on this method
 
 		if ((argv.length < 2)
@@ -69,7 +74,8 @@ public class FconfigureCmd implements Command {
 			throw new TclException(interp, "can not find channel named \""
 					+ argv[1].toString() + "\"");
 		}
-
+		String validCmds[] = (chan instanceof AbstractSocketChannel) ? socketValidCommands : commonValidCommands;
+		
 		if (argv.length == 2) {
 			// return list of all name/value pairs for this channelId
 			TclObject list = TclList.newInstance();
@@ -153,12 +159,31 @@ public class FconfigureCmd implements Command {
 			} else {
 				// Not readable or writeable, do nothing
 			}
+			
+			// -peername
+			if (chan instanceof tcl.lang.channel.SocketChannel) {
+				TclList.append(interp, list, TclString.newInstance("-peername"));
+				TclList.append(interp, list, ((AbstractSocketChannel)chan).getPeerName(interp));
+			}
+			
+			// -sockname
+			if (chan instanceof AbstractSocketChannel) {
+				TclList.append(interp, list, TclString.newInstance("-sockname"));
+				TclList.append(interp, list, ((AbstractSocketChannel)chan).getSockName(interp));
+			}
 
 			interp.setResult(list);
 		}
 
 		if (argv.length == 3) {
 			// return value for supplied name
+			
+			// C Tcl doesn't put -error in the 'bad option' error message, and seems to treat it
+			// differently.
+			if (chan instanceof AbstractSocketChannel && argv[2].toString().equals("-error")) {
+				interp.setResult(((AbstractSocketChannel)chan).getError(interp));
+				return;
+			}
 
 			int index = 0;
 			try {
@@ -252,6 +277,12 @@ public class FconfigureCmd implements Command {
 
 				break;
 			}
+			case OPT_PEERNAME:
+				interp.setResult(((AbstractSocketChannel)chan).getPeerName(interp));
+				break;
+			case OPT_SOCKNAME:
+				interp.setResult(((AbstractSocketChannel)chan).getSockName(interp));
+				break;
 			default: {
 				throw new TclRuntimeError("Fconfigure.cmdProc() error: "
 						+ "incorrect index returned from TclIndex.get()");
@@ -264,7 +295,7 @@ public class FconfigureCmd implements Command {
 
 			int index;
 			try {
-				index = TclIndex.get(interp, argv[i-1], validCmds, "option", 0);
+				index = TclIndex.get(interp, argv[i-1], commonValidCommands, "option", 0);
 			} catch (TclException e) {
 				// custom error message
 				throw new TclException(interp,"bad option \""+argv[i-1]

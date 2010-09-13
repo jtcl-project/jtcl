@@ -23,13 +23,14 @@ import tcl.lang.TclException;
 import tcl.lang.TclIO;
 import tcl.lang.TclObject;
 import tcl.lang.TclPosixException;
+import tcl.lang.TclString;
 
 /**
  * The ServerSocketChannel class implements a channel object for ServerSocket
  * connections, created using the socket command.
  **/
 
-public class ServerSocketChannel extends Channel {
+public class ServerSocketChannel extends AbstractSocketChannel {
 
 	/**
 	 * The java ServerSocket object associated with this Channel.
@@ -143,16 +144,38 @@ public class ServerSocketChannel extends Channel {
 				"error during seek on \"" + getChanName() + "\"");
 	}
 
-	String getChanType() {
-		return "tcp";
-	}
-
 	protected InputStream getInputStream() throws IOException {
 		throw new RuntimeException("should never be called");
 	}
 
 	protected OutputStream getOutputStream() throws IOException {
 		throw new RuntimeException("should never be called");
+	}
+
+	@Override
+	public TclObject getError(Interp interp) throws TclException {
+		// FIXME: what kind of error do we return here?
+		return TclString.newInstance("");
+	}
+
+	@Override
+	InetAddress getLocalAddress() {
+		return sock.getInetAddress();
+	}
+
+	@Override
+	int getLocalPort() {
+		return sock.getLocalPort();
+	}
+
+	@Override
+	InetAddress getPeerAddress() {
+		return null;  // not supported
+	}
+
+	@Override
+	int getPeerPort() {
+		return 0; // not supported
 	}
 }
 
