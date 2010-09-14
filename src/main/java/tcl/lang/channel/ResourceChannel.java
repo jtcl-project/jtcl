@@ -56,29 +56,26 @@ public class ResourceChannel extends Channel {
 	 *                tested for. Most cases should be caught.
 	 */
 
-	public String open(Interp interp, String fileName, int modeFlags)
-			throws IOException, TclException {
+	public String open(Interp interp, String fileName, int modeFlags) throws IOException, TclException {
 
 		mode = modeFlags;
 
 		// disallow any mode except read
 
 		if (modeFlags != TclIO.RDONLY) {
-			throw new TclException(interp,
-					"invalid mode(s), only RDONLY mode allowed for resource:");
+			throw new TclException(interp, "invalid mode(s), only RDONLY mode allowed for resource:");
 		}
 
 		try {
 			file = interp.getClassLoader().getResourceAsStream(fileName);
 		} catch (java.lang.NullPointerException npe) {
-			throw new TclPosixException(interp,TclPosixException.ENOENT, true,
+			throw new TclPosixException(interp, TclPosixException.ENOENT, true,
 					"ResourceChannel.open: no file specified for \"resource:\" ");
 		}
 
 		if (file == null) {
-			throw new TclPosixException(interp,TclPosixException.ENOENT, true,
-					"ResourceChannel.open: cannot find \"resource:" + fileName
-							+ "\"");
+			throw new TclPosixException(interp, TclPosixException.ENOENT, true,
+					"ResourceChannel.open: cannot find \"resource:" + fileName + "\"");
 		}
 
 		// In standard Tcl fashion, set the channelId to be "resource" + the
@@ -89,57 +86,31 @@ public class ResourceChannel extends Channel {
 		return fName;
 	}
 
-
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see tcl.lang.channel.Channel#implClose()
 	 */
 	@Override
 	void implClose() throws IOException {
 		if (file == null) {
-			throw new TclRuntimeError(
-					"ResourceChannel.close(): null file object");
+			throw new TclRuntimeError("ResourceChannel.close(): null file object");
 		}
 		file.close();
 		file = null;
 	}
 
-	/**
-	 * Seek not allowed on resource file, throw a TclRuntimeError.
-	 * 
-	 * @param offset
-	 *            The number of bytes to move the file pointer.
-	 * @param inmode
-	 *            to begin incrementing the file pointer; beginning, current, or
-	 *            end of the file.
-	 */
-
-	public void seek(Interp interp, long offset, int inmode)
-			throws IOException, TclException {
-
-		throw new TclRuntimeError(
-				"ResourceChannel.seek(): not allowed for resource:");
-
-	}
-
-	/**
-	 * Tell not allowed on resource file, throw TclRuntimeError.
-	 * 
-	 * @return The current value of the file pointer.
-	 */
-
-	public long tell() throws IOException {
-		throw new TclRuntimeError(
-				"ResourceChannel.tell(): not allowed for resource:");
-	}
-
+	@Override
 	String getChanType() {
 		return "resource";
 	}
 
+	@Override
 	protected InputStream getInputStream() throws IOException {
 		return file;
 	}
 
+	@Override
 	protected OutputStream getOutputStream() throws IOException {
 		throw new IOException("ResourceChannel: output stream not available");
 	}
