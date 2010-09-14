@@ -298,6 +298,11 @@ public class ArrayCmd implements Command {
 				throw new TclVarException(interp, name1, null, "set", "variable isn't array"	);
 			}
 			
+			/* Create the array if it does not exists; this is required if there are 0 elements
+			 * to create: array set arrayname {}
+			 */
+			Var.lookupVar(interp, name1, "", 0, "set", true, false);
+			
 			// Set each of the array variable names in the interp
 
 			for (i = 0; i < size; i++) {
