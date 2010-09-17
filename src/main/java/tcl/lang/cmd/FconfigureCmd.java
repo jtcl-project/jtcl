@@ -406,9 +406,6 @@ public class FconfigureCmd implements Command {
 									+ "crlf, or platform");
 				}
 
-				if (outputTranslation == TclIO.TRANS_AUTO)
-					outputTranslation = TclIO.TRANS_PLATFORM;
-
 				if (chan.isReadOnly()) {
 					chan.setInputTranslation(inputTranslation);
 					if (inputTranslationArg.equals("binary")) {

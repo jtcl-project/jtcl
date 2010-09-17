@@ -208,12 +208,7 @@ class InputBuffer extends FilterInputStream {
 	 */
 	@Override
 	public int available() throws IOException {
-		/*
-		 * If there is a refill in progress, we don't want to block in
-		 * remaining()
-		 */
-		if (isRefillInProgress())
-			return 0;
+		if (isRefillInProgress()) return 0;
 		return remaining() + eofInputFilter.available();
 	}
 

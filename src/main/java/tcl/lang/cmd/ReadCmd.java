@@ -48,7 +48,6 @@ public class ReadCmd implements Command {
 		// method
 		int i = 1; // Index to the next arg in argv
 		int toRead = 0; // Number of bytes or chars to read from channel
-		int charactersRead; // Number of bytes or chars read from channel
 		boolean readAll = true; // If true read-all else toRead
 		boolean noNewline = false; // If true, strip the newline if there
 		TclObject result;
@@ -76,70 +75,45 @@ public class ReadCmd implements Command {
 
 		i++;
 
-		// Compute how many bytes or chars to read, and see whether the final
-		// noNewline should be dropped.
-
-		if (i < argv.length) {
-			String arg = argv[i].toString();
-
-			if (Character.isDigit(arg.charAt(0))) {
-				toRead = TclInteger.getInt(interp, argv[i]);
-				readAll = false;
-			} else if (arg.equals("nonewline")) {
-				noNewline = true;
-			} else {
-				throw new TclException(interp, "bad argument \"" + arg
-						+ "\": should be \"nonewline\"");
+		if (i==argv.length) {
+			readAll = true;
+		} else {
+			readAll = false;
+			toRead = TclInteger.getInt(interp, argv[i]);
+			if (toRead < 0) {
+				// this is a wierd error, but it's what io-32.3 test wants
+				throw new TclException(interp, "bad argument \""+argv[i]+"\": should be \"nonewline\"");
 			}
+			
 		}
-
+	
 		try {
-			if (chan.getEncoding() == null) {
+			if (chan.getEncoding() == null && ! noNewline) {
 				result = TclByteArray.newInstance();
 			} else {
 				result = TclString.newInstance(new StringBuffer(64));
 			}
 			if (readAll) {
-				charactersRead = chan.read(interp, result, TclIO.READ_ALL, 0);
+				chan.read(interp, result, TclIO.READ_ALL, 0);
 
 				// If -nonewline was specified, and we have not hit EOF
 				// and the last char is a "\n", then remove it and return.
 
-				if (noNewline) {
+				if (noNewline && chan.eof()) {
 					String inStr = result.toString();
-					if ((charactersRead > 0)
-							&& (inStr.charAt(charactersRead - 1) == '\n')) {
-						interp.setResult(inStr.substring(0,
-								(charactersRead - 1)));
-						return;
+					if (inStr.endsWith("\n")) {
+						interp.setResult(inStr.substring(0, inStr.length()-1));
+					} else {
+						interp.setResult(result);
 					}
+				} else {
+					interp.setResult(result);
 				}
 			} else {
-				// FIXME: Bug here, the -nonewline flag must be respected
-				// when reading a set number of bytes
-				charactersRead = chan.read(interp, result, TclIO.READ_N_BYTES,
+				chan.read(interp, result, TclIO.READ_N_BYTES,
 						toRead);
+				interp.setResult(result);
 			}
-
-			/*
-			 * // FIXME: Port this -nonewline logic from the C code. if
-			 * (charactersRead < 0) { Tcl_ResetResult(interp);
-			 * Tcl_AppendResult(interp, "error reading \"", name, "\": ",
-			 * Tcl_PosixError(interp), (char *) NULL);
-			 * Tcl_DecrRefCount(resultPtr); return TCL_ERROR; }
-			 * 
-			 * // If requested, remove the last newline in the channel if at
-			 * EOF.
-			 * 
-			 * if ((charactersRead > 0) && (newline != 0)) { char *result; int
-			 * length;
-			 * 
-			 * result = Tcl_GetStringFromObj(resultPtr, &length); if
-			 * (result[length - 1] == '\n') { Tcl_SetObjLength(resultPtr, length
-			 * - 1); } }
-			 */
-
-			interp.setResult(result);
 
 		} catch (IOException e) {
 			throw new TclRuntimeError(

@@ -24,6 +24,12 @@ public class FileEvent extends IdleHandler {
 	 * Indicates a WRITE file event
 	 */
 	public final static int WRITABLE = 1;
+	
+	/**
+	 * set to true if stdin is being used for command input
+	 * and filevents should not be fired
+	 */
+	static boolean stdinUsedForCommandInput = false;
 
 	/**
 	 * The interpreter in which this FileEvent is registered
@@ -95,6 +101,15 @@ public class FileEvent extends IdleHandler {
 		if (script == null) {
 			return; // event was disposed
 		}
+		/* Don't fire fileevents on stdin when it is being used for command input
+		 * ConsoleThread sets stdinUsedForCommandInput; some commands like
+		 * vwait reset while executing
+		 */
+		if (channel instanceof StdChannel && "stdin".equals(channel.getChanName())
+				&& isStdinUsedForCommandInput()) {
+			requeue();
+			return;
+		}
 		if (type == READABLE && !channel.isReadable()) {
 			try {
 				channel.fillInputBuffer();
@@ -128,5 +143,25 @@ public class FileEvent extends IdleHandler {
 		requeue();
 		return;
 	}
+
+	/**
+	 * @return true if stdin is currently being used for command input
+	 * and file events should not be fired on stdin
+	 */
+	public synchronized static boolean isStdinUsedForCommandInput() {
+		return stdinUsedForCommandInput;
+	}
+
+	/**
+	 * @param stdinUsedForCommandInput the stdinUsedForCommandInput to set
+	 * @return previous value of flag
+	 */
+	public synchronized static boolean setStdinUsedForCommandInput(boolean stdinUsedForCommandInput) {
+		boolean rv = FileEvent.stdinUsedForCommandInput;
+		FileEvent.stdinUsedForCommandInput = stdinUsedForCommandInput;
+		return rv;
+	}
+	
+
 
 }

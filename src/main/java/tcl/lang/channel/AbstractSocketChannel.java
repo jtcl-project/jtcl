@@ -4,6 +4,7 @@ import java.net.InetAddress;
 
 import tcl.lang.Interp;
 import tcl.lang.TclException;
+import tcl.lang.TclIO;
 import tcl.lang.TclInteger;
 import tcl.lang.TclList;
 import tcl.lang.TclObject;
@@ -61,6 +62,18 @@ public abstract class AbstractSocketChannel extends Channel {
 		return "tcp";
 	}
 	
+	/**
+	 * if output translation is set to AUTO, sockets are crlf
+	 * regardless of platform
+	  *
+	 * @see tcl.lang.channel.Channel#setOutputTranslation(int)
+	 */
+	@Override
+	public void setOutputTranslation(int translation) {
+		if (translation == TclIO.TRANS_AUTO) translation = TclIO.TRANS_CRLF;
+		super.setOutputTranslation(translation);
+	}
+
 	/**
 	 * This option gets the current error status of the given socket. This is
 	 * useful when you need to determine if an asynchronous connect operation

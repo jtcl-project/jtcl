@@ -16,6 +16,7 @@ import tcl.lang.TclByteArray;
 import tcl.lang.TclException;
 import tcl.lang.TclIO;
 import tcl.lang.TclObject;
+import tcl.lang.channel.Channel;
 
 /**
  * Implements a pure Java process. Combines java.lang.ProcessBuilder and
@@ -240,14 +241,14 @@ public class JavaProcess extends TclProcess {
 						tclbuf = TclByteArray.newInstance(buf);
 						try {
 							try {
-								stderrRedirect.channel.waitForOwnership();
+								stderrRedirect.channel.waitForOwnership(Channel.WRITE_OWNERSHIP);
 							} catch (InterruptedException e) {
 							}
 							stderrRedirect.channel.write(interp, tclbuf);
 						} catch (TclException e) {
 							throw new IOException(e.getMessage());
 						} finally {
-							stderrRedirect.channel.setOwnership(false);
+							stderrRedirect.channel.setOwnership(false, Channel.WRITE_OWNERSHIP);
 						}
 					}
 					
@@ -261,14 +262,14 @@ public class JavaProcess extends TclProcess {
 						tclbuf = TclByteArray.newInstance(b, off, len);
 						try {
 							try {
-								stderrRedirect.channel.waitForOwnership();
+								stderrRedirect.channel.waitForOwnership(Channel.WRITE_OWNERSHIP);
 							} catch (InterruptedException e) {
 							}
 							stderrRedirect.channel.write(interp, tclbuf);
 						} catch (TclException e) {
 							throw new IOException(e.getMessage());
 						} finally {
-							stderrRedirect.channel.setOwnership(false);
+							stderrRedirect.channel.setOwnership(false, Channel.WRITE_OWNERSHIP);
 						}
 					}
 
@@ -282,14 +283,14 @@ public class JavaProcess extends TclProcess {
 						super.flush();
 						try {
 							try {
-								stderrRedirect.channel.waitForOwnership();
+								stderrRedirect.channel.waitForOwnership(Channel.WRITE_OWNERSHIP);
 							} catch (InterruptedException e) {
 							}
 							stderrRedirect.channel.flush(interp);
 						} catch (TclException e) {
 							throw new IOException(e.getMessage());
 						} finally {
-							stderrRedirect.channel.setOwnership(false);
+							stderrRedirect.channel.setOwnership(false, Channel.WRITE_OWNERSHIP);
 						}
 					}
 

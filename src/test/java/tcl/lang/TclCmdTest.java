@@ -113,10 +113,16 @@ public class TclCmdTest extends TestCase {
 		
 		// load the tcltest package, export namespace procs, 
 		// configure output file to the temporary file we created.
+		
+		// DJB - Also, initialize the built-in constraints.  It appears that tcltest
+		// does lazy initialization of these, but the init doesn't work with
+		// constraints specified as args to test(), because the lazy initializer
+		// var trace doesn't get fired.  The same thing happens with C Tcl.
 		try {
 			interp.eval("package require tcltest; " 
 					+ "namespace import -force ::tcltest::*; " 
-					+ "tcltest::configure -outfile " + tmpFileStr);
+					+ "tcltest::configure -outfile " + tmpFileStr + "; "
+					+ "tcltest::InitConstraints");
 		} catch (TclException e) {
 			String errStr = interp.getVar("errorInfo", 0).toString();
 			throw new Exception(errStr, e);

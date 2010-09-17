@@ -53,7 +53,11 @@ public abstract class SeekableChannel extends Channel {
 	@Override
 	public void seek(Interp interp, long offset, int mode) throws IOException, TclException {
 
-		if (!setOwnership(true)) {
+		if (!setOwnership(true, READ_OWNERSHIP)) {
+			throw new TclException(interp, "channel is busy");
+		}
+		if (!setOwnership(true, WRITE_OWNERSHIP)) {
+			setOwnership(false, READ_OWNERSHIP);
 			throw new TclException(interp, "channel is busy");
 		}
 
@@ -131,7 +135,8 @@ public abstract class SeekableChannel extends Channel {
 				setBlocking(false);
 			}
 		} finally {
-			setOwnership(false);
+			setOwnership(false, WRITE_OWNERSHIP);
+			setOwnership(false, READ_OWNERSHIP);
 		}
 	}
 
@@ -185,4 +190,20 @@ public abstract class SeekableChannel extends Channel {
 	void prepareForAppendWrite() throws IOException {
 		implSeek(getMaxSeek());
 	}
+
+	/**
+	 * Set channel's eofSeen by testing current file position
+	 * 
+	 * @see tcl.lang.channel.Channel#setEofSeenWithoutRead()
+	 */
+	@Override
+	void setEofSeenWithoutRead() {
+		try {
+			if (getNumBufferedInputBytes() == 0 && implTell() >= getMaxSeek())
+				eofSeen = true;
+		} catch (IOException e) {
+			
+		}
+	}
+	
 }

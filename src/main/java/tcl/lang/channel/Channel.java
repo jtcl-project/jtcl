@@ -185,9 +185,24 @@ public abstract class Channel {
 	boolean eofSeen = false;
 
 	/**
-	 * Thread id of owning thread, or -1 if no owner
+	 * Thread id of reader owning thread, or -1 if no owner
 	 */
-	long owningThread = -1;
+	long readOwningThread = -1;
+
+	/**
+	 * Thread id of writer owning thread, or -1 if no owner
+	 */
+	long writeOwningThread = -1;
+	
+	/**
+	 * Indicate that thread wants read ownership
+	 */
+	public static final int READ_OWNERSHIP = 1;
+	
+	/**
+	 * Indicate tht thread wants write ownership
+	 */
+	public static final int WRITE_OWNERSHIP = 2;
 
 	/**
 	 * This object is notified when the channel is no longer owned
@@ -234,7 +249,7 @@ public abstract class Channel {
 	 */
 	public int read(Interp interp, TclObject tobj, int readType, int numBytes) throws IOException, TclException {
 
-		if (!setOwnership(true)) {
+		if (!setOwnership(true, READ_OWNERSHIP)) {
 			throw new TclException(interp, "channel is busy");
 		}
 		try {
@@ -244,7 +259,7 @@ public abstract class Channel {
 			encodingChangedSinceLastRead = false;
 
 			if (eofSeen) {
-				setOwnership(false);
+				setOwnership(false, READ_OWNERSHIP);
 				return -1;
 			}
 
@@ -299,6 +314,12 @@ public abstract class Channel {
 						break;
 					}
 					if (cnt == 0 && (!blocking)) {
+						setEofSeenWithoutRead(); // perhaps it's an EOF that we
+													// can flag, some tests in
+													// io.test require that
+													// eof() be detected
+													// immediately in
+													// non-blocking mode
 						break;
 					}
 					if (readChars)
@@ -306,7 +327,7 @@ public abstract class Channel {
 					total += cnt;
 				}
 				if (eofSeen && total == 0) {
-					setOwnership(false);
+					setOwnership(false, READ_OWNERSHIP);
 					return -1;
 				}
 
@@ -314,7 +335,7 @@ public abstract class Channel {
 					// trim the TclByteArray
 					TclByteArray.setLength(interp, tobj, total);
 				}
-				setOwnership(false);
+				setOwnership(false, READ_OWNERSHIP);
 				return total;
 			}
 			case TclIO.READ_LINE: {
@@ -325,7 +346,7 @@ public abstract class Channel {
 				StringBuffer sb = new StringBuffer(64);
 				int rv = eolInputFilter.readLine(sb, blocking);
 				TclString.empty(tobj);
-				setOwnership(false);
+				setOwnership(false, READ_OWNERSHIP);
 
 				switch (rv) {
 
@@ -339,6 +360,9 @@ public abstract class Channel {
 					return -1;
 
 				case EolInputFilter.INCOMPLETE_LINE:
+					setEofSeenWithoutRead(); // perhaps we can set eofSeen, some
+												// tests in io.test require that
+												// eof() be detected immediately
 					return -1;
 				}
 
@@ -347,7 +371,7 @@ public abstract class Channel {
 				throw new TclRuntimeError("Channel.read: Invalid read mode.");
 			}
 		} finally {
-			setOwnership(false);
+			setOwnership(false, READ_OWNERSHIP);
 		}
 	}
 
@@ -363,36 +387,42 @@ public abstract class Channel {
 	 */
 
 	public void write(Interp interp, TclObject outData) throws IOException, TclException {
-		if (!setOwnership(true)) {
+		if (!setOwnership(true, WRITE_OWNERSHIP)) {
 			throw new TclException(interp, "channel is busy");
 		}
 		try {
 			checkWrite(interp);
 			initOutput();
 
-			if (outData.isByteArrayType() && encoding == null 
+			if (outData.isByteArrayType() && encoding == null
 					&& (outputTranslation == TclIO.TRANS_BINARY || outputTranslation == TclIO.TRANS_LF)) {
 				/* Can write with the more efficient firstOutputStream */
 				firstOutputStream.write(TclByteArray.getBytes(interp, outData), 0, TclByteArray.getLength(interp,
 						outData));
-				/* Step in to do line buffering, since we bypassed EolOutputFilter */
+				/*
+				 * Step in to do line buffering, since we bypassed
+				 * EolOutputFilter
+				 */
 				if (buffering == TclIO.BUFF_LINE) {
-					byte [] bytes = TclByteArray.getBytes(interp, outData);
+					byte[] bytes = TclByteArray.getBytes(interp, outData);
 					for (byte b : bytes) {
-						if (b==0x0A) {
+						if (b == 0x0A) {
 							firstOutputStream.flush();
 							break;
 						}
 					}
 				}
 			} else {
-				char [] cbuf;
+				char[] cbuf;
 				if (outData.isByteArrayType() && encoding != null) {
 					/* Read the bytearray according to the system encoding */
 					cbuf = TclByteArray.decodeToString(interp, outData, EncodingCmd.systemTclEncoding).toCharArray();
-					if (cbuf.length==0 && TclByteArray.getLength(interp, outData) > 0) {
-						/* Must have had a bad encoding translation; throw an exception.  This is based on io.test io-60.1 */
-						throw new TclException(interp,"error writing \""+getChanName()+"\": invalid argument");
+					if (cbuf.length == 0 && TclByteArray.getLength(interp, outData) > 0) {
+						/*
+						 * Must have had a bad encoding translation; throw an
+						 * exception. This is based on io.test io-60.1
+						 */
+						throw new TclException(interp, "error writing \"" + getChanName() + "\": invalid argument");
 					}
 				} else {
 					cbuf = outData.toString().toCharArray();
@@ -400,7 +430,7 @@ public abstract class Channel {
 				firstWriter.write(cbuf, 0, cbuf.length);
 			}
 		} finally {
-			setOwnership(false);
+			setOwnership(false, WRITE_OWNERSHIP);
 		}
 	}
 
@@ -425,13 +455,15 @@ public abstract class Channel {
 	 *            if true, give Channel ownership to the current thread if no
 	 *            other thread owns it; otherwise, give up ownership if the
 	 *            current thread owns it
+	 * @param type
+	 * 			 	Either READ_OWNERSHIP or WRITE_OWNERSHIP          
 	 * 
 	 * @return If takeOwnership is true, returns true if the current thread
 	 *         successfully received ownership. If takeOwnership is false,
 	 *         returns true if the current thread was the owner of the channel.
 	 */
-	public synchronized boolean setOwnership(boolean takeOwnership) {
-		return setOwnership(takeOwnership, Thread.currentThread().getId());
+	public synchronized boolean setOwnership(boolean takeOwnership, int type) {
+		return setOwnership(takeOwnership, type, Thread.currentThread().getId());
 	}
 
 	/**
@@ -441,6 +473,8 @@ public abstract class Channel {
 	 *            if true, give Channel ownership to the current thread if no
 	 *            other thread owns it; otherwise, give up ownership if the
 	 *            current thread owns it
+	 * @param type
+	 * 			   Either READ_OWNERSHIP or WRITE_OWNERSHIP
 	 * @param threadId
 	 *            Thread.getId() of thread that should own the channel
 	 * 
@@ -448,13 +482,17 @@ public abstract class Channel {
 	 *         successfully received ownership. If takeOwnership is false,
 	 *         returns true if the current thread was the owner of the channel.
 	 */
-	public boolean setOwnership(boolean takeOwnership, long threadId) {
+	public boolean setOwnership(boolean takeOwnership, int type, long threadId) {
 		synchronized (ownershipNotifier) {
+			long owningThread = (type == READ_OWNERSHIP ? readOwningThread : writeOwningThread);
+			if (type != READ_OWNERSHIP && type != WRITE_OWNERSHIP) return false;
 			if (owningThread < 0 || threadId == owningThread) {
 				if (takeOwnership) {
-					owningThread = threadId;
+					if (type==READ_OWNERSHIP) readOwningThread = threadId;
+					if (type==WRITE_OWNERSHIP) writeOwningThread = threadId;
 				} else {
-					owningThread = -1;
+					if (type==READ_OWNERSHIP) readOwningThread = -1;
+					if (type==WRITE_OWNERSHIP) writeOwningThread = -1;
 					ownershipNotifier.notifyAll();
 				}
 				return true;
@@ -467,12 +505,14 @@ public abstract class Channel {
 	/**
 	 * Block until ownership to this channel is granted to the current thread
 	 * 
+	 * @param type  Either READ_OWNERSHIP or WRITE_OWNERSHIP
+	 * 
 	 * @throws InterruptedException
 	 */
-	public void waitForOwnership() throws InterruptedException {
+	public void waitForOwnership(int type) throws InterruptedException {
 		long threadId = Thread.currentThread().getId();
 		synchronized (ownershipNotifier) {
-			while (!setOwnership(true, threadId)) {
+			while (!setOwnership(true, type, threadId)) {
 				ownershipNotifier.wait();
 			}
 		}
@@ -556,7 +596,7 @@ public abstract class Channel {
 	public void flush(Interp interp) throws IOException, TclException {
 
 		checkWrite(interp);
-		if (!setOwnership(true)) {
+		if (!setOwnership(true, WRITE_OWNERSHIP)) {
 			throw new TclException(interp, "channel is busy");
 		}
 		try {
@@ -564,7 +604,7 @@ public abstract class Channel {
 				firstWriter.flush();
 			}
 		} finally {
-			setOwnership(false);
+			setOwnership(false, WRITE_OWNERSHIP);
 		}
 	}
 
@@ -604,6 +644,14 @@ public abstract class Channel {
 	 */
 	public long tell() throws IOException {
 		return -1;
+	}
+
+	/**
+	 * If we can detect EOF without another read, set eofSeen. Default
+	 * implementation can't do much, but SeekableChannel can.
+	 */
+	void setEofSeenWithoutRead() {
+
 	}
 
 	/**
@@ -671,6 +719,8 @@ public abstract class Channel {
 	boolean isWritable() {
 		if (outputBuffer == null && !closed)
 			return true;
+		if (closed)
+			return false;
 		if (outputBuffer.getBufferedByteCount() >= bufferSize)
 			return false;
 		return true;
@@ -687,6 +737,13 @@ public abstract class Channel {
 			return true;
 		if (inputBuffer.eof())
 			return true;
+		try {
+			/* Line buffering may be waiting on a EOL.  test io-54.2 deadlocks
+			 * if line buffered channel doesn't become readable
+			 */
+			if (buffering==TclIO.BUFF_LINE && ! inputBuffer.lastReadWouldHaveBlocked() &&  inputBuffer.isRefillInProgress())
+				return true;
+		} catch (IOException e1) { }
 		try {
 			return (inputBuffer.available() > 0);
 		} catch (IOException e) {
@@ -719,7 +776,7 @@ public abstract class Channel {
 	/**
 	 * Returns true if the last read reached the end of file.
 	 */
-	public final boolean eof() {
+	public boolean eof() {
 		return eofSeen;
 	}
 
@@ -955,7 +1012,7 @@ public abstract class Channel {
 	public boolean isBlocked(Interp interp) throws TclException {
 		checkRead(interp);
 		if (inputBuffer != null)
-			return inputBuffer.lastReadWouldHaveBlocked();
+			return inputBuffer.lastReadWouldHaveBlocked() && !eof();
 		else
 			return false;
 	}

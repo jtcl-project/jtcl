@@ -13,8 +13,6 @@
 
 package tcl.lang.channel;
 
-import java.io.FileDescriptor;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -61,6 +59,11 @@ public class StdChannel extends Channel {
 	 * Standard error stream to read from
 	 */
 	static OutputStream _err = System.err;
+	
+	/**
+	 * Set to true if STDIN is being used by the Shell for command input
+	 */
+	static boolean stdinUsedByShell = false;
 
 	/**
 	 * Reassign the standard input stream to a new stream. This will change the

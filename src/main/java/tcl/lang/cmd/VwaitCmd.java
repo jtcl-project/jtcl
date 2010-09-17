@@ -22,6 +22,7 @@ import tcl.lang.TclNumArgsException;
 import tcl.lang.TclObject;
 import tcl.lang.Var;
 import tcl.lang.VarTrace;
+import tcl.lang.channel.FileEvent;
 
 /*
  * This class implements the built-in "vwait" command in Tcl.
@@ -57,10 +58,14 @@ public class VwaitCmd implements Command {
 		Var.traceVar(interp, argv[1].toString(), null, TCL.GLOBAL_ONLY
 				| TCL.TRACE_WRITES | TCL.TRACE_UNSETS, trace);
 
+		/* Allow stdin file events to be fired, since we aren't reading stdin for commands now */
+		boolean stdinUsed = FileEvent.setStdinUsedForCommandInput(false);
 		int foundEvent = 1;
 		while (!trace.done && (foundEvent != 0)) {
 			foundEvent = interp.getNotifier().doOneEvent(TCL.ALL_EVENTS);
 		}
+		/* Reset stdin use flag */
+		FileEvent.setStdinUsedForCommandInput(stdinUsed);
 
 		Var.untraceVar(interp, argv[1].toString(), null, TCL.GLOBAL_ONLY
 				| TCL.TRACE_WRITES | TCL.TRACE_UNSETS, trace);

@@ -27,7 +27,7 @@ import tcl.lang.TclString;
 
 /**
  * The ServerSocketChannel class implements a channel object for ServerSocket
- * connections, created using the socket command.
+ * connections, created using the socket -server command.
  **/
 
 public class ServerSocketChannel extends AbstractSocketChannel {
@@ -60,6 +60,11 @@ public class ServerSocketChannel extends AbstractSocketChannel {
 	 * Creates a new ServerSocketChannel object with the given options. Creates
 	 * an underlying ServerSocket object, and a thread to handle connections to
 	 * the socket.
+	 * 
+	 * @param interp the current interpreter
+	 * @param localAddr the IP address to bind to, or an empty string
+	 * @param port the port to bind to, or 0 for any port
+	 * @param callback the Tcl script specified by 'server -socket'
 	 **/
 
 	public ServerSocketChannel(Interp interp, String localAddr, int port,
@@ -76,6 +81,7 @@ public class ServerSocketChannel extends AbstractSocketChannel {
 		}
 		this.mode = TclIO.CREAT; // Allow no reading or writing on channel
 		this.callback = callback;
+		this.callback.preserve();
 		this.cbInterp = interp;
 
 		// Create the server socket.
@@ -94,44 +100,25 @@ public class ServerSocketChannel extends AbstractSocketChannel {
 		acceptThread.start();
 	}
 
+	/**
+	 * Add an event to the TclEvent queue to process a new socket connection
+	 * 
+	 * @param s  the new socket returned from accept()
+	 */
 	synchronized void addConnection(Socket s) {
-		// Create an event which executes the callback TclString with
-		// the arguments sock, addr, port added.
-		// First, create a SocketChannel for this Socket object.
-		SocketChannel sChan = null;
-		try {
-			sChan = new SocketChannel(cbInterp, s);
-			// Register this channel in the channel tables.
-			TclIO.registerChannel(cbInterp, sChan);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		SocketConnectionEvent evt = new SocketConnectionEvent(cbInterp,
-				callback, sChan.getChanName(), s.getInetAddress()
-						.getHostAddress(), s.getPort());
+		SocketConnectionEvent evt = new SocketConnectionEvent(cbInterp, callback, s, this.sock);
 		cbInterp.getNotifier().queueEvent((TclEvent) evt, TCL.QUEUE_TAIL);
 	}
 
-	// FIXME: Since this does not actually close the socket
-	// right away, we run into errors in the test suite
-	// saying the socket is already in use after the close
-	// command has been issued. Need to figure out how to
-	// deal with this issue.
-
-	public void close() throws IOException {
-		// Stop the event handler thread.
-		// this might not happen for up to a minute!
-		acceptThread.pleaseStop();
-
-		super.close();
-	}
 
 	/* (non-Javadoc)
 	 * @see tcl.lang.channel.Channel#implClose()
 	 */
 	@Override
 	void implClose() throws IOException {
-		sock.close();		
+		acceptThread.pleaseStop();
+		sock.close();
+		callback.release();
 	}
 
 	/**
@@ -183,7 +170,7 @@ class AcceptThread extends Thread {
 
 	private ServerSocket sock;
 	private ServerSocketChannel sschan;
-	boolean keepRunning;
+	volatile boolean keepRunning;
 
 	public AcceptThread(ServerSocket s1, ServerSocketChannel s2) {
 		sock = s1;
@@ -222,5 +209,6 @@ class AcceptThread extends Thread {
 
 	public void pleaseStop() {
 		keepRunning = false;
+		interrupt();
 	}
 }

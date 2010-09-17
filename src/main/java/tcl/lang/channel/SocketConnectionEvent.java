@@ -6,42 +6,93 @@
  */
 package tcl.lang.channel;
 
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+
 import tcl.lang.Interp;
 import tcl.lang.TCL;
 import tcl.lang.TclEvent;
+import tcl.lang.TclException;
+import tcl.lang.TclIO;
+import tcl.lang.TclInteger;
+import tcl.lang.TclList;
 import tcl.lang.TclObject;
 import tcl.lang.TclString;
 
+/**
+ * A subclass of TclEvent used to indicate that a connection
+ * has been made to a server socket.
+ *
+ */
 public class SocketConnectionEvent extends TclEvent {
 
 	Interp cbInterp;
 	TclObject callbackCmd;
+	Socket sock;
+	ServerSocket serverSock;
 
-	public SocketConnectionEvent(Interp i, TclObject cb, String chan,
-			String ip, int port) {
-		cbInterp = i;
-		callbackCmd = TclString.newInstance(cb.toString());
-		TclString.append(callbackCmd, " " + chan + " " + ip + " " + port);
+	/**
+	 * Create a new event to process a new socket connection
+	 * 
+	 * @param interp The interpreter in which the connection was made
+	 * @param callbackObj Callback provided to 'socket -server'
+	 * @param sock The new Java socket that was accepted
+	 * @param serverSock The Java ServerSocket that created sock
+	 */
+	public SocketConnectionEvent(Interp interp, TclObject callbackObj, Socket sock, ServerSocket serverSock) {
+		cbInterp = interp;
+		callbackCmd = callbackObj;
+		this.sock = sock;
+		this.serverSock = serverSock;
 	}
 
 	public int processEvent(int flags) {
-		// Check this event is for us.
-		if ((flags == 0) || ((flags & TCL.FILE_EVENTS) == TCL.FILE_EVENTS)
-				|| ((flags & TCL.ALL_EVENTS) == TCL.ALL_EVENTS)) {
+			/*
+			 *  If the server socket was closed before we got around to this socket, just close this socket.
+			 * This emulates Tcl's behavior of not making connections outside of event loop
+			 */
+			if (serverSock.isClosed()) {
+				try {
+					sock.close();
+				} catch (IOException e) { }
+				return 1;
+			}
+			
+			/* Create a channel for the socket */
+			SocketChannel chan = null;
+			try {
+				chan = new SocketChannel(cbInterp, sock);
+			} catch (IOException e1) {
+				new TclException(cbInterp, e1.getMessage());
+				cbInterp.backgroundError();
+				return 1;
+			} catch (TclException e1) {
+				cbInterp.backgroundError();
+				return 1;
+			}
+			TclIO.registerChannel(cbInterp, chan);
+			
+			TclObject cblist = TclList.newInstance();
+			try {
+				TclList.append(cbInterp, cblist, callbackCmd);
+				TclList.append(cbInterp, cblist, TclString.newInstance(chan.getChanName()));
+				TclList.append(cbInterp, cblist, TclString.newInstance(sock.getInetAddress().getHostAddress()));
+				TclList.append(cbInterp, cblist, TclInteger.newInstance(sock.getPort()));
+			} catch (TclException e1) {
+				cbInterp.backgroundError();
+				return 1;
+			}
 			// Process the event
 			try {
-				cbInterp.eval(callbackCmd, TCL.EVAL_GLOBAL);
-			} catch (Exception e) {
-				// What do I do with this??
-				e.printStackTrace();
-				// Possibly the interpreter doesn't exist anymore??
+				cbInterp.eval(cblist, TCL.EVAL_GLOBAL);
+			} catch (TclException e2) {
+				cbInterp.addErrorInfo("\n  during server socket callback \n");
+				cbInterp.backgroundError();
 			}
+			
 			return 1;
-		} else {
-			System.out.println("Event type: " + flags);
-			// Event not for us
-			return 0;
-		}
+		} 
 	}
 
-}
+

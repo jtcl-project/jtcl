@@ -3,6 +3,7 @@ package tcl.lang;
 import java.io.IOException;
 
 import tcl.lang.channel.Channel;
+import tcl.lang.channel.FileEvent;
 import tcl.lang.channel.StdChannel;
 
 /**
@@ -67,6 +68,7 @@ public class ConsoleThread extends Thread {
 			System.out.println("entered ConsoleThread run() method");
 		}
 
+		FileEvent.setStdinUsedForCommandInput(true);
 		if (isInteractive()) put(out, "% ");
 
 		while (true) {

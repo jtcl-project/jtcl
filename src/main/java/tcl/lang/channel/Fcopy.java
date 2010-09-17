@@ -203,11 +203,11 @@ public class Fcopy {
 	 *             if one of the channels is busy
 	 */
 	private void getChannelOwnership(long id) throws TclException {
-		if (!source.setOwnership(true, id)) {
+		if (!source.setOwnership(true, Channel.READ_OWNERSHIP, id)) {
 			throw new TclException(interp, "channel \"" + source.getChanName() + "\" is busy");
 		}
-		if (!destination.setOwnership(true, id)) {
-			source.setOwnership(false);
+		if (!destination.setOwnership(true, Channel.WRITE_OWNERSHIP, id)) {
+			source.setOwnership(false, Channel.READ_OWNERSHIP);
 			throw new TclException(interp, "channel \"" + destination.getChanName() + "\" is busy");
 		}
 	}
@@ -285,8 +285,8 @@ public class Fcopy {
 		destination.setBlocking(destinationBlocking);
 		source.setBuffering(sourceBuffering);
 		destination.setBuffering(destinationBuffering);
-		source.setOwnership(false);
-		destination.setOwnership(false);
+		source.setOwnership(false, Channel.READ_OWNERSHIP);
+		destination.setOwnership(false, Channel.WRITE_OWNERSHIP);
 		if (doUtf8OutputEncoding) {
 			destination.setEncoding(null);
 		}

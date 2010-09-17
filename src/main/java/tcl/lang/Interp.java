@@ -2423,11 +2423,7 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * Tcl_RecordAndEvalObj -> recordAndEval
-	 * 
+	/**
 	 * This procedure adds its command argument to the current list of recorded
 	 * events and then executes the command by calling eval.
 	 * 
@@ -2438,8 +2434,11 @@ public class Interp extends EventuallyFreed {
 	 * 
 	 * Side effects: The side effects will be determined by the exact Tcl code
 	 * to be evaluated.
-	 * 
-	 * ----------------------------------------------------------------------
+	 *
+	 * @param script a script to evaluate
+	 * @param flags TCL.NO_EVAL records only; TCL.EVAL_GLOBAL evalutes the script in a global
+	 * context
+	 * @throws TclException
 	 */
 
 	public void recordAndEval(TclObject script, // A script to evaluate.
