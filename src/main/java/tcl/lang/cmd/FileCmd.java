@@ -838,7 +838,13 @@ public class FileCmd implements Command {
 			if (!argv[firstSource].toString().startsWith("-")) {
 				break;
 			}
-			int opt = TclIndex.get(interp, argv[firstSource], validOptions, "option", 1);
+			int opt;
+			try {
+				opt = TclIndex.get(interp, argv[firstSource], validOptions, "option", 1);
+			} catch (TclException e) {
+				// change error message to match tests
+				throw new TclException(interp, e.getMessage().replace("must", "should"));
+			}
 			switch (opt) {
 			case OPT_FORCE:
 				force = true;
@@ -893,7 +899,7 @@ public class FileCmd implements Command {
 					deleteOneFile(interp, new File(fileObj, fileList[i]), force);
 				}
 			} else {
-				throw new TclPosixException(interp, TclPosixException.ENOTEMPTY, "error deleting \"" + fileName
+				throw new TclPosixException(interp, TclPosixException.ENOTEMPTY, "error deleting \"" + fileObj.getName()
 						+ "\": directory not empty");
 			}
 		}
@@ -931,7 +937,13 @@ public class FileCmd implements Command {
 			if (!argv[firstSource].toString().startsWith("-")) {
 				break;
 			}
-			int opt = TclIndex.get(interp, argv[firstSource], validOptions, "option", 1);
+			int opt;
+			try {
+				opt = TclIndex.get(interp, argv[firstSource], validOptions, "option", 1);
+			} catch (TclException e) {
+				// change error message to match tests
+				throw new TclException(interp, e.getMessage().replace("must", "should"));
+			}
 			switch (opt) {
 			case OPT_FORCE:
 				force = true;
@@ -1085,22 +1097,34 @@ public class FileCmd implements Command {
 			}
 		} else {
 			// Perform the copy procedure.
-
-			try {
-				BufferedInputStream bin = new BufferedInputStream(new FileInputStream(sourceFileObj));
-				BufferedOutputStream bout = new BufferedOutputStream(new FileOutputStream(targetFileObj));
-
-				final int bsize = 1024;
-				byte[] buff = new byte[bsize];
-				int numChars = bin.read(buff, 0, bsize);
-				while (numChars != -1) {
-					bout.write(buff, 0, numChars);
-					numChars = bin.read(buff, 0, bsize);
+			
+			// Directories just get made
+			if (sourceFileObj.isDirectory()) {
+				if (! targetFileObj.mkdir()) {
+					throw new TclPosixException(interp, TclPosixException.EACCES, true, "error copying \"" + sourceName
+							+ "\" to \"" + targetName + "\":  best guess at reason");
 				}
-				bin.close();
-				bout.close();
-			} catch (IOException e) {
-				throw new TclException(interp, "error copying: " + e.getMessage());
+				/* Recursively copy all files in this directory */
+				for (File f : sourceFileObj.listFiles()) {
+					copyRenameOneFile(interp, f.getPath(), new File(targetFileObj,f.getName()).getPath(), true, force);
+				}
+			} else {	
+				try {
+					BufferedInputStream bin = new BufferedInputStream(new FileInputStream(sourceFileObj));
+					BufferedOutputStream bout = new BufferedOutputStream(new FileOutputStream(targetFileObj));
+	
+					final int bsize = 1024;
+					byte[] buff = new byte[bsize];
+					int numChars = bin.read(buff, 0, bsize);
+					while (numChars != -1) {
+						bout.write(buff, 0, numChars);
+						numChars = bin.read(buff, 0, bsize);
+					}
+					bin.close();
+					bout.close();
+				} catch (IOException e) {
+					throw new TclException(interp, "error copying: " + e.getMessage());
+				}
 			}
 		}
 	}

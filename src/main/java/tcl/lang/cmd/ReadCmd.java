@@ -79,9 +79,10 @@ public class ReadCmd implements Command {
 			readAll = true;
 		} else {
 			readAll = false;
-			toRead = TclInteger.getInt(interp, argv[i]);
-			if (toRead < 0) {
-				// this is a wierd error, but it's what io-32.3 test wants
+			if (Character.isDigit(argv[i].toString().charAt(0))) {
+				toRead = TclInteger.getInt(interp, argv[i]);
+			} else {
+				// this is a wierd error, but that's what io-32.3, iocmd-4.9 tests want
 				throw new TclException(interp, "bad argument \""+argv[i]+"\": should be \"nonewline\"");
 			}
 			

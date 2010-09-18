@@ -8,6 +8,11 @@ import tcl.lang.TclCmdTest;
 public class FileCmdTest extends TclCmdTest {
 	public void testCmd() throws Exception {
 		LinkedList<String> expectedFailureList = new LinkedList<String>(Arrays.asList( new String[] {
+				/* These fail because of error message differences; JVM can't doesn't know exactly why
+				 * copy/rename fails
+				 */
+				"fCmd-6.17",
+				"fCmd-9.14",
 				/*
 				 * These tests fail primarily because link creation with 'file link' is not available because
 				 * Java doesn't support it.  However, Java 1.7 will support it, so we should fix it at that time,

@@ -60,10 +60,6 @@ public class StdChannel extends Channel {
 	 */
 	static OutputStream _err = System.err;
 	
-	/**
-	 * Set to true if STDIN is being used by the Shell for command input
-	 */
-	static boolean stdinUsedByShell = false;
 
 	/**
 	 * Reassign the standard input stream to a new stream. This will change the

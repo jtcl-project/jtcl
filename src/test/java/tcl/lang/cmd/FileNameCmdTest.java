@@ -14,6 +14,9 @@ public class FileNameCmdTest extends TclCmdTest {
 				 * platform-specific native code, file link -symbolic and glob -types l can be fixes, and these
 				 * test should work.
 				 */
+				"filename-11.17.2",
+				"filename-11.17.3",
+				"filename-11.17.4",
 	            "filename-11.17.7",
 	            "filename-11.17.8" 
 	        }));
