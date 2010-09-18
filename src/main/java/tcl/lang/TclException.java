@@ -16,7 +16,7 @@
 
 package tcl.lang;
 
-/*
+/**
  * TclException is used to interrupt the Tcl script currently being
  * interpreted by the Tcl Interpreter. Usually, a TclException is thrown
  * to indicate a script level error, e.g.:
@@ -39,15 +39,16 @@ package tcl.lang;
  * stored in the compCode field of this class.
  */
 
+@SuppressWarnings("serial")
 public class TclException extends Exception {
 
-	/*
+	/**
 	 * Stores the completion code of a TclException.
 	 */
 
 	private int compCode;
 
-	/*
+	/**
 	 * An index that indicates where an error occurs inside a Tcl string. This
 	 * is used to add the offending command into the stack trace.
 	 * 
@@ -58,11 +59,7 @@ public class TclException extends Exception {
 
 	public int errIndex;
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * TclException --
-	 * 
+	/**
 	 * Create an TclException with the given error message and completion code
 	 * and indicate the location of the error in a script.
 	 * 
@@ -71,7 +68,10 @@ public class TclException extends Exception {
 	 * Side effects: The instance fields are initialized; the message is
 	 * assigned to the interpreter's result if interp is non-null.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp current interpreter; may be null
+	 * @param msg error message
+	 * @param ccode completion code (TCL.ERROR, TCL.BREAK, etc)
+	 * @param idx error index
 	 */
 
 	protected TclException(Interp interp, // Current interpreter. May be null if
@@ -94,18 +94,14 @@ public class TclException extends Exception {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * TclException --
-	 * 
+	/**
 	 * Create a TclException with the given completion code.
 	 * 
 	 * Results: None.
 	 * 
 	 * Side effects: The instance fields are initialized.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param ccode completion code
 	 */
 
 	public TclException(int ccode) // Completion code.
@@ -119,11 +115,7 @@ public class TclException extends Exception {
 		errIndex = -1;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * TclException --
-	 * 
+	/**
 	 * Create an TclException with the given error message. The completion code
 	 * is set to ERROR by default.
 	 * 
@@ -132,7 +124,8 @@ public class TclException extends Exception {
 	 * Side effects: The instance fields are initialized; the message is
 	 * assigned to the interpreter's result if interp is non-null.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp current interpreter, may be null if unknown
+	 * @param msg error message
 	 */
 
 	public TclException(Interp interp, // Current interpreter. May be null if
@@ -142,19 +135,16 @@ public class TclException extends Exception {
 		this(interp, msg, TCL.ERROR, -1);
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * TclException --
-	 * 
+	/**
 	 * Create an TclException with the given error message and completion code.
 	 * 
 	 * Results: None.
 	 * 
 	 * Side effects: The instance fields are initialized; the message is
 	 * assigned to the interpreter's result if interp is non-null.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp current interpreter, may be null if unknown
+	 * @param msg error message
+	 * @param ccode completion code
 	 */
 
 	public TclException(Interp interp, // Current interpreter. May be null if
@@ -165,38 +155,20 @@ public class TclException extends Exception {
 		this(interp, msg, ccode, -1);
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
+	/**
 	 * getCompletionCode --
 	 * 
-	 * Returns the current completion code.
-	 * 
-	 * Results: The int value of compCode.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @return the current completion code (TCL.BREAK, TCL.OK, TCL.RETURN...).
 	 */
-
 	final public int getCompletionCode() {
 		return compCode;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * setCompletionCode --
-	 * 
+	/**
 	 * Sets the current completion code.
 	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: The completion code is changed.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param ccode new completion code
 	 */
-
 	public final void setCompletionCode(int ccode) // New completion code.
 	{
 		if (ccode == TCL.OK) {

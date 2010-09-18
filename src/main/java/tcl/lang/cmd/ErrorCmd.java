@@ -23,17 +23,13 @@ import tcl.lang.TclException;
 import tcl.lang.TclNumArgsException;
 import tcl.lang.TclObject;
 
-/*
+/**
  * This class implements the built-in "error" command in Tcl.
  */
 
 public class ErrorCmd implements Command {
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * cmdProc --
-	 * 
+	/**
 	 * This procedure is invoked as part of the Command interface to process the
 	 * "error" Tcl command. See the user documentation for details on what it
 	 * does.
@@ -41,8 +37,6 @@ public class ErrorCmd implements Command {
 	 * Results: None.
 	 * 
 	 * Side effects: See the user documentation.
-	 * 
-	 * ----------------------------------------------------------------------
 	 */
 
 	public void cmdProc(Interp interp, // Current interpreter.
@@ -64,7 +58,9 @@ public class ErrorCmd implements Command {
 		}
 
 		if (argv.length == 4) {
+			boolean errAlreadyLogged = interp.errAlreadyLogged;
 			interp.setErrorCode(argv[3]);
+			interp.errAlreadyLogged = errAlreadyLogged; // in case errorCode var trace in effect
 		}
 
 		interp.setResult(argv[1]);
