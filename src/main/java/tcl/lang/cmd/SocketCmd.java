@@ -54,7 +54,6 @@ public class SocketCmd implements Command {
 
 		boolean server = false; // True if this is a server socket
 		boolean async = false; // True if this is asynchronous
-		String channelId = ""; // Key into chanTable
 		String myaddr = ""; // DNS or IP address of the server
 		String script = ""; // Script for server to run
 		String host = ""; // The server fot the client
@@ -166,8 +165,8 @@ public class SocketCmd implements Command {
 				TclIO.registerChannel(interp, sock);
 				interp.setResult(sock.getChanName());
 			} catch (IOException e) {
-				throw new TclException(interp, "cannot open socket: "
-						+ e.getMessage());
+				throw new TclException(interp, "couldn't open socket: "
+						+ e.getMessage().toLowerCase());
 			}
 		}
 	}

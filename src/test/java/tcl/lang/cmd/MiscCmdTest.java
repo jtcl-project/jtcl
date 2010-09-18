@@ -17,8 +17,11 @@ public class MiscCmdTest extends TclCmdTest {
 	}
 	
 	public void testIo() throws Exception {
+		LinkedList<String> expectedFailureList = new LinkedList<String>(Arrays.asList( new String[] {
+				"io-14.9" // test requires that we can exec a new tcltest environment
+			}));
 		String resName = "/tcl/lang/cmd/io.test";
-		tclTestResource(TCLTEST_NAMEOFEXECUTABLE,resName, Collections.EMPTY_LIST);
+		tclTestResource(TCLTEST_NAMEOFEXECUTABLE,resName, expectedFailureList);
 	}
 	
 	public void testUtil() throws Exception {

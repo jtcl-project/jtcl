@@ -2,9 +2,10 @@ package tcl.lang.channel;
 
 import java.io.IOException;
 
-import tcl.lang.IdleHandler;
 import tcl.lang.Interp;
+import tcl.lang.Notifier;
 import tcl.lang.TCL;
+import tcl.lang.TclEvent;
 import tcl.lang.TclException;
 
 /**
@@ -15,7 +16,7 @@ import tcl.lang.TclException;
  * @author Dan Bodoh
  * 
  */
-public class FileEvent extends IdleHandler {
+public class FileEvent extends TclEvent {
 	/**
 	 * Indicates a READ file event
 	 */
@@ -24,10 +25,10 @@ public class FileEvent extends IdleHandler {
 	 * Indicates a WRITE file event
 	 */
 	public final static int WRITABLE = 1;
-	
+
 	/**
-	 * set to true if stdin is being used for command input
-	 * and filevents should not be fired
+	 * set to true if stdin is being used for command input and filevents should
+	 * not be fired
 	 */
 	static boolean stdinUsedForCommandInput = false;
 
@@ -60,13 +61,10 @@ public class FileEvent extends IdleHandler {
 		this.interp = interp;
 		this.channel = channel;
 		this.type = type;
-		super.register(interp.getNotifier());
 	}
 
 	/**
-	 * Create a new FileEvent and add it to the TclEvent queue. It is internally
-	 * implemented as an IdleHandler, but could also be implemented as a regular
-	 * TclEvent
+	 * Create a new FileEvent and add it to the TclEvent queue.
 	 * 
 	 * @param interp
 	 *            interpreter in which to create the file event
@@ -76,7 +74,11 @@ public class FileEvent extends IdleHandler {
 	 *            either READABLE or WRITABLE
 	 */
 	public static void queueFileEvent(Interp interp, Channel channel, int type) {
-		new FileEvent(interp, channel, type);
+		Notifier notifier = interp.getNotifier();
+		if (notifier != null) {
+			TclEvent ev = new FileEvent(interp, channel, type);
+			notifier.queueEvent(ev, TCL.QUEUE_TAIL);
+		}
 	}
 
 	/**
@@ -95,20 +97,19 @@ public class FileEvent extends IdleHandler {
 	}
 
 	@Override
-	public void processIdleEvent() {
-
+	public int processEvent(int flags) {
 		FileEventScript script = FileEventScript.find(interp, channel, type);
 		if (script == null) {
-			return; // event was disposed
+			return 1; // event was disposed
 		}
-		/* Don't fire fileevents on stdin when it is being used for command input
-		 * ConsoleThread sets stdinUsedForCommandInput; some commands like
+		/*
+		 * Don't fire fileevents on stdin when it is being used for command
+		 * input ConsoleThread sets stdinUsedForCommandInput; some commands like
 		 * vwait reset while executing
 		 */
-		if (channel instanceof StdChannel && "stdin".equals(channel.getChanName())
-				&& isStdinUsedForCommandInput()) {
+		if (channel instanceof StdChannel && "stdin".equals(channel.getChanName()) && isStdinUsedForCommandInput()) {
 			requeue();
-			return;
+			return 1;
 		}
 		if (type == READABLE && !channel.isReadable()) {
 			try {
@@ -119,11 +120,11 @@ public class FileEvent extends IdleHandler {
 				interp.backgroundError();
 				dispose();
 			}
-			return;
+			return 1;
 		}
 		if (type == WRITABLE && !channel.isWritable()) {
 			requeue();
-			return;
+			return 1;
 		}
 
 		/*
@@ -134,26 +135,27 @@ public class FileEvent extends IdleHandler {
 		} catch (TclException e) {
 			interp.backgroundError();
 			dispose();
-			return;
+			return 1;
 		}
 
 		/*
 		 * Put a duplicate FileEvent on the queue
 		 */
 		requeue();
-		return;
+		return 1;
 	}
 
 	/**
-	 * @return true if stdin is currently being used for command input
-	 * and file events should not be fired on stdin
+	 * @return true if stdin is currently being used for command input and file
+	 *         events should not be fired on stdin
 	 */
 	public synchronized static boolean isStdinUsedForCommandInput() {
 		return stdinUsedForCommandInput;
 	}
 
 	/**
-	 * @param stdinUsedForCommandInput the stdinUsedForCommandInput to set
+	 * @param stdinUsedForCommandInput
+	 *            the stdinUsedForCommandInput to set
 	 * @return previous value of flag
 	 */
 	public synchronized static boolean setStdinUsedForCommandInput(boolean stdinUsedForCommandInput) {
@@ -161,7 +163,5 @@ public class FileEvent extends IdleHandler {
 		FileEvent.stdinUsedForCommandInput = stdinUsedForCommandInput;
 		return rv;
 	}
-	
-
 
 }

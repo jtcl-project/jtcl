@@ -132,7 +132,9 @@ public class FconfigureCmd implements Command {
 
 				TclList.append(interp, list, eofchar_pair);
 			} else {
-				// Not readable or writeable, do nothing
+				char eofChar = chan.getInputEofChar();
+				TclList.append(interp, list, (eofChar == 0) ? TclString
+						.newInstance("") : TclString.newInstance(eofChar));
 			}
 
 			// -translation
@@ -157,7 +159,8 @@ public class FconfigureCmd implements Command {
 
 				TclList.append(interp, list, translation_pair);
 			} else {
-				// Not readable or writeable, do nothing
+				TclList.append(interp, list, TclString.newInstance(TclIO
+						.getTranslationString(chan.getInputTranslation())));
 			}
 			
 			// -peername

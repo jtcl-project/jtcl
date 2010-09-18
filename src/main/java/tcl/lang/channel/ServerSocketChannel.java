@@ -91,7 +91,7 @@ public class ServerSocketChannel extends AbstractSocketChannel {
 			else
 				sock = new ServerSocket(port, 0, localAddress);
 		} catch (IOException ex) {
-			throw new TclException(interp, ex.getMessage());
+			throw new TclException(interp, "couldn't open socket: "+ex.getMessage().toLowerCase());
 		}
 
 		acceptThread = new AcceptThread(sock, this);
@@ -107,7 +107,7 @@ public class ServerSocketChannel extends AbstractSocketChannel {
 	 */
 	synchronized void addConnection(Socket s) {
 		SocketConnectionEvent evt = new SocketConnectionEvent(cbInterp, callback, s, this.sock);
-		cbInterp.getNotifier().queueEvent((TclEvent) evt, TCL.QUEUE_TAIL);
+		cbInterp.getNotifier().queueEvent(evt, TCL.QUEUE_TAIL);
 	}
 
 
@@ -125,16 +125,19 @@ public class ServerSocketChannel extends AbstractSocketChannel {
 	 * Override to provide specific errors for server socket.
 	 **/
 
+	@Override
 	public void seek(Interp interp, long offset, int mode) throws IOException,
 			TclException {
 		throw new TclPosixException(interp, TclPosixException.EACCES, true,
 				"error during seek on \"" + getChanName() + "\"");
 	}
 
+	@Override
 	protected InputStream getInputStream() throws IOException {
 		throw new RuntimeException("should never be called");
 	}
 
+	@Override
 	protected OutputStream getOutputStream() throws IOException {
 		throw new RuntimeException("should never be called");
 	}
@@ -166,10 +169,23 @@ public class ServerSocketChannel extends AbstractSocketChannel {
 	}
 }
 
+/**
+ * Thread that accepts connections on the ServerSocket
+ *
+ */
 class AcceptThread extends Thread {
 
+	/**
+	 * The ServerSocket accepting connections
+	 */
 	private ServerSocket sock;
+	/**
+	 * The Tcl Channel associated with the socket
+	 */
 	private ServerSocketChannel sschan;
+	/**
+	 * Set to false when channel is shut down
+	 */
 	volatile boolean keepRunning;
 
 	public AcceptThread(ServerSocket s1, ServerSocketChannel s2) {
@@ -185,6 +201,7 @@ class AcceptThread extends Thread {
 		keepRunning = true;
 	}
 
+	@Override
 	public void run() {
 		try {
 			while (keepRunning) {
@@ -207,6 +224,9 @@ class AcceptThread extends Thread {
 		}
 	}
 
+	/**
+	 * Request that this thread stop accepting connections
+	 */
 	public void pleaseStop() {
 		keepRunning = false;
 		interrupt();
