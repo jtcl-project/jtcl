@@ -88,18 +88,10 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 	static final boolean debug = false;
 
 	/**
-	 *----------------------------------------------------------------------
-	 * 
-	 * SlaveObjCmd -> cmdProc
-	 * 
 	 * Command to manipulate an interpreter, e.g. to send commands to it to be
 	 * evaluated. One such command exists for each slave interpreter.
 	 * 
-	 * Results: A standard Tcl result.
-	 * 
-	 * Side effects: See user documentation for details.
-	 * 
-	 *----------------------------------------------------------------------
+	 * Results: A standard Tcl results
 	 */
 
 	public void cmdProc(Interp interp, // Current interpreter.
@@ -128,6 +120,9 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 			throw new TclNumArgsException(interp, 2, objv,
 					"aliasName ?targetName? ?args..?");
 		case OPT_ALIASES:
+			if (objv.length != 2) {
+				throw new TclNumArgsException(interp, 2, objv, null);
+			}
 			InterpAliasCmd.list(interp, slaveInterp);
 			break;
 		case OPT_EVAL:
@@ -157,6 +152,9 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 			InterpSlaveCmd.hidden(interp, slaveInterp);
 			break;
 		case OPT_ISSAFE:
+			if (objv.length != 2) {
+				throw new TclNumArgsException(interp, 2, objv, null);
+			}
 			interp.setResult(slaveInterp.isSafe);
 			break;
 		case OPT_INVOKEHIDDEN:
@@ -239,12 +237,7 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 		}
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * -
-	 * 
-	 * disposeAssocData --
-	 * 
+	/**
 	 * Invoked when an interpreter is being deleted. It releases all storage
 	 * used by the master/slave/safe interpreter facilities.
 	 * 
@@ -252,11 +245,6 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 	 * 
 	 * Side effects: Cleans up storage. Sets the interpInfoPtr field of the
 	 * interp to NULL.
-	 * 
-	 * 
-	 * 
-	 * --------------------------------------------------------------------------
-	 * -
 	 */
 
 	public void disposeAssocData(Interp interp) // Current interpreter.
@@ -314,10 +302,6 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 	}
 
 	/**
-	 *----------------------------------------------------------------------
-	 * 
-	 * slaveCreate -> create
-	 * 
 	 * Helper function to do the actual work of creating a slave interp and new
 	 * object command. Also optionally makes the new slave interpreter "safe".
 	 * 
@@ -326,9 +310,12 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 	 * 
 	 * Side effects: Creates a new slave interpreter and a new object command.
 	 * 
-	 *----------------------------------------------------------------------
+	 * @param interp interpreter to start search from
+	 * @param path path of slave to create
+	 * @param safe true if it should be made safe
+	 * @return new slave interpreter
+	 * @throws TclException
 	 */
-
 	static Interp create(Interp interp, // Interp. to start search from.
 			TclObject path, // Path (name) of slave to create.
 			boolean safe) // Should we make it "safe"?
@@ -364,6 +351,7 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 		slaveInterp.setMaxNestingDepth(masterInterp.getMaxNestingDepth());
 		slaveInterp.slave = slave;
 		slaveInterp.setAssocData("InterpSlaveCmd", slave);
+		slaveInterp.setWorkingDir(interp.getWorkingDir().getPath());
 
 		slave.masterInterp = masterInterp;
 		slave.path = pathString;
@@ -400,19 +388,14 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 	}
 
 	/**
-	 *----------------------------------------------------------------------
-	 * 
-	 * slaveEval -> eval
-	 * 
 	 * Helper function to evaluate a command in a slave interpreter.
 	 * 
-	 * Results: None.
-	 * 
-	 * Side effects: Whatever the command does.
-	 * 
-	 *----------------------------------------------------------------------
+	 * @param interp interpreter for error return
+	 * @param slaveInterp slave interpreter in which command will be evaluated
+	 * @param objIx number of arguments to ignore
+	 * @param objv argument objects
+	 * @throws TclException
 	 */
-
 	static void eval(Interp interp, // Interp for error return.
 			Interp slaveInterp, // The slave interpreter in which command
 			// will be evaluated.
@@ -449,11 +432,7 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * SlaveExpose -> expose
-	 * 
+	/**
 	 * Helper function to expose a command in a slave interpreter.
 	 * 
 	 * Results: A standard Tcl result.
@@ -461,7 +440,11 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 	 * Side effects: After this call scripts in the slave will be able to invoke
 	 * the newly exposed command.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * 	@param interp interpreter for error return
+	 * @param slaveInterp slave interpreter in which command will be evaluated
+	 * @param objIx number of arguments to ignore
+	 * @param objv argument objects
+	 * @throws TclException
 	 */
 
 	static void expose(Interp interp, // Interp for error return.
@@ -485,11 +468,7 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * SlaveHide -> hide
-	 * 
+	/**
 	 * Helper function to hide a command in a slave interpreter.
 	 * 
 	 * Results: A standard Tcl result.
@@ -497,7 +476,11 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 	 * Side effects: After this call scripts in the slave will no longer be able
 	 * to invoke the named command.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp interpreter for error return
+	 * @param slaveInterp slave interpreter in which command will be evaluated
+	 * @param objIx number of arguments to ignore
+	 * @param objv argument objects
+	 * @throws TclException
 	 */
 
 	static void hide(Interp interp, // Interp for error return.
@@ -521,11 +504,7 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * SlaveHidden -> hidden
-	 * 
+	/**
 	 * Helper function to compute list of hidden commands in a slave
 	 * interpreter.
 	 * 
@@ -533,9 +512,10 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp interp for data return
+	 * @param slaveInterp interp whose hidden commands to query
+	 * @throws TclException
 	 */
-
 	static void hidden(Interp interp, // Interp for data return.
 			Interp slaveInterp) // Interp whose hidden commands to query.
 			throws TclException {
@@ -553,7 +533,7 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 		interp.setResult(result);
 	}
 
-	/*
+	/**
 	 * ----------------------------------------------------------------------
 	 * 
 	 * SlaveInvokeHidden -> invokeHidden
@@ -608,7 +588,7 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 		}
 	}
 
-	/*
+	/**
 	 * ----------------------------------------------------------------------
 	 * 
 	 * SlaveMarkTrusted -> markTrusted
@@ -634,11 +614,7 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 		slaveInterp.isSafe = false;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * SlaveRecursionLimit --
-	 * 
+	/**
 	 * Helper function to set/query the Recursion limit of an interp
 	 * 
 	 * Results: A standard Tcl result.
@@ -646,7 +622,10 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 	 * Side effects: When (objc == 1), slaveInterp will be set to a new
 	 * recursion limit of objv[0].
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp the current interpreter
+	 * @param slaveInterp interpreter to query/set recursion limit
+	 * @param objc if non-zero, set to recursion limit to new value in objv
+	 * @param objv argument objects
 	 */
 
 	static void recursionLimit(Interp interp, Interp slaveInterp, int objc, // Set
@@ -659,15 +638,10 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 		if (objc != 0) {
 			if (interp.isSafe) {
 				throw new TclException(interp, "permission denied: "
-						+ "safe interpreter cannot change recursion limit");
+						+ "safe interpreters cannot change recursion limit");
 			}
 
-			try {
-				limit = TclInteger.getInt(interp, objv[objv.length - 1]);
-			} catch (TclException e) {
-				interp.transferResult(slaveInterp, e.getCompletionCode());
-				throw e;
-			}
+			limit = TclInteger.getInt(interp, objv[objv.length - 1]);
 
 			if (limit <= 0) {
 				throw new TclException(interp, "recursion limit must be > 0");
@@ -687,7 +661,7 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 		}
 	}
 
-	/*
+	/**
 	 * ----------------------------------------------------------------------
 	 * 
 	 * makeSafe --
@@ -788,7 +762,7 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 		}
 	}
 
-	/*
+	/**
 	 * ----------------------------------------------------------------------
 	 * 
 	 * Tcl_GetSlave, GetInterp -> getSlave

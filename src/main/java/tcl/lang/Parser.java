@@ -2605,7 +2605,7 @@ public class Parser {
 
 	static void infiniteLoopException(Interp interp) throws TclException {
 		throw new TclException(interp,
-				"too many nested calls to eval (infinite loop?)");
+				"too many nested evaluations (infinite loop?)");
 	}
 
 } // end class Parser

@@ -177,7 +177,7 @@ public class TclInteger implements InternalRep {
 		throws TclException {
 		long v = getLong(interp, tobj);
 		if (v > Integer.MAX_VALUE || v < Integer.MIN_VALUE) {
-			throw new TclException(interp, "TclObject value is beyond the max or min value of an int");
+			throw new TclException(interp, "integer value too large to represent");
 		}
 		return (int)v;
 	}

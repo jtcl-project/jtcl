@@ -35,42 +35,47 @@ import tcl.lang.WrappedCommand;
 
 public class InterpAliasCmd implements CommandWithDispose {
 
-	// Name of alias command in slave interp.
-
+	/**
+	 *  Name of alias command in slave interp.
+	 */
 	public TclObject name;
 
-	// Interp in which target command will be invoked.
-
+	/**
+	 *  Interp in which target command will be invoked.
+	 */
 	private Interp targetInterp;
 
-	// Tcl list making up the prefix of the target command to be invoked in
-	// the target interpreter. Additional arguments specified when calling
-	// the alias in the slave interp will be appended to the prefix before
-	// the command is invoked.
-
+	/**
+	 *  Tcl list making up the prefix of the target command to be invoked in
+	 *
+	 * the target interpreter. Additional arguments specified when calling
+	 * the alias in the slave interp will be appended to the prefix before
+	 * the command is invoked.
+	 */
 	private TclObject prefix;
 
-	// Source command in slave interpreter, bound to command that invokes
-	// the target command in the target interpreter.
-
+	/**
+	 *  Source command in slave interpreter, bound to command that invokes
+	 * the target command in the target interpreter.
+	 */
 	private WrappedCommand slaveCmd;
 
-	// Entry for the alias hash table in slave.
-	// This is used by alias deletion to remove the alias from the slave
-	// interpreter alias table.
-
+	/**
+	 *  Entry for the alias hash table in slave.
+	 *
+	 * This is used by alias deletion to remove the alias from the slave
+	 * interpreter alias table.
+	 */
 	private String aliasEntry;
 
-	// Interp in which the command is defined.
-	// This is the interpreter with the aliasTable in Slave.
-
+	/** 
+	 * Interp in which the command is defined. This is the interpreter with the aliasTable in Slave.
+	 * 
+	 */
 	private Interp slaveInterp;
 
 	/**
-	 *----------------------------------------------------------------------
-	 * 
-	 * AliasObjCmd -> cmdProc
-	 * 
+     *	
 	 * This is the procedure that services invocations of aliases in a slave
 	 * interpreter. One such command exists for each alias. When invoked, this
 	 * procedure redirects the invocation to the target command in the master
@@ -82,8 +87,6 @@ public class InterpAliasCmd implements CommandWithDispose {
 	 * Side effects: Causes forwarding of the invocation; all possible side
 	 * effects may occur as a result of invoking the command to which the
 	 * invocation is forwarded.
-	 * 
-	 *----------------------------------------------------------------------
 	 */
 
 	public void cmdProc(Interp interp, // Current interpreter.
@@ -138,10 +141,6 @@ public class InterpAliasCmd implements CommandWithDispose {
 	}
 
 	/**
-	 *----------------------------------------------------------------------
-	 * 
-	 * AliasObjCmdDeleteProc -> disposeCmd
-	 * 
 	 * Is invoked when an alias command is deleted in a slave. Cleans up all
 	 * storage associated with this alias.
 	 * 
@@ -149,8 +148,6 @@ public class InterpAliasCmd implements CommandWithDispose {
 	 * 
 	 * Side effects: Deletes the alias record and its entry in the alias table
 	 * for the interpreter.
-	 * 
-	 *----------------------------------------------------------------------
 	 */
 
 	public void disposeCmd() {
@@ -167,20 +164,22 @@ public class InterpAliasCmd implements CommandWithDispose {
 	}
 
 	/**
-	 *----------------------------------------------------------------------
-	 * 
-	 * AliasCreate -> create
-	 * 
 	 * Helper function to do the work to actually create an alias.
 	 * 
 	 * Results: A standard Tcl result.
 	 * 
 	 * Side effects: An alias command is created and entered into the alias
 	 * table for the slave interpreter.
-	 * 
-	 *----------------------------------------------------------------------
+	 *
+	 * @param interp interpreter for error reporting
+	 * @param slaveInterp itnerp where alias cmd will live or from which it will be deleted
+	 * @param masterInterp interp in which target command will be invoked
+	 * @param name name of alias cmd
+	 * @param targetName name of target cmd
+	 * @param objIx offset of first element in objv
+	 * @param objv additional arguments to store with alias
+	 * @throws TclException
 	 */
-
 	static void create(Interp interp, // Interp for error reporting.
 			Interp slaveInterp, // Interp where alias cmd will live or from
 			// which alias will be deleted.
@@ -193,6 +192,12 @@ public class InterpAliasCmd implements CommandWithDispose {
 			throws TclException {
 		String string = name.toString();
 
+		/* Don't allow alias over an interpreter's own slave command - see test interp-14.4 */
+		WrappedCommand slaveCmd = Namespace.findCommand(slaveInterp, name.toString(), null, 0);
+		if (slaveCmd!=null && slaveInterp!=null && slaveCmd.cmd == masterInterp.slave)  {
+			slaveInterp.deleteCommandFromToken(slaveCmd);
+			throw new TclException(interp, "cannot define or rename alias \""+name+"\": interpreter deleted");
+		}
 		InterpAliasCmd alias = new InterpAliasCmd();
 
 		alias.name = name;
@@ -246,19 +251,17 @@ public class InterpAliasCmd implements CommandWithDispose {
 	}
 
 	/**
-	 *----------------------------------------------------------------------
-	 * 
-	 * AliasDelete -> delete
-	 * 
 	 * Deletes the given alias from the slave interpreter given.
 	 * 
 	 * Results: A standard Tcl result.
 	 * 
 	 * Side effects: Deletes the alias from the slave interpreter.
 	 * 
-	 *----------------------------------------------------------------------
+	 * @param interp interpreter for error reporting
+	 * @param slaveInterp interp where alias command will be deleted
+	 * @param name name of alias to delete
+	 * @throws TclException
 	 */
-
 	static void delete(Interp interp, // Interp for error reporting.
 			Interp slaveInterp, // Interp where alias cmd will live or from
 			// which alias will be deleted.
@@ -278,11 +281,7 @@ public class InterpAliasCmd implements CommandWithDispose {
 		slaveInterp.deleteCommandFromToken(alias.slaveCmd);
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * AliasDescribe -> describe --
-	 * 
+	/**
 	 * Sets the interpreter's result object to a Tcl list describing the given
 	 * alias in the given interpreter: its target command and the additional
 	 * arguments to prepend to any invocation of the alias.
@@ -291,7 +290,10 @@ public class InterpAliasCmd implements CommandWithDispose {
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp interpreter for error reporting
+	 * @param slaveInterp interp that contains alias command that will be described
+	 * @param name name of alias to describe
+	 * @throws TclException
 	 */
 
 	static void describe(Interp interp, // Interp for error reporting.
@@ -340,10 +342,6 @@ public class InterpAliasCmd implements CommandWithDispose {
 	}
 
 	/**
-	 *----------------------------------------------------------------------
-	 * 
-	 * getTargetCmd --
-	 * 
 	 * helper function, that returns the WrappedCommand of the target command
 	 * (i.e. the command which is called in the master interpreter).
 	 * 
@@ -351,7 +349,8 @@ public class InterpAliasCmd implements CommandWithDispose {
 	 * 
 	 * Side effects: None.
 	 * 
-	 *----------------------------------------------------------------------
+	 * @param interp interp for error reporting
+	 * @return the wrapped command
 	 */
 
 	public WrappedCommand getTargetCmd(Interp interp) // Interp for error
@@ -363,20 +362,18 @@ public class InterpAliasCmd implements CommandWithDispose {
 	}
 
 	/**
-	 *----------------------------------------------------------------------
-	 * 
-	 * getTargetInterp --
-	 * 
 	 * static helper function, that returns the target interpreter of an alias
 	 * with the given name in the given slave interpreter.
 	 * 
-	 * Results: The target interpreter, or null if no alias was found.
+	 * @param slaveInterp
+	 * @param aliasName
+	 * 
+	 * @return  The target interpreter, or null if no alias was found.
 	 * 
 	 * Side effects: None.
 	 * 
-	 *----------------------------------------------------------------------
+	 * 
 	 */
-
 	static Interp getTargetInterp(Interp slaveInterp, String aliasName) {
 		if (!slaveInterp.aliasTable.containsKey(aliasName)) {
 			return null;

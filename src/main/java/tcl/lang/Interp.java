@@ -160,9 +160,10 @@ public class Interp extends EventuallyFreed {
 
 	// CallFrame globalFrame;
 
-	// The script file currently under execution. Can be null if the
-	// interpreter is not evaluating any script file.
-
+	/**
+	 *  The script file currently under execution. Can be null if the
+	 * interpreter is not evaluating any script file.
+	 */
 	public String scriptFile;
 
 	/** Number of times the interp.eval() routine has been recursively
@@ -170,7 +171,9 @@ public class Interp extends EventuallyFreed {
      */
 	public int nestLevel;
 
-	// Used to catch infinite loops in Parser.eval2.
+	/**
+	 *  Used to catch infinite loops in Parser.eval2.
+	 */
 
 	private int maxNestingDepth = 1000;
 
@@ -178,8 +181,9 @@ public class Interp extends EventuallyFreed {
 
 	public int evalFlags;
 
-	// Flags used when evaluating a command.
-
+	/**
+	 *  Flags used when evaluating a command.
+	 */
 	int flags;
 
 	/** Is this interpreted marked as safe? */
@@ -231,10 +235,11 @@ public class Interp extends EventuallyFreed {
 	 */
 	public int returnCode;
 
-	// True means the interpreter has been deleted: don't process any
-	// more commands for it, and destroy the structure as soon as all
-	// nested invocations of eval() are done.
-
+	/** 
+	 * True means the interpreter has been deleted: don't process any
+	 * more commands for it, and destroy the structure as soon as all
+	 * nested invocations of eval() are done.
+	 */
 	protected boolean deleted;
 
 	/** True means an error unwind is already in progress. False
@@ -3303,11 +3308,7 @@ public class Interp extends EventuallyFreed {
 		return 0;
 	}
 
-	/*
-	 * -------------------------------------------------------------------------
-	 * 
-	 * TclTransferResult -> transferResult
-	 * 
+	/**
 	 * Copy the result (and error information) from one interp to another. Used
 	 * when one interp has caused another interp to evaluate a script and then
 	 * wants to transfer the results back to itself.
@@ -3325,7 +3326,14 @@ public class Interp extends EventuallyFreed {
 	 * 
 	 * Side effects: None.
 	 * 
-	 * -------------------------------------------------------------------------
+	 * @param sourceInterp
+	 *            interp whose result and error information should be moved to
+	 *            the target interp. AFter moving the results, the interp's
+	 *            result is reset
+	 * @param result
+	 *            TCL.OK if just the result should be copied, TCL.ERROR if both
+	 *            teh result and the error information should be copied
+	 * @throws TclException
 	 */
 
 	public void transferResult(Interp sourceInterp, // Interp whose result and
@@ -4452,14 +4460,12 @@ public class Interp extends EventuallyFreed {
 		dispose();
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * setMaxNestingDepth --
+	/**
 	 * 
 	 * Set new value for maxNestingDepth
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param depth If > 0, set as new depth; otherwise don't set new value
+	 * @return old value, or current value if depth <= 0
 	 */
 
 	public int setMaxNestingDepth(int depth) {
@@ -4472,28 +4478,18 @@ public class Interp extends EventuallyFreed {
 		return old;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
+	/**
 	 * setMaxNestingDepth --
 	 * 
-	 * Gets the value of maxNestingDepth
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @return value of maxNestingDepth
 	 */
 
 	public int getMaxNestingDepth() {
 		return maxNestingDepth;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * toString --
-	 * 
+	/**
 	 * Debug print info about the interpreter.
-	 * 
-	 * ----------------------------------------------------------------------
 	 */
 
 	public String toString() {
