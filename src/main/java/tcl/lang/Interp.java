@@ -1792,19 +1792,20 @@ public class Interp extends EventuallyFreed {
 	 * the interpreter.
 	 * 
 	 * @param cmd
-	 *            wrapper token for the command to delete
+	 *            wrapper token for the command to delete; may be null
 	 * @return 0 is returned if the command was deleted successfully. -1 is
-	 *         returned if there didn't exist a command by that name.
+	 *         returned if there didn't exist a command by that name (cmd is null)
 	 */
 
-	public int deleteCommandFromToken(WrappedCommand cmd) // Wrapper Token for
-															// command to
-															// delete.
+	public int deleteCommandFromToken(WrappedCommand cmd) 
 	{
+		/* dont' try to delete a command in a delete trace callback; it's going to be deleted anyway */
 		if (cmd == null) {
 			return -1;
 		}
-
+		/* Call the command traces */
+		cmd.callTraces(CommandTrace.DELETE,"");
+		
 		ImportRef ref, nextRef;
 		WrappedCommand importCmd;
 
@@ -1916,6 +1917,7 @@ public class Interp extends EventuallyFreed {
 			return;
 		}
 
+	
 		// Make sure that the destination command does not already exist.
 		// The rename operation is like creating a command, so we should
 		// automatically create the containing namespaces just like
@@ -1936,6 +1938,13 @@ public class Interp extends EventuallyFreed {
 					+ "\": command already exists");
 		}
 
+		/* Call the command traces */
+		String newCommand = newNs.fullName + (newNs.fullName.endsWith("::") ? "" : "::") + newTail;
+		cmd.callTraces(CommandTrace.RENAME, newCommand);
+		/* It's possible that the command was deleted in one of the callbacks */
+		cmd = Namespace.findCommand(interp, oldName, null, 0);
+		if (cmd==null) return;
+		
 		// Warning: any changes done in the code here are likely
 		// to be needed in Tcl_HideCommand() code too.
 		// (until the common parts are extracted out) --dl
@@ -2080,6 +2089,99 @@ public class Interp extends EventuallyFreed {
 		return Parser.commandComplete(string, string.length());
 	}
 
+	
+	/**
+	 * Set a trace on a command
+	 * 
+	 * @param command fully qualified command name
+	 * @param trace trace to add to command
+	 * @throws TclException 
+	 */
+	public void traceCommand(String command, CommandTrace trace) throws TclException {
+		WrappedCommand wrappedCommand = Namespace.findCommand(this, command, null, TCL.LEAVE_ERR_MSG);
+		untraceCommand(wrappedCommand, trace.getType(), trace.getCallbackCmd());  // remove old trace of same type/name
+		if (wrappedCommand.commandTraces == null) {
+			wrappedCommand.commandTraces = new ArrayList<CommandTrace>();
+		} 
+		wrappedCommand.commandTraces.add(trace);
+	}
+	
+	/**
+	 * Remove a trace on a command
+	 * 
+	 * @param command fully qualified command name
+	 * @param type CommandTrace.RENAME or CommandTrace.DELETE
+	 * @param callbackCmd callback command to remove
+	 * @throws TclException 
+	 */
+	public void untraceCommand(String command, int type, TclObject callbackCmd) throws TclException {
+		untraceCommand(Namespace.findCommand(this, command, null, TCL.LEAVE_ERR_MSG), type, callbackCmd.toString());
+	}
+	
+	/**
+	 * Get a list of all traces on a command
+	 * 
+	 * @param command fully qualified name of command
+	 * @return List, in the form of [trace command info]
+	 * @throws TclException
+	 */
+	public TclObject traceCommandInfo(String command) throws TclException {
+		WrappedCommand wrappedCommand = Namespace.findCommand(this, command, null, TCL.LEAVE_ERR_MSG);
+		if (wrappedCommand.commandTraces==null || wrappedCommand.commandTraces.size()==0)
+			return TclString.newInstance("");
+		TclObject rv = TclList.newInstance();
+		boolean [] reported = new boolean[wrappedCommand.commandTraces.size()];
+		for (int i=0; i<reported.length; i++) reported[i] = false;
+		
+		for (int i=0; i<wrappedCommand.commandTraces.size(); i++) {
+			if (reported[i]) continue;
+			reported[i] = true;
+			
+			TclObject traceInfo = TclList.newInstance();
+			TclList.append(this, rv, traceInfo);
+			
+			CommandTrace trace = wrappedCommand.commandTraces.get(i);
+			boolean isDelete = trace.getType() == CommandTrace.DELETE;
+			boolean isRename = trace.getType() == CommandTrace.RENAME;
+			
+			/* look ahead to see if other type is traced */
+			for (int j=i+1; j<wrappedCommand.commandTraces.size(); j++) {
+				if (reported[j]) continue;
+				CommandTrace trace2 = wrappedCommand.commandTraces.get(j);
+				if (trace2.getCallbackCmd().equals(trace.getCallbackCmd())) {
+					reported[j]=true;
+					if (trace2.getType()==CommandTrace.DELETE) isDelete=true;
+					else isRename = true;
+					break;
+				}
+			}
+			
+			TclObject ops = TclList.newInstance();
+			if (isRename) TclList.append(this, ops, TclString.newInstance("rename"));
+			if (isDelete)   TclList.append(this, ops, TclString.newInstance("delete"));
+			TclList.append(this, traceInfo, ops);
+			TclList.append(this, traceInfo, TclString.newInstance(trace.getCallbackCmd()));
+		}
+		return rv;
+	}
+	/**
+	 * Remove a trace on a command
+	 * 
+	 * @param cmd WrappedCommand to remove traces on
+	 * @param type CommandTrace.RENAME or CommandTrace.DELETE
+	 * @param callbackCmd callback command to remove
+	 * @throws TclException
+	 */
+	private void untraceCommand(WrappedCommand cmd, int type, String callbackCmd) throws TclException {
+		if (cmd.commandTraces == null) return;
+		for (int i=0; i<cmd.commandTraces.size(); i++) {
+			CommandTrace trace = cmd.commandTraces.get(i);
+			if (type == trace.getType() && trace.getCallbackCmd().equals(callbackCmd)) {
+				cmd.commandTraces.remove(i);
+				break;
+			}
+		}
+	}
 	/*-----------------------------------------------------------------
 	 *
 	 *	                     EVAL
@@ -2957,7 +3059,7 @@ public class Interp extends EventuallyFreed {
 			errInProgress = true;
 
 			try {
-				setVar("errorInfo", null, getResult().toString(),
+				setVar("::errorInfo", null, getResult().toString(),
 						TCL.GLOBAL_ONLY);
 			} catch (TclException e1) {
 				// Ignore (see try-block above).
@@ -2976,7 +3078,7 @@ public class Interp extends EventuallyFreed {
 		}
 
 		try {
-			setVar("errorInfo", null, message, TCL.APPEND_VALUE
+			setVar("::errorInfo", null, message, TCL.APPEND_VALUE
 					| TCL.GLOBAL_ONLY);
 		} catch (TclException e1) {
 			// Ignore (see try-block above).
@@ -3048,7 +3150,7 @@ public class Interp extends EventuallyFreed {
 
 			if (errorInfo != null) {
 				try {
-					setVar("errorInfo", null, errorInfo, TCL.GLOBAL_ONLY);
+					setVar("::errorInfo", null, errorInfo, TCL.GLOBAL_ONLY);
 				} catch (TclException e) {
 					// An error may happen during a trace to errorInfo. We
 					// ignore it. This may leave error messages inside

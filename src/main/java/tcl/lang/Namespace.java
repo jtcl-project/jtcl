@@ -547,11 +547,7 @@ public class Namespace {
 		return ns;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * Tcl_DeleteNamespace -> deleteNamespace
-	 * 
+	/**
 	 * Deletes a namespace and all of the commands, variables, and other
 	 * namespaces within it.
 	 * 
@@ -561,9 +557,8 @@ public class Namespace {
 	 * a child of its parent namespace. Also, all its commands, variables and
 	 * child namespaces are deleted.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param namespace namespace to delete
 	 */
-
 	public static void deleteNamespace(Namespace namespace) {
 		Namespace ns = namespace;
 		Interp interp = ns.interp;
@@ -619,11 +614,7 @@ public class Namespace {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * TclTeardownNamespace -> teardownNamespace
-	 * 
+	/**
 	 * Used internally to dismantle and unlink a namespace when it is deleted.
 	 * Divorces the namespace from its parent, and deletes all commands,
 	 * variables, and child namespaces.
@@ -639,10 +630,9 @@ public class Namespace {
 	 * hashtable. Deletes all commands, variables and namespaces in this
 	 * namespace. If this is the global namespace, the "errorInfo" and
 	 * "errorCode" variables are left alone and deleted later.
-	 * 
-	 * ----------------------------------------------------------------------
+	 *
+	 * @param ns namespace to tear down
 	 */
-
 	static void teardownNamespace(Namespace ns) {
 		Interp interp = ns.interp;
 		Namespace childNs;
@@ -650,9 +640,29 @@ public class Namespace {
 		Namespace globalNs = getGlobalNamespace(interp);
 		int i;
 
-		// Start by destroying the namespace's variable table,
-		// since variables might trigger traces.
-
+		/*
+		 * Fire the command traces early, and then delete the traces so they don't 
+		 * fire again when we actually delete the commands.  This prevents the teardown
+		 * process from interfering with trace execution.  Since traces may delete other
+		 * commands, separate the iteration through the command table from the trace
+		 * execution.
+		 */
+		ArrayList<String> tracedCommands = new ArrayList<String>();
+		for (Map.Entry<String, WrappedCommand> entry : ns.cmdTable.entrySet()) {
+			if (entry.getValue().commandTraces != null && entry.getValue().commandTraces.size()>0) {
+				tracedCommands.add(entry.getKey());
+			}
+		}
+		for (String cmdName : tracedCommands) {
+			cmd = ns.cmdTable.get(cmdName);
+			if (cmd != null) {
+				cmd.callTraces(CommandTrace.DELETE,"");
+				cmd.commandTraces = null;
+			}
+		}
+		tracedCommands = null;
+		
+		
 		if (ns == globalNs) {
 			// This is the global namespace, so be careful to preserve the
 			// "errorInfo" and "errorCode" variables. These might be needed
@@ -697,6 +707,7 @@ public class Namespace {
 			Var.deleteVars(interp, ns.varTable);
 		}
 
+		
 		// Remove the namespace from its parent's child hashtable.
 
 		if (ns.parent != null) {
@@ -2164,10 +2175,6 @@ public class Namespace {
 	}
 
 	/**
-	 *----------------------------------------------------------------------
-	 * 
-	 * Tcl_FirstHashEntry -> FirstHashEntry
-	 * 
 	 * Return the first Object value contained in the given table. This method
 	 * is used only when taking apart a table where entries in the table could
 	 * be removed elsewhere. An Iterator is no longer valid once entries have
@@ -2178,7 +2185,8 @@ public class Namespace {
 	 * with a Java Iterator when the table being iterated could have elements
 	 * added or deleted.
 	 * 
-	 *----------------------------------------------------------------------
+	 * @param table a hash table
+	 * @return first element in the hash table
 	 */
 
 	public static Object FirstHashEntry(HashMap table) {

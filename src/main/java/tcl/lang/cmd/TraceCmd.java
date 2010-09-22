@@ -20,6 +20,7 @@ package tcl.lang.cmd;
 import java.util.ArrayList;
 
 import tcl.lang.Command;
+import tcl.lang.CommandTrace;
 import tcl.lang.Interp;
 import tcl.lang.TCL;
 import tcl.lang.TclException;
@@ -45,7 +46,6 @@ public class TraceCmd implements Command {
 
 	// Valid sub-commands for the trace command.
 
-	static final private String[] varTraceOps = { "read", "write", "unset", };
 	static final private String[] validCmds = { "add", "info", "remove", "variable", "vdelete", "vinfo", };
 
 	static final private int OPT_ADD = 0;
@@ -55,14 +55,16 @@ public class TraceCmd implements Command {
 	static final private int OPT_VDELETE = 4;
 	static final private int OPT_VINFO = 5;
 
-	static final private String[] subCmds = { "variable", "command", "execution", };
+	static final private String[] subCmds = { "variable", "command", "execution" };
 
 	static final private int TYPE_VARIABLE = 0;
 	static final private int TYPE_COMMAND = 1;
-	static final private int TYPE_RENAME = 2;
-	static final private int TYPE_DELETE = 3;
-	static final private int TYPE_EXECUTION = 4;
+	static final private int TYPE_EXECUTION = 3;
 
+	static final private String[] commandOps = {"delete", "rename"};
+	static final private int OP_RENAME = 1;
+	static final private int OP_DELETE =0;
+	
 	// Arrays for quickly generating the Tcl strings corresponding to
 	// the TCL.TRACE_ARRAY, TCL.TRACE_READS, TCL.TRACE_WRITES and
 	// TCL.TRACE_UNSETS flags.
@@ -159,8 +161,6 @@ public class TraceCmd implements Command {
 	 * @throws TclException
 	 */
 	public void cmdProc(Interp interp, TclObject[] objv) throws TclException {
-		int len;
-
 		if (objv.length < 2) {
 			throw new TclNumArgsException(interp, 1, objv, "option ?arg arg ...?");
 		}
@@ -171,15 +171,13 @@ public class TraceCmd implements Command {
 		case OPT_REMOVE:
 		case OPT_INFO:
 			if (objv.length < 3) {
-				throw new TclNumArgsException(interp, 2, objv, "type opList");
+				throw new TclNumArgsException(interp, 2, objv, "type ?arg arg ...?");
 			}
 			int subOpt = TclIndex.get(interp, objv[2], subCmds, "option", 0);
 			if (subOpt == TYPE_VARIABLE) {
 				traceVariable(interp, opt, objv, 3);
 			} else if (subOpt == TYPE_COMMAND) {
-				throw new TclException(interp, "trace add/remove/info command not implemented yet");
-				// FIXME - implement command traces
-				// traceCommand(interp, opt, objv, 3);
+				traceCommand(interp, opt, objv);
 			} else if (subOpt == TYPE_EXECUTION) {
 				// FIXME - implement executions traces
 				throw new TclException(interp, "trace add/remove/info execution not implemented yet");
@@ -219,29 +217,66 @@ public class TraceCmd implements Command {
 	 *            option index
 	 * @param objv
 	 *            argument list
-	 * @param start
-	 *            the index of the argument list to start parsing sub-options
 	 * @throws TclException
 	 */
-	// FIXME - need to implement
-	private void traceCommand(Interp interp, int opt, TclObject[] objv, int start) throws TclException {
-		int len;
+	private void traceCommand(Interp interp, int opt, TclObject[] objv) throws TclException {
 
-		if (objv.length < 3) {
-			throw new TclNumArgsException(interp, 2, objv, "option [arg arg ...]");
+		String commandName = objv.length >= 4 ? objv[3]	.toString() : null;
+
+		if (opt==OPT_INFO) {
+			if (objv.length != 4)
+				throw new TclNumArgsException(interp, 3, objv, "name");
+			interp.setResult(interp.traceCommandInfo(commandName));
 		}
-		switch (opt) {
-		case OPT_ADD:
-		case OPT_REMOVE:
-			if (objv.length != 6) {
-				if (opt == OPT_ADD) {
-					throw new TclNumArgsException(interp, 3, objv, "name opList command");
-				}
+
+		if ((opt==OPT_ADD || opt==OPT_REMOVE)) {
+			if (objv.length != 6)
+				throw new TclNumArgsException(interp, 3, objv, "name opList command");
+			
+			TclObject [] ops = TclList.getElements(interp, objv[4]);
+			if (ops.length==0) {
+				throw new TclException(interp,"bad operation list \"\": must be one or more of delete or rename");
 			}
-			break;
+			boolean rename = false;
+			boolean delete = false;
+			
+			for (TclObject op : ops) {
+				int operation = TclIndex.get(interp, op, commandOps, "operation", TCL.EXACT);
+				switch (operation) {
+				case OP_RENAME:
+					rename = true;
+					break;
+				case OP_DELETE:
+					delete = true;
+					break;
+				}			
+			}
+			switch (opt) {
+			case OPT_ADD:
+				if (rename) {
+					CommandTrace trace = new CommandTrace(interp, CommandTrace.RENAME, objv[5]);
+					interp.traceCommand(commandName, trace);
+				}
+				if (delete) {
+					CommandTrace trace = new CommandTrace(interp, CommandTrace.DELETE, objv[5]);
+					interp.traceCommand(commandName, trace);
+				}
+				break;
+			case OPT_REMOVE:
+				if (rename) {
+					interp.untraceCommand(commandName, CommandTrace.RENAME, objv[5]);
+				}
+				if (delete) {
+					interp.untraceCommand(commandName, CommandTrace.DELETE, objv[5]);
+				}
+				break;
+			}
+			
 		}
+	
 	}
 
+	
 	/**
 	 * Parse and execute options for variable traces.
 	 * 
@@ -258,10 +293,6 @@ public class TraceCmd implements Command {
 	private void traceVariable(Interp interp, int opt, TclObject[] objv, int start) throws TclException {
 		int len;
 
-		if (objv.length < (start + 1)) {
-			throw new TclNumArgsException(interp, start, objv, "name ?arg arg...?");
-		}
-
 		switch (opt) {
 		case OPT_ADD:
 		case OPT_REMOVE:
@@ -276,7 +307,6 @@ public class TraceCmd implements Command {
 				isNewStyle = true;
 				TclObject opsArray[] = TclList.getElements(interp, objv[start + 1]);
 				for (int i = 0; i < opsArray.length; i++) {
-					String opsString = opsArray[i].toString();
 					if ("read".equals(opsArray[i].toString())) {
 						flags |= TCL.TRACE_READS;
 					} else if ("write".equals(opsArray[i].toString())) {
@@ -286,13 +316,13 @@ public class TraceCmd implements Command {
 					} else if ("array".equals(opsArray[i].toString())) {
 						flags |= TCL.TRACE_ARRAY;
 					} else {
-						throw new TclException(interp, "bad operation \"" + objv[4]
+						throw new TclException(interp, "bad operation \"" + opsArray[i].toString()
 								+ "\": must be array, read, unset, or write");
-					}
-					if (flags == 0) {
-						throw new TclException(interp, "bad operations list\"" + objv[3]
-								+ "\": should be one or more of array, read, unset, or write");
-					}
+					}	
+				}
+				if (flags == 0) {
+					throw new TclException(interp, "bad operation list \"" + objv[start + 1]
+							+ "\": must be one or more of array, read, unset, or write");
 				}
 			} else {
 				// old style trace variable ...
@@ -325,7 +355,7 @@ public class TraceCmd implements Command {
 			}
 
 			if (opt == OPT_ADD) {
-				CmdTraceProc trace = new CmdTraceProc(objv[start + 2].toString(), flags, isNewStyle);
+				VarTraceProc trace = new VarTraceProc(objv[start + 2].toString(), flags, isNewStyle);
 				Var.traceVar(interp, objv[start].toString(), null, flags, trace);
 			} else {
 				// Search through all of our traces on this variable to
@@ -338,8 +368,8 @@ public class TraceCmd implements Command {
 					for (int i = 0; i < len; i++) {
 						TraceRecord rec = (TraceRecord) traces.get(i);
 
-						if (rec.trace instanceof CmdTraceProc) {
-							CmdTraceProc proc = (CmdTraceProc) rec.trace;
+						if (rec.trace instanceof VarTraceProc) {
+							VarTraceProc proc = (VarTraceProc) rec.trace;
 							if (proc.flags == flags && proc.command.toString().equals(objv[start + 2].toString())) {
 								Var.untraceVar(interp, objv[start].toString(), null, flags, proc);
 								break;
@@ -366,8 +396,8 @@ public class TraceCmd implements Command {
 					for (int i = 0; i < len; i++) {
 						TraceRecord rec = (TraceRecord) traces.get(i);
 
-						if (rec.trace instanceof CmdTraceProc) {
-							CmdTraceProc proc = (CmdTraceProc) rec.trace;
+						if (rec.trace instanceof VarTraceProc) {
+							VarTraceProc proc = (VarTraceProc) rec.trace;
 							int mode = proc.flags;
 							boolean hasArrayTrace = (mode & TCL.TRACE_ARRAY) == TCL.TRACE_ARRAY;
 							mode &= (TCL.TRACE_READS | TCL.TRACE_WRITES | TCL.TRACE_UNSETS);
@@ -408,10 +438,10 @@ public class TraceCmd implements Command {
 }
 
 /**
- * The CmdTraceProc object holds the information for a specific trace.
+ * The VarTraceProc object holds the information for a specific trace.
  * 
  */
-class CmdTraceProc implements VarTrace {
+class VarTraceProc implements VarTrace {
 
 	// The command holds the Tcl script that will execute. The flags
 	// hold the mode flags that define what conditions to fire under.
@@ -433,7 +463,7 @@ class CmdTraceProc implements VarTrace {
 	 *            string
 	 */
 
-	CmdTraceProc(String cmd, int newFlags, boolean isNewStyle) {
+	VarTraceProc(String cmd, int newFlags, boolean isNewStyle) {
 		command = cmd;
 		flags = newFlags;
 		newStyle = isNewStyle;

@@ -14,6 +14,7 @@
 
 package tcl.lang;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -27,53 +28,116 @@ import java.util.HashMap;
 
 public class WrappedCommand {
 	/**
-	 *  Reference to the table that this command is defined inside. The
-	 * hashKey member can be // used to lookup this WrappedCommand instance //
-	 * in the table of WrappedCommands. The table  member combined with the
-	 * hashKey member are  are equivilent to the C version's Command->hPtr.
+	 * Reference to the table that this command is defined inside. The hashKey
+	 * member can be used to lookup this WrappedCommand instance  in the
+	 * table of WrappedCommands. The table member combined with the hashKey
+	 * member are are equivilent to the C version's Command->hPtr.
 	 */
-	public HashMap table; 
+	public HashMap table;
 	/**
-	 * A string that stores the name of the command.  This name is NOT fully
+	 * A string that stores the name of the command. This name is NOT fully
 	 * qualified.
 	 */
-	public String hashKey; 
+	public String hashKey;
 
 	/**
-	 *  The namespace where the command is located
+	 * The namespace where the command is located
 	 */
 	public Namespace ns;
 	/**
 	 * The actual command interface that is being wrapped
 	 */
 	public Command cmd;
+
 	/**
-	 * Means that the command is in the process  of being deleted. Other
-	 * attempts to  delete the command should be ignored.
+	 * List of command traces on this command
 	 */
-	public boolean deleted; // 
+	ArrayList<CommandTrace> commandTraces = null;
+
+	/**
+	 * Set to true while delete traces are being executed to prevent recursive
+	 * traces
+	 */
+	boolean deleteTraceInProgress = false;
+
+	/**
+	 * Set to true while rename traces are being executed to prevent recursive
+	 * traces
+	 */
+	boolean renameTraceInProgress = false;
+
+	/**
+	 * Means that the command is in the process of being deleted. Other attempts
+	 * to delete the command should be ignored.
+	 */
+	public boolean deleted;
 
 	/**
 	 * List of each imported Command created in another namespace when this
-	 * command is  imported. These imported commands  redirect invocations
-	 * back to this  command. The list is used to remove all  those imported
-	 * commands when deleting  this "real" command.
+	 * command is imported. These imported commands redirect invocations back to
+	 * this command. The list is used to remove all those imported commands when
+	 * deleting this "real" command.
 	 */
 	ImportRef importRef;
 
 	/**
-	 * incremented to invalidate any references
+	 * incremented to invalidate any references. that point to this command when
+	 * it is renamed, deleted, hidden, or exposed. This field always have a
+	 * value in the range 1 to Integer.MAX_VALUE (inclusive). User code should
+	 * NEVER modify this value.
 	 */
-	public int cmdEpoch; 
+	public int cmdEpoch;
 
-	// that point to this command when it is
-	// renamed, deleted, hidden, or exposed.
-	// This field always have a value in the
-	// range 1 to Integer.MAX_VALUE (inclusive).
-	// User code should NEVER modify this value.
+	/**
+	 * Call the command traces on this command
+	 * 
+	 * @param type
+	 *            either CommandTrace.DELETE or CommandTrace.RENAME
+	 * @param fully
+	 *            qualified new name of command, if this is a RENAME
+	 */
+	void callTraces(int type, String newName) {
+		boolean inProgress = false;
+		switch (type) {
+		case CommandTrace.DELETE:
+			inProgress = deleteTraceInProgress;
+			deleteTraceInProgress = true;
+			break;
+		case CommandTrace.RENAME:
+			inProgress = renameTraceInProgress;
+			renameTraceInProgress = true;
+			break;
+		}
 
-	// Increment the cmdProch field. This method is used by the interpreter
-	// to indicate that a command was hidden, renamed, or deleted.
+		/* Fire any command traces */
+		if (commandTraces != null && !inProgress && !ns.interp.deleted) {
+			String oldCommand = ns.fullName + (ns.fullName.endsWith("::") ? "" : "::") + hashKey;
+
+			/*
+			 * Copy the commandTrace array, because it can be modified by the
+			 * callbacks
+			 */
+			Object[] copyOfTraces = commandTraces.toArray();
+			for (Object commandTrace : copyOfTraces) {
+				((CommandTrace) commandTrace).trace(type, oldCommand, (type == CommandTrace.DELETE ? "" : newName));
+			}
+			ns.interp.resetResult();
+		}
+		switch (type) {
+		case CommandTrace.DELETE:
+			deleteTraceInProgress = false;
+			break;
+		case CommandTrace.RENAME:
+			renameTraceInProgress = false;
+			break;
+		}
+
+	}
+
+	/**
+	 * Increment the cmdProch field. This method is used by the interpreter to
+	 * indicate that a command was hidden, renamed, or deleted.
+	 */
 
 	void incrEpoch() {
 		cmdEpoch++;
@@ -83,6 +147,7 @@ public class WrappedCommand {
 		}
 	}
 
+	@Override
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
 

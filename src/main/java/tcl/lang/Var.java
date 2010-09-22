@@ -193,7 +193,10 @@ public class Var {
 	 */
 
 	public TclObject tobj;
-	public HashMap arraymap;
+	/**
+	 * Key/value pairs in array, if this is an array
+	 */
+	public HashMap<String, Var> arraymap;
 	Var linkto;
 
 	/**

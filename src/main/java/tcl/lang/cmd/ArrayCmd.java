@@ -174,39 +174,42 @@ public class ArrayCmd implements Command {
 				pattern = objv[3].toString();
 			}
 
-			HashMap table = var.arraymap;
 			TclObject tobj = TclList.newInstance();
 			String arrayName = objv[2].toString();
-			String key, strValue;
-			Var var2;
-
-			// Go through each key in the hash table. If there is a
-			// pattern, test for a match. Each valid key and its value
-			// is written into sbuf, which is returned.
-
-			// FIXME : do we need to port over the 8.1 code for this loop?
 			
-			// FIXME - (tp) trace.test 'trace-1.11' and 'trace-1.12' (others?) fail because of
-			//             read traces set on an array, where those traces modify the array
-			//             structure.  no fix yet.  probably requires fixes to Var.java, and
-			//             incrementing 'var.refCount' here before reading, and decrementing after.
-
-			for (Iterator iter = table.entrySet().iterator(); iter.hasNext();) {
-				Map.Entry entry = (Map.Entry) iter.next();
-				key = (String) entry.getKey();
-				var2 = (Var) entry.getValue();
-				if (var2.isVarUndefined()) {
-					continue;
-				}
-
+			/*  Go through each key in the hash table. If there is a pattern, test for a match.
+			 * Separate the collection of keys from values, in case the reading of a value
+			 * triggers a read trace that modifies the array
+			 */
+			ArrayList<String> keysToReturn = new ArrayList<String>();
+			
+			for (Iterator<String> iter = var.arraymap.keySet().iterator(); iter.hasNext(); ) {
+				String key = iter.next();
 				if (pattern != null && !Util.stringMatch(key, pattern)) {
 					continue;
 				}
-
-				strValue = interp.getVar(arrayName, key, 0).toString();
-
-				TclList.append(interp, tobj, TclString.newInstance(key));
-				TclList.append(interp, tobj, TclString.newInstance(strValue));
+				keysToReturn.add(key);
+			}
+			for (String key : keysToReturn) {
+				Var var2 = var.arraymap.get(key);
+				if (var2==null || var2.isVarUndefined()) continue;
+				String strValue;
+				try {
+					strValue = interp.getVar(arrayName, key, 0).toString();
+					TclList.append(interp, tobj, TclString.newInstance(key));
+					TclList.append(interp, tobj, TclString.newInstance(strValue));
+				} catch (TclException e) {
+					// If our array doesn't exist anymore, throw an exception.
+					// But if it's just an element missing, just go on
+					retArray = Var.lookupVar(interp, varName, null, 0, null, false, false);
+					if (retArray != null) {
+						var = retArray[0];
+						array = retArray[1];
+					}
+					if ((var == null) || !var.isVarArray() || var.isVarUndefined()) {
+						throw e;
+					}					
+				}
 			}
 			interp.setResult(tobj);
 			break;
