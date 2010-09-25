@@ -899,11 +899,9 @@ public class Parser {
 		msg = new String(script_array, cmdIndex, offset);
 
 		/*
-		 * forceMessageWhileExecutingErrorInfo is set to true to force the
-		 * "whle executing" errorInfo, to make test cases pass and replicate an
-		 * apparent Tcl bug from back when the Tcl Tests were grabbed from CVS (Dec 2001?).
-		 * Since then, all these messages have been changed to
-		 * "while compiling".
+		 * Modern TCL  has all these messages changed to
+		 * "while compiling"; JTCL has some issues deciding which to use
+		 * which causes test fails
 		 */
 		if (!(interp.errInProgress)) {
 			interp.addErrorInfo("\n    while executing\n\"" + msg + ellipsis

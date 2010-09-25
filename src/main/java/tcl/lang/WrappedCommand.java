@@ -499,6 +499,8 @@ public class WrappedCommand {
 			TclObject savedResult = interp.getResult();
 			savedResult.preserve();
 			int savedReturnCode = interp.returnCode;
+			// preserve errAlreadyLogged so ::errorInfo is preserved
+			boolean errAlreadyLogged = interp.errAlreadyLogged;
 
 			try {
 				/* Call LEAVE traces */
@@ -518,6 +520,7 @@ public class WrappedCommand {
 				// ignore error
 			}
 			
+			interp.errAlreadyLogged = errAlreadyLogged;
 			interp.returnCode = savedReturnCode;
 			interp.setResult(savedResult);
 			savedResult.release();

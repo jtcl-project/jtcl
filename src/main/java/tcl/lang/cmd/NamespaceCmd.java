@@ -20,7 +20,6 @@
 
 package tcl.lang.cmd;
 
-import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -85,7 +84,7 @@ public class NamespaceCmd implements InternalRep, Command {
 	static final private int OPT_CURRENT = 2;
 	static final private int OPT_DELETE = 3;
 	static final private int OPT_EVAL = 4;
-	static final private int OPT_EXTISTS = 5;
+	static final private int OPT_EXISTS = 5;
 	static final private int OPT_EXPORT = 6;
 	static final private int OPT_FORGET = 7;
 	static final private int OPT_IMPORT = 8;
@@ -98,7 +97,7 @@ public class NamespaceCmd implements InternalRep, Command {
 
 	public void cmdProc(Interp interp, TclObject[] objv) throws TclException {
 
-		int i, opt;
+		int  opt;
 
 		if (objv.length < 2) {
 			throw new TclNumArgsException(interp, 1, objv,
@@ -128,7 +127,7 @@ public class NamespaceCmd implements InternalRep, Command {
 			evalCmd(interp, objv);
 			return;
 		}
-		case OPT_EXTISTS: {
+		case OPT_EXISTS: {
 			existsCmd(interp, objv);
 			return;
 		}
@@ -188,12 +187,10 @@ public class NamespaceCmd implements InternalRep, Command {
 
 	private static void childrenCmd(Interp interp, TclObject[] objv)
 			throws TclException {
-		Namespace namespace;
 		Namespace ns, childNs;
 		Namespace globalNs = Namespace.getGlobalNamespace(interp);
 		String pattern = null;
 		StringBuffer buffer;
-		Enumeration search;
 		TclObject list, elem;
 
 		// Get a pointer to the specified namespace, or the current namespace.
@@ -453,9 +450,7 @@ public class NamespaceCmd implements InternalRep, Command {
 			throws TclException {
 		Namespace namespace;
 		CallFrame frame;
-		String cmd;
 		String name;
-		int length;
 
 		if (objv.length < 4) {
 			throw new TclNumArgsException(interp, 2, objv, "name arg ?arg...?");
@@ -503,6 +498,7 @@ public class NamespaceCmd implements InternalRep, Command {
 				interp.addErrorInfo("\n    (in namespace eval \""
 						+ namespace.fullName + "\" script line "
 						+ interp.errorLine + ")");
+				interp.errAlreadyLogged = false;  // allow 'invoked from within' message to be appended
 			}
 			throw ex;
 		} finally {
@@ -772,7 +768,7 @@ public class NamespaceCmd implements InternalRep, Command {
 			throws TclException {
 		Namespace namespace;
 		CallFrame frame;
-		int i, result;
+		int i;
 
 		if (objv.length < 4) {
 			throw new TclNumArgsException(interp, 2, objv, "name arg ?arg...?");
@@ -1318,7 +1314,6 @@ public class NamespaceCmd implements InternalRep, Command {
 		Namespace.ResolvedNsName resName;
 		Namespace ns;
 		Namespace currNs = Namespace.getCurrentNamespace(interp);
-		int result;
 
 		// Get the internal representation, converting to a namespace type if
 		// needed. The internal representation is a ResolvedNsName that points
