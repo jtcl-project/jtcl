@@ -123,6 +123,8 @@ class AutoloadStub implements Command {
 	 */
 	public void cmdProc(Interp interp, TclObject[] objv) throws TclException {
 		Command cmd = load(interp, objv[0].toString());
+		// don't call via WrappedCommand.invoke() because this cmdProc was already
+		// called with invoke
 		cmd.cmdProc(interp, objv);
 	}
 

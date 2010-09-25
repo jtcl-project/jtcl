@@ -25,6 +25,8 @@ package tcl.lang;
  */
 
 public interface CommandWithDispose extends Command {
-	public void disposeCmd(); // The disposeCmd method is called when the
-	// interp is removing the Tcl command.
+	/**
+	 * Called when the interpreter is removing the Tcl command
+	 */
+	public void disposeCmd();
 }

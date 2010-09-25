@@ -1534,7 +1534,8 @@ class BiCmds {
 			cmd = wcmd.cmd;
 
 			try {
-				cmd.cmdProc(interp, objv);
+				if (wcmd.mustCallInvoke(interp)) wcmd.invoke(interp, objv);
+				else cmd.cmdProc(interp, objv);
 			} catch (TclException ex) {
 				// If the option was not recognized by the usual "info" command,
 				// then we got a "bad option" error message. Add the options

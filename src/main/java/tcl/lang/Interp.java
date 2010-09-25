@@ -128,31 +128,35 @@ public class Interp extends EventuallyFreed {
 	 */
 	public HashMap hiddenCmdTable;
 
-	// Information used by InterpCmd.java to keep
-	// track of master/slave interps on a per-interp basis.
-
-	// Keeps track of all interps for which this interp is the Master.
-	// First, slaveTable (a hashtable) maps from names of commands to
-	// slave interpreters. This hashtable is used to store information
-	// about slave interpreters of this interpreter, to map over all slaves,
-	// etc.
+	/**
+	 * Information used by InterpCmd.java to keep
+	 * track of master/slave interps on a per-interp basis.
+	 * 
+	 * Keeps track of all interps for which this interp is the Master. First,
+	 * slaveTable (a hashtable) maps from names of commands to slave
+	 * interpreters. This hashtable is used to store information about slave
+	 * interpreters of this interpreter, to map over all slaves, etc.
+	 */
 
 	public HashMap slaveTable;
 
-	// Hash table for Target Records. Contains all Target records which denote
-	// aliases from slaves or sibling interpreters that direct to commands in
-	// this interpreter. This table is used to remove dangling pointers
-	// from the slave (or sibling) interpreters when this interpreter is
-	// deleted.
+	/**
+	 * Hash table for Target Records. Contains all Target records which denote
+	 * aliases from slaves or sibling interpreters that direct to commands in
+	 * this interpreter. This table is used to remove dangling pointers from the
+	 * slave (or sibling) interpreters when this interpreter is deleted.
+	 */
 
 	public HashMap targetTable;
 
-	// Information necessary for this interp to function as a slave.
+	/**
+	 *  Information necessary for this interp to function as a slave.
+	 */
 	public InterpSlaveCmd slave;
 
-	// Table which maps from names of commands in slave interpreter to
-	// InterpAliasCmd objects.
-
+	/**
+	 *  Table which maps from names of commands in slave interpreter to InterpAliasCmd objects.
+	 */
 	public HashMap aliasTable;
 
 	// FIXME : does globalFrame need to be replaced by globalNs?
@@ -404,6 +408,16 @@ public class Interp extends EventuallyFreed {
 	// at the next safe moment.
 
 	private TclInterruptedExceptionEvent interruptedEvent = null;
+
+	/**
+	 * List of WrappedCommands that currently have active execution step traces
+	 */
+	ArrayList<WrappedCommand> activeExecutionStepTraces = null; 
+	
+	/**
+	 * Set to true to enable step tracing, if any exist
+	 */
+	boolean stepTracingEnabled = true;
 	
 	/**
 	 * Using System.in directly creates non-interruptible block during System.in.read().
@@ -1804,7 +1818,7 @@ public class Interp extends EventuallyFreed {
 			return -1;
 		}
 		/* Call the command traces */
-		cmd.callTraces(CommandTrace.DELETE,"");
+		cmd.callCommandTraces(CommandTrace.DELETE,"");
 		
 		ImportRef ref, nextRef;
 		WrappedCommand importCmd;
@@ -1940,7 +1954,7 @@ public class Interp extends EventuallyFreed {
 
 		/* Call the command traces */
 		String newCommand = newNs.fullName + (newNs.fullName.endsWith("::") ? "" : "::") + newTail;
-		cmd.callTraces(CommandTrace.RENAME, newCommand);
+		cmd.callCommandTraces(CommandTrace.RENAME, newCommand);
 		/* It's possible that the command was deleted in one of the callbacks */
 		cmd = Namespace.findCommand(interp, oldName, null, 0);
 		if (cmd==null) return;
@@ -2051,7 +2065,8 @@ public class Interp extends EventuallyFreed {
 	 * @param cmdName string name of the command
 	 * 
 	 * @return The command procedure of the given command, or null if the
-	 * command doesn't exist.
+	 * command doesn't exist.  Do not directly call getCommand().cmdProc();
+	 * see WrappedCommand.invoke() and WrappedCommand.mustCallInvoke()
 	 */
 	public Command getCommand(String cmdName) 
 	{
@@ -2067,6 +2082,19 @@ public class Interp extends EventuallyFreed {
 		}
 
 		return ((cmd == null) ? null : cmd.cmd);
+	}
+	
+	/**
+	 * @param cmdName name of command to get
+	 * @return WrappedCommand object for given command
+	 */
+	public WrappedCommand getWrappedCommand(String cmdName) {
+		try {
+			return Namespace.findCommand(this, cmdName, null, 0);
+		} catch (TclException e) {
+			// This should never happen
+			throw new TclRuntimeError("unexpected TclException: " + e);
+		}
 	}
 
 	/*
@@ -2091,7 +2119,7 @@ public class Interp extends EventuallyFreed {
 
 	
 	/**
-	 * Set a trace on a command
+	 * Set a command trace on a command
 	 * 
 	 * @param command fully qualified command name
 	 * @param trace trace to add to command
@@ -2099,15 +2127,11 @@ public class Interp extends EventuallyFreed {
 	 */
 	public void traceCommand(String command, CommandTrace trace) throws TclException {
 		WrappedCommand wrappedCommand = Namespace.findCommand(this, command, null, TCL.LEAVE_ERR_MSG);
-		untraceCommand(wrappedCommand, trace.getType(), trace.getCallbackCmd());  // remove old trace of same type/name
-		if (wrappedCommand.commandTraces == null) {
-			wrappedCommand.commandTraces = new ArrayList<CommandTrace>();
-		} 
-		wrappedCommand.commandTraces.add(trace);
+		wrappedCommand.traceCommand(trace);
 	}
 	
 	/**
-	 * Remove a trace on a command
+	 * Remove a command trace on a command
 	 * 
 	 * @param command fully qualified command name
 	 * @param type CommandTrace.RENAME or CommandTrace.DELETE
@@ -2115,11 +2139,12 @@ public class Interp extends EventuallyFreed {
 	 * @throws TclException 
 	 */
 	public void untraceCommand(String command, int type, TclObject callbackCmd) throws TclException {
-		untraceCommand(Namespace.findCommand(this, command, null, TCL.LEAVE_ERR_MSG), type, callbackCmd.toString());
+		WrappedCommand cmd = Namespace.findCommand(this, command, null, TCL.LEAVE_ERR_MSG);
+		cmd.untraceCommand(type, callbackCmd.toString());
 	}
-	
+
 	/**
-	 * Get a list of all traces on a command
+	 * Get a list of all command traces on a command
 	 * 
 	 * @param command fully qualified name of command
 	 * @return List, in the form of [trace command info]
@@ -2127,61 +2152,100 @@ public class Interp extends EventuallyFreed {
 	 */
 	public TclObject traceCommandInfo(String command) throws TclException {
 		WrappedCommand wrappedCommand = Namespace.findCommand(this, command, null, TCL.LEAVE_ERR_MSG);
-		if (wrappedCommand.commandTraces==null || wrappedCommand.commandTraces.size()==0)
-			return TclString.newInstance("");
-		TclObject rv = TclList.newInstance();
-		boolean [] reported = new boolean[wrappedCommand.commandTraces.size()];
-		for (int i=0; i<reported.length; i++) reported[i] = false;
-		
-		for (int i=0; i<wrappedCommand.commandTraces.size(); i++) {
-			if (reported[i]) continue;
-			reported[i] = true;
-			
-			TclObject traceInfo = TclList.newInstance();
-			TclList.append(this, rv, traceInfo);
-			
-			CommandTrace trace = wrappedCommand.commandTraces.get(i);
-			boolean isDelete = trace.getType() == CommandTrace.DELETE;
-			boolean isRename = trace.getType() == CommandTrace.RENAME;
-			
-			/* look ahead to see if other type is traced */
-			for (int j=i+1; j<wrappedCommand.commandTraces.size(); j++) {
-				if (reported[j]) continue;
-				CommandTrace trace2 = wrappedCommand.commandTraces.get(j);
-				if (trace2.getCallbackCmd().equals(trace.getCallbackCmd())) {
-					reported[j]=true;
-					if (trace2.getType()==CommandTrace.DELETE) isDelete=true;
-					else isRename = true;
-					break;
-				}
-			}
-			
-			TclObject ops = TclList.newInstance();
-			if (isRename) TclList.append(this, ops, TclString.newInstance("rename"));
-			if (isDelete)   TclList.append(this, ops, TclString.newInstance("delete"));
-			TclList.append(this, traceInfo, ops);
-			TclList.append(this, traceInfo, TclString.newInstance(trace.getCallbackCmd()));
-		}
-		return rv;
+		return wrappedCommand.traceCommandInfo(this);
 	}
+	
+	
 	/**
-	 * Remove a trace on a command
+	 * Set a execution trace on a command
 	 * 
-	 * @param cmd WrappedCommand to remove traces on
-	 * @param type CommandTrace.RENAME or CommandTrace.DELETE
+	 * @param command fully qualified command name
+	 * @param trace trace to add to command
+	 * @throws TclException 
+	 */
+	public void traceExecution(String command, ExecutionTrace trace) throws TclException {
+		WrappedCommand wrappedCommand = Namespace.findCommand(this, command, null, TCL.LEAVE_ERR_MSG);
+		wrappedCommand.traceExecution(trace);
+	}
+	
+	/**
+	 * Remove an execution trace on a command
+	 * 
+	 * @param command fully qualified command name
+	 * @param type ExecutionTrace.ENTER, ExecutionTrace.LEAVE, ExecutionTrace.ENTERSTEP, ExecutionTrace.LEAVESTEP
 	 * @param callbackCmd callback command to remove
+	 * @throws TclException 
+	 */
+	public void untraceExecution(String command, int type, TclObject callbackCmd) throws TclException {
+		WrappedCommand cmd = Namespace.findCommand(this, command, null, TCL.LEAVE_ERR_MSG);
+		cmd.untraceExecution(type, callbackCmd.toString());
+		deactivateExecutionStepTrace(cmd);
+	}
+	
+	/**
+	 * Get a list of all execution traces on a command
+	 * 
+	 * @param command fully qualified name of command
+	 * @return List, in the form of [trace command info]
 	 * @throws TclException
 	 */
-	private void untraceCommand(WrappedCommand cmd, int type, String callbackCmd) throws TclException {
-		if (cmd.commandTraces == null) return;
-		for (int i=0; i<cmd.commandTraces.size(); i++) {
-			CommandTrace trace = cmd.commandTraces.get(i);
-			if (type == trace.getType() && trace.getCallbackCmd().equals(callbackCmd)) {
-				cmd.commandTraces.remove(i);
-				break;
-			}
+	public TclObject traceExecutionInfo(String command) throws TclException {
+		WrappedCommand wrappedCommand = Namespace.findCommand(this, command, null, TCL.LEAVE_ERR_MSG);
+		return wrappedCommand.traceExecutionInfo(this);
+	}
+
+	/**
+	 * Add a new execution step trace to the active traces
+	 * 
+	 * @param cmd Command which will be stepped through
+	 * @return true if it was added
+	 */
+	boolean activateExecutionStepTrace(WrappedCommand cmd) {
+		if (activeExecutionStepTraces == null) {
+			activeExecutionStepTraces = new ArrayList<WrappedCommand>();
+		}
+		if (activeExecutionStepTraces.contains(cmd)) return false;
+		activeExecutionStepTraces.add(cmd);
+		return true;
+	}
+	
+	/**
+	 * Remove an execution step trace from the active traces
+	 * 
+	 * @param cmd Command which was being stepped through
+	 */
+	void deactivateExecutionStepTrace(WrappedCommand cmd) {
+		if (activeExecutionStepTraces == null) return;
+		activeExecutionStepTraces.remove(cmd);
+		if (activeExecutionStepTraces.size()==0) {
+			activeExecutionStepTraces = null;
 		}
 	}
+	
+	/**
+	 * @return true if there are active execution step traces in effect
+	 */
+	final boolean hasActiveExecutionStepTraces() {
+		return (stepTracingEnabled && activeExecutionStepTraces!=null);
+	}
+	/**
+	 * @return a copy of the active execution step traces.  A zero-length array
+	 * is returned if there are no active traces
+	 */
+	WrappedCommand [] getCopyOfActiveExecutionStepTraces() {
+		WrappedCommand [] rv = new WrappedCommand[0];
+		if (activeExecutionStepTraces == null) return rv;
+		rv = activeExecutionStepTraces.toArray(rv);
+		return rv;
+	}
+	
+	/**
+	 * @param enable if false, suppress execution step tracing.  If true, re-enable step tracing
+	 */
+	void enableExecutionStepTracing(boolean enable) {
+		stepTracingEnabled = enable;
+	}
+
 	/*-----------------------------------------------------------------
 	 *
 	 *	                     EVAL
@@ -3268,11 +3332,7 @@ public class Interp extends EventuallyFreed {
 		return notifier;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * pkgProvide --
-	 * 
+	/**
 	 * This procedure is invoked to declare that a particular version of a
 	 * particular package is now present in an interpreter. There must not be
 	 * any other version of this package already provided in the interpreter.
@@ -3284,45 +3344,48 @@ public class Interp extends EventuallyFreed {
 	 * so that no other version of the package may be provided for the
 	 * interpreter.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param name name of package
+	 * @param version version of package
+	 * @throws TclException
 	 */
-
 	public final void pkgProvide(String name, String version)
 			throws TclException {
 		PackageCmd.pkgProvide(this, name, version);
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * pkgRequire --
-	 * 
+	/**
 	 * This procedure is called by code that depends on a particular version of
 	 * a particular package. If the package is not already provided in the
 	 * interpreter, this procedure invokes a Tcl script to provide it. If the
 	 * package is already provided, this procedure makes sure that the caller's
 	 * needs don't conflict with the version that is present.
+	 * 	Side effects: The script from some previous "package ifneeded" command
+	 * may be invoked to provide the package.
 	 * 
-	 * Results: If successful, returns the version string for the currently
+	 * @param pkgname name of the package to require
+	 * @param version version to require
+	 * @param exact if true, require the exact versions specified
+	 * 
+	 * @return If successful, returns the version string for the currently
 	 * provided version of the package, which may be different from the
-	 * "version" argument. If the caller's requirements cannot be met (e.g. the
+	 * "version" argument. 
+	 * 
+	 * @throws TclException If the caller's requirements cannot be met (e.g. the
 	 * version requested conflicts with a currently provided version, or the
 	 * required version cannot be found, or the script to provide the required
 	 * version generates an error), a TclException is raised.
-	 * 
-	 * Side effects: The script from some previous "package ifneeded" command
-	 * may be invoked to provide the package.
-	 * 
-	 * ----------------------------------------------------------------------
 	 */
-
 	public final String pkgRequire(String pkgname, String version, boolean exact)
 			throws TclException {
 		return PackageCmd.pkgRequire(this, pkgname, version, exact);
 	}
 
-	/*
-	 * Debugging API.
+
+	protected DebugInfo dbg;
+
+	/**
+	 * Initialize the debugging information.
+	 *  * Debugging API.
 	 * 
 	 * The following section defines two debugging API functions for logging
 	 * information about the point of execution of Tcl scripts:
@@ -3352,12 +3415,7 @@ public class Interp extends EventuallyFreed {
 	 * The debugging API functions in the Interp class are just dummy stub
 	 * functions. These functions are usually implemented in a subclass of
 	 * Interp (e.g. DbgInterp) that has real debugging support.
-	 */
-
-	protected DebugInfo dbg;
-
-	/**
-	 * Initialize the debugging information.
+	 *
 	 * 
 	 * @return a DebugInfo object used by Interp in non-debugging mode.
 	 */
@@ -3817,7 +3875,8 @@ public class Interp extends EventuallyFreed {
 
 		int result = TCL.OK;
 		try {
-			cmd.cmd.cmdProc(this, objv);
+			if (cmd.mustCallInvoke(this)) cmd.invoke(this, objv);
+			else cmd.cmd.cmdProc(this, objv);
 		} catch (TclException e) {
 			result = e.getCompletionCode();
 		}
@@ -3874,11 +3933,7 @@ public class Interp extends EventuallyFreed {
 		return result;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * Tcl_AllowExceptions -> allowExceptions
-	 * 
+	/**
 	 * Sets a flag in an interpreter so that exceptions can occur in the next
 	 * call to Tcl_Eval without them being turned into errors.
 	 * 
@@ -3886,10 +3941,7 @@ public class Interp extends EventuallyFreed {
 	 * 
 	 * Side effects: The TCL_ALLOW_EXCEPTIONS flag gets set in the interpreter's
 	 * evalFlags structure. See the reference documentation for more details.
-	 * 
-	 * ----------------------------------------------------------------------
 	 */
-
 	public void allowExceptions() {
 		evalFlags |= Parser.TCL_ALLOW_EXCEPTIONS;
 	}

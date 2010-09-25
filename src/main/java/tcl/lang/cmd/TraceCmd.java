@@ -21,6 +21,7 @@ import java.util.ArrayList;
 
 import tcl.lang.Command;
 import tcl.lang.CommandTrace;
+import tcl.lang.ExecutionTrace;
 import tcl.lang.Interp;
 import tcl.lang.TCL;
 import tcl.lang.TclException;
@@ -59,11 +60,17 @@ public class TraceCmd implements Command {
 
 	static final private int TYPE_VARIABLE = 0;
 	static final private int TYPE_COMMAND = 1;
-	static final private int TYPE_EXECUTION = 3;
+	static final private int TYPE_EXECUTION = 2;
 
 	static final private String[] commandOps = {"delete", "rename"};
 	static final private int OP_RENAME = 1;
 	static final private int OP_DELETE =0;
+	
+	static final private String[] executionOps = {"enter", "leave", "enterstep", "leavestep"};
+	static final private int OP_ENTER = 0;
+	static final private int OP_LEAVE = 1;
+	static final private int OP_ENTERSTEP = 2;
+	static final private int OP_LEAVESTEP = 3;
 	
 	// Arrays for quickly generating the Tcl strings corresponding to
 	// the TCL.TRACE_ARRAY, TCL.TRACE_READS, TCL.TRACE_WRITES and
@@ -173,17 +180,25 @@ public class TraceCmd implements Command {
 			if (objv.length < 3) {
 				throw new TclNumArgsException(interp, 2, objv, "type ?arg arg ...?");
 			}
-			int subOpt = TclIndex.get(interp, objv[2], subCmds, "option", 0);
-			if (subOpt == TYPE_VARIABLE) {
-				traceVariable(interp, opt, objv, 3);
-			} else if (subOpt == TYPE_COMMAND) {
-				traceCommand(interp, opt, objv);
-			} else if (subOpt == TYPE_EXECUTION) {
-				// FIXME - implement executions traces
-				throw new TclException(interp, "trace add/remove/info execution not implemented yet");
+			if (opt==OPT_INFO) {
+				if (objv.length != 4)
+					throw new TclNumArgsException(interp, 3, objv, "name");
 			} else {
-				throw new TclException(interp, "bad option \"" + objv[2]
-						+ "\": must be execution, command, or variable");
+				if (objv.length != 6)
+					throw new TclNumArgsException(interp, 3, objv, "name opList command");
+			}
+			
+			int subOpt = TclIndex.get(interp, objv[2], subCmds, "option", 0);
+			switch (subOpt) {
+			case TYPE_VARIABLE:
+				traceVariable(interp, opt, objv, 3);
+				break;
+			case TYPE_COMMAND:
+				traceCommand(interp, opt, objv);
+				break;
+			case TYPE_EXECUTION:
+				traceExecution(interp, opt, objv);
+				break;
 			}
 			break;
 		case OPT_VARIABLE:
@@ -209,6 +224,91 @@ public class TraceCmd implements Command {
 	}
 
 	/**
+	 * Parse and execute options for execetion traces.
+	 * 
+	 * @param interp
+	 *            current interpreter
+	 * @param opt
+	 *            option index
+	 * @param objv
+	 *            argument list
+	 * @throws TclException
+	 */
+	private void traceExecution(Interp interp, int opt, TclObject[] objv) throws TclException {
+
+		String commandName = objv.length >= 4 ? objv[3]	.toString() : null;
+
+		if (opt==OPT_INFO) {
+			interp.setResult(interp.traceExecutionInfo(commandName));
+		}
+
+		if ((opt==OPT_ADD || opt==OPT_REMOVE)) {
+			TclObject [] ops = TclList.getElements(interp, objv[4]);
+			if (ops.length==0) {
+				throw new TclException(interp,"bad operation list \"\": must be one or more of enter, leave, enterstep, or leavestep");
+			}
+			boolean enter = false;
+			boolean leave = false;
+			boolean enterStep = false;
+			boolean leaveStep = false;
+			
+			for (TclObject op : ops) {
+				int operation = TclIndex.get(interp, op, executionOps, "operation", TCL.EXACT);
+				switch (operation) {
+				case OP_ENTER:
+					enter = true;
+					break;
+				case OP_LEAVE:
+					leave = true;
+					break;
+				case OP_ENTERSTEP:
+					enterStep = true;
+					break;
+				case OP_LEAVESTEP:
+					leaveStep = true;
+					break;
+				}			
+			}
+			switch (opt) {
+			case OPT_ADD:
+				if (enter) {
+					ExecutionTrace trace = new ExecutionTrace(interp, ExecutionTrace.ENTER, objv[5]);
+					interp.traceExecution(commandName, trace);
+				}
+				if (leave) {
+					ExecutionTrace trace = new ExecutionTrace(interp, ExecutionTrace.LEAVE, objv[5]);
+					interp.traceExecution(commandName, trace);
+				}
+				if (enterStep) {
+					ExecutionTrace trace = new ExecutionTrace(interp, ExecutionTrace.ENTERSTEP, objv[5]);
+					interp.traceExecution(commandName, trace);
+				}
+				if (leaveStep) {
+					ExecutionTrace trace = new ExecutionTrace(interp, ExecutionTrace.LEAVESTEP, objv[5]);
+					interp.traceExecution(commandName, trace);
+				}
+				break;
+			case OPT_REMOVE:
+				if (enter) {
+					interp.untraceExecution(commandName, ExecutionTrace.ENTER, objv[5]);
+				}
+				if (leave) {
+					interp.untraceExecution(commandName, ExecutionTrace.LEAVE, objv[5]);
+				}
+				if (enterStep) {
+					interp.untraceExecution(commandName, ExecutionTrace.ENTERSTEP, objv[5]);
+				}
+				if (leaveStep) {
+					interp.untraceExecution(commandName, ExecutionTrace.LEAVESTEP, objv[5]);
+				}
+				break;
+			}
+			
+		}
+	
+	}
+
+	/**
 	 * Parse and execute options for command traces.
 	 * 
 	 * @param interp
@@ -220,19 +320,14 @@ public class TraceCmd implements Command {
 	 * @throws TclException
 	 */
 	private void traceCommand(Interp interp, int opt, TclObject[] objv) throws TclException {
-
+		
 		String commandName = objv.length >= 4 ? objv[3]	.toString() : null;
 
 		if (opt==OPT_INFO) {
-			if (objv.length != 4)
-				throw new TclNumArgsException(interp, 3, objv, "name");
 			interp.setResult(interp.traceCommandInfo(commandName));
 		}
 
 		if ((opt==OPT_ADD || opt==OPT_REMOVE)) {
-			if (objv.length != 6)
-				throw new TclNumArgsException(interp, 3, objv, "name opList command");
-			
 			TclObject [] ops = TclList.getElements(interp, objv[4]);
 			if (ops.length==0) {
 				throw new TclException(interp,"bad operation list \"\": must be one or more of delete or rename");
@@ -271,11 +366,8 @@ public class TraceCmd implements Command {
 				}
 				break;
 			}
-			
 		}
-	
 	}
-
 	
 	/**
 	 * Parse and execute options for variable traces.
@@ -296,10 +388,6 @@ public class TraceCmd implements Command {
 		switch (opt) {
 		case OPT_ADD:
 		case OPT_REMOVE:
-			if (objv.length != (start + 3)) {
-				throw new TclNumArgsException(interp, start, objv, "name opList command");
-			}
-
 			int flags = 0;
 			boolean isNewStyle = false;
 			if (start == 3) {
@@ -382,9 +470,6 @@ public class TraceCmd implements Command {
 
 		case OPT_VINFO:
 		case OPT_INFO:
-			if (objv.length != (start + 1)) {
-				throw new TclNumArgsException(interp, start, objv, "name");
-			}
 			ArrayList traces = Var.getTraces(interp, objv[start].toString(), null, 0);
 			if (traces != null) {
 				len = traces.size();

@@ -1226,7 +1226,8 @@ class Ensemble {
 				ensPart = FindEnsemblePart(interp, ensData, "@error");
 				if (ensPart != null) {
 					cmd = ensPart.cmd;
-					cmd.cmdProc(interp, objv);
+					if (ensPart.wcmd.mustCallInvoke(interp)) ensPart.wcmd.invoke(interp, objv);
+					else cmd.cmdProc(interp, objv);
 					return;
 				}
 			}
@@ -1256,7 +1257,8 @@ class Ensemble {
 				cmdlinev = TclList.getElements(interp, cmdline);
 
 				cmd = ensPart.cmd;
-				cmd.cmdProc(interp, cmdlinev);
+				if (ensPart.wcmd.mustCallInvoke(interp)) ensPart.wcmd.invoke(interp, cmdlinev);
+				else cmd.cmdProc(interp, cmdlinev);
 			} finally {
 				cmdline.release();
 			}

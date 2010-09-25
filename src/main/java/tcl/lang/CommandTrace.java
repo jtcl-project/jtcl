@@ -1,7 +1,7 @@
 package tcl.lang;
 
 /**
- * This class is used to trace command rename and deletion
+ * This CommandTrace class is used to trace command rename and deletion
  * 
  */
 public class CommandTrace {
@@ -21,10 +21,6 @@ public class CommandTrace {
 	 * The type of trace, either DELETE or RENAME
 	 */
 	protected int type;
-	/**
-	 * Interpreter in which to eval the callback
-	 */
-	Interp interp;
 
 	/**
 	 * Create a new CommandTrace
@@ -37,7 +33,6 @@ public class CommandTrace {
 	public CommandTrace(Interp interp, int type, TclObject callbackCmd) {
 		this.type = type;
 		this.callbackCmd = callbackCmd.toString();
-		this.interp = interp;
 	}
 
 	/**
@@ -65,7 +60,7 @@ public class CommandTrace {
 	 * @param newname
 	 *            new name of command being renamed; ignored for DELETE type
 	 */
-	public void trace(int type, String oldname, String newname) {
+	public void trace(Interp interp, int type, String oldname, String newname) {
 		try {
 			if (type == this.type) {
 				String callback = callbackCmd + " " + oldname + " "

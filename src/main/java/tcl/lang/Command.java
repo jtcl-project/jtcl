@@ -14,7 +14,6 @@
 
 package tcl.lang;
 
-
 /**
  * The Command interface specifies the method that a new Tcl command must
  * implement. See the createCommand method of the Interp class to see how to add
@@ -22,8 +21,19 @@ package tcl.lang;
  */
 
 public interface Command {
-	abstract public void cmdProc( // The method cmdProc is called by interp.
-			Interp interp, // The interpreter for setting result etc.
-			TclObject[] objv) // The argument list for the command.
-			throws TclException; // Tcl exceptions are thown for Tcl errors.
+	/**
+	 * This method implements the functionality of the command. However, calling
+	 * it directly in application code will bypass execution traces. Instead,
+	 * commands should be called with WrappedCommand.invoke
+	 * 
+	 * @param interp
+	 *            The interpreter for setting the results and which contains the
+	 *            context
+	 * @param objv
+	 *            the argument list for the command; objv[0[ is the command name
+	 *            itself
+	 * @throws TclException
+	 *             on any errors
+	 */
+	abstract public void cmdProc(Interp interp, TclObject[] objv) throws TclException;
 }

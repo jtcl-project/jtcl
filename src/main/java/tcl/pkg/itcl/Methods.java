@@ -784,6 +784,8 @@ public class Methods {
 			if ((mcode.flags & ItclInt.IMPLEMENT_OBJCMD) != 0) {
 				// FIXME: Need to handle unexpected return results
 				// via the interp somehow.
+				// FIXME: we are not firing any execution traces here,
+				// because I don't see a WrappedCommand - Dan Bodoh 9/23/10
 				mcode.objCmd.cmdProc(interp, objv);
 			} else if ((mcode.flags & ItclInt.IMPLEMENT_ARGCMD) != 0) {
 				throw new TclRuntimeError("unexpected IMPLEMENT_ARGCMD");

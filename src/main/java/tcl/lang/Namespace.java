@@ -649,15 +649,15 @@ public class Namespace {
 		 */
 		ArrayList<String> tracedCommands = new ArrayList<String>();
 		for (Map.Entry<String, WrappedCommand> entry : ns.cmdTable.entrySet()) {
-			if (entry.getValue().commandTraces != null && entry.getValue().commandTraces.size()>0) {
+			if (entry.getValue().hasCommandTraces()) {
 				tracedCommands.add(entry.getKey());
 			}
 		}
 		for (String cmdName : tracedCommands) {
 			cmd = ns.cmdTable.get(cmdName);
 			if (cmd != null) {
-				cmd.callTraces(CommandTrace.DELETE,"");
-				cmd.commandTraces = null;
+				cmd.callCommandTraces(CommandTrace.DELETE,"");
+				cmd.removeAllCommandTraces();
 			}
 		}
 		tracedCommands = null;
@@ -987,7 +987,8 @@ public class Namespace {
 			cmd = autoCmd;
 			try {
 				// Invoke the command with the arguments
-				cmd.cmd.cmdProc(interp, objv);
+				if (cmd.mustCallInvoke(interp)) cmd.invoke(interp, objv);
+				else cmd.cmd.cmdProc(interp, objv);
 			} finally {
 				objv[0].release();
 				objv[1].release();
@@ -1321,7 +1322,8 @@ public class Namespace {
 			TclObject[] objv // Argument objects
 	) throws TclException {
 		WrappedCommand realCmd = data.realCmd;
-		realCmd.cmd.cmdProc(interp, objv);
+		if (realCmd.mustCallInvoke(interp)) realCmd.invoke(interp, objv);
+		else realCmd.cmd.cmdProc(interp, objv);
 	}
 
 	/**

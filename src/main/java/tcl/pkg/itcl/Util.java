@@ -1274,7 +1274,8 @@ class Util {
 		// Finally, invoke the command's cmdProc()
 
 		interp.resetResult();
-		wcmd.cmd.cmdProc(interp, cmdlinev);
+		if (wcmd.mustCallInvoke(interp)) wcmd.invoke(interp, cmdlinev);
+		else wcmd.cmd.cmdProc(interp, cmdlinev);
 	}
 
 	/*

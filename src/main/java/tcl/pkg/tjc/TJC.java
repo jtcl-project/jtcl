@@ -728,8 +728,9 @@ public class TJC {
 				// Invoke TJC::source, this is the original source command.
 				// The original command will deal with error reporting
 				// as well as invocations that source a file not in "files".
-				Command cmd = interp.getCommand("TJC::source");
-				cmd.cmdProc(interp, objv);
+				WrappedCommand cmd = interp.getWrappedCommand("TJC::source");
+				if (cmd.mustCallInvoke(interp)) cmd.invoke(interp, objv);
+				else cmd.cmd.cmdProc(interp, objv);
 			}
 		}
 	}

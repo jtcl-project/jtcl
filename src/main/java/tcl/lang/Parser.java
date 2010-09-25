@@ -753,7 +753,7 @@ public class Parser {
 
 	static void evalObjv(Interp interp, TclObject[] objv, int length,  int flags)
 			throws TclException {
-		Command cmd;
+		WrappedCommand cmd;
 		TclObject[] newObjv = null;
 		int i;
 		CallFrame savedVarFrame; // Saves old copy of interp.varFrame
@@ -778,7 +778,7 @@ public class Parser {
 			// command words as arguments. Then call ourselves recursively
 			// to execute it.
 
-			cmd = interp.getCommand(objv[0].toString());
+			cmd = interp.getWrappedCommand(objv[0].toString());
 			if (cmd == null) {
 				newObjv = Parser.grabObjv(interp, objv.length + 1);
 				for (i = (objv.length - 1); i >= 0; i--) {
@@ -786,7 +786,7 @@ public class Parser {
 				}
 				newObjv[0] = TclString.newInstance("::unknown");
 				newObjv[0].preserve();
-				cmd = interp.getCommand("::unknown");
+				cmd = interp.getWrappedCommand("::unknown");
 				if (cmd == null) {
 					throw new TclException(interp, "invalid command name \""
 							+ objv[0].toString() + "\"");
@@ -807,7 +807,8 @@ public class Parser {
 				interp.varFrame = null;
 			}
 
-			cmd.cmdProc(interp, objv);
+			if (cmd.mustCallInvoke(interp)) cmd.invoke(interp, objv);
+			else cmd.cmd.cmdProc(interp, objv);
 
 			// (TODO)
 			//

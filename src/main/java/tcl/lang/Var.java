@@ -2758,7 +2758,11 @@ public class Var {
 		// hash entries will be deleted automatically when the whole
 		// table is deleted). Note that we give callTraces the variable's
 		// fully-qualified name so that any called trace procedures can
-		// refer to these variables being deleted.
+		// refer to these variables being deleted.  Also, set the
+		// variable undefined before the trace, so an error is generated
+		// if the variable is read in the trace.  This is consistent with
+		// unset.
+		var.setVarUndefined();
 
 		if (var.traces != null) {
 			String fullname = getVariableFullName(interp, var);
