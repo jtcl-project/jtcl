@@ -18,6 +18,7 @@ package tcl.lang.cmd;
 
 import tcl.lang.Command;
 import tcl.lang.Interp;
+import tcl.lang.TCL;
 import tcl.lang.TclException;
 import tcl.lang.TclList;
 import tcl.lang.TclNumArgsException;
@@ -43,9 +44,11 @@ public class LappendCmd implements Command {
 			throw new TclNumArgsException(interp, 1, objv,
 					"varName ?value value ...?");
 		}
+	
 		if (objv.length == 2) {
 			try {
 				newValue = interp.getVar(objv[1], 0);
+
 			} catch (TclException e) {
 				// The variable doesn't exist yet. Just create it with an empty
 				// initial value.
@@ -75,11 +78,18 @@ public class LappendCmd implements Command {
 		return;
 	}
 
-	// Append TclObject values to a list value stored
-	// in the named variable. This method is used in
-	// the lappend implementation above when 3 or
-	// more arguments are passed to lappend.
+	
 
+	/**
+	 * Append values to a list value 
+	 * 
+	 * @param interp current interpreter
+	 * @param varName name of variable
+	 * @param values TclObject values to append
+	 * @param valuesInd index of values to start at
+	 * @return new value for variable
+	 * @throws TclException
+	 */
 	public static TclObject lappendVar(Interp interp, String varName, // name of
 			// variable
 			TclObject[] values, // TclObject values to append
@@ -100,12 +110,29 @@ public class LappendCmd implements Command {
 
 		try {
 			varValue = interp.getVar(varName, 0);
+			
 		} catch (TclException e) {
+			
 			// We couldn't read the old value: either the var doesn't yet
 			// exist or it's an array element. If it's new, we will try to
 			// create it with Tcl_ObjSetVar2 below.
 
 			if (Var.isArrayVarname(varName)) {
+				
+				/* If the var doesn't exist and the array doesn't exist yet,
+				 * we have to call the READ traces by hand.  This is inconsistent
+				 * with, for example, unset arravar; set arrayvar(b) which would
+				 * not call a read trace on arrayvar.  But it's what C Tcl does, 
+				 * according to append.test 
+				 */
+				int part1End = varName.indexOf('(');
+				Var [] result = Var.lookupVar(interp, 
+						varName.substring(0, part1End), null,
+					0, "read", false, false);
+				if (result != null && result[0].isVarUndefined()) {
+					Var.callTraces(interp, null, result[0], varName.substring(0, part1End), varName.substring(part1End+1, 
+							varName.length()-1), TCL.TRACE_READS);
+				} 
 				createVar = false;
 			}
 
