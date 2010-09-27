@@ -579,6 +579,17 @@ test socket-2.11 {detecting new data} {socket} {
     fconfigure $sock -blocking 1
     puts $s2 two
     flush $s2
+    # Very occasionally, JTCL fails to get 'two'
+    # at the c:[gets $sock]; it appears to be
+    # a race between the Java socket implementation
+    # and the OS - I've verified that 'flush' is
+    # actually synchronously happening.  Just the 
+    # smallest delay here allows the OS (Linux 2.6.32
+    # for this testing) to win the race.  So for JTCL,
+    # I've added an 'after 1'.  In any real programming
+    # scenario, one would not assume the socket was
+    # readable immediately.
+    after 1
     fconfigure $sock -blocking 0
     lappend result c:[gets $sock]
     fconfigure $sock -blocking 1
