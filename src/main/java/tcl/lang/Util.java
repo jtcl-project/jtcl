@@ -151,7 +151,7 @@ public class Util {
 
 		if (base == 0) {
 			if (c == '0') {
-				if (i < len - 1) {
+				if (i < len - 2) { /* must be at least two more chars to consider X a hex indicator */
 					i++;
 					c = s.charAt(i);
 					if (c == 'x' || c == 'X') { // FIXME: RS: ?? if ((c == 'x'
@@ -159,7 +159,7 @@ public class Util {
 						i++;
 						base = 16;
 					}
-				}
+				} 
 				if (base == 0) {
 					// Must set anyDigits here, otherwise "0" produces a
 					// "no digits" error.
@@ -182,11 +182,13 @@ public class Util {
 
 		boolean overflowed = false;
 		long previousResult = 0;
-
+		int digitCount = 0;
+		
 		for (;; i += 1) {
 			if (i >= len) {
 				break;
 			}
+			digitCount++;
 			digit = s.charAt(i) - '0';
 			if (digit < 0 || digit > ('z' - '0')) {
 				break;
@@ -196,14 +198,28 @@ public class Util {
 				break;
 			}
 
-			result = result * base + digit;
-			
-			/* result should never decrease, otherwise we've overflowed */
-			if (result < previousResult) {
-				overflowed = true;
+			switch (base) {
+			case 2:
+				result = (result << 1) | (long)digit;
+				overflowed = (digitCount > 64);
+				break;
+			case 8:
+				result = (result << 3) | (long)digit;
+				overflowed = ((digitCount == 22 && digit>1) || digitCount > 22);
+				break;
+			case 16:
+				result = (result << 4) | (long)digit;
+				overflowed = (digitCount>16);
+				break;
+			default:
+				result = (result * base) + digit;
+				/* result should never decrease, otherwise we've overflowed */
+				if (result < previousResult) {
+					overflowed = true;
+				}
+				previousResult = result;		
+				break;
 			}
-			previousResult = result;
-			
 			anyDigits = true;
 		}
 
@@ -211,6 +227,7 @@ public class Util {
 		if (negative) {
 			result = -result;
 		}
+
 		if (!anyDigits) {
 			strtoulResult.update(0, 0, TCL.INVALID_INTEGER);
 		} else if (overflowed) {
@@ -525,7 +542,7 @@ public class Util {
 			if (si != i) { // same c value as when above for loop was entered
 				c = s.charAt(i);
 			}
-			if ((c == 'E') || (c == 'e')) {
+			if (((c == 'E') || (c == 'e')) && i < len - 1) {
 				i++;
 				if (i < len) {
 					c = s.charAt(i);
@@ -1051,7 +1068,7 @@ public class Util {
 		// backslashes then use a StringBuffer.
 
 		StringBuffer sbuf = null;
-		int simpleStart, simpleEnd = -1;
+		int simpleStart;
 		String elem;
 
 		elemStart = i;

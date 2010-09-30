@@ -478,10 +478,8 @@ public class FormatCmd implements Command {
 
 		if ((flags & SIGNED_VALUE) != 0) {
 			if (lngValue < 0) {
-				if (altPrefix.length() > 0) {
-					lngValue = (lngValue << 32);
-					lngValue = (lngValue >>> 32);
-				} else {
+				/* preserve sign bit in base 8 and 16 */
+				if (base != 8 && base !=16) {
 					lngValue = -lngValue;
 					prefix = '-';
 					prefixSize = 1;
@@ -502,9 +500,32 @@ public class FormatCmd implements Command {
 		// Convert to ascii
 
 		do {
-			sbuf.insert(0, charSet[(int) (lngValue % base)]);
-			lngValue = lngValue / base;
-		} while (lngValue > 0);
+			/* treat base 8 and 16 separately, to preserve sign bit */
+			int digit;
+			switch (base) {
+			case 8:
+				digit = (int)(lngValue & 07L);
+				break;
+			case 16:
+				digit = (int)(lngValue & 0xfL);
+				break;
+			default:
+				digit = (int)(lngValue % base);
+				break;
+			}
+			sbuf.insert(0, charSet[digit]);
+			switch (base) {
+			case 8:
+				lngValue = lngValue >>> 3;
+				break;
+			case 16:
+				lngValue = lngValue >>> 4;
+				break;
+			default:
+				lngValue = lngValue / base;
+				break;
+			}
+		} while (lngValue != 0);
 
 		length = sbuf.length();
 		for (i = (precision - length); i > 0; i--) {

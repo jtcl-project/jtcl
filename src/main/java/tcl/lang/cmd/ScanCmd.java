@@ -15,11 +15,12 @@ package tcl.lang.cmd;
 
 import tcl.lang.Command;
 import tcl.lang.Interp;
-import tcl.lang.StrtodResult;
 import tcl.lang.StrtoulResult;
+import tcl.lang.TCL;
 import tcl.lang.TclDouble;
 import tcl.lang.TclException;
 import tcl.lang.TclInteger;
+import tcl.lang.TclList;
 import tcl.lang.TclNumArgsException;
 import tcl.lang.TclObject;
 import tcl.lang.TclString;
@@ -27,542 +28,723 @@ import tcl.lang.Util;
 
 /**
  * This class implements the built-in "scan" command in Tcl.
- * 
  */
 
 public class ScanCmd implements Command {
+
+	/*
+	 * The code in this class is almost a literal translation 8.4 C Tcl's
+	 * tclScan.c, with changes to eliminate goto and pointer arithmetic. We also
+	 * assume that %i, %d, %x will always be resolved to a 64-bit long,
+	 * regardless of %l or %L. This is consistent with a 64-bit compiled C TCL.
+	 */
+	/** Don't skip blanks. */
+	private final int SCAN_NOSKIP = 0x1;
+	/** Suppress assignment. */
+	private final int SCAN_SUPPRESS = 0x2;
+	/** Read an unsigned value. */
+	private final int SCAN_UNSIGNED = 0x4;
+	/** A width value was supplied. */
+	private final int SCAN_WIDTH = 0x8;
+	/** Asked for a wide value. */
+	private final int SCAN_LONGER = 0x400;
+	/** asked for bignum value */
+	private final int SCAN_BIG = 0x800;
+
 	/**
 	 * This procedure is invoked to process the "scan" Tcl command. See the user
 	 * documentation for details on what it does.
 	 * 
-	 * Each iteration of the cmdProc compares the scanArr's current index to the
-	 * frmtArr's index. If the chars are equal then the indicies are
-	 * incremented. If a '%' is found in the frmtArr, the formatSpecifier is
-	 * parced from the frmtArr, the corresponding value is extracted from the
-	 * scanArr, and that value is set in the Tcl Interp.
-	 * 
-	 * If the chars are not equal, or the conversion fails, the boolean
-	 * scanArrDone is set to true, indicating the scanArr is not to be parced
-	 * and no new values are to be set. However the frmtArr is still parced
-	 * because of the priority of error messages. In the C version of Tcl, bad
-	 * format specifiers throw errors before incorrect argument input or other
-	 * scan errors. Thus we need to parce the entire frmtArr to verify correct
-	 * formating. This is dumb and inefficient but it is consistent w/ the
-	 * current C-version of Tcl.
 	 */
 
-	public void cmdProc(Interp interp, TclObject argv[]) throws TclException {
+	public void cmdProc(Interp interp, TclObject objv[]) throws TclException {
+		String format;
+		int numVars = -1;
+		int totalVars = -1;
 
-		if (argv.length < 3) {
-			throw new TclNumArgsException(interp, 1, argv,
-					"string format ?varName varName ...?");
+		if (objv.length < 3) {
+			throw new TclNumArgsException(interp, 1, objv, "string format ?varName varName ...?");
 		}
-		;
 
-		StrtoulResult strul; // Return value for parcing the scanArr when
-		// extracting integers/longs
-		StrtodResult strd; // Return value for parcing the scanArr when
-		// extracting doubles
-		char[] scanArr; // Array containing parce info
-		char[] frmtArr; // Array containing info on how to
-		// parse the scanArr
-		int scanIndex; // Index into the scan array
-		int frmtIndex; // Index into the frmt array
-		int tempIndex; // Temporary index holder
-		int argIndex; // Index into the current arg
-		int width; // Stores the user specified result width
-		int base; // Base of the integer being converted
-		int numUnMatched; // Number of fields actually set.
-		int numMatched; // Number of fields actually matched.
-		int i; // Generic variable
-		char ch; // Generic variable
-		boolean cont; // Used in loops to indicate when to stop
-		boolean scanOK; // Set to false if strtoul/strtod fails
-		boolean scanArrDone; // Set to false if strtoul/strtod fails
-		boolean widthFlag; // True is width is specified
-		boolean discardFlag; // If a "%*" is in the formatString dont
-		// write output to arg
+		format = objv[2].toString();
+		numVars = objv.length - 3;
 
-		scanArr = argv[1].toString().toCharArray();
-		frmtArr = argv[2].toString().toCharArray();
-		width = base = numMatched = numUnMatched = 0;
-		scanIndex = frmtIndex = 0;
-		scanOK = true;
-		scanArrDone = false;
-		argIndex = 3;
+		/*
+		 * Check for errors in the format string
+		 */
+		totalVars = validateFormat(interp, format, numVars);
 
-		// Skip all (if any) of the white space before getting to a char
+		/*
+		 * Allocate space for the result objects
+		 */
+		TclObject[] objs = new TclObject[totalVars];
+		for (int i = 0; i < totalVars; i++) {
+			objs[i] = null;
+		}
 
-		frmtIndex = skipWhiteSpace(frmtArr, frmtIndex);
+		String string = objv[1].toString();
 
-		// Search through the frmtArr. If the next char is a '%' parse the
-		// next chars and determine the type (if any) of the format specifier.
-		// If the scanArr has been fully searched, do nothing but incerment
-		// "numUnMatched". The reason to continue the frmtArr search is for
-		// consistency in output. Previously scan format errors were reported
-		// before arg input mismatch, so this maintains the same level of error
-		// checking.
+		/*
+		 * Iterate over the format string filling in the result objects until we
+		 * reach the end of input, the end of the format string, or there is a
+		 * mismatch.
+		 */
+		int objIndex = 0;
+		int nconversions = 0;
+		int formatIndex = 0;
+		int stringIndex = 0;
+		boolean underflow = false;
 
-		while (frmtIndex < frmtArr.length) {
-			discardFlag = widthFlag = false;
-			cont = true;
+		DONE: while (formatIndex < format.length()) {
+			char sch;
+			char ch = format.charAt(formatIndex++);
 
-			// Parce the format array and read in the correct value from the
-			// scan array. When the correct value is retrieved, set the
-			// variable (from argv) in the interp.
+			int flags = 0;
 
-			if (frmtArr[frmtIndex] == '%') {
-
-				frmtIndex++;
-				checkOverFlow(interp, frmtArr, frmtIndex);
-
-				// Two '%'s in a row, do nothing...
-
-				if (frmtArr[frmtIndex] == '%') {
-					frmtIndex++;
-					scanIndex++;
-					continue;
+			/*
+			 * If we see whitespace in the format, skip whitespace in the
+			 * string.
+			 */
+			if (Character.isWhitespace(ch)) {
+				while (stringIndex < string.length() && Character.isWhitespace(string.charAt(stringIndex))) {
+					++stringIndex;
 				}
-
-				// Check for a discard field flag
-
-				if (frmtArr[frmtIndex] == '*') {
-					discardFlag = true;
-					frmtIndex++;
-					checkOverFlow(interp, frmtArr, frmtIndex);
+				if (stringIndex == string.length()) {
+					break DONE;
 				}
+				continue;
+			}
 
-				// Check for a width field and accept the 'h', 'l', 'L'
-				// characters, but do nothing with them.
-				//
-				// Note: The order of the width specifier and the other
-				// chars is unordered, so we need to iterate until all
-				// of the specifiers are identified.
+			boolean isLiteral;
 
-				while (cont) {
-					cont = false;
-
-					switch (frmtArr[frmtIndex]) {
-					case 'h':
-					case 'l':
-					case 'L': {
-						// Just ignore these values
-
-						frmtIndex++;
-						cont = true;
-						break;
-					}
-					default: {
-						if (Character.isDigit(frmtArr[frmtIndex])) {
-							strul = interp.strtoulResult;
-							Util.strtoul(new String(frmtArr), frmtIndex, base,
-									strul);
-							width = (int) strul.value;
-							frmtIndex = strul.index;
-							widthFlag = true;
-							cont = true;
-							strul = null;
-						}
-					}
-					}
-					checkOverFlow(interp, frmtArr, frmtIndex);
-				}
-
-				// On all conversion specifiers except 'c' and 'n', move the
-				// scanIndex to the next non-whitespace.
-
-				ch = frmtArr[frmtIndex];
-				if ((ch != 'c') && (ch != 'n') && (ch != '[') && !scanArrDone) {
-					scanIndex = skipWhiteSpace(scanArr, scanIndex);
-				}
-				if (scanIndex >= scanArr.length) {
-					scanArrDone = true;
-				}
-
-				if ((scanIndex < scanArr.length) && (ch != 'c') && (ch != '[')) {
-					// The width+scanIndex might be greater than
-					// the scanArr so we need to re-adjust when this
-					// happens.
-
-					if (widthFlag && (width + scanIndex > scanArr.length)) {
-						width = scanArr.length - scanIndex;
-					}
-				}
-
-				if (scanIndex >= scanArr.length) {
-					scanArrDone = true;
-				}
-
-				// Foreach iteration we want strul and strd to be
-				// null since we error check on this case.
-
-				strul = null;
-				strd = null;
-
-				switch (ch) {
-				case 'n':
-					if (!discardFlag) {
-						testAndSetVar(interp, argv, argIndex++, TclInteger
-								.newInstance(scanIndex - base));
-					}
-					frmtIndex++;
-					numMatched++;
-					continue;
-				case 'd':
-				case 'o':
-				case 'x':
-				case 'u':
-				case 'i': {
-
-					if (!scanArrDone) {
-
-						if (ch == 'd' || ch == 'u') {
-							base = 10;
-						} else if (ch == 'o') {
-							base = 8;
-						} else if (ch == 'x') {
-							base = 16;
-						} else { // e.g. ch == 'i'
-							base = 0;
-						}
-
-						// If the widthFlag is set then convert only
-						// "width" characters to an ascii representation,
-						// else read in until the end of the integer. The
-						// scanIndex is moved to the point where we stop
-						// reading in.
-
-						strul = interp.strtoulResult;
-						if (widthFlag) {
-							Util.strtoul(new String(scanArr, 0, width
-									+ scanIndex), scanIndex, base, strul);
-						} else {
-							Util.strtoul(new String(scanArr), scanIndex, base,
-									strul);
-						}
-						if (strul.errno != 0) {
-							scanOK = false;
-							break;
-						}
-						scanIndex = strul.index;
-
-						if (!discardFlag) {
-							if (ch == 'u') {
-								testAndSetVar(interp, argv, argIndex++,
-										TclInteger.newInstance(strul.value));
-							} else {
-								i = (int) strul.value;
-								testAndSetVar(interp, argv, argIndex++,
-										TclInteger.newInstance(i));
-							}
-						}
-					}
-					break;
-				}
-				case 'c': {
-					if (widthFlag) {
-						errorCharFieldWidth(interp);
-					}
-					if (!discardFlag && !scanArrDone) {
-						testAndSetVar(interp, argv, argIndex++, TclInteger
-								.newInstance(scanArr[scanIndex++]));
-					}
-					break;
-				}
-				case 's': {
-					if (!scanArrDone) {
-						// If the widthFlag is set then read only "width"
-						// characters into the string, else read in until
-						// the first whitespace or endArr is found. The
-						// scanIndex is moved to the point where we stop
-						// reading in.
-
-						tempIndex = scanIndex;
-						if (!widthFlag) {
-							width = scanArr.length;
-						}
-						for (i = 0; (scanIndex < scanArr.length) && (i < width); i++) {
-							ch = scanArr[scanIndex];
-							if ((ch == ' ') || (ch == '\n') || (ch == '\r')
-									|| (ch == '\t') || (ch == '\f')) {
-								break;
-							}
-							scanIndex++;
-						}
-
-						if (!discardFlag) {
-							String str = new String(scanArr, tempIndex,
-									scanIndex - tempIndex);
-							testAndSetVar(interp, argv, argIndex++, TclString
-									.newInstance(str));
-						}
-					}
-					break;
-				}
-				case 'e':
-				case 'f':
-				case 'g': {
-					if (!scanArrDone) {
-						// If the wisthFlag is set then read only "width"
-						// characters into the string, else read in until
-						// the first whitespace or endArr is found. The
-						// scanIndex is moved to the point where we stop
-						// reading in.
-
-						if (widthFlag) {
-							strd = interp.strtodResult;
-							Util.strtod(new String(scanArr, 0, width
-									+ scanIndex), scanIndex, -1, strd);
-						} else {
-							strd = interp.strtodResult;
-							Util.strtod(new String(scanArr), scanIndex, -1,
-									strd);
-						}
-						if (strd.errno != 0) {
-							scanOK = false;
-							break;
-						}
-						scanIndex = strd.index;
-
-						if (!discardFlag) {
-							double d = strd.value;
-							testAndSetVar(interp, argv, argIndex++, TclDouble
-									.newInstance(d));
-						}
-					}
-					break;
-				}
-				case '[': {
-					boolean charMatchFound = false;
-					boolean charNotMatch = false;
-					char[] tempArr;
-					int startIndex;
-					int endIndex;
-					String unmatched = "unmatched [ in format string";
-
-					if ((++frmtIndex) >= frmtArr.length) {
-						throw new TclException(interp, unmatched);
-					}
-
-					if (frmtArr[frmtIndex] == '^') {
-						charNotMatch = true;
-						frmtIndex += 2;
-					} else {
-						frmtIndex++;
-					}
-					tempIndex = frmtIndex - 1;
-
-					if (frmtIndex >= frmtArr.length) {
-						throw new TclException(interp, unmatched);
-					}
-
-					// Extract the list of chars for matching.
-
-					while (frmtArr[frmtIndex] != ']') {
-						if ((++frmtIndex) >= frmtArr.length) {
-							throw new TclException(interp, unmatched);
-						}
-					}
-					tempArr = new String(frmtArr, tempIndex, frmtIndex
-							- tempIndex).toCharArray();
-
-					startIndex = scanIndex;
-					if (charNotMatch) {
-						// Format specifier contained a '^' so interate
-						// until one of the chars in tempArr is found.
-
-						while (scanOK && !charMatchFound) {
-							if (scanIndex >= scanArr.length) {
-								scanOK = false;
-								break;
-							}
-							for (i = 0; i < tempArr.length; i++) {
-								if (tempArr[i] == scanArr[scanIndex]) {
-									charMatchFound = true;
-									break;
-								}
-							}
-							if (widthFlag
-									&& ((scanIndex - startIndex) >= width)) {
-								break;
-							}
-							if (!charMatchFound) {
-								scanIndex++;
-							}
-						}
-					} else {
-						// Iterate until the char in the scanArr is not
-						// in the tempArr.
-
-						charMatchFound = true;
-						while (scanOK && charMatchFound) {
-							if (scanIndex >= scanArr.length) {
-								scanOK = false;
-								break;
-							}
-							charMatchFound = false;
-							for (i = 0; i < tempArr.length; i++) {
-								if (tempArr[i] == scanArr[scanIndex]) {
-									charMatchFound = true;
-									break;
-								}
-							}
-							if (widthFlag && (scanIndex - startIndex) >= width) {
-								break;
-							}
-							if (charMatchFound) {
-								scanIndex++;
-							}
-
-						}
-					}
-
-					// Indicates nothing was found.
-
-					endIndex = scanIndex - startIndex;
-					if (endIndex <= 0) {
-						scanOK = false;
-						break;
-					}
-
-					if (!discardFlag) {
-						String str = new String(scanArr, startIndex, endIndex);
-						testAndSetVar(interp, argv, argIndex++, TclString
-								.newInstance(str));
-					}
-					break;
-				}
-				default: {
-					errorBadField(interp, ch);
-				}
-				}
-
-				// As long as the scan was successful (scanOK), the format
-				// specifier did not contain a '*' (discardFlag), and
-				// we are not at the end of the scanArr (scanArrDone);
-				// increment the num of vars set in the interp. Otherwise
-				// increment the number of valid format specifiers.
-
-				if (scanOK && !discardFlag && !scanArrDone) {
-					numMatched++;
-				} else if ((scanArrDone || !scanOK) && !discardFlag) {
-					numUnMatched++;
-				}
-				frmtIndex++;
-
-			} else if (scanIndex < scanArr.length
-					&& scanArr[scanIndex] == frmtArr[frmtIndex]) {
-				// No '%' was found, but the characters matched
-
-				scanIndex++;
-				frmtIndex++;
-
+			if (ch == '%') {
+				ch = format.charAt(formatIndex++);
+				isLiteral = (ch == '%');
 			} else {
-				// No '%' found and the characters int frmtArr & scanArr
-				// did not match.
-
-				frmtIndex++;
-
+				isLiteral = true;
+			}
+			if (isLiteral) {
+				if (stringIndex == string.length()) {
+					underflow = true;
+					break DONE;
+				}
+				sch = string.charAt(stringIndex++);
+				if (ch != sch) {
+					break DONE;
+				}
+				continue;
 			}
 
+			/*
+			 * Check for assignment suppression ('*') or an XPG3-style
+			 * assignment ('%n$').
+			 */
+			long value;
+			if (ch == '*') {
+				flags |= SCAN_SUPPRESS;
+				ch = format.charAt(formatIndex++);
+			} else if ((ch < 0x80) && Character.isDigit(ch)) { /*
+																 * INTL: "C"
+																 * locale.
+																 */
+				Util.strtoul(format, formatIndex - 1, 10, interp.strtoulResult);
+				value = interp.strtoulResult.value;
+				if (format.charAt(interp.strtoulResult.index) == '$') {
+					formatIndex = interp.strtoulResult.index + 1;
+					ch = format.charAt(formatIndex++);
+					objIndex = (int) (value - 1);
+				}
+			}
+
+			/*
+			 * Parse any width specifier.
+			 */
+			int width;
+			if ((ch < 0x80) && Character.isDigit(ch)) { /* INTL: "C" locale. */
+				Util.strtoul(format, formatIndex - 1, 10, interp.strtoulResult);
+				width = (int) interp.strtoulResult.value;
+				formatIndex = interp.strtoulResult.index;
+				ch = format.charAt(formatIndex++);
+			} else {
+				width = 0;
+			}
+
+			/*
+			 * Handle any size specifier.
+			 */
+
+			switch (ch) {
+		
+
+			 case 'l':
+					// Rest of JTCL does not have bignum support, so we won't add it
+					// here
+				// if (formatIndex < format.length() &&
+				// format.charAt(formatIndex) == 'l') {
+				// flags |= SCAN_BIG;
+				// formatIndex++;
+				// ch = format.charAt(formatIndex++);
+				// break;
+				// }
+			case 'L':
+				flags |= SCAN_LONGER;
+				/*
+				 * Fall through so we skip to the next character.
+				 */
+			case 'h':
+				ch = format.charAt(formatIndex++);
+			}
+
+			/*
+			 * Handle the various field types.
+			 */
+			char op = ' ';
+
+			int radix = 0;
+			switch (ch) {
+			case 'n':
+				if ((flags & SCAN_SUPPRESS) == 0) {
+					TclObject objPtr = TclInteger.newInstance(stringIndex);
+					objs[objIndex++] = objPtr;
+				}
+				nconversions++;
+				continue;
+
+			case 'd':
+				op = 'i';
+				radix = 10;
+				break;
+			case 'i':
+				op = 'i';
+				radix = 0; // get it from prefix
+				break;
+			case 'o':
+				op = 'i';
+				radix = 8;
+				break;
+			case 'x':
+				op = 'i';
+				radix = 16;
+				break;
+			case 'b':
+				op = 'i';
+				radix = 2;
+				break;
+			case 'u':
+				op = 'i';
+				radix = 10;
+				flags |= SCAN_UNSIGNED;
+				break;
+
+			case 'f':
+			case 'e':
+			case 'g':
+				op = 'f';
+				break;
+
+			case 's':
+				op = 's';
+				break;
+
+			case 'c':
+				op = 'c';
+				flags |= SCAN_NOSKIP;
+				break;
+			case '[':
+				op = '[';
+				flags |= SCAN_NOSKIP;
+				break;
+			}
+
+			/*
+			 * At this point, we will need additional characters from the string
+			 * to proceed.
+			 */
+
+			if (stringIndex >= string.length()) {
+				underflow = true;
+				break DONE;
+			}
+
+			/*
+			 * Skip any leading whitespace at the beginning of a field unless
+			 * the format suppresses this behavior.
+			 */
+
+			if ((flags & SCAN_NOSKIP) == 0) {
+				while (stringIndex < string.length()) {
+					if (Character.isWhitespace(string.charAt(stringIndex))) {
+						++stringIndex;
+					} else {
+						break;
+					}
+				}
+				if (stringIndex == string.length()) {
+					underflow = true;
+					break DONE;
+				}
+			}
+
+			/*
+			 * Perform the requested scanning operation.
+			 */
+
+			switch (op) {
+			case 's':
+				/*
+				 * Scan a string up to width characters or whitespace.
+				 */
+				if (width == 0) {
+					width = Integer.MAX_VALUE;
+				}
+				int end = stringIndex;
+				while (end < string.length()) {
+					sch = string.charAt(end);
+					if (Character.isWhitespace(sch)) {
+						break;
+					}
+					end++;
+					if (--width == 0) {
+						break;
+					}
+				}
+
+				if ((flags & SCAN_SUPPRESS) == 0) {
+					TclObject objPtr = TclString.newInstance(string.substring(stringIndex, end));
+					objs[objIndex++] = objPtr;
+				}
+				stringIndex = end;
+				break;
+
+			case '[': {
+				CharSet cset = new CharSet(format, formatIndex);
+				formatIndex = cset.getEndOfFormat();
+
+				if (width == 0) {
+					width = Integer.MAX_VALUE;
+				}
+				end = stringIndex;
+
+				while (end < string.length()) {
+					sch = string.charAt(end);
+					if (!cset.charInSet(sch)) {
+						break;
+					}
+					++end;
+					if (--width == 0) {
+						break;
+					}
+				}
+
+				if (stringIndex == end) {
+					/*
+					 * Nothing matched the range, stop processing.
+					 */
+					break DONE;
+				}
+
+				if ((flags & SCAN_SUPPRESS) == 0) {
+					TclObject objPtr = TclString.newInstance(string.substring(stringIndex, end));
+					objs[objIndex++] = objPtr;
+				}
+				stringIndex = end;
+				break;
+			}
+
+			case 'c':
+				/*
+				 * Scan a single Unicode character.
+				 */
+				sch = string.charAt(stringIndex++);
+				if ((flags & SCAN_SUPPRESS) == 0) {
+					TclObject objPtr = TclInteger.newInstance(sch);
+					objs[objIndex++] = objPtr;
+				}
+				break;
+
+			case 'i':
+				/*
+				 * Scan an unsigned or signed integer.
+				 */
+				if (width == 0)
+					Util.strtoul(string, stringIndex, radix, interp.strtoulResult);
+				else {
+					if (stringIndex + width > string.length()) {
+						underflow = true;
+						break DONE;
+					}
+					String truncString = string.substring(0, stringIndex + width);
+					Util.strtoul(truncString, stringIndex, radix, interp.strtoulResult);
+				}
+				if (interp.strtoulResult.errno != TCL.INVALID_INTEGER) {
+					long v;
+					if (interp.strtoulResult.errno == TCL.INTEGER_RANGE) {
+						v = -1;
+					} else {
+						v = interp.strtoulResult.value;
+					}
+					stringIndex = interp.strtoulResult.index;
+					if ((flags & SCAN_SUPPRESS) == 0) {
+						objs[objIndex++] = TclInteger.newInstance(v);
+					}
+				} else {
+					if (width == 1 || string.length() == 1) {
+						/* special case when we underflow; see scan-4.44 */
+						underflow = (string.charAt(stringIndex) == '-' || string.charAt(stringIndex) == '+');
+					}
+					break DONE;
+				}
+
+				break;
+
+			case 'f':
+				/*
+				 * scan a floating point number
+				 */
+
+				if (width == 0)
+					Util.strtod(string, stringIndex, -1, interp.strtodResult);
+				else {
+					if (stringIndex + width > string.length()) {
+						underflow = true;
+						break DONE;
+					}
+					String truncString = string.substring(0, stringIndex + width);
+					Util.strtod(truncString, stringIndex, -1, interp.strtodResult);
+				}
+
+				if (interp.strtodResult.errno == 0) {
+					stringIndex = interp.strtodResult.index;
+					if ((flags & SCAN_SUPPRESS) == 0) {
+						objs[objIndex++] = TclDouble.newInstance(interp.strtodResult.value);
+					}
+				} else {
+					if (width == 1 || string.length() == 1) {
+						/* special case when we underflow; see scan-4.55 */
+						underflow = (string.charAt(stringIndex) == '-' || string.charAt(stringIndex) == '+');
+					}
+					break DONE;
+				}
+
+				break;
+			}
+			nconversions++;
 		}
 
-		// The numMatched is the return value: a count of the num of vars set.
-		// While the numUnMatched is the number of formatSpecifiers that
-		// passed the parsing stage, but did not match anything in the scanArr.
-
-		if ((numMatched + numUnMatched) != (argv.length - 3)) {
-			errorDiffVars(interp);
-		}
-		interp.setResult(numMatched);
-
-	}
-
-	/**
-	 * Given an array and an index into it, move the index forward until a
-	 * non-whitespace char is found.
-	 * 
-	 * @param arr
-	 *            - the array to search
-	 * @param index
-	 *            - where to begin the search
-	 * @return The index value where the whitespace ends.
-	 */
-
-	private int skipWhiteSpace(char[] arr, int index) {
-		boolean cont;
-		do {
-			if (index >= arr.length) {
-				return index;
+		int result = 0;
+		if (numVars > 0) {
+			/*
+			 * In this case, variables were specified (classic scan).
+			 */
+			StringBuffer varErrors = null;
+			for (int i = 0; i < totalVars; i++) {
+				if (objs[i] == null) {
+					continue;
+				}
+				result++;
+				try {
+					interp.setVar(objv[i + 3].toString(), objs[i], 0);
+				} catch (TclException e) {
+					// custom error message
+					if (varErrors == null)
+						varErrors = new StringBuffer();
+					// yes, errors really do get appended with no spaces
+					// between. See scan.test scan-4.61
+					varErrors.append("couldn't set variable \"").append(objv[i + 3].toString()).append('"');
+				}
 			}
-			cont = false;
-			switch (arr[index]) {
-			case '\t':
-			case '\n':
-			case '\r':
-			case '\f':
-			case ' ': {
-				cont = true;
-				index++;
-			}
-			}
-		} while (cont);
-
-		return index;
-	}
-
-	/**
-	 * Called whenever the cmdProc wants to set an interp value. This method
-	 * <ol>
-	 * <li>verifies that there exisits a varName from the argv array,
-	 * <li>that the variable either dosent exisit or is of type scalar
-	 * <li>set the variable in interp if (1) and (2) are OK
-	 * </ol>
-	 * 
-	 * @param interp
-	 *            - the Tcl interpreter
-	 * @param argv
-	 *            - the argument array
-	 * @param argIndex
-	 *            - the current index into the argv array
-	 * @param tobj
-	 *            - the TclObject that the varName equals
-	 * 
-	 */
-
-	private static void testAndSetVar(Interp interp, TclObject[] argv,
-			int argIndex, TclObject tobj) throws TclException {
-		if (argIndex < argv.length) {
-			try {
-				interp.setVar(argv[argIndex].toString(), tobj, 0);
-			} catch (TclException e) {
-				throw new TclException(interp, "couldn't set variable \""
-						+ argv[argIndex].toString() + "\"");
-			}
+			if (varErrors != null)
+				throw new TclException(interp, varErrors.toString());
 		} else {
-			errorDiffVars(interp);
+			/*
+			 * Here no vars were specified, we want a list returned (inline
+			 * scan)
+			 */
+			TclObject objPtr = TclList.newInstance();
+			for (int i = 0; i < totalVars; i++) {
+				if (objs[i] != null) {
+					TclList.append(interp, objPtr, objs[i]);
+				} else {
+					/*
+					 * More %-specifiers than matching chars, so we just spit
+					 * out empty strings for these.
+					 */
+					TclList.append(interp, objPtr, TclString.newInstance(""));
+				}
+			}
+			interp.setResult(objPtr);
+		}
+		if (underflow && (nconversions == 0)) {
+			if (numVars > 0) {
+				interp.setResult(-1);
+			} else {
+				interp.setResult("");
+			}
+		} else if (numVars > 0) {
+			interp.setResult(result);
 		}
 	}
 
 	/**
-	 * Called whenever the frmtIndex in the cmdProc is changed. It verifies the
-	 * the array index is still within the bounds of the array. If no throw
-	 * error.
+	 * Parse the format string and verify that it is properly formed and that
+	 * there are exactly enough variables on the command line.
 	 * 
 	 * @param interp
-	 *            - The TclInterp which called the cmdProc method .
-	 * @param arr
-	 *            - The array to be checked.
-	 * @param index
-	 *            - The new value for the array index.
+	 * 			   The current interpreter
+	 * @param format
+	 *            The format string
+	 * @param numVars
+	 *            The number of variables passed to the scan command
+	 * @return Number of variables that will be required.
+	 * @throws TclException
+	 *             if any invalid scan format is encountered.
 	 */
+	private int validateFormat(Interp interp, String format, int numVars) throws TclException {
+		boolean gotXpg = false;
+		boolean gotSequential = false;
+		int xpgSize = 0;
+		int objIndex = 0;
+		int flags = 0;
+		int[] nassign = new int[numVars == 0 ? 1 : numVars];
+		int value;
 
-	private static final void checkOverFlow(Interp interp, char[] arr, int index)
-			throws TclException {
-		if ((index >= arr.length) || (index < 0)) {
-			throw new TclException(interp,
-					"\"%n$\" argument index out of range");
+		/*
+		 * Initialize an array that records the number of times a variable is
+		 * assigned to by the format string. We use this to detect if a variable
+		 * is multiply assigned or left unassigned.
+		 */
+		for (int i = 0; i < nassign.length; i++) {
+			nassign[i] = 0;
 		}
+		int formatIndex = 0;
+		while (formatIndex < format.length()) {
+			char ch = format.charAt(formatIndex++);
+
+			flags = 0;
+
+			if (ch != '%') {
+				continue;
+			}
+
+			ch = format.charAt(formatIndex++);
+			if (ch == '%') {
+				continue;
+			}
+			if (ch == '*') {
+				flags |= SCAN_SUPPRESS;
+				ch = format.charAt(formatIndex++);
+			} else {
+				if (ch < 0x80 && Character.isDigit(ch)) {
+					/*
+					 * Check for an XPG3-style %n$ specification. Note: there
+					 * must not be a mixture of XPG3 specs and non-XPG3 specs in
+					 * the same format string.
+					 */
+					StrtoulResult result = new StrtoulResult();
+					Util.strtoul(format, formatIndex - 1, 10, result);
+					int endIndex = result.index;
+					if (format.charAt(endIndex) != '$') {
+						/* notXpg */
+						gotSequential = true;
+						if (gotXpg) {
+							errorBadField(interp, '$');
+						}
+					} else {
+						formatIndex = endIndex + 1;
+						ch = format.charAt(formatIndex++);
+						gotXpg = true;
+						if (gotSequential) {
+							errorBadField(interp, '$');
+						}
+						value = (int) result.value;
+						objIndex = value - 1;
+						if ((objIndex < 0) || (numVars != 0 && (objIndex >= numVars))) {
+							errorDiffVars(interp, gotXpg);
+						} else if (numVars == 0) {
+							/*
+							 * In the case where no vars are specified, the user
+							 * can specify %9999$ legally, so we have to
+							 * consider special rules for growing the assign
+							 * array. 'value' is guaranteed to be > 0.
+							 */
+							xpgSize = (xpgSize > (int) result.value) ? xpgSize : (int) result.value;
+
+						}
+
+					}
+				} else {
+					/* notGpg: */
+					gotSequential = true;
+					if (gotXpg) {
+						errorCannotMix(interp, '$');
+					}
+				}
+			}
+
+			/* xpgCheckDone: */
+
+			/*
+			 * Parse any width specifier.
+			 */
+
+			if ((ch < 0x80) && Character.isDigit(ch)) {
+				StrtoulResult result = new StrtoulResult();
+				Util.strtoul(format, formatIndex - 1, 10, result);
+				if (result.errno != 0) {
+					value = 0;
+				} else {
+					value = (int) result.value;
+				}
+				formatIndex = result.index;
+				flags |= SCAN_WIDTH;
+				ch = format.charAt(formatIndex++);
+			}
+
+			/*
+			 * Handle any size specifier.
+			 */
+
+			switch (ch) {
+			 
+			 case 'l':
+//				don't support bignum yet, since rest of JTCL does not
+//			 if (format.charAt(formatIndex)=='l') {
+//			 flags |= SCAN_BIG;
+//			 ++formatIndex;
+//			 ch = format.charAt(formatIndex++);
+//			 break;
+//			 }
+			case 'L':
+				flags |= SCAN_LONGER;
+			case 'h':
+				ch = format.charAt(formatIndex++);
+			}
+
+			if (!((flags & SCAN_SUPPRESS) != 0) && numVars > 0 && (objIndex >= numVars)) {
+				errorDiffVars(interp, gotXpg);
+			}
+
+			/*
+			 * Handle the various field types.
+			 */
+
+			switch (ch) {
+
+			case 'c':
+				if ((flags & SCAN_WIDTH) != 0) {
+					errorCharFieldWidth(interp);
+				}
+				// Fall through !
+
+			case 'n':
+			case 's':
+				if ((flags & (SCAN_LONGER | SCAN_BIG)) != 0) {
+					errorLonger(interp, ch);
+				}
+				// Fall through !
+			case 'd':
+			case 'e':
+			case 'f':
+			case 'g':
+			case 'i':
+			case 'o':
+			case 'x':
+			case 'b':
+				break;
+			case 'u':
+				if ((flags & SCAN_BIG) != 0) {
+					throw new TclException(interp, "unsigned bignum scans are invalid");
+				}
+				break;
+
+			/*
+			 * Bracket terms need special checking
+			 */
+			case '[':
+				if ((flags & (SCAN_LONGER | SCAN_BIG)) != 0) {
+					errorLonger(interp, ch);
+				}
+				if (formatIndex >= format.length()) {
+					errorBadSet(interp);
+				}
+				ch = format.charAt(formatIndex++);
+				if (ch == '^') {
+					if (formatIndex >= format.length()) {
+						errorBadSet(interp);
+					}
+					ch = format.charAt(formatIndex++);
+				}
+				if (ch == ']') {
+					if (formatIndex >= format.length()) {
+						errorBadSet(interp);
+					}
+					ch = format.charAt(formatIndex++);
+				}
+				while (ch != ']') {
+					if (formatIndex >= format.length()) {
+						errorBadSet(interp);
+					}
+					ch = format.charAt(formatIndex++);
+				}
+
+				break;
+
+			default:
+				errorBadConvChar(interp, ch);
+			}
+
+			if (!((flags & SCAN_SUPPRESS) != 0)) {
+				if (objIndex >= nassign.length) {
+					/*
+					 * Expand the nassign buffer. If we are using XPG
+					 * specifiers, make sure that we grow to a large enough
+					 * size. xpgSize is guaranteed to be at least one larger
+					 * than objIndex.
+					 */
+					int nspace;
+					if (xpgSize > 0)
+						nspace = xpgSize;
+					else
+						nspace = nassign.length + 16;
+
+					int[] newNassign = new int[nspace];
+					System.arraycopy(nassign, 0, newNassign, 0, nassign.length);
+					for (int i = nassign.length; i < newNassign.length; i++) {
+						newNassign[i] = 0;
+					}
+					nassign = newNassign;
+				}
+				nassign[objIndex]++;
+				objIndex++;
+			}
+
+		}
+
+		/*
+		 * Verify that all of the variable were assigned exactly once.
+		 */
+
+		if (numVars == 0) {
+			if (xpgSize != 0) {
+				numVars = xpgSize;
+			} else {
+				numVars = objIndex;
+			}
+		}
+
+		for (int i = 0; i < numVars; i++) {
+			if (nassign[i] > 1) {
+				errorMultipleAssignments(interp);
+			} else if (xpgSize == 0 && nassign[i] == 0) {
+				/*
+				 * If the space is empty, and xpgSize is 0 (means XPG wasn't
+				 * used, and/or numVars != 0), then too many vars were given
+				 */
+				errorNotAssigned(interp);
+			}
+		}
+
+		return numVars; /* equiv to C Tcl *totalSubs */
 	}
 
 	/**
@@ -573,10 +755,13 @@ public class ScanCmd implements Command {
 	 *            - The TclInterp which called the cmdProc method .
 	 */
 
-	private static final void errorDiffVars(Interp interp) throws TclException {
+	private static final void errorDiffVars(Interp interp, boolean gotXpg) throws TclException {
 
-		throw new TclException(interp,
-				"different numbers of variable names and field specifiers");
+		if (gotXpg) {
+			throw new TclException(interp, "\"%n$\" argument index out of range");
+		} else {
+			throw new TclException(interp, "different numbers of variable names and field specifiers");
+		}
 	}
 
 	/**
@@ -588,10 +773,21 @@ public class ScanCmd implements Command {
 	 *            - The erroneous character
 	 */
 
-	private static final void errorBadField(Interp interp, char fieldSpecifier)
-			throws TclException {
-		throw new TclException(interp, "cannot mix \"%\" and \"%n"
-				+ fieldSpecifier + "\" conversion specifiers");
+	private static final void errorCannotMix(Interp interp, char fieldSpecifier) throws TclException {
+		throw new TclException(interp, "cannot mix \"%\" and \"%n" + fieldSpecifier + "\" conversion specifiers");
+	}
+
+	/**
+	 * Called whenever the current char in the frmtArr is erroneous
+	 * 
+	 * @param interp
+	 *            - The TclInterp which called the cmdProc method .
+	 * @param fieldSpecifier
+	 *            - The erroneous character
+	 */
+
+	private static final void errorBadField(Interp interp, char fieldSpecifier) throws TclException {
+		throw new TclException(interp, "cannot mix \"%\" and \"%n" + fieldSpecifier + "\" conversion specifiers");
 	}
 
 	/**
@@ -602,9 +798,254 @@ public class ScanCmd implements Command {
 	 *            - The TclInterp which called the cmdProc method .
 	 */
 
-	private static final void errorCharFieldWidth(Interp interp)
-			throws TclException {
-		throw new TclException(interp,
-				"field width may not be specified in %c conversion");
+	private static final void errorCharFieldWidth(Interp interp) throws TclException {
+		throw new TclException(interp, "field width may not be specified in %c conversion");
+	}
+
+	/**
+	 * Called whenever a long conversion is invalid specifier
+	 * 
+	 * @param interp
+	 *            - The TclInterp which called the cmdProc method .
+	 */
+
+	private static final void errorLonger(Interp interp, char ch) throws TclException {
+		throw new TclException(interp, "'l' modifier may not be specified in " + ch + " conversion");
+	}
+
+	/**
+	 * Called whenever a set is invalid
+	 * 
+	 * @param interp
+	 *            - The TclInterp which called the cmdProc method .
+	 */
+
+	private static final void errorBadSet(Interp interp) throws TclException {
+		throw new TclException(interp, "unmatched [ in format string");
+	}
+
+	/**
+	 * Called whenever a bad conversion character is found
+	 * 
+	 * @param interp
+	 *            - The TclInterp which called the cmdProc method .
+	 */
+
+	private static final void errorBadConvChar(Interp interp, char ch) throws TclException {
+		throw new TclException(interp, "bad scan conversion character \"" + ch + "\"");
+	}
+
+	/**
+	 * Called whenever a variable is assigned multiple times
+	 * 
+	 * @param interp
+	 *            - The TclInterp which called the cmdProc method .
+	 */
+
+	private static final void errorMultipleAssignments(Interp interp) throws TclException {
+		throw new TclException(interp, "variable is assigned by multiple \"%n$\" conversion specifiers");
+	}
+
+	/**
+	 * Called whenever a variable is not assigned
+	 * 
+	 * @param interp
+	 *            - The TclInterp which called the cmdProc method .
+	 */
+
+	private static final void errorNotAssigned(Interp interp) throws TclException {
+		throw new TclException(interp, "variable is not assigned by any conversion specifiers");
+	}
+
+	/**
+	 * Encapsulates a character set such as [ab0-9]
+	 * 
+	 */
+	private static class CharSet {
+		/**
+		 * True if CharSet starts with '^' indicating it has chars to be
+		 * excluded
+		 */
+		boolean exclude = false;
+		/**
+		 * List of chars in the character set
+		 */
+		String chars = null;
+		/**
+		 * Ranges of chars in the character set; may be null
+		 */
+		Range[] ranges = null;
+		/**
+		 * Index of the first character after the end of the charset's ']' in
+		 * the format string passed to the constructor
+		 */
+		int endOfFormat;
+
+		/**
+		 * Create a new CharSet
+		 * 
+		 * @param format
+		 *            Format string which may contain other format information
+		 * @param formatIndex
+		 *            index of first character in format after opening '[' of
+		 *            Charset
+		 */
+		CharSet(String format, int formatIndex) {
+			char ch;
+			int offset = 0;
+			int endIndex = 0;
+
+			ch = format.charAt(formatIndex);
+			offset = 1;
+			if (ch == '^') {
+				exclude = true;
+				formatIndex += offset;
+				ch = format.charAt(formatIndex);
+				offset = 1;
+			}
+			endIndex = formatIndex + offset;
+			/*
+			 * Find the close bracket, but get past the first one
+			 */
+			if (ch == ']') {
+				ch = format.charAt(endIndex++);
+			}
+			int nranges = 0;
+
+			while (ch != ']' && endIndex < format.length()) {
+				if (ch == '-')
+					nranges++;
+				ch = format.charAt(endIndex++);
+			}
+			StringBuffer charsbuf = new StringBuffer();
+			if (nranges > 0) {
+				ranges = new Range[nranges];
+			} else {
+				ranges = null;
+			}
+			nranges = 0;
+
+			ch = format.charAt(formatIndex++);
+			char start = ch;
+			if (ch == ']' || ch == '-') {
+				charsbuf.append(ch);
+				ch = format.charAt(formatIndex++);
+			}
+			while (ch != ']') {
+				char nextChar = (formatIndex < format.length()) ? format.charAt(formatIndex) : 0;
+				if (nextChar == '-') {
+					/*
+					 * This may be first char of a range, so don't add it yet
+					 */
+					start = ch;
+				} else if (ch == '-') {
+					/*
+					 * Check to see if this is the last character in the set, in
+					 * which case it is not a range and we should add the
+					 * previous character as well as the dash.
+					 */
+					if (nextChar == ']') {
+						charsbuf.append(start);
+						charsbuf.append(ch);
+					} else {
+						ch = format.charAt(formatIndex++);
+						ranges[nranges] = new Range(start, ch);
+						nranges++;
+					}
+				} else {
+					charsbuf.append(ch);
+				}
+
+				ch = format.charAt(formatIndex++);
+			}
+			endOfFormat = formatIndex;
+			chars = charsbuf.toString();
+		}
+
+		/**
+		 * @return the next character to continue processing from in the format
+		 *         string
+		 */
+		int getEndOfFormat() {
+			return endOfFormat;
+		}
+
+		/**
+		 * 
+		 * @param ch
+		 *            character to test
+		 * @return true if a character is included in the character set
+		 */
+		private boolean charInSet(char ch) {
+			boolean match = false;
+			if (chars.indexOf(ch) >= 0) {
+				match = true;
+			} else if (ranges != null) {
+				for (int i = 0; i < ranges.length; i++) {
+					if (ranges[i] != null && ranges[i].isInRange(ch)) {
+						match = true;
+						break;
+					}
+				}
+			}
+
+			return exclude ? !match : match;
+		}
+
+		@Override
+		public String toString() {
+			StringBuffer sb = new StringBuffer();
+			sb.append('[');
+			if (exclude)
+				sb.append('^');
+			if (chars != null)
+				sb.append(chars);
+			if (ranges != null) {
+				for (Range r : ranges) {
+					if (r != null)
+						sb.append(r.start).append('-').append(r.end);
+				}
+			}
+			sb.append(']');
+			return sb.toString();
+		}
+	}
+
+	/**
+	 * Represents a range of characters, such as [a-z]
+	 * 
+	 */
+	private static class Range {
+		char start;
+		char end;
+
+		/**
+		 * Create a new Range of characters
+		 * 
+		 * @param a
+		 *            one character in range
+		 * @param b
+		 *            other character in range
+		 */            
+		Range(char a, char b) {
+			if (a < b) {
+				start = a;
+				end = b;
+			} else {
+				start = b;
+				end = a;
+			}
+		}
+
+		/**
+		 * Test if a character is within the range of this Range
+		 * 
+		 * @param c
+		 *            character to test
+		 * @return true if character is inclusively within this Range
+		 */
+		final boolean isInRange(char c) {
+			return (c >= start && c <= end);
+		}
 	}
 }
