@@ -91,6 +91,12 @@ public class Interp extends EventuallyFreed {
 	public HashMap<String, Channel> interpChanTable;
 
 	/**
+	 * Set to true if [encoding system] can set the encoding
+	 * for stdout and stderr.  This is an attempt to replicate
+	 * TCL behavior seen in encoding.test encoding-24.3
+	 */
+	public boolean systemEncodingChangesStdoutStderr = true;
+	/**
 	 *  The Notifier associated with this Interp.
 	 */
 	private Notifier notifier;

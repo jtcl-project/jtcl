@@ -22,6 +22,7 @@ import tcl.lang.Interp;
 import tcl.lang.StrtodResult;
 import tcl.lang.StrtoulResult;
 import tcl.lang.TCL;
+import tcl.lang.TclByteArray;
 import tcl.lang.TclException;
 import tcl.lang.TclIndex;
 import tcl.lang.TclInteger;
@@ -600,14 +601,22 @@ public class StringCmd implements Command {
 			if (objv.length != 3) {
 				throw new TclNumArgsException(interp, 2, objv, "string");
 			}
-			interp.setResult(Utf8Count(objv[2].toString()));
+			if (objv[2].isByteArrayType()) {
+				interp.setResult(TclByteArray.getLength(interp, objv[2]));
+			} else {
+				interp.setResult(Utf8Count(objv[2].toString()));
+			}
 			break;
 
 		case STR_LENGTH: {
 			if (objv.length != 3) {
 				throw new TclNumArgsException(interp, 2, objv, "string");
 			}
-			interp.setResult(objv[2].toString().length());
+			if (objv[2].isByteArrayType()) {
+				interp.setResult(TclByteArray.getLength(interp, objv[2]));
+			} else {
+				interp.setResult(objv[2].toString().length());
+			}
 			break;
 		}
 
@@ -746,8 +755,14 @@ public class StringCmd implements Command {
 						"string first last");
 			}
 
-			String string1 = objv[2].toString();
-			int length1 = string1.length();
+			String string1=null;
+			int length1;
+			if (objv[2].isByteArrayType()) {
+				length1 = TclByteArray.getLength(interp, objv[2]);
+			} else {
+				string1 = objv[2].toString();
+				length1 = string1.length();
+			}
 
 			int first = Util.getIntForIndex(interp, objv[3], length1 - 1);
 			if (first < 0) {
@@ -761,7 +776,13 @@ public class StringCmd implements Command {
 			if (first > last) {
 				interp.resetResult();
 			} else {
-				interp.setResult(string1.substring(first, last + 1));
+				if (string1==null) {
+					byte [] bytes = TclByteArray.getBytes(interp, objv[2]);
+					TclObject rv = TclByteArray.newInstance(bytes, first, last+1-first);
+					interp.setResult(rv);
+				} else {
+					interp.setResult(string1.substring(first, last + 1));
+				}
 			}
 			break;
 		}

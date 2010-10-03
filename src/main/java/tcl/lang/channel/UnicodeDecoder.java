@@ -10,6 +10,8 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
 import java.nio.charset.CodingErrorAction;
 
+import tcl.lang.cmd.EncodingCmd;
+
 /**
  * This class implements Unicode decoding for Tcl input Channels. It is similar
  * to an InputStreamReader, but can report on its internal buffering, and
@@ -78,7 +80,7 @@ class UnicodeDecoder extends Reader {
 			return;
 		encoding = requestedEncoding;
 
-		if (encoding != null) {
+		if (encoding != null && ! "symbol".equals(encoding)) {
 			Charset cs = Charset.forName(encoding);
 			csd = cs.newDecoder();
 			csd.onMalformedInput(CodingErrorAction.REPLACE);
@@ -267,10 +269,10 @@ class UnicodeDecoder extends Reader {
 				in.unread(bb.get());
 			}
 			return cb.position() - off;
+			
 		} else {
-
 			/*
-			 * otherwise, do a binary encoding, which means just translate bytes
+			 * otherwise, do a binary or symbol encoding, which means just translate bytes
 			 * to chars
 			 */
 
@@ -280,8 +282,13 @@ class UnicodeDecoder extends Reader {
 				eofSeen = true;
 				return -1;
 			}
-			for (int i = 0; i < cnt; i++) {
-				cbuf[i + off] = (char) (bbuf[i] & 0xff);
+			if (encoding!=null) {
+				/* must be symbol encoding */
+				EncodingCmd.decodeSymbol(bbuf, cbuf, off, cnt);
+			} else {
+				for (int i = 0; i < cnt; i++) {
+					cbuf[i + off] = (char) (bbuf[i] & 0xff);
+				}
 			}
 			return cnt;
 		}

@@ -13,6 +13,10 @@
 
 package tcl.lang.cmd;
 
+
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
 import java.nio.charset.Charset;
@@ -27,15 +31,19 @@ import tcl.lang.Command;
 import tcl.lang.Interp;
 import tcl.lang.TclByteArray;
 import tcl.lang.TclException;
+import tcl.lang.TclIO;
 import tcl.lang.TclIndex;
 import tcl.lang.TclList;
 import tcl.lang.TclNumArgsException;
 import tcl.lang.TclObject;
 import tcl.lang.TclRuntimeError;
 import tcl.lang.TclString;
+import tcl.lang.channel.Channel;
 
 /**
  * This class implements the built-in "encoding" command in Tcl.
+ * It's also the home for the global systemEncoding property,
+ * and translates between TCL encoding names and Java Encoding names.
  */
 
 public class EncodingCmd implements Command {
@@ -46,7 +54,7 @@ public class EncodingCmd implements Command {
 	public static String systemTclEncoding = null;
 	/**
 	 * The java equivalent name (either java.nio or java.io/java.lang) of the value
-	 * returned fomr 'encoding system'
+	 * returned for 'encoding system'
 	 */
 	public static String systemJavaEncoding = null;
 
@@ -75,7 +83,9 @@ public class EncodingCmd implements Command {
 	 */
 	static Hashtable<String, EncodingMap> encodeHash;
 
-	static EncodingMap[] encodings = { new EncodingMap("identity", "ISO-8859-1", 1),
+	static EncodingMap[] encodings = { 
+		    new EncodingMap("identity", "UTF8", 1),  // this is not really true; convertfrom/convertto handle it differently
+		    new EncodingMap("symbol", "ASCII",1), // not really true; handled as a special case
 			new EncodingMap("utf-8", "UTF8", 1),
 			new EncodingMap("utf-16", "UTF16", 2),
 			new EncodingMap("unicode", "ISO-10646-UCS-2", 2),
@@ -107,15 +117,15 @@ public class EncodingCmd implements Command {
 			new EncodingMap("cp866", "Cp866", 1),
 			new EncodingMap("cp869", "Cp869", 1),
 			new EncodingMap("cp874", "Cp874", 1),
-			new EncodingMap("cp932", "Cp942", 0),
+			new EncodingMap("cp932", "Cp943", 0),  // this mapping reduces the number of encoding.test errors
 			new EncodingMap("cp936", "Cp936", 0),
 			new EncodingMap("cp949", "Cp949", 0),
 			new EncodingMap("cp950", "Cp950", 0),
 			new EncodingMap("euc-cn", "EUC_cn", 0),
 			new EncodingMap("euc-jp", "EUC_jp", 0),
 			new EncodingMap("euc-kr", "EUC_kr", 0),
-			new EncodingMap("iso2022", "ISO2022JP", -1),
-			new EncodingMap("iso2022-jp", "ISO2022JP", -1),
+			new EncodingMap("iso2022", "ISO-2022-JP-2", -1),  // C Tcl's mapping files looks like ISO2022-JP-2
+			new EncodingMap("iso2022-jp", "ISO-2022-JP-2", -1),  // C Tcl's mapping file looks like ISO2022-JP-2
 			new EncodingMap("iso2022-kr", "ISO2022KR", -1),
 			new EncodingMap("iso8859-1", "ISO-8859-1", 1),
 			new EncodingMap("ansi_x3.4-1968", "ISO-8859-1", 1),
@@ -146,10 +156,11 @@ public class EncodingCmd implements Command {
 			new EncodingMap("macJapan", "MacJapan", 0),
 			new EncodingMap("macRoman", "MacRoman", 1),
 			new EncodingMap("macRomania", "MacRomania", 1),
+			new EncodingMap("macSymbol", "MacSymbol", 1),
 			new EncodingMap("macThai", "MacThai", 1),
 			new EncodingMap("macTurkish", "MacTurkish", 1),
 			new EncodingMap("macUkraine", "MacUkraine", 1),
-			new EncodingMap("shiftjis", "SJIS", 0) };
+			new EncodingMap("shiftjis","Shift_JIS", 0) };
 
 	static {
 		// Store entries in a Hashtable, so that access from
@@ -206,6 +217,29 @@ public class EncodingCmd implements Command {
 		}
 	}
 
+	/**
+	 * This table maps Tcl's built-in 'symbol' encoding to Unicode characters; it is derived from symbol.enc in the Tcl source
+	 * It covers the symbols from 0x40 to 0x7A
+	 */
+	static final private char [] symbolEncoding0x40to0x7A = {	
+		'\u2245','\u0391','\u0392','\u03A7','\u0394','\u0395','\u03A6','\u0393','\u0397','\u0399','\u03D1','\u039A','\u039B','\u039C','\u039D','\u039F',
+		'\u03A0','\u0398','\u03A1','\u03A3','\u03A4','\u03A5','\u03C2','\u03A9','\u039E','\u03A8','\u0396','\u005B','\u2234','\u005D','\u22A5','\u005F',
+		'\uF8E5','\u03B1','\u03B2','\u03C7','\u03B4','\u03B5','\u03C6','\u03B3','\u03B7','\u03B9','\u03D5','\u03BA','\u03BB','\u03BC','\u03BD','\u03BF',
+		'\u03C0','\u03B8','\u03C1','\u03C3','\u03C4','\u03C5','\u03D6','\u03C9','\u03BE','\u03C8','\u03B6'};
+	
+	/**
+	 * This table maps Tcl's built-in 'symbol' encoding to Unicode characters; it is derived from symbol.enc in the Tcl source
+	 * It covers the symbols from 0xA0 to 0xFF
+	 */
+	static final private char [] symbolEncoding0xA0to0xFF = {	
+		'\u0000','\u03D2','\u2032','\u2264','\u2044','\u221E','\u0192','\u2663','\u2666','\u2665','\u2660','\u2194','\u2190','\u2191','\u2192','\u2193',
+		'\u00B0','\u00B1','\u2033','\u2265','\u00D7','\u221D','\u2202','\u2022','\u00F7','\u2260','\u2261','\u2248','\u2026','\uF8E6','\uF8E7','\u21B5',
+		'\u2135','\u2111','\u211C','\u2118','\u2297','\u2295','\u2205','\u2229','\u222A','\u2283','\u2287','\u2284','\u2282','\u2286','\u2208','\u2209',
+		'\u2220','\u2207','\u00AE','\u00A9','\u2122','\u220F','\u221A','\u22C5','\u00AC','\u2227','\u2228','\u21D4','\u21D0','\u21D1','\u21D2','\u21D3',
+		'\u22C4','\u2329','\uF8E8','\uF8E9','\uF8EA','\u2211','\uF8EB','\uF8EC','\uF8ED','\uF8EE','\uF8EF','\uF8F0','\uF8F1','\uF8F2','\uF8F3','\uF8F4',
+		'\uF8FF','\u232A','\u222B','\u2320','\uF8F5','\u2321','\uF8F6','\uF8F7','\uF8F8','\uF8F9','\uF8FA','\uF8FB','\uF8FC','\uF8FD','\uF8FE','\u0000'};
+	
+		
 	static final private String validCmds[] = { "convertfrom", "convertto",
 			"names", "system", };
 
@@ -262,23 +296,41 @@ public class EncodingCmd implements Command {
 						// preserve the original bytes as a TclByteArray
 						TclByteArray.getLength(interp, data);
 						interp.setResult(data);
-					} else { 
+					} else if (tclEncoding.equals("symbol")) {
+						char [] cbuf = new char[TclByteArray.getLength(interp,data)];
+						decodeSymbol(TclByteArray.getBytes(interp, data), cbuf, 0, cbuf.length);
+						interp.setResult(new String(cbuf));
+					} else {
 						interp.setResult(TclByteArray.decodeToString(interp, data, tclEncoding));
 					}
-				} else {
-					byte[] bytes;
+				} else /* OPT_CONVERTTO */ {
 					if (tclEncoding.equals("identity")) {
-						// convert to TclByteArray
-						TclByteArray.getLength(interp, data);
-						interp.setResult(data);
+						if (data.isByteArrayType())
+							interp.setResult(data);
+						else {
+							// convert to TclByteArray, using modified UTF8, where \u0000 is 0xc0 0x80
+							// We'll use a DataOutputStream.writeUTF() to do this for us
+							ByteArrayOutputStream bos = new ByteArrayOutputStream(data.toString().length()*3);
+							DataOutputStream dos = new DataOutputStream(bos);
+							dos.writeUTF(data.toString());
+							
+							byte [] bytes = bos.toByteArray();
+							interp.setResult(TclByteArray.newInstance(bytes, 2, bytes.length-2));
+						}
+					} else if (tclEncoding.equals("symbol")) {
+						byte [] bbuf = encodeSymbol(data.toString().toCharArray(), 0, data.toString().length());
+						interp.setResult(TclByteArray.newInstance(bbuf, 0, bbuf.length));
 					} else {
-						interp.setResult(TclByteArray.newInstance(data.toString().getBytes(javaEncoding)));
+						TclObject rv = TclByteArray.newInstance(data.toString().getBytes(javaEncoding));
+						interp.setResult(rv);
 					}
 				}
 
 			} catch (UnsupportedEncodingException ex) {
 				throw new TclException(interp,"Encoding.cmdProc() error: "
 						+ "unsupported java encoding \"" + javaEncoding + "\"");
+			} catch (IOException e) {
+				 throw new TclException(interp, e.getMessage());
 			}
 
 			break;
@@ -324,6 +376,15 @@ public class EncodingCmd implements Command {
 
 				systemTclEncoding = tclEncoding;
 				systemJavaEncoding = javaEncoding;
+				
+				/* TCL probably does this differently, but it's the easiest way to implement in JTCL */
+				if (interp.systemEncodingChangesStdoutStderr) {
+					Channel chan = TclIO.getChannel(interp, "stdout");
+					if (chan!=null) chan.setEncoding(systemJavaEncoding);
+					chan = TclIO.getChannel(interp, "stderr");
+					if (chan!=null) chan.setEncoding(systemJavaEncoding);
+					interp.systemEncodingChangesStdoutStderr = true; // reset it because getChannel() cleared it
+				}
 			}
 
 			break;
@@ -387,7 +448,8 @@ public class EncodingCmd implements Command {
 
 	/**
 	 * 
-	 * @param name java encoding name, as from getJavaName()
+	 * @param name
+	 *            java encoding name, as from getJavaName()
 	 * @return true if the encoding is supported in this JRE
 	 */
 	static boolean isSupported(String name) {
@@ -396,10 +458,6 @@ public class EncodingCmd implements Command {
 		if (map == null) {
 			return false;
 		}
-
-		// FIXME: Could load the supported charset map once, then
-		// use it over and over. If lots of calls to [encoding names]
-		// is made, this could make a big diff.
 
 		// Load the encoding at runtime
 		Charset cs;
@@ -421,5 +479,66 @@ public class EncodingCmd implements Command {
 
 		return cs.canEncode();
 	}
-
+	
+	/**
+	 * Decode bytes encoded in Tcl's symbol encoding into a character array.
+	 * We probably should have done this by registering a Java CharSet,
+	 * but that's a lot of code for this not-often-used encoding.
+	 * 
+	 * @param bbuf binary data that contains a symbol encodes string
+	 * @param cbuf character buffer to fill with data s
+	 * @param off offset to filling cbuf
+	 * @param len number of characters to add to cbuf
+	 */
+	public static void decodeSymbol(byte [] bbuf, char[] cbuf, int off, int len) {
+		for (int i=0; i<len; i++) {
+			int byteVal = bbuf[i] & 0xff;
+			if (byteVal < 0x40) { 
+				cbuf[i+off] = (char)byteVal;
+			} else if (byteVal < 0x7b) {
+				cbuf[i+off] = symbolEncoding0x40to0x7A[byteVal-0x40];
+			} else if (byteVal < 0xA0) {
+				cbuf[i+off] = (char)byteVal;
+			} else {
+				cbuf[i+off] = symbolEncoding0xA0to0xFF[byteVal-0xA0];
+			}
+		}
+	}
+	
+	/**
+	 * Encode chars into Tcl's symbol encoding into a byte  array.
+	 * We probably should have done this by registering a Java CharSet,
+	 * but that's a lot of code for this not-often-used encoding.
+	 * 
+	 * @param cbuf character data to encode in 'symbol' encoding
+	 * @param off offset to start encoding
+	 * @param len number of characters to encode
+	 * @return a byte array of lenght len containing encoded data
+	 */
+	public static byte [] encodeSymbol(char [] cbuf, int off, int len) {
+		byte [] bbuf = new byte[len];
+		for (int i=off; i<off+len; i++) {
+			if ( (cbuf[i] <= '\u00ff')) {
+				bbuf[i-off] = (byte)(cbuf[i] & 0xff);
+			} else {
+				boolean notFound=true;
+				for (int j=0; notFound && j<symbolEncoding0x40to0x7A.length; j++) {
+					if (cbuf[i]==symbolEncoding0x40to0x7A[j]) {
+						notFound=false;
+						bbuf[i-off] = (byte)(j+0x40);
+					}
+				}
+				for (int j=0; notFound && j<symbolEncoding0xA0to0xFF.length; j++) {
+					if (cbuf[i]==symbolEncoding0xA0to0xFF[j]) {
+						notFound=false;
+						bbuf[i-off] = (byte)(j+0xA0);
+					}
+				}
+				if (notFound) {
+					bbuf[i-off] = 0x3f;
+				}
+			}
+		}
+		return bbuf;
+	}
 }

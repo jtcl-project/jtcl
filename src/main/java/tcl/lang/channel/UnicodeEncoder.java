@@ -11,6 +11,8 @@ import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CoderResult;
 import java.nio.charset.CodingErrorAction;
 
+import tcl.lang.cmd.EncodingCmd;
+
 /**
  * Encodes Unicode characters into the requested encoding. Supports Tcl's
  * 'binary' encoding. Similar to a OutputStreamWriter, but prevents any internal
@@ -61,7 +63,7 @@ class UnicodeEncoder extends Writer {
 			return;
 
 		encoding = requestedEncoding;
-		if (encoding == null)
+		if (encoding == null || "symbol".equals(encoding))
 			cse = null;
 		else {
 			cse = Charset.forName(encoding).newEncoder();
@@ -119,12 +121,19 @@ class UnicodeEncoder extends Writer {
 
 		} else {
 			/*
-			 * cse is null, which means we are doing a binary encoding - just
+			 * cse is null, which means we are doing a binary or symbol encoding - just
 			 * move chars to bytes
 			 */
-			byte[] bbuf = new byte[len];
-			for (int i = 0; i < len; i++) {
-				bbuf[i] = (byte) (cbuf[i + off] & 0xff);
+			byte[] bbuf;
+			
+			if (encoding==null) {
+				bbuf = new byte[len];
+				for (int i = 0; i < len; i++) {
+					bbuf[i] = (byte) (cbuf[i + off] & 0xff);
+				}
+			} else {
+				/* symbol encoding */
+				bbuf = EncodingCmd.encodeSymbol(cbuf, off, len);
 			}
 			out.write(bbuf, 0, len);
 		}

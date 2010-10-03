@@ -144,6 +144,10 @@ public class TclIO {
 	public static Channel getChannel(Interp interp, String chanName) {
 		HashMap<String, Channel> chanTable = getInterpChanTable(interp);
 
+		/* Once we request stdin/stderr, [system encoding VALUE] can't change its encoding */
+		if (interp.systemEncodingChangesStdoutStderr && ("stdout".equals(chanName) || "stderr".equals(chanName))) {
+			interp.systemEncodingChangesStdoutStderr = false;
+		}
 		if (chanTable.containsKey(chanName)) {
 			return chanTable.get(chanName);
 		} else {
@@ -171,6 +175,9 @@ public class TclIO {
 	public static void getChannelNames(Interp interp, TclObject pattern) throws TclException {
 		Iterator<String> it = getInterpChanTable(interp).keySet().iterator();
 
+		/* Once we request stdin/stderr, [system encoding VALUE] can't change its encoding */
+		interp.systemEncodingChangesStdoutStderr = false;
+		
 		while (it.hasNext()) {
 			String chanName = it.next();
 
@@ -265,8 +272,11 @@ public class TclIO {
 	public static void giveChannel(Interp master, Interp slave, String chanName, boolean removeFromMaster)
 			throws TclException {
 
+		
 		HashMap<String, Channel> masterTable = getInterpChanTable(master);
 		HashMap<String, Channel> slaveTable = getInterpChanTable(slave);
+		
+		slave.systemEncodingChangesStdoutStderr = false;
 
 		Channel channel = masterTable.get(chanName);
 		if (channel != null) {
@@ -343,9 +353,8 @@ public class TclIO {
 	 */
 	static HashMap<String, Channel> getInterpChanTable(Interp interp) {
 		Channel chan;
-
+		
 		if (interp.interpChanTable == null) {
-
 			interp.interpChanTable = new HashMap<String, Channel>();
 
 			chan = getStdChannel(StdChannel.STDIN);
