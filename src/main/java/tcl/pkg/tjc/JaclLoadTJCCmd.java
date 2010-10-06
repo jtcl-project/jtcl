@@ -24,7 +24,7 @@ import tcl.lang.TclObject;
  * Jacl.
  */
 
-class JaclLoadTJCCmd implements Command {
+public class JaclLoadTJCCmd implements Command {
 
 	public void cmdProc(Interp interp, // Current interpreter.
 			TclObject[] objv) // Arguments to "jaclloadtjc" cmd
