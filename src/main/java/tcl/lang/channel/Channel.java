@@ -263,8 +263,8 @@ public abstract class Channel {
 				return -1;
 			}
 
-			/* do we read characters or bytes? */
-			boolean readChars = (encoding != null || (inputTranslation != TclIO.TRANS_BINARY || inputTranslation != TclIO.TRANS_LF));
+			/* do we read characters or bytes? Must read characters if encoding is not binary or a non-LF EOL char */
+			boolean readChars = ! (encoding == null && (inputTranslation == TclIO.TRANS_BINARY || inputTranslation == TclIO.TRANS_LF));
 			if (readChars) {
 				TclString.empty(tobj);
 			} else {
@@ -326,14 +326,13 @@ public abstract class Channel {
 						TclString.append(tobj, buf, 0, cnt);
 					total += cnt;
 				}
-				if (eofSeen && total == 0) {
-					setOwnership(false, READ_OWNERSHIP);
-					return -1;
-				}
-
 				if (!readChars) {
 					// trim the TclByteArray
 					TclByteArray.setLength(interp, tobj, total);
+				}
+				if (eofSeen && total == 0) {
+					setOwnership(false, READ_OWNERSHIP);
+					return -1;
 				}
 				setOwnership(false, READ_OWNERSHIP);
 				return total;
