@@ -3503,6 +3503,9 @@ public class Interp extends EventuallyFreed {
 			// information should be copied.
 			throws TclException {
 		if (sourceInterp == this) {
+			if (result != TCL.OK) {
+				throw new TclException(this, getResult().toString(), result);
+			}
 			return;
 		}
 
