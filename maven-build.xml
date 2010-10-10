@@ -54,6 +54,8 @@
 
   <target name="clean" description="Clean the output directory">
     <delete dir="${maven.build.dir}"/>
+    <delete file="tjc.jar"/>
+    <delete file="tjcsrc.jar"/>
   </target>
 
   <!-- ====================================================================== -->
@@ -77,7 +79,13 @@
       <classpath refid="build.classpath"/>
     </javac>
     <copy todir="${maven.build.outputDir}">
-      <fileset dir="${maven.build.resourceDir.0}"/>
+      <fileset dir="${maven.build.resourceDir.0}">
+         <exclude name="**/pkg/tjc/library/*.tcl"/>
+      </fileset>
+      <fileset dir="${maven.build.resourceDir.0}">
+         <include name="**/pkg/tjc/library/tjc.tcl"/>
+         <include name="**/pkg/tjc/library/tjcthread.tcl"/>
+      </fileset>
     </copy>
   </target>
 
@@ -110,6 +118,33 @@
     <copy todir="${maven.build.testOutputDir}">
       <fileset dir="${maven.build.testResourceDir.0}"/>
     </copy>
+  </target>
+
+
+  <target name="test-tjc-status" >
+    <condition property="tjc.absent">
+        <not>
+        <available file="${maven.build.dir}/tjc.jar"> 
+        </available>
+        </not>
+      </condition>
+   </target>
+
+  <!-- ====================================================================== -->
+  <!-- Generate TJC Java files  target                                        -->
+  <!-- ====================================================================== -->
+
+  <target  depends="compile,test-tjc-status" if="tjc.absent"  description="Generate TJC Java files" name="tjcgen">
+    <java fork="yes" classname="tcl.pkg.tjc.TJCShell" dir="${maven.build.dir}">
+      <classpath>
+        <pathelement location="${maven.build.resourceDir.0}"/>
+        <pathelement location="${maven.build.outputDir}"/>
+      </classpath>
+      <arg value="../src/main/resources/tcl/pkg/tjc/library/tjc.tjc"/>
+    </java>
+    <unjar src="${maven.build.dir}/tjc.jar"
+         dest="${maven.build.outputDir}">
+    </unjar>
   </target>
 
   <!-- ====================================================================== -->
@@ -206,7 +241,7 @@
   <!-- Package target                                                         -->
   <!-- ====================================================================== -->
 
-  <target name="package" depends="compile,test" description="Package the application">
+  <target name="package" depends="compile,test,tjcgen" description="Package the application">
     <jar jarfile="${maven.build.dir}/${maven.build.finalName}.jar" 
          compress="true" 
          index="false" 
