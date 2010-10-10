@@ -85,12 +85,12 @@ proc validate_options {} {
 }
 
 # Process jdk config values defined in jdk.cfg
-# in root/bin/jdk.cfg.
+# in root/jdk.cfg.
 
 proc process_jdk_config {} {
-    global _tjc env
+    global _tjc env _jdk_config
 
-    set debug 0
+    set debug 1
     if {$_tjc(debug)} {
         set debug 1
     }
@@ -100,20 +100,27 @@ proc process_jdk_config {} {
             [info exists env(TJC_BUILD_DIR)]} {
         set jdk_cfg $env(TJC_BUILD_DIR)/jdk.cfg
     } else {
-        set jdk_cfg [file join $_tjc(root) bin jdk.cfg]
+        set jdk_cfg [file join $_tjc(root) jdk.cfg]
     }
+    set _jdk_config(CLASSPATH) $env(CLASSPATH)
+    set _jdk_config(JAVAC)  [file join $env(java.home) bin javac]
+    set _jdk_config(JAR)  [file join $env(java.home) bin jar]
 
-    if {$debug || $_tjc(progress)} {
-        puts "loading $jdk_cfg"
-    }
+    if {[file exists $jdk_cfg]} {
+        if {$debug || $_tjc(progress)} {
+            puts "loading $jdk_cfg"
+        }
 
-    set res [jdk_config_parse_file $jdk_cfg]
-    if {[lindex $res 0] == 0} {
-        puts stderr "Error loading $jdk_cfg : [lindex $res 1]"
-        return -1
+        set res [jdk_config_parse_file $jdk_cfg]
+        if {[lindex $res 0] == 0} {
+            puts stderr "Error loading $jdk_cfg : [lindex $res 1]"
+            return -1
+        }
     }
     # JDK config values are now validated, they
     # can be quiried via jdk_config_var.
+    # Set CLASSPATH now that it is validated
+    set ::env(CLASSPATH) [jdk_config_var CLASSPATH]
     return 0
 }
 
@@ -347,6 +354,7 @@ proc process_module_file { filename } {
 
             if {$nocompile} {
                 set java_filename {}
+                set java_filename [jdk_tool_javac_save $java_class $java_source]
             } else {
                 set java_filename [jdk_tool_javac_save $java_class $java_source]
             }
