@@ -150,9 +150,7 @@ proc jdk_config_parse_file { filename } {
     if {$valid} {
         # Check that tcljava.jar, jacl.jar, and tjc.jar appear on CLASSPATH
         # and that they all live in the same directory.
-        set found_tcljava 0
-        set found_jacl 0
-        set found_tjc 0
+        set found_jtcl 0
         set libdir ""
         set reason ""
 
@@ -166,49 +164,15 @@ proc jdk_config_parse_file { filename } {
             if {$path == {}} {
                 continue
             }
-            if {[file tail $path] == "tcljava.jar"} {
-                set dir [file dirname $path]
-                if {$libdir == ""} {
-                    set libdir $dir
-                } else {
-                    if {$libdir != $dir} {
-                        set reason "Jars tcljava.jar, jacl.jar, and tjc.jar must exist in same dir"
-                    }
-                }
-                if {$reason == ""} {
-                    set found_tcljava 1
-                }
-            }
-            if {[file tail $path] == "jacl.jar"} {
-                set dir [file dirname $path]
-                if {$libdir == ""} {
-                    set libdir $dir
-                } else {
-                    if {$libdir != $dir} {
-                        set reason "Jars tcljava.jar, jacl.jar, and tjc.jar must exist in same dir"
-                    }
-                }
-                if {$reason == ""} {
-                    set found_jacl 1
-                }
-            }
-            if {[file tail $path] == "tjc.jar"} {
-                set dir [file dirname $path]
-                if {$libdir == ""} {
-                    set libdir $dir
-                } else {
-                    if {$libdir != $dir} {
-                        set reason "Jars tcljava.jar, jacl.jar, and tjc.jar must exist in same dir"
-                    }
-                }
-                if {$reason == ""} {
-                    set found_tjc 1
-                }
+            if {[string match jtcl* [file tail $path]]} {
+                set found_jtcl 1
+                set libdir [file dirname $path]
+                break
             }
         }
-        if {!$found_tcljava || !$found_jacl || !$found_tjc} {
+        if {!$found_jtcl} {
             if {$reason == ""} {
-                set reason "CLASSPATH is not valid: tcljava.jar, jacl.jar, and tjc.jar must appear"
+                set reason "CLASSPATH is not valid: jtcl* must appear"
             }
             set valid 0
         }
@@ -281,6 +245,8 @@ proc jdk_tool_javac { filenames } {
         } else {
             error "unsupported compiler \"$compiler\""
         }
+    } else {
+          set javac [list javac -classpath [file normalize $::env(CLASSPATH)]]
     }
 
     set javac_flags -g
@@ -352,8 +318,10 @@ proc jdk_tool_javac { filenames } {
 
         if {[catch {eval exec $javac {$javac_flags -d $TJC_build} $javac_filenames} err]} {
             puts stderr $err
-            set caught 1
-            break
+            if {![string match *deprecation* $err]} {
+                set caught 1
+                break
+            }
         }
     }
 
