@@ -36,41 +36,7 @@ if {$debug} {
 # lib/tcljava directory in the install tree. If running from the
 # build directory, then env(TJC_LIBRARY) would be set.
 
-if {[info exists env(TJC_LIBRARY)]} {
-    set _tjc(root) ERROR
-    #set tjc_dir $env(TJC_LIBRARY)
-} else {
-    set tjcname tjc.jar
-    set found_tjc ""
-    if {$tcl_platform(host_platform) == "windows"} {
-        set sep \;
-    } else {
-        set sep :
-    }
-    foreach path [split $env(CLASSPATH) $sep] {
-        if {[file tail $path] == $tjcname} {
-            set found_tjc $path
-        }
-    }
-    if {$found_tjc == ""} {
-        error "Could not locate tjc.jar on CLASSPATH: \"$CLASSPATH\""
-    }
-    set tjc_dir [file dirname $found_tjc]
-    if {$debug} {
-        puts "found tjc.jar in $tjc_dir"
-    }
-    set cwd [pwd]
-    cd $tjc_dir/../..
-    set _tjc(root) [pwd]
-    set _tjc(jardir) $tjc_dir
-    if {$debug} {
-        puts "set _tjc(root) to \"$_tjc(root)\""
-    }
-    cd $cwd
-    unset cwd
-    unset tjc_dir
-    unset found_tjc
-}
+set _tjc(root) [pwd]
 
 if {$froot == "tjc" && ($fext == "" || $fext == ".exe")} {
     if {$debug} {
@@ -104,7 +70,11 @@ if {$froot == "tjc" && ($fext == "" || $fext == ".exe")} {
     if {$argc != [llength $argv]} {
         error "argc is $argc but llength of argv is [llength $argv]"
     }
-    source resource:/tcl/pkg/tjc/library/reload.tcl
+    # try to run compiled version first, otherwise we're building TJC 
+    if {[catch {source resource:/tjc/library/reload.tcl}]} {
+        source resource:/tcl/pkg/tjc/library/reload.tcl
+    }
+
     unset dir tail froot fext debug
 
     exit [main $argv]
