@@ -68,12 +68,13 @@ proc initJavaCompiler {} {
         if {$path == {}} {
             continue
         }
-        if {[file tail $path] == "tcljava.jar"} {
+        if {[string match jtcl* [file tail $path]]} {
             set jardir [file dirname $path]
+            set jar_file $path
         }
     }
     if {$jardir == ""} {
-        error "could not locate tcljava.jar on CLASSPATH \"$env(CLASSPATH)\""
+        error "could not locate jtcl.jar on CLASSPATH \"$env(CLASSPATH)\""
     }
 
     foreach driver $drivers {
@@ -88,15 +89,11 @@ proc initJavaCompiler {} {
                 break
             }
         } elseif {$driver == "janino"} {
-            # Look for janino compiler Jar
-            set file [file join $jardir "janino.jar"]
-            if {[file exists $file]} {
-                set jar_file $file
+            # janino compiler builtin
                 set test_class org.codehaus.janino.SimpleCompiler
                 set test_ctor {org.codehaus.janino.SimpleCompiler boolean}
                 set java_cmd janinoCompile
                 break
-            }
         }
     }
 
@@ -350,7 +347,10 @@ proc processTclSource { java_filename proc_source } {
         namespace eval :: {
            package require parser
            set _tjc(embedded) 1
-           source resource:/tcl/pkg/tjc/library/reload.tcl
+           if {[catch {source resource:/tjc/library/reload.tcl}]} {
+               source resource:/tcl/pkg/tjc/library/reload.tcl
+           }
+
         }
 
         # Init the module code so that it knows
