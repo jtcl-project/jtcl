@@ -248,7 +248,7 @@ proc emitter_package_name { package } {
 # Import all identifiers in Tcl/Jacl package.
 
 proc emitter_import_tcl {} {
-    return "import tcl.lang.*;\n"
+    return "import tcl.lang.*;\nimport tcl.pkg.tjc.*;\n;import tcl.pkg.java.*;\nimport tcl.lang.channel.*;\n"
 }
 
 # Import all identifiers in a named package
