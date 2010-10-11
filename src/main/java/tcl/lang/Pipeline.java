@@ -189,8 +189,8 @@ public class Pipeline implements Runnable {
 					TclIO.registerChannel(interp, channel);
 					redirect = new Redirect(channel, true);
 				} else {
-					String fn = FileUtil.translateFileName(interp, redirectee);
-					redirect = new Redirect(new File(fn), redirector.contains(">>"));
+					File redirfile = FileUtil.getNewFileObj(interp, redirectee);
+					redirect = new Redirect(redirfile, redirectee, redirector.contains(">>"));
 				}
 
 				/* Does this redirector apply to stderr, stdout or stdin? */

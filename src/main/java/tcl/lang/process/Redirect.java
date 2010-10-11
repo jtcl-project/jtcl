@@ -24,6 +24,12 @@ public class Redirect {
 	 * The File object, for FILE redirects
 	 */
 	protected File file = null;
+	
+	/**
+	 * A filename for file directs as specified to Tcl; used for error messages
+	 */
+	protected String specifiedFilePath = null;
+	
 	/**
 	 * The TclProcess on the other side of the pipe, for PIPE redirects
 	 */
@@ -76,10 +82,13 @@ public class Redirect {
 	 * 
 	 * @param f
 	 *            File to redirect bytes from/to
+	 * @param specifiedPath
+	 * 			   File name as specified to Tcl; used for error messages          
 	 */
-	public Redirect(File f, boolean append) {
+	public Redirect(File f, String specifiedPath, boolean append) {
 		this.type = Type.FILE;
 		this.file = f;
+		this.specifiedFilePath = specifiedPath;
 		this.appendToFile = append;
 	}
 

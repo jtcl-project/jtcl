@@ -213,7 +213,7 @@ public abstract class TclProcess {
 		if (stdinRedirect.type == Redirect.Type.FILE) {
 			if (!stdinRedirect.file.exists()) {
 				throw new TclPosixException(interp, TclPosixException.ENOENT, true, "couldn't read file \""
-						+ stdinRedirect.file + "\"");
+						+ stdinRedirect.specifiedFilePath + "\"");
 			}
 		}
 
@@ -251,13 +251,14 @@ public abstract class TclProcess {
 			}
 		}
 		if (stdoutRedirect.type == Redirect.Type.FILE) {
+			// test to verify that directory already exists for the new output file.
 			File testFile = stdoutRedirect.file;
 			if (!stdoutRedirect.appendToFile) {
-				testFile = testFile.getParentFile();
+				testFile = testFile.getAbsoluteFile().getParentFile();
 			}
 			if (!testFile.exists()) {
 				throw new TclPosixException(interp, TclPosixException.ENOENT, true, "couldn't write file \""
-						+ stdoutRedirect.file + "\"");
+						+ stdoutRedirect.specifiedFilePath + "\"");
 			}
 		}
 		if (stdoutRedirect.type == Redirect.Type.TCL_CHANNEL && "stdout".equals(stdoutRedirect.channel.getChanName())) {
@@ -293,13 +294,14 @@ public abstract class TclProcess {
 			}
 		}
 		if (stderrRedirect.type == Redirect.Type.FILE) {
+			// test to verify that directory already exists for the new output file.
 			File testFile = stderrRedirect.file;
 			if (!stderrRedirect.appendToFile) {
-				testFile = testFile.getParentFile();
+				testFile = testFile.getAbsoluteFile().getParentFile();
 			}
 			if (!testFile.exists()) {
 				throw new TclPosixException(interp, TclPosixException.ENOENT, true, "couldn't write file \""
-						+ stderrRedirect.file + "\"");
+						+ stderrRedirect.specifiedFilePath + "\"");
 			}
 		}
 
