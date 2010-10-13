@@ -68,6 +68,10 @@ class InputBuffer extends FilterInputStream {
 	 * This thread refills the buffer
 	 */
 	Refiller refiller = null;
+	/**
+	 * Set to true when refiller should stop
+	 */
+	boolean closed = false;
 
 	/**
 	 * Construct a new InputBuffer in blocking mode
@@ -180,6 +184,18 @@ class InputBuffer extends FilterInputStream {
 	 */
 	boolean eof() {
 		return eofSeen;
+	}
+
+	/**
+	 * Close the inputBuffer and kill the refiller
+	 */
+	@Override
+	public void close() throws IOException {
+		closed = true;
+		if (refiller != null) {
+			refiller.interrupt();
+		}
+		super.close();
 	}
 
 	/**
@@ -459,10 +475,11 @@ class InputBuffer extends FilterInputStream {
 
 		@Override
 		public void run() {
-			ioException = null;
-			while (true) {
+			ioException = null;	
+			
+			while (!closed) {
 				synchronized (getRefillerNotifier()) {
-					while (!requestRefill) {
+					while (!closed && !requestRefill) {
 						try {
 							getRefillerNotifier().wait();
 						} catch (InterruptedException e) {
