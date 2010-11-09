@@ -1,0 +1,67 @@
+ ----
+ JTcl Differences
+ ----
+
+JTcl Differences from Tcl 8.4
+
+  While JTcl is mostly compatible with Tcl 8.4, there are some differences
+  compared to the C/Tcl version.  This page supercedes the Tcl 8.4 documentation.
+
+
+  * Regular expressions
+ 
+    * JTcl uses the Java regular expression engine <java.util.regex>, rather than a port
+      of the Tcl ARE (<Advanced Regular Expression>) library.
+
+    * Several Tcl ARE patterns are substituted at runtime to the corresponding valid 
+      <java.util.regex> patterns.  For example, Tcl ARE pattern <<[:alnum:]>> is replaced by
+      <<\\p{Alnum}>>.
+
+    * Basic REs are not supported (embedded option 'b' causes PatternSyntaxException)
+
+    * Extended REs are not supported, unless they are ARE-compatible and are
+      not explicitly requested with the 'e' embedded option ('e' causes
+      PatternSyntaxException) 
+
+    * Tcl ARE always attempts to match the longest string
+      starting from the outermost levels to the inner levels of parens.
+      With alternation <<(|)>>, TCL chooses the longest match of all the branches.
+      Java's <java.util.regex> on the other hand, evaluates the RE from left to right, and returns
+      the first successful match, even if it is not the longest.  
+
+    * Some syntax errors that would occur in Tcl ARE do not occur because
+      <java.util.regex> is more forgiving of bad RE syntax.
+
+  []
+ 
+  * Integer expressions are always computed with 64-bit integers, so any overflow/underflow
+    with 32-bit integers will not occur. 
+
+  []
+ 
+  * <<file>> command options <<atime>>, <<attributes>> and <<link>> are not supported due to
+    JVM API restrictions.  Option <<stat>> does not return information for 
+    <<dev, gid, ino, mode>>, and <<nlink>> attributes; <<ctime>> and <<atime>>
+    attributes report the same value as <<mtime>>.
+
+  []
+ 
+  * JTcl uses Java sorting utilities rather than a custom implementation, and may return results
+    differently.  For examle, <<lsort -index 0 \{\{a b\} \{a c\}\}>> can sort into either order.
+    Likewise, unsorted results from <<array names>>, etc. may be returned in a different
+    order due to using Java hashing algorithms.
+
+  []
+ 
+  * <<encoding>> maps characters using Java's Unicode facilities.  
+
+  []
+ 
+  * <<exec>> command is limited due to the JVM process mode which does not allow proper stdio
+    file descriptor inheritance, instead using a pipe model.  Too much of stdin may be read, if
+    a script stops reading before exhausting all input.  The JVM also does not allow
+    background processes to survive the JVM process if they read from stdin or write to stdout/stderr.
+
+  []
+ 
+  * <<errorInfo>> always reports errors as <while executing> rather than <invoked from within>.

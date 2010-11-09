@@ -1,0 +1,28 @@
+ ----
+ Getting Started
+ ----
+
+Getting started with JTcl
+
+  * Install Java 1.5 or higher.  If you don't already have Java installed, 
+    download and install the appropriate Java package (Linux, Solaris, Windows) from 
+    {{{http://www.oracle.com/technetwork/java/javase/downloads/index.html}Oracle.com}}.
+    Apple Macintosh OSX 10.6 and below have Java 1.5 installed.  Many Linux 
+    distributions have a Java package that can be installed via the
+    local package manager.   Install either the Java JRE or JDK package.
+    
+    []
+    
+  * {{{http://kenai.com/projects/jtcl/downloads}Download}} the JTcl jar file. 
+    
+    []
+  
+  * Start the JTcl interpreter:\
+    \
+    interactive mode:\
+    <<java -jar jtcl-2.0.0.jar>>\
+    \
+    running a Tcl script:\
+    <<java -jar jtcl-2.0.0.jar  script.tcl >> 
+    
+    []

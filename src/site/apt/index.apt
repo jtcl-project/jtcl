@@ -1,16 +1,50 @@
  -----
- The Site
- -----
- The Maven Team
+ JTcl Project
  -----
 
-Maven Site for your project
+JTcl - Tcl interpreter written in Java
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
- Congratulations! If you are looking at this page then you have successfully generated a
- template site employing the site archetype and you have run:
+ JTcl is an implementation of {{{http://www.tcl.tk}Tool Command Language}} 
+ written in Java.  JTcl implements a large extent of Tcl 8.4 syntax and 
+ commands, limited only by API restrictions of the Java Virtual Machine.
+ JTcl is based on the {{{http://tcljava.sf.net}Jacl interpreter}}.  
+
+ The primary goals of the JTcl Project are:
+
+   * Implement Tcl version 8.4 to the greatest extent possible.  Compliance
+     to Tcl 8.4 is based on the Tcl test suite.
+
+   * Modernize the code base, including package reorganization, modern code 
+     formatting, and use Java-centric build tools.
+
+   * Promote more community involvement.  Bug fixes, additional feature 
+     implementations, JTcl specific libraries, etc. are welcomed.
   
-+-----+
 
-m2 site:site
+ JTcl is licensed under terms of the BSD open source license.  See the 
+ {{{licenses.html}License}} page for details.
 
-+-----+
+Major features of JTcl
+
+ * Implement Tcl 8.4 commands, arguments, options and semantics.  The major 
+   exceptions are commands that are limited by JVM restrictions, such as 
+   <<file stat>>.
+
+ * Tcl 8.4 compatible regular expression engine.  Most features and syntax
+   of Tcl's regex engine are supported by using the Java library regular expression
+   package and using syntax translation where required.
+
+ * <<fileevent>> and <<fcopy>> commands implemented for event-driven I/O
+   processing.
+
+ * <<exec>> and <<open>> commands now supports a large subset of Tcl's 
+   exec command and pipeline I/O.
+
+ * 64 bit wide integer support.
+
+ * <<trace>> command now supports command tracing, as well as updated trace
+   options. 
+
+ * Reorganized packaging to a single jar file for ease of installation.
+

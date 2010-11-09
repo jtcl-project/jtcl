@@ -1,0 +1,15 @@
+ ----
+ Documentation
+ ----
+ 
+ JTcl Documentation resources
+ 
+   * {{{jtcldifferences.html}JTcl differences}} from Tcl 8.4
+   
+   * Tcl 8.4 {{{http://www.tcl.tk/man/tcl8.4/TclCmd/contents.htm}command reference}} (via www.tcl.tk)
+   
+   * <<java>> package {{{http://tcljava.sourceforge.net/docs/TclJava/contents.html}command reference}} (via tcljava.sf.net)
+   
+   * <<Incr Tcl>> package <coming soon>
+   
+   * {{{buildingjtcl.html}Building JTcl}}
