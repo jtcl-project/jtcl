@@ -23,6 +23,8 @@ Getting started with JTcl
     <<java -jar jtcl-2.0.0.jar>>\
     \
     running a Tcl script:\
-    <<java -jar jtcl-2.0.0.jar  script.tcl >> 
+    <<java -jar jtcl-2.0.0.jar  script.tcl >>\
+    \
+    Either method invokes the <tcl.lang.Shell> class in the Jtcl jar. 
     
     []

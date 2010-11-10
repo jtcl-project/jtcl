@@ -28,22 +28,22 @@ JTcl - Tcl interpreter written in Java
 Major features of JTcl
 
  * Implement Tcl 8.4 commands, arguments, options and semantics.  The major 
-   exceptions are commands that are limited by JVM restrictions, such as 
+   {{{docs/jtcldifferences.html}exceptions}} are commands that are limited by Java 1.5 API restrictions, such as 
    <<file stat>>.
 
  * Tcl 8.4 compatible regular expression engine.  Most features and syntax
    of Tcl's regex engine are supported by using the Java library regular expression
    package and using syntax translation where required.
 
- * <<fileevent>> and <<fcopy>> commands implemented for event-driven I/O
+ * <<fileevent>> and <<fcopy>> commands interact with a new channel subsystem for event-driven I/O
    processing.
 
- * <<exec>> and <<open>> commands now supports a large subset of Tcl's 
-   exec command and pipeline I/O.
+ * <<exec>> and <<open>> commands now support Tcl's pipeline and redirection syntax, with
+   {{{docs/jtcldifferences.html}some caveats}}.
 
  * 64 bit wide integer support.
 
- * <<trace>> command now supports command tracing, as well as updated trace
+ * <<trace>> command now supports command and execution tracing, as well as updated variable trace
    options. 
 
  * Reorganized packaging to a single jar file for ease of installation.

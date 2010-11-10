@@ -8,10 +8,10 @@ JTcl Differences from Tcl 8.4
   compared to the C/Tcl version.  This page supercedes the Tcl 8.4 documentation.
 
 
-  * Regular expressions
+  * Regular expressions: Tcl ARE (<Advanced Regular Expression>) syntax is supported with some caveats.
  
     * JTcl uses the Java regular expression engine <java.util.regex>, rather than a port
-      of the Tcl ARE (<Advanced Regular Expression>) library.
+      of the Tcl ARE  library. However, <java.util.regex> regular expression syntax is not supported.
 
     * Several Tcl ARE patterns are substituted at runtime to the corresponding valid 
       <java.util.regex> patterns.  For example, Tcl ARE pattern <<[:alnum:]>> is replaced by
@@ -31,18 +31,41 @@ JTcl Differences from Tcl 8.4
 
     * Some syntax errors that would occur in Tcl ARE do not occur because
       <java.util.regex> is more forgiving of bad RE syntax.
+ 
+  []
+
+  * Some <<file>> options are limited due to Java 1.5 API restrictions:
+
+     * <<file atime>> is not supported.
+
+     * <<file attributes>> is not supported.
+
+     * <<file stat>> does not return information for <<dev, gid, ino, mode>>, and <<nlink>> attributes; <<ctime>> and <<atime>>
+       attributes report the same value as <<mtime>>.
+
+     * <<file link>>, <<file readlink>> and <<file type>>, and the <<type>> field returned from <<file stat>>  
+       attempt to identify a link target by looking for a difference between the values returned by 
+       <java.io.File.getCanonicalPath()> and <java.io.File.getAbsolutePath()>.
+       and may incorrectly indicate that regular file is a link.
+
+     * <<file link>> cannot create links.
+
+     * With Java 1.5, <<file executable>> on Windows returns 1 if the extension is <exe>, <com>, or <bat> or the file is a 
+       directory.  On other platforms, it always returns 1.  With Java 1.6+, <<executable>> returns 1 if 
+       <java.io.File.canExecute()> is true.
+
+     * <<file owned>> always returns 1 if the file exists.
+
+  []
+     * <<glob -types>> is limited by the Java 1.5 API.  The types <<b>>, <<c>>, <<p>> and <<s>> will match on any file that
+       returns false for both <java.io.File.isFile()> and <java.io.File.isDirectory()>.  The <<l>> type is treated
+       as described above for <<file readlink>>.  MacOS types and creators are not supported.
 
   []
  
   * Integer expressions are always computed with 64-bit integers, so any overflow/underflow
-    with 32-bit integers will not occur. 
+    with 32-bit integers will not occur.  JTcl acts similar to Tcl 8.4 compiled on a 64-bit architecture.
 
-  []
- 
-  * <<file>> command options <<atime>>, <<attributes>> and <<link>> are not supported due to
-    JVM API restrictions.  Option <<stat>> does not return information for 
-    <<dev, gid, ino, mode>>, and <<nlink>> attributes; <<ctime>> and <<atime>>
-    attributes report the same value as <<mtime>>.
 
   []
  
@@ -57,11 +80,40 @@ JTcl Differences from Tcl 8.4
 
   []
  
-  * <<exec>> command is limited due to the JVM process mode which does not allow proper stdio
-    file descriptor inheritance, instead using a pipe model.  Too much of stdin may be read, if
-    a script stops reading before exhausting all input.  The JVM also does not allow
-    background processes to survive the JVM process if they read from stdin or write to stdout/stderr.
+  * <<exec>> and <<open>> pipes are somewhat limited due to the Java 1.5 process model which does not allow proper stdio
+    file descriptor inheritance and true OS-level pipes.
+        
+        * Background processes will not survive the JVM process if they read from stdin or write to stdout
+          or stderr
+
+        * JTcl may send more stdin to a subprocess than it actually reads, causing the unread input to be lost
+
+        * To limit stdin stealing from the shell, processes started in the background with <&> do not automatically 
+          inherit stdin
 
   []
  
-  * <<errorInfo>> always reports errors as <while executing> rather than <invoked from within>.
+  * <<errorInfo>> sometimes reports deep errors as <invoked from within> rather than <while executing>.
+
+  []
+
+  * <<pid>> returns the filename referenced by <</proc/self>> on those operating systems that support it, and 
+    returns -1 on other operating systems.  <<pid>> <fileid> may return -1 if the PIDs of the pipeline cannot be 
+    determined using a non-portable reflection on <java.lang.Process>.
+
+  []
+
+  * The standard shell, <tcl.lang.Shell>, always sets the <<tcl_interactive>> variable to 1 unless a JTcl script
+    is specified as an argument.  It cannot differentiate true terminal interaction and a stdin input redirection.  Therefore,
+    if a script is sent to <tcl.lang.Shell> via stdin redirection, the shell will print the <%> prompt as if it were
+    interacting with a terminal.  As a workaround, either explicitly set <<tcl_interactive>> to 0 to suppress the
+    prompt, or use <tcl.lang.NonInteractiveShell> which sets <<tcl_interactive>> to 0 prior to any command processing.
+
+  []
+
+  * <<load>> is not supported.
+
+  []
+
+  * <<info nameofexecutable>> attempts to return a java command line that will invokes the main class, for example,
+    </usr/lib/jvm/java-6-sun-1.6.0.20/jre/bin/java -classpath target/classes tcl.lang.Shell>
