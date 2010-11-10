@@ -103,8 +103,19 @@ proc process_jdk_config {} {
         set jdk_cfg [file join $_tjc(root) jdk.cfg]
     }
     set _jdk_config(CLASSPATH) $env(CLASSPATH)
-    set _jdk_config(JAVAC)  [file join $env(java.home) bin javac]
-    set _jdk_config(JAR)  [file join $env(java.home) bin jar]
+
+    # java.home might be the jdk, or a jre inside the jdk, try both
+    # fallback to those on the PATH
+    set _jdk_config(JAVAC) javac
+    set _jdk_config(JAR) jar
+    foreach dir [list [file join $env(java.home) bin javac] [file join $env(java.home) .. bin javac]] {
+	if {[file readable [file join $dir javac]]} {
+            set _jdk_config(JAVAC)  [file join $dir javac]
+	}
+	if {[file readable [file join $dir jar]]} {
+            set _jdk_config(JAR)  [file join $dir jar]
+	}
+    }
 
     if {[file exists $jdk_cfg]} {
         if {$debug || $_tjc(progress)} {
