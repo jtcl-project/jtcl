@@ -7,7 +7,7 @@ rem
 rem JAVA_HOME  - directory of JDK/JRE, if not set then 'java' must be found on PATH
 rem CLASSPATH  - colon separated list of additional jar files & class directories
 rem JAVA_OPTS  - list of JVM options, e.g. "-Xmx256m -Dfoo=bar"
-rem TCLLIBPATH - space separated list of Tcl libraries directories
+rem TCLLIBPATH - space separated list of Tcl library directories
 rem
 
 

@@ -13,18 +13,25 @@ Getting started with JTcl
     
     []
     
-  * {{{http://kenai.com/projects/jtcl/downloads}Download}} the JTcl jar file. 
+  * {{{http://kenai.com/projects/jtcl/downloads}Download}} the JTcl distribution ZIP file, and
+    unzip into a directory of your choice.\
+    \
+    Example:\
+    \
+    download jtcl-(version).zip \
+    <<mkdir jtcl>>\
+    <<cd jtcl>>\
+    <<unzip jtcl-(version).zip>>\
+    \
+    Optional for Linux/Unix systems:  make a symbolic link in /usr/local/bin (or any other directory
+    on your PATH of your choice):\
+    \
+    <<sudo ln  -s  `pwd`/jtcl  /usr/local/bin>>
     
     []
   
   * Start the JTcl interpreter:\
     \
-    interactive mode:\
-    <<java -jar jtcl-2.0.0.jar>>\
-    \
-    running a Tcl script:\
-    <<java -jar jtcl-2.0.0.jar  script.tcl >>\
-    \
-    Either method invokes the <tcl.lang.Shell> class in the Jtcl jar. 
+    <<jtcl>>  <filename>  <arg> <arg ...>
     
     []

@@ -7,7 +7,7 @@
 # JAVA_HOME  - directory of JDK/JRE, if not set then 'java' must be found on PATH
 # CLASSPATH  - colon separated list of additional jar files & class directories
 # JAVA_OPTS  - list of JVM options, e.g. "-Xmx256m -Dfoo=bar"
-# TCLLIBPATH - space separated list of Tcl libraries directories
+# TCLLIBPATH - space separated list of Tcl library directories
 #
 
 jtclver=2.0.0-SNAPSHOT
