@@ -7,15 +7,17 @@
 # JAVA_HOME  - directory of JDK/JRE, if not set then 'java' must be found on PATH
 # CLASSPATH  - colon separated list of additional jar files & class directories
 # JAVA_OPTS  - list of JVM options, e.g. "-Xmx256m -Dfoo=bar"
-# TCLLIBPATH - space separated list of Tcl library directories
+# TCLLIBPATH - space separated list of Tcl libraries directories
 #
 
 jtclver=2.0.0-SNAPSHOT
 jtclmain=tcl.lang.Shell
 
 iscygwin=false
+ismsys=false
 case "`uname`" in
     CYGWIN*) iscygwin=true ;;
+    MINGW*) ismsys=true ;;
 esac
 
 JAVA=java
@@ -46,14 +48,20 @@ dir=`dirname $pgm`
 # set classpath, or add to existing
 if [ -z "$CLASSPATH" ] ; then
     CLASSPATH="$dir/jtcl-$jtclver.jar"
-else
     if $iscygwin ; then
-        CLASSPATH=`cygpath -pu "$CLASSPATH"`
+        CLASSPATH=`cygpath -pw "$CLASSPATH"`
     fi
-    CLASSPATH="$dir/jtcl-$jtclver.jar:$CLASSPATH"
-fi
-if $iscygwin ; then
-    CLASSPATH=`cygpath -pw "$CLASSPATH"`
+else
+    if $ismsys ; then
+        jtcldir=`$dir/echopath $dir`
+        CLASSPATH="$jtcldir/jtcl-$jtclver.jar;$CLASSPATH"
+    elif $iscygwin ; then
+        CLASSPATH=`cygpath -pu "$CLASSPATH"`
+        CLASSPATH="$dir/jtcl-$jtclver.jar;$CLASSPATH"
+        CLASSPATH=`cygpath -pw "$CLASSPATH"`
+    else 
+        CLASSPATH="$dir/jtcl-$jtclver.jar:$CLASSPATH"
+    fi
 fi
 
 export CLASSPATH
