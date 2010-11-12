@@ -41,11 +41,17 @@ package require -exact Tcl 8.4
 
 
 if {![info exists auto_path]} {
-    if {[info exists env(TCLLIBPATH)]} {
-	# jtcl - include tcl library resource path
-	set auto_path [list resource:/tcl/lang/library $env(TCLLIBPATH)]
+    if {[info exists env(TCLLIBPATH)] && [string length [string trim $env(TCLLIBPATH)]] > 0} {
+	# jtcl - include tcl library resource path with standard library
+	# check if env(TCLLIBPATH) is set and is a proper list
+	set env(TCLLIBPATH) [string trim $env(TCLLIBPATH)]
+	if {[catch {llength $env(TCLLIBPATH)}] == 0} {
+	    set auto_path [linsert $env(TCLLIBPATH) 0 resource:/tcl/lang/library]
+	} else {
+	    set auto_path [list resource:/tcl/lang/library $env(TCLLIBPATH)]
+	}
     } else {
-	# jtcl - set tcl library resource path
+	# jtcl - set tcl library resource path to standard library only
 	set auto_path resource:/tcl/lang/library
     }
 }
