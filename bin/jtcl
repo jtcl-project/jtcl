@@ -10,7 +10,7 @@
 # TCLLIBPATH - space separated list of Tcl libraries directories
 #
 
-jtclver=2.0.0-SNAPSHOT
+jtclver=2.0.0-a1
 jtclmain=tcl.lang.Shell
 
 iscygwin=false

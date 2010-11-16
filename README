@@ -1,0 +1,47 @@
+JTcl - Tcl Language Interpreter in Java
+
+http://jtcl.kenai.com
+
+JTcl is an implementation of Tcl (Tool Command Language) written in Java.
+JTcl implements a large extent of Tcl 8.4 syntax and commands, limited 
+only by API restrictions of the Java Virtual Machine.  JTcl is based on 
+the Jacl interpreter (http://tcljava.sf.net)
+
+
+INSTALLING JTCL
+
+JTcl requires a Java JVM 1.5 or higher (Java 1.6 is recommended).  You may 
+have to install Java if you don't already have it installed.  
+
+JTcl is distributed as a ZIP archive.  Download the latest jtcl-{version}.zip 
+file from the JTcl website, and unzip into a directory of your choice.  
+Unix/Linux/Mac OSX shell script (`jtcl') and Windows batch file (`jtcl.bat') 
+are included.   
+
+
+SOURCE CODE
+
+JTcl uses the Mercurial distributed source code control system.  Install
+Mercurial using your OS distribution package manager or get executables 
+from the Mercurial site:  http://mercurial.selenic.com/
+
+Browse JTcl source code:   http://kenai.com/projects/jtcl/sources
+Clone the JTcl repository: hg clone https://hg.kenai.com/hg/jtcl~jtcl-main 
+
+
+DOCUMENTATION
+
+Please refer to the JTcl web site.
+
+
+MAILING LIST and BUG REPORTING
+
+Please subscribe and use the JTcl mailing list for questions and to
+share information.  The JTcl Bugzilla bug tracker should be used to
+report bugs.
+
+Mailing lists: http://kenai.com/projects/jtcl/lists
+Bug reporting: http://kenai.com/bugzilla/buglist.cgi?product=jtcl
+
+
+**The JTcl Team**

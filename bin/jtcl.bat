@@ -13,7 +13,7 @@ rem
 
 if "%OS%" == "Windows_NT" setlocal
 
-set jtclver=2.0.0-SNAPSHOT
+set jtclver=2.0.0-a1
 set jtclmain=tcl.lang.Shell
 
 set dir=%~dp0
