@@ -18,10 +18,10 @@ Getting started with JTcl
     \
     Example:\
     \
-    download jtcl-(version).zip \
-    <<mkdir jtcl>>\
-    <<cd jtcl>>\
-    <<unzip jtcl-(version).zip>>\
+    download jtcl-<(version)>.zip using your web browser\
+    \
+    <<unzip jtcl->><(version)><<.zip>>\
+    <<cd jtcl->><(version)>\
     \
     Optional for Linux/Unix systems:  make a symbolic link in /usr/local/bin (or any other directory
     on your PATH of your choice):\
