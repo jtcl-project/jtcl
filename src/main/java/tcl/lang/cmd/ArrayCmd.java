@@ -176,14 +176,16 @@ public class ArrayCmd implements Command {
 
 			TclObject tobj = TclList.newInstance();
 			String arrayName = objv[2].toString();
-			
-			/*  Go through each key in the hash table. If there is a pattern, test for a match.
-			 * Separate the collection of keys from values, in case the reading of a value
-			 * triggers a read trace that modifies the array
+
+			/*
+			 * Go through each key in the hash table. If there is a pattern,
+			 * test for a match. Separate the collection of keys from values, in
+			 * case the reading of a value triggers a read trace that modifies
+			 * the array
 			 */
 			ArrayList<String> keysToReturn = new ArrayList<String>();
-			
-			for (Iterator<String> iter = var.arraymap.keySet().iterator(); iter.hasNext(); ) {
+
+			for (Iterator<String> iter = var.arraymap.keySet().iterator(); iter.hasNext();) {
 				String key = iter.next();
 				if (pattern != null && !Util.stringMatch(key, pattern)) {
 					continue;
@@ -192,7 +194,8 @@ public class ArrayCmd implements Command {
 			}
 			for (String key : keysToReturn) {
 				Var var2 = var.arraymap.get(key);
-				if (var2==null || var2.isVarUndefined()) continue;
+				if (var2 == null || var2.isVarUndefined())
+					continue;
 				String strValue;
 				try {
 					strValue = interp.getVar(arrayName, key, 0).toString();
@@ -208,7 +211,7 @@ public class ArrayCmd implements Command {
 					}
 					if ((var == null) || !var.isVarArray() || var.isVarUndefined()) {
 						throw e;
-					}					
+					}
 				}
 			}
 			interp.setResult(tobj);
@@ -296,16 +299,20 @@ public class ArrayCmd implements Command {
 			String name1 = objv[2].toString();
 			String name2, strValue;
 
-			/* verify that name1 is not an array.  Var.lookupVar can does this, but requires a part2 */
+			/*
+			 * verify that name1 is not an array. Var.lookupVar can does this,
+			 * but requires a part2
+			 */
 			if (name1.endsWith(")") && name1.contains("(")) {
-				throw new TclVarException(interp, name1, null, "set", "variable isn't array"	);
+				throw new TclVarException(interp, name1, null, "set", "variable isn't array");
 			}
-			
-			/* Create the array if it does not exists; this is required if there are 0 elements
-			 * to create: array set arrayname {}
+
+			/*
+			 * Create the array if it does not exists; this is required if there
+			 * are 0 elements to create: array set arrayname {}
 			 */
 			Var.lookupVar(interp, name1, "", 0, "set", true, false);
-			
+
 			// Set each of the array variable names in the interp
 
 			for (i = 0; i < size; i++) {
@@ -384,7 +391,7 @@ public class ArrayCmd implements Command {
 				throw new TclNumArgsException(interp, 2, objv, "arrayName ?pattern?");
 			}
 			if (notArray) {
-				errorNotArray(interp, objv[2].toString());
+				return;
 			}
 			if (objv.length == 3) {
 				// When no pattern is given, just unset the whole array
