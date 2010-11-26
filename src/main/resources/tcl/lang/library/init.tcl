@@ -83,6 +83,12 @@ namespace eval tcl {
 	    }
 	}
     }
+	
+    # jtcl - source tcllib main pkgIndex.tcl
+    set dir resource:/tcl/pkg/tcllib/library
+    source $dir/pkgIndex.tcl
+    unset dir
+
 }
  
 # Windows specific end of initialization
