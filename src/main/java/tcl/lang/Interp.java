@@ -606,6 +606,7 @@ public class Interp extends EventuallyFreed {
 
 			setVar("tcl_platform", "platform", "java", TCL.GLOBAL_ONLY);
 			setVar("tcl_platform", "byteOrder", "bigEndian", TCL.GLOBAL_ONLY);
+			setVar("tcl_platform", "user", Util.tryGetSystemProperty("user.name", "unknown"), TCL.GLOBAL_ONLY);
 
 			setVar("tcl_platform", "os", Util.tryGetSystemProperty("os.name",
 					"?"), TCL.GLOBAL_ONLY);
@@ -626,6 +627,7 @@ public class Interp extends EventuallyFreed {
 			} else {
 				setVar("tcl_platform", "host_platform", "unix", TCL.GLOBAL_ONLY);
 			}
+
 
 			// Create the env array an populated it with proper
 			// values.
