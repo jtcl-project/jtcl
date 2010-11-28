@@ -132,7 +132,7 @@ public class BlendExtension extends Extension {
 		// win/makefile.vc
 		// unix/configure.in
 
-		interp.eval("package provide java 1.4.1");
+		interp.eval("package provide java 2.0.0");
 
 	}
 

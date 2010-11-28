@@ -352,8 +352,8 @@ public class Interp extends EventuallyFreed {
 	TclToken[] parserTokens;
 	int parserTokensUsed;
 
-	/** Used ONLY by JavaImportCmd */
-	public HashMap[] importTable = { new HashMap(), new HashMap() };
+	/** Used ONLY by JavaImportCmd: classTable, packageTable, wildcardTable */
+	public HashMap[] importTable = { new HashMap(), new HashMap(), new HashMap() };
 
 	/** Used by callers of Util.strtoul(), also used in FormatCmd.strtoul().
 	 * There is typically only one instance of a StrtoulResult around
