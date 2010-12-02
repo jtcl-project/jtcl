@@ -155,4 +155,16 @@ public final class TclObject extends TclObjectBase {
 		((TclDouble) internalRep).value = d;
 		stringRep = null;
 	}
+
+	public boolean equals(Object o) {
+		if (o == null) {
+			return false;
+		}
+		return (o instanceof TclObject && ((TclObject) o).toString().equals(toString()));
+	}
+
+	public int hashCode() {
+		return toString().hashCode();
+	}
+
 }

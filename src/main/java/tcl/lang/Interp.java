@@ -923,6 +923,7 @@ public class Interp extends EventuallyFreed {
 		Extension.loadOnDemand(this, "close", "tcl.lang.cmd.CloseCmd");
 		Extension.loadOnDemand(this, "continue", "tcl.lang.cmd.ContinueCmd");
 		Extension.loadOnDemand(this, "concat", "tcl.lang.cmd.ConcatCmd");
+		Extension.loadOnDemand(this, "dict", "tcl.lang.cmd.DictCmd");
 		Extension.loadOnDemand(this, "encoding", "tcl.lang.cmd.EncodingCmd");
 		Extension.loadOnDemand(this, "eof", "tcl.lang.cmd.EofCmd");
 		Extension.loadOnDemand(this, "eval", "tcl.lang.cmd.EvalCmd");

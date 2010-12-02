@@ -89,6 +89,8 @@ namespace eval tcl {
     source $dir/pkgIndex.tcl
     unset dir
 
+    # jtcl - note that 'dict' package is provided via DictCmd & TclDict
+    package provide dict 8.5
 }
  
 # Windows specific end of initialization
