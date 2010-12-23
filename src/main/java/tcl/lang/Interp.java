@@ -1,19 +1,3 @@
-/*
- * Interp.java --
- *
- *	Implements the core Tcl interpreter.
- *
- * Copyright (c) 1997 Cornell University.
- * Copyright (c) 1997-1998 Sun Microsystems, Inc.
- *
- * See the file "license.terms" for information on usage and
- * redistribution of this file, and for a DISCLAIMER OF ALL
- * WARRANTIES.
- * 
- * RCS: @(#) $Id: Interp.java,v 1.91 2009/07/10 13:21:41 rszulgo Exp $
- *
- */
-
 package tcl.lang;
 
 import java.io.File;
@@ -40,7 +24,12 @@ import tcl.lang.cmd.PackageCmd;
 import tcl.lang.cmd.RegexpCmd;
 
 /**
- * The Tcl interpreter class.
+ * Implements the core Tcl interpreter.
+ * 
+ * Copyright (c) 1997 Cornell University. Copyright (c) 1997-1998 Sun Microsystems, Inc.
+ * 
+ * See the file "license.terms" for information on usage and redistribution of this file, and for a DISCLAIMER OF ALL
+ * WARRANTIES.
  */
 
 public class Interp extends EventuallyFreed {
@@ -50,38 +39,38 @@ public class Interp extends EventuallyFreed {
 	// variables are accessed by the ReflectObject class, they
 	// are defined here be cause we need them to be per interp data.
 
-	/** Translates Object to ReflectObject. This makes sure we have only
-	 *  one ReflectObject internalRep for the same Object -- this
-	 * way Object identity can be done by string comparison.
+	/**
+	 * Translates Object to ReflectObject. This makes sure we have only one ReflectObject internalRep for the same
+	 * Object -- this way Object identity can be done by string comparison.
 	 */
 	public HashMap reflectObjTable = new HashMap();
 
-	/** Number of reflect objects created so far inside this Interp
-	 * (including those that have be freed)
+	/**
+	 * Number of reflect objects created so far inside this Interp (including those that have be freed)
 	 */
 	public long reflectObjCount = 0;
 
-	/** Table used to store reflect hash index conflicts, see
-	 * ReflectObject implementation for more details
+	/**
+	 * Table used to store reflect hash index conflicts, see ReflectObject implementation for more details
 	 */
 	public HashMap reflectConflictTable = new HashMap();
 
-	/** The number of chars to copy from an offending command into error
-	 * message.
+	/**
+	 * The number of chars to copy from an offending command into error message.
 	 */
 	private static final int MAX_ERR_LENGTH = 200;
 
 	/**
-	 *  We pretend this is Tcl 8.4
+	 * We pretend this is Tcl 8.4
 	 */
 	static final String TCL_VERSION = "8.4";
 	/**
-	 *  We pretend this is Tcl 8.4, patch level 0.
+	 * We pretend this is Tcl 8.4, patch level 0.
 	 */
 	static final String TCL_PATCH_LEVEL = "8.4.0";
 
-	/** Total number of times a command procedure
-	 * has been called for this interpreter.
+	/**
+	 * Total number of times a command procedure has been called for this interpreter.
 	 */
 	public int cmdCount;
 
@@ -91,19 +80,17 @@ public class Interp extends EventuallyFreed {
 	public HashMap<String, Channel> interpChanTable;
 
 	/**
-	 * Set to true if [encoding system] can set the encoding
-	 * for stdout and stderr.  This is an attempt to replicate
-	 * TCL behavior seen in encoding.test encoding-24.3
+	 * Set to true if [encoding system] can set the encoding for stdout and stderr. This is an attempt to replicate TCL
+	 * behavior seen in encoding.test encoding-24.3
 	 */
 	public boolean systemEncodingChangesStdoutStderr = true;
 	/**
-	 *  The Notifier associated with this Interp.
+	 * The Notifier associated with this Interp.
 	 */
 	private Notifier notifier;
 
 	/**
-	 *  Hash table for associating data with this interpreter. Cleaned up 
-	 *  when this interpreter is deleted
+	 * Hash table for associating data with this interpreter. Cleaned up when this interpreter is deleted
 	 */
 	HashMap<String, AssocData> assocData;
 
@@ -112,20 +99,19 @@ public class Interp extends EventuallyFreed {
 	 */
 	private File workingDir;
 
-	/** Points to top-most in stack of all nested procedure
-	 * invocations. null means there are no active procedures.
+	/**
+	 * Points to top-most in stack of all nested procedure invocations. null means there are no active procedures.
 	 */
 	public CallFrame frame;
 
-	/** Points to the call frame whose variables are currently in use
-	 * (same as frame unless an "uplevel" command is being
-	 * executed). null means no procedure is active or "uplevel 0" is
-	 * being exec'ed.
+	/**
+	 * Points to the call frame whose variables are currently in use (same as frame unless an "uplevel" command is being
+	 * executed). null means no procedure is active or "uplevel 0" is being exec'ed.
 	 */
 	public CallFrame varFrame;
 
 	/**
-	 *  The interpreter's global namespace.
+	 * The interpreter's global namespace.
 	 */
 	Namespace globalNs;
 
@@ -135,33 +121,30 @@ public class Interp extends EventuallyFreed {
 	public HashMap hiddenCmdTable;
 
 	/**
-	 * Information used by InterpCmd.java to keep
-	 * track of master/slave interps on a per-interp basis.
+	 * Information used by InterpCmd.java to keep track of master/slave interps on a per-interp basis.
 	 * 
-	 * Keeps track of all interps for which this interp is the Master. First,
-	 * slaveTable (a hashtable) maps from names of commands to slave
-	 * interpreters. This hashtable is used to store information about slave
-	 * interpreters of this interpreter, to map over all slaves, etc.
+	 * Keeps track of all interps for which this interp is the Master. First, slaveTable (a hashtable) maps from names
+	 * of commands to slave interpreters. This hashtable is used to store information about slave interpreters of this
+	 * interpreter, to map over all slaves, etc.
 	 */
 
 	public HashMap slaveTable;
 
 	/**
-	 * Hash table for Target Records. Contains all Target records which denote
-	 * aliases from slaves or sibling interpreters that direct to commands in
-	 * this interpreter. This table is used to remove dangling pointers from the
+	 * Hash table for Target Records. Contains all Target records which denote aliases from slaves or sibling
+	 * interpreters that direct to commands in this interpreter. This table is used to remove dangling pointers from the
 	 * slave (or sibling) interpreters when this interpreter is deleted.
 	 */
 
 	public HashMap targetTable;
 
 	/**
-	 *  Information necessary for this interp to function as a slave.
+	 * Information necessary for this interp to function as a slave.
 	 */
 	public InterpSlaveCmd slave;
 
 	/**
-	 *  Table which maps from names of commands in slave interpreter to InterpAliasCmd objects.
+	 * Table which maps from names of commands in slave interpreter to InterpAliasCmd objects.
 	 */
 	public HashMap aliasTable;
 
@@ -171,18 +154,17 @@ public class Interp extends EventuallyFreed {
 	// CallFrame globalFrame;
 
 	/**
-	 *  The script file currently under execution. Can be null if the
-	 * interpreter is not evaluating any script file.
+	 * The script file currently under execution. Can be null if the interpreter is not evaluating any script file.
 	 */
 	public String scriptFile;
 
-	/** Number of times the interp.eval() routine has been recursively
-	 *  invoked.
-     */
+	/**
+	 * Number of times the interp.eval() routine has been recursively invoked.
+	 */
 	public int nestLevel;
 
 	/**
-	 *  Used to catch infinite loops in Parser.eval2.
+	 * Used to catch infinite loops in Parser.eval2.
 	 */
 
 	private int maxNestingDepth = 1000;
@@ -192,7 +174,7 @@ public class Interp extends EventuallyFreed {
 	public int evalFlags;
 
 	/**
-	 *  Flags used when evaluating a command.
+	 * Flags used when evaluating a command.
 	 */
 	int flags;
 
@@ -200,8 +182,8 @@ public class Interp extends EventuallyFreed {
 
 	public boolean isSafe;
 
-	/** Offset of character just after last one compiled or executed
-	 * by Parser.eval2().
+	/**
+	 * Offset of character just after last one compiled or executed by Parser.eval2().
 	 */
 	public int termOffset;
 
@@ -211,74 +193,86 @@ public class Interp extends EventuallyFreed {
 
 	ArrayList resolvers;
 
-	/** The expression parser for this interp.
-	  */
+	/**
+	 * The expression parser for this interp.
+	 */
 	public Expression expr;
 
-	// Used by the Expression class. If it is equal to zero, then the
-	// parser will evaluate commands and retrieve variable values from
-	// the interp.
-
+	/**
+	 * Used by the Expression class. If it is equal to zero, then the parser will evaluate commands and retrieve
+	 * variable values from the interp.
+	 */
 	int noEval;
 
-	// Used in the Expression.java file for the
-	// SrandFunction.class and RandFunction.class.
-	// Set to true if a seed has been set.
+	/**
+	 * Used in the Expression.java file for the SrandFunction.class and RandFunction.class. Set to true if a seed has
+	 * been set.
+	 */
 
 	boolean randSeedInit;
 
-	// Used in the Expression.java file for the SrandFunction.class and
-	// RandFunction.class. Stores the value of the seed.
+	/**
+	 * Used in the Expression.java file for the SrandFunction.class and RandFunction.class. Stores the value of the
+	 * seed.
+	 */
 
 	long randSeed;
 
-	/** If returnCode is TCL.ERROR, stores the errorInfo.
+	/**
+	 * If returnCode is TCL.ERROR, stores the errorInfo.
 	 */
 	public String errorInfo;
 
-	/** If returnCode is TCL.ERROR, stores the errorCode.
+	/**
+	 * If returnCode is TCL.ERROR, stores the errorCode.
 	 */
 	public String errorCode;
 
-	/** Completion code to return if current procedure exits with a
-	 *  TCL_RETURN code.
+	/**
+	 * Completion code to return if current procedure exits with a TCL_RETURN code.
 	 */
 	public int returnCode;
 
-	/** 
-	 * True means the interpreter has been deleted: don't process any
-	 * more commands for it, and destroy the structure as soon as all
-	 * nested invocations of eval() are done.
+	/**
+	 * True means the interpreter has been deleted: don't process any more commands for it, and destroy the structure as
+	 * soon as all nested invocations of eval() are done.
 	 */
 	protected boolean deleted;
 
-	/** True means an error unwind is already in progress. False
-	 * means a command proc has been invoked since last error occured.
+	/**
+	 * True means an error unwind is already in progress. False means a command proc has been invoked since last error
+	 * occured.
 	 */
 	public boolean errInProgress;
 
-	/** True means information has already been logged in $errorInfo
-	 *  for the current eval() instance, so eval() needn't log it
-	 * (used to implement the "error" command).
+	/**
+	 * True means information has already been logged in $errorInfo for the current eval() instance, so eval() needn't
+	 * log it (used to implement the "error" command).
 	 */
 	public boolean errAlreadyLogged;
 
-	// True means that addErrorInfo has been called to record
-	// information for the current error. False means Interp.eval
-	// must clear the errorCode variable if an error is returned.
+	/**
+	 * True means that addErrorInfo has been called to record information for the current error. False means Interp.eval
+	 * must clear the errorCode variable if an error is returned.
+	 */
 
 	protected boolean errCodeSet;
 
-	/** When TCL_ERROR is returned, this gives the line number within
-	 * the command where the error occurred (1 means first line).
+	/**
+	 * When TCL_ERROR is returned, this gives the line number within the command where the error occurred (1 means first
+	 * line).
 	 */
 	public int errorLine;
 
-	// Stores the current result in the interpreter.
+	/**
+	 * Stores the current result in the interpreter.
+	 */
 
 	private TclObject m_result;
 
-	// Value m_result is set to when resetResult() is called.
+	/**
+	 * Value m_result is set to when resetResult() is called.
+	 */
 
 	private final TclObject m_nullResult;
 
@@ -355,10 +349,10 @@ public class Interp extends EventuallyFreed {
 	/** Used ONLY by JavaImportCmd: classTable, packageTable, wildcardTable */
 	public HashMap[] importTable = { new HashMap(), new HashMap(), new HashMap() };
 
-	/** Used by callers of Util.strtoul(), also used in FormatCmd.strtoul().
-	 * There is typically only one instance of a StrtoulResult around
-	 * at any one time. Callers should exercise care to use the results
-	 * before any other code could call strtoul() again.
+	/**
+	 * Used by callers of Util.strtoul(), also used in FormatCmd.strtoul(). There is typically only one instance of a
+	 * StrtoulResult around at any one time. Callers should exercise care to use the results before any other code could
+	 * call strtoul() again.
 	 */
 	public StrtoulResult strtoulResult = new StrtoulResult();
 
@@ -379,9 +373,8 @@ public class Interp extends EventuallyFreed {
 
 	// List of unsafe commands:
 
-	static final String[] unsafeCmds = { "encoding", "exit", "load", "cd",
-			"fconfigure", "file", "glob", "open", "pwd", "socket", "beep",
-			"echo", "ls", "resource", "source", "exec", "source" };
+	static final String[] unsafeCmds = { "encoding", "exit", "load", "cd", "fconfigure", "file", "glob", "open", "pwd",
+			"socket", "beep", "echo", "ls", "resource", "source", "exec", "source" };
 
 	// Flags controlling the call of invoke.
 
@@ -418,29 +411,24 @@ public class Interp extends EventuallyFreed {
 	/**
 	 * List of WrappedCommands that currently have active execution step traces
 	 */
-	ArrayList<WrappedCommand> activeExecutionStepTraces = null; 
-	
+	ArrayList<WrappedCommand> activeExecutionStepTraces = null;
+
 	/**
 	 * Set to true to enable step tracing, if any exist
 	 */
 	boolean stepTracingEnabled = true;
-	
+
 	/**
-	 * Using System.in directly creates non-interruptible block during System.in.read().
-	 * This instance prevents the read() block.  The first instance created will replace
-	 * System.in with itself, so code doesn't have to use this instance directly.  
+	 * Using System.in directly creates non-interruptible block during System.in.read(). This instance prevents the
+	 * read() block. The first instance created will replace System.in with itself, so code doesn't have to use this
+	 * instance directly.
 	 */
 	static public ManagedSystemInStream systemIn = new ManagedSystemInStream();
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
+	 * Side effects: Various parts of the interpreter are initialized; built-in commands are created; global variables
+	 * are initialized, etc.
 	 * 
-	 * Tcl_CreateInterp -> Interp Initializes an interpreter object.
-	 * 
-	 * Side effects: Various parts of the interpreter are initialized; built-in
-	 * commands are created; global variables are initialized, etc.
-	 * 
-	 * ----------------------------------------------------------------------
 	 */
 
 	public Interp() {
@@ -608,26 +596,20 @@ public class Interp extends EventuallyFreed {
 			setVar("tcl_platform", "byteOrder", "bigEndian", TCL.GLOBAL_ONLY);
 			setVar("tcl_platform", "user", Util.tryGetSystemProperty("user.name", "unknown"), TCL.GLOBAL_ONLY);
 
-			setVar("tcl_platform", "os", Util.tryGetSystemProperty("os.name",
-					"?"), TCL.GLOBAL_ONLY);
-			setVar("tcl_platform", "osVersion", Util.tryGetSystemProperty(
-					"os.version", "?"), TCL.GLOBAL_ONLY);
-			setVar("tcl_platform", "machine", Util.tryGetSystemProperty(
-					"os.arch", "?"), TCL.GLOBAL_ONLY);
+			setVar("tcl_platform", "os", Util.tryGetSystemProperty("os.name", "?"), TCL.GLOBAL_ONLY);
+			setVar("tcl_platform", "osVersion", Util.tryGetSystemProperty("os.version", "?"), TCL.GLOBAL_ONLY);
+			setVar("tcl_platform", "machine", Util.tryGetSystemProperty("os.arch", "?"), TCL.GLOBAL_ONLY);
 
 			setVar("tcl_version", TCL_VERSION, TCL.GLOBAL_ONLY);
 			setVar("tcl_patchLevel", TCL_PATCH_LEVEL, TCL.GLOBAL_ONLY);
 			setVar("tcl_library", "resource:/tcl/lang/library", TCL.GLOBAL_ONLY);
 			if (Util.isWindows()) {
-				setVar("tcl_platform", "host_platform", "windows",
-						TCL.GLOBAL_ONLY);
+				setVar("tcl_platform", "host_platform", "windows", TCL.GLOBAL_ONLY);
 			} else if (Util.isMac()) {
-				setVar("tcl_platform", "host_platform", "macintosh",
-						TCL.GLOBAL_ONLY);
+				setVar("tcl_platform", "host_platform", "macintosh", TCL.GLOBAL_ONLY);
 			} else {
 				setVar("tcl_platform", "host_platform", "unix", TCL.GLOBAL_ONLY);
 			}
-
 
 			// Create the env array an populated it with proper
 			// values.
@@ -665,27 +647,20 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 * Invoked to indicate that the interp should be disposed of. If there are
-	 * no Tcl_Preserve calls in effect for this interpreter, it is deleted
-	 * immediately, otherwise the interpreter is deleted when the last
-	 * Tcl_Preserve is matched by a call to Tcl_Release.
+	 * Invoked to indicate that the interp should be disposed of. If there are no Tcl_Preserve calls in effect for this
+	 * interpreter, it is deleted immediately, otherwise the interpreter is deleted when the last Tcl_Preserve is
+	 * matched by a call to Tcl_Release.
 	 * 
 	 * Results: None.
 	 * 
 	 * Side effects: Cleans up the interpreter.
 	 */
 	public void dispose() {
-		final boolean debug = false;
-
-		if (debug) {
-			System.out.println("Invoked Interp.dispose() for " + this);
-		}
 
 		// Interp.dispose() must be invoked from thread that invoked Interp()
 
 		if (Thread.currentThread() != cThread) {
-			throw new TclRuntimeError(
-					"Interp.dispose() invoked in thread other than the one it was created in");
+			throw new TclRuntimeError("Interp.dispose() invoked in thread other than the one it was created in");
 		}
 
 		// Mark the interpreter as deleted. No further evals will be allowed.
@@ -700,58 +675,39 @@ public class Interp extends EventuallyFreed {
 		super.dispose();
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
+	 * This method cleans up the state of the interpreter so that it can be garbage collected safely. This routine needs
+	 * to break any circular references that might keep the interpreter alive indefinitely.
 	 * 
-	 * DeleteInterpProc -> eventuallyDispose
-	 * 
-	 * This method cleans up the state of the interpreter so that it can be
-	 * garbage collected safely. This routine needs to break any circular
-	 * references that might keep the interpreter alive indefinitely.
-	 * 
-	 * This proc should never be called directly. Instead it is called via the
-	 * EventuallyFreed superclass. This method will only ever be invoked once.
+	 * This proc should never be called directly. Instead it is called via the EventuallyFreed superclass. This method
+	 * will only ever be invoked once.
 	 * 
 	 * Results: None.
 	 * 
 	 * Side effects: Cleans up the interpreter.
 	 * 
-	 * ----------------------------------------------------------------------
 	 */
 
 	public void eventuallyDispose() {
-		final boolean debug = false;
-
-		if (debug) {
-			System.out
-					.println("Invoked Interp.eventuallyDispose() for " + this);
-		}
-
 		// The interpreter should already be marked deleted; otherwise how did
 		// we
 		// get here?
 
 		if (!deleted) {
-			throw new TclRuntimeError(
-					"eventuallyDispose called on interpreter not marked deleted");
+			throw new TclRuntimeError("eventuallyDispose called on interpreter not marked deleted");
 		}
 
 		if (nestLevel > 0) {
 			throw new TclRuntimeError("dispose() called with active evals");
 		}
-		
+
 		// Remove our association with the notifer (if we had one).
 
 		if (notifier != null) {
 			notifier.release();
 			notifier = null;
-
-			if (debug) {
-				System.out.println("notifier set to null for " + this);
-			}
 		} else {
-			throw new TclRuntimeError(
-					"eventuallyDispose() already invoked for " + this);
+			throw new TclRuntimeError("eventuallyDispose() already invoked for " + this);
 		}
 
 		// Dismantle everything in the global namespace except for the
@@ -827,8 +783,7 @@ public class Interp extends EventuallyFreed {
 
 		// Close any remaining channels
 
-		for (Iterator iter = interpChanTable.entrySet().iterator(); iter
-				.hasNext();) {
+		for (Iterator iter = interpChanTable.entrySet().iterator(); iter.hasNext();) {
 			Map.Entry entry = (Map.Entry) iter.next();
 			Channel chan = (Channel) entry.getValue();
 			try {
@@ -845,38 +800,26 @@ public class Interp extends EventuallyFreed {
 		Namespace.deleteNamespace(globalNs);
 		globalNs = null;
 
-		// Free up the result *after* deleting variables, since variable
-		// deletion could have transferred ownership of the result string
-		// to Tcl.
+		// Free up the result *after* deleting variables, since variable deletion could have transferred ownership of
+		// the result string to Tcl.
 
 		frame = null;
 		varFrame = null;
 		resolvers = null;
 
+		// Free up classloader (makes sure Interp is released in container
+		// environments.)
+		if (classLoader != null) {
+			classLoader.dispose();
+			classLoader = null;
+		}
+
 		resetResult();
 	}
 
 	/**
-	 * Interpreter finalization method. We print a message to stderr if the user
-	 * neglected to dispose of an Interp properly. The Interp should have been
-	 * disposed of in the thread that created it.
-	 * 
-	 * Results: Prints to stderr.
-	 * 
-	 * Side effects: None.
-	 */
-
-	protected void finalize() throws Throwable {
-		if (notifier != null) {
-			System.err.println("finalized interp has not been disposed : "
-					+ this);
-		}
-		super.finalize();
-	}
-
-	/**
-	 * Check if an interpreter is ready to eval commands or scripts, i.e., if it
-	 * was not deleted and if the nesting level is not too high.
+	 * Check if an interpreter is ready to eval commands or scripts, i.e., if it was not deleted and if the nesting
+	 * level is not too high.
 	 * 
 	 * Results: Raises a TclExcetpion is the interp is not ready.
 	 * 
@@ -892,8 +835,7 @@ public class Interp extends EventuallyFreed {
 
 		if (deleted) {
 			setResult("attempt to call eval in deleted interpreter");
-			setErrorCode(TclString
-					.newInstance("CORE IDELETE {attempt to call eval in deleted interpreter}"));
+			setErrorCode(TclString.newInstance("CORE IDELETE {attempt to call eval in deleted interpreter}"));
 			throw new TclException(TCL.ERROR);
 		}
 
@@ -906,9 +848,8 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 * Create the build-in commands. These commands are loaded on demand -- the
-	 * class file of a Command class are loaded into the JVM the first time the
-	 * given command is executed.
+	 * Create the build-in commands. These commands are loaded on demand -- the class file of a Command class are loaded
+	 * into the JVM the first time the given command is executed.
 	 */
 	protected void createCommands() {
 		Extension.loadOnDemand(this, "after", "tcl.lang.cmd.AfterCmd");
@@ -934,8 +875,7 @@ public class Interp extends EventuallyFreed {
 		Extension.loadOnDemand(this, "exit", "tcl.lang.cmd.ExitCmd");
 		Extension.loadOnDemand(this, "expr", "tcl.lang.cmd.ExprCmd");
 		Extension.loadOnDemand(this, "fblocked", "tcl.lang.cmd.FblockedCmd");
-		Extension
-				.loadOnDemand(this, "fconfigure", "tcl.lang.cmd.FconfigureCmd");
+		Extension.loadOnDemand(this, "fconfigure", "tcl.lang.cmd.FconfigureCmd");
 		Extension.loadOnDemand(this, "fcopy", "tcl.lang.cmd.FcopyCmd");
 		Extension.loadOnDemand(this, "file", "tcl.lang.cmd.FileCmd");
 		Extension.loadOnDemand(this, "fileevent", "tcl.lang.cmd.FileeventCmd");
@@ -998,8 +938,7 @@ public class Interp extends EventuallyFreed {
 		// Load tcltest package as a result of "package require tcltest"
 
 		try {
-			eval("package ifneeded tcltest 1.0 {source "
-					+ "resource:/tcl/lang/library/tcltest/tcltest.tcl}");
+			eval("package ifneeded tcltest 1.0 {source " + "resource:/tcl/lang/library/tcltest/tcltest.tcl}");
 		} catch (TclException e) {
 			System.out.println(getResult());
 			e.printStackTrace();
@@ -1010,8 +949,7 @@ public class Interp extends EventuallyFreed {
 		// "package require java" in the interp. We need to create a small
 		// command that will load when "package require java" is called.
 
-		Extension.loadOnDemand(this, "jaclloadjava",
-				"tcl.pkg.java.JaclLoadJavaCmd");
+		Extension.loadOnDemand(this, "jaclloadjava", "tcl.pkg.java.JaclLoadJavaCmd");
 
 		try {
 			eval("package ifneeded java 1.4.1 jaclloadjava");
@@ -1024,8 +962,7 @@ public class Interp extends EventuallyFreed {
 		// Load the Itcl package as a result of the user running
 		// "package require Itcl".
 
-		Extension.loadOnDemand(this, "jaclloaditcl",
-				"tcl.pkg.itcl.ItclExtension");
+		Extension.loadOnDemand(this, "jaclloaditcl", "tcl.pkg.itcl.ItclExtension");
 
 		try {
 			eval("package ifneeded Itcl 3.3 {jaclloaditcl ; package provide Itcl 3.3}");
@@ -1038,8 +975,7 @@ public class Interp extends EventuallyFreed {
 		// Load the parser package as a result of the user
 		// running "package require parser".
 
-		Extension.loadOnDemand(this, "jaclloadparser",
-				"tcl.lang.TclParserExtension");
+		Extension.loadOnDemand(this, "jaclloadparser", "tcl.lang.TclParserExtension");
 
 		try {
 			eval("package ifneeded parser 1.4 {jaclloadparser}");
@@ -1051,8 +987,7 @@ public class Interp extends EventuallyFreed {
 
 		// Load the TJC package as a result of the user running
 		// "package require tjc"
-		Extension.loadOnDemand(this, "jaclloadtjc",
-				"tcl.pkg.tjc.JaclLoadTJCCmd");
+		Extension.loadOnDemand(this, "jaclloadtjc", "tcl.pkg.tjc.JaclLoadTJCCmd");
 
 		try {
 			eval("package ifneeded TJC 1.0 {jaclloadtjc ; package provide TJC 1.0}");
@@ -1065,27 +1000,24 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 * Creates a named association between user-specified data and this
-	 * interpreter. If the association already exists the data is overwritten
-	 * with the new data. The data.deleteAssocData() method will be invoked when
-	 * the interpreter is deleted.
+	 * Creates a named association between user-specified data and this interpreter. If the association already exists
+	 * the data is overwritten with the new data. The data.deleteAssocData() method will be invoked when the interpreter
+	 * is deleted.
 	 * 
-	 * NOTE: deleteAssocData() is not called when an old data is replaced by a
-	 * new data. Caller of setAssocData() is responsible with deleting the old
-	 * data.
+	 * NOTE: deleteAssocData() is not called when an old data is replaced by a new data. Caller of setAssocData() is
+	 * responsible with deleting the old data.
 	 * 
 	 * Results: None.
 	 * 
-	 * Side effects: Sets the associated data, creates the association if
-	 * needed.
+	 * Side effects: Sets the associated data, creates the association if needed.
 	 * 
-	 * @param name name for the association
-	 * @param data Object associated with the name
+	 * @param name
+	 *            name for the association
+	 * @param data
+	 *            Object associated with the name
 	 */
 
-	public void setAssocData(String name,
-			AssocData data) 
-	{
+	public void setAssocData(String name, AssocData data) {
 		if (assocData == null) {
 			assocData = new HashMap<String, AssocData>();
 		}
@@ -1093,35 +1025,34 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 * Deletes a named association of user-specified data with the specified
-	 * interpreter.
+	 * Deletes a named association of user-specified data with the specified interpreter.
 	 * 
 	 * Results: None.
 	 * 
 	 * Side effects: Deletes the association.
 	 * 
-	 * @param name name of the association
+	 * @param name
+	 *            name of the association
 	 */
-	public synchronized void  deleteAssocData(String name) 
-	{
+	public synchronized void deleteAssocData(String name) {
 		if (assocData == null) {
 			return;
 		}
 
 		AssocData d = assocData.remove(name);
-		if (d!=null) d.disposeAssocData(this);
+		if (d != null)
+			d.disposeAssocData(this);
 	}
 
 	/**
-	 * Returns the AssocData instance associated with this name in the specified
-	 * interpreter.
+	 * Returns the AssocData instance associated with this name in the specified interpreter.
 	 * 
-	 * Results: The AssocData instance in the AssocData record denoted by the
-	 * named association, or null.
+	 * Results: The AssocData instance in the AssocData record denoted by the named association, or null.
 	 * 
 	 * Side effects: None.
 	 * 
-	 * @param name name of the association
+	 * @param name
+	 *            name of the association
 	 * @return AssocData instance indicated by name, or null if it does not exist
 	 */
 
@@ -1135,14 +1066,13 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 * This procedure is invoked to handle errors that occur in Tcl commands
-	 * that are invoked in "background" (e.g. from event or timer bindings).
+	 * This procedure is invoked to handle errors that occur in Tcl commands that are invoked in "background" (e.g. from
+	 * event or timer bindings).
 	 * 
 	 * Results: None.
 	 * 
-	 * Side effects: The command "bgerror" is invoked later as an idle handler
-	 * to process the error, passing it the error message. If that fails, then
-	 * an error message is output on stderr.
+	 * Side effects: The command "bgerror" is invoked later as an idle handler to process the error, passing it the
+	 * error message. If that fails, then an error message is output on stderr.
 	 */
 	public void backgroundError() {
 		BgErrorMgr mgr = (BgErrorMgr) getAssocData("tclBgError");
@@ -1160,7 +1090,6 @@ public class Interp extends EventuallyFreed {
 	 *-----------------------------------------------------------------
 	 */
 
-	
 	/**
 	 * Set the value of a variable
 	 * 
@@ -1169,20 +1098,14 @@ public class Interp extends EventuallyFreed {
 	 * @param value
 	 *            new value for variable
 	 * @param flags
-	 *            any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY, TCL.APPEND_VALUE,
-	 *            or TCL.LIST_ELEMENT.
+	 *            any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY, TCL.APPEND_VALUE, or TCL.LIST_ELEMENT.
 	 * @return new value for variable
 	 * @throws TclException
 	 */
-	public final TclObject setVar(TclObject nameObj,
-			TclObject value,
-			int flags) 
-			throws TclException {
-		return Var.setVar(this, nameObj.toString(), null, value,
-				(flags | TCL.LEAVE_ERR_MSG));
+	public final TclObject setVar(TclObject nameObj, TclObject value, int flags) throws TclException {
+		return Var.setVar(this, nameObj.toString(), null, value, (flags | TCL.LEAVE_ERR_MSG));
 	}
 
-	
 	/**
 	 * Set the value of a variable
 	 * 
@@ -1191,18 +1114,13 @@ public class Interp extends EventuallyFreed {
 	 * @param value
 	 *            new value for variable
 	 * @param flags
-	 *            any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY, TCL.APPEND_VALUE,
-	 *            or TCL.LIST_ELEMENT.
+	 *            any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY, TCL.APPEND_VALUE, or TCL.LIST_ELEMENT.
 	 * @return new value for variable
 	 * @throws TclException
 	 */
-	public final TclObject setVar(String name, 
-			TclObject value, 
-			int flags)
-			throws TclException {
+	public final TclObject setVar(String name, TclObject value, int flags) throws TclException {
 		return Var.setVar(this, name, null, value, (flags | TCL.LEAVE_ERR_MSG));
 	}
-
 
 	/**
 	 * Set the value of a variable
@@ -1214,20 +1132,13 @@ public class Interp extends EventuallyFreed {
 	 * @param value
 	 *            new value for variable
 	 * @param flags
-	 *            any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY, TCL.APPEND_VALUE,
-	 *            or TCL.LIST_ELEMENT.
+	 *            any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY, TCL.APPEND_VALUE, or TCL.LIST_ELEMENT.
 	 * @return new value for variable
 	 * @throws TclException
 	 */
-	public final TclObject setVar(String name1, 
-			String name2, 
-			TclObject value,
-			int flags) 
-			throws TclException {
-		return Var.setVar(this, name1, name2, value,
-				(flags | TCL.LEAVE_ERR_MSG));
+	public final TclObject setVar(String name1, String name2, TclObject value, int flags) throws TclException {
+		return Var.setVar(this, name1, name2, value, (flags | TCL.LEAVE_ERR_MSG));
 	}
-
 
 	/**
 	 * Set the value of a variable
@@ -1237,46 +1148,32 @@ public class Interp extends EventuallyFreed {
 	 * @param strValue
 	 *            new value for variable
 	 * @param flags
-	 *            any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY, TCL.APPEND_VALUE,
-	 *            or TCL.LIST_ELEMENT.
+	 *            any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY, TCL.APPEND_VALUE, or TCL.LIST_ELEMENT.
 	 * @return new value for variable
 	 * @throws TclException
 	 */
-	public final TclObject setVar(String name,
-			String strValue, 
-			int flags) 
-			throws TclException {
-		return Var.setVar(this, name, null, checkCommonString(strValue),
-				(flags | TCL.LEAVE_ERR_MSG));
+	public final TclObject setVar(String name, String strValue, int flags) throws TclException {
+		return Var.setVar(this, name, null, checkCommonString(strValue), (flags | TCL.LEAVE_ERR_MSG));
 	}
 
-	
 	/**
 	 * Set a variable to the value of a String
 	 * 
 	 * @param name1
-	 *            If name2 is null, this is the name of a scalar variable;
-	 *            otherwise it is the name of an array
+	 *            If name2 is null, this is the name of a scalar variable; otherwise it is the name of an array
 	 * @param name2
 	 *            name of element within an array, or null
 	 * @param strValue
 	 *            new value for variable
 	 * @param flags
-	 *            any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY, TCL.APPEND_VALUE,
-	 *            or TCL.LIST_ELEMENT.
+	 *            any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY, TCL.APPEND_VALUE, or TCL.LIST_ELEMENT.
 	 * @return the new value of the variable
 	 * @throws TclException
 	 */
-	public final TclObject setVar(String name1, 
-			String name2, 
-			String strValue, 
-			int flags) 
-			throws TclException {
-		return Var.setVar(this, name1, name2, checkCommonString(strValue),
-				(flags | TCL.LEAVE_ERR_MSG));
+	public final TclObject setVar(String name1, String name2, String strValue, int flags) throws TclException {
+		return Var.setVar(this, name1, name2, checkCommonString(strValue), (flags | TCL.LEAVE_ERR_MSG));
 	}
 
-	
 	/**
 	 * Set a variable to the value in a long argument.
 	 * 
@@ -1287,72 +1184,52 @@ public class Interp extends EventuallyFreed {
 	 * @param intValue
 	 *            new value for avariable
 	 * @param flags
-	 *            Various flags that tell how to set valu any of
-	 *            TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY, TCL.APPEND_VALUE, or
-	 *            TCL.LIST_ELEMENT.
+	 *            Various flags that tell how to set valu any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY, TCL.APPEND_VALUE,
+	 *            or TCL.LIST_ELEMENT.
 	 * @return Variable with new value
 	 * 
 	 * @throws TclException
 	 */
-	public final TclObject setVar(String name1, String name2, long intValue, int flags) 
-			throws TclException {
-		return Var.setVar(this, name1, name2, checkCommonInteger(intValue),
-				(flags | TCL.LEAVE_ERR_MSG));
+	public final TclObject setVar(String name1, String name2, long intValue, int flags) throws TclException {
+		return Var.setVar(this, name1, name2, checkCommonInteger(intValue), (flags | TCL.LEAVE_ERR_MSG));
 	}
-
 
 	/**
 	 * Set a variable to the value of a double
 	 * 
 	 * @param name1
-	 *            If name2 is null, this is the name of a scalar variable;
-	 *            otherwise it is the name of an array
+	 *            If name2 is null, this is the name of a scalar variable; otherwise it is the name of an array
 	 * @param name2
 	 *            name of element within an array, or null
 	 * @param dValue
 	 *            new value for variable
 	 * @param flags
-	 *            any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY, TCL.APPEND_VALUE,
-	 *            or TCL.LIST_ELEMENT.
+	 *            any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY, TCL.APPEND_VALUE, or TCL.LIST_ELEMENT.
 	 * @return the new value of the variable
 	 * @throws TclException
 	 */
-	public final TclObject setVar(String name1,
-			String name2, 
-			double dValue, 
-			int flags) 
-			throws TclException {
-		return Var.setVar(this, name1, name2, checkCommonDouble(dValue),
-				(flags | TCL.LEAVE_ERR_MSG));
+	public final TclObject setVar(String name1, String name2, double dValue, int flags) throws TclException {
+		return Var.setVar(this, name1, name2, checkCommonDouble(dValue), (flags | TCL.LEAVE_ERR_MSG));
 	}
-
 
 	/**
 	 * Set a variable to the value of a boolean
 	 * 
 	 * @param name1
-	 *            If name2 is null, this is the name of a scalar variable;
-	 *            otherwise it is the name of an array
+	 *            If name2 is null, this is the name of a scalar variable; otherwise it is the name of an array
 	 * @param name2
 	 *            name of element within an array, or null
 	 * @param bValue
 	 *            new value for variable
 	 * @param flags
-	 *            any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY, TCL.APPEND_VALUE,
-	 *            or TCL.LIST_ELEMENT.
+	 *            any of TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY, TCL.APPEND_VALUE, or TCL.LIST_ELEMENT.
 	 * @return the new value of the variable
 	 * @throws TclException
 	 */
-	public final TclObject setVar(String name1,
-			String name2,
-			boolean bValue, 
-			int flags) 
-			throws TclException {
-		return Var.setVar(this, name1, name2, checkCommonBoolean(bValue),
-				(flags | TCL.LEAVE_ERR_MSG));
+	public final TclObject setVar(String name1, String name2, boolean bValue, int flags) throws TclException {
+		return Var.setVar(this, name1, name2, checkCommonBoolean(bValue), (flags | TCL.LEAVE_ERR_MSG));
 	}
 
-	
 	/**
 	 * Get the value of a variable. Side effects: May trigger traces.
 	 * 
@@ -1370,8 +1247,7 @@ public class Interp extends EventuallyFreed {
 			int flags) // Various flags that tell how to get value:
 			// any of TCL.GLOBAL_ONLY or TCL.NAMESPACE_ONLY.
 			throws TclException {
-		return Var.getVar(this, nameObj.toString(), null,
-				(flags | TCL.LEAVE_ERR_MSG));
+		return Var.getVar(this, nameObj.toString(), null, (flags | TCL.LEAVE_ERR_MSG));
 	}
 
 	/**
@@ -1385,9 +1261,7 @@ public class Interp extends EventuallyFreed {
 	 * @throws TclException
 	 *             If the variable is not
 	 */
-	public final TclObject getVar(String name, 
-			int flags) 
-			throws TclException {
+	public final TclObject getVar(String name, int flags) throws TclException {
 		return Var.getVar(this, name, null, (flags | TCL.LEAVE_ERR_MSG));
 	}
 
@@ -1395,8 +1269,7 @@ public class Interp extends EventuallyFreed {
 	 * Get the value of a variable. Side effects: May trigger traces.
 	 * 
 	 * @param name1
-	 *            if name2 is null, this is the name of a scalar. Otherwise, it
-	 *            is the name of an array
+	 *            if name2 is null, this is the name of a scalar. Otherwise, it is the name of an array
 	 * @param name2
 	 *            name of an element within an array, or null
 	 * @param flags
@@ -1406,14 +1279,10 @@ public class Interp extends EventuallyFreed {
 	 *             If the variable is not
 	 */
 
-	public final TclObject getVar(String name1, 
-			String name2, 
-			int flags) 
-			throws TclException {
+	public final TclObject getVar(String name1, String name2, int flags) throws TclException {
 		return Var.getVar(this, name1, name2, (flags | TCL.LEAVE_ERR_MSG));
 	}
 
-	
 	/**
 	 * Unset a variable. May trigget traces.
 	 * 
@@ -1423,14 +1292,10 @@ public class Interp extends EventuallyFreed {
 	 *            any of TCL.GLOBAL_ONLY or TCL.NAMESPACE_ONLY.
 	 * @throws TclException
 	 */
-	public final void unsetVar(TclObject nameObj, 
-			int flags)
-			throws TclException {
-		Var.unsetVar(this, nameObj.toString(), null,
-				(flags | TCL.LEAVE_ERR_MSG));
+	public final void unsetVar(TclObject nameObj, int flags) throws TclException {
+		Var.unsetVar(this, nameObj.toString(), null, (flags | TCL.LEAVE_ERR_MSG));
 	}
 
-	
 	/**
 	 * Unset a variable. May trigget traces.
 	 * 
@@ -1440,29 +1305,22 @@ public class Interp extends EventuallyFreed {
 	 *            any of TCL.GLOBAL_ONLY or TCL.NAMESPACE_ONLY.
 	 * @throws TclException
 	 */
-	public final void unsetVar(String name,
-			int flags)
-			throws TclException {
+	public final void unsetVar(String name, int flags) throws TclException {
 		Var.unsetVar(this, name, null, (flags | TCL.LEAVE_ERR_MSG));
 	}
 
-	
 	/**
 	 * Unset a variable. May trigget traces.
 	 * 
 	 * @param name1
-	 *            if name2 is null, this is the name of a scalar. Otherwise it
-	 *            is the name of an array
+	 *            if name2 is null, this is the name of a scalar. Otherwise it is the name of an array
 	 * @param name2
 	 *            name of an element within an array, or null
 	 * @param flags
 	 *            any of TCL.GLOBAL_ONLY or TCL.NAMESPACE_ONLY.
 	 * @throws TclException
 	 */
-	public final void unsetVar(String name1, 
-			String name2,
-			int flags) 
-			throws TclException {
+	public final void unsetVar(String name1, String name2, int flags) throws TclException {
 		Var.unsetVar(this, name1, name2, (flags | TCL.LEAVE_ERR_MSG));
 	}
 
@@ -1472,21 +1330,17 @@ public class Interp extends EventuallyFreed {
 	 * Results: None.
 	 * 
 	 * Side effects: None.
-	 * 	@param nameObj
+	 * 
+	 * @param nameObj
 	 *            name of variable, may contain a parenthesized index value
 	 * @param trace
-	 *            object to notify when specified ops are invoked upon the
-	 *            variable
+	 *            object to notify when specified ops are invoked upon the variable
 	 * @param flags
-	 *             OR-ed collection of bits, including any  of
-	 *            TCL.TRACE_READS, TCL.TRACE_WRITES, TCL.TRACE_UNSETS,
+	 *            OR-ed collection of bits, including any of TCL.TRACE_READS, TCL.TRACE_WRITES, TCL.TRACE_UNSETS,
 	 *            TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY.
 	 */
 
-	void traceVar(TclObject nameObj,
-			VarTrace trace, 
-			int flags) 
-			throws TclException {
+	void traceVar(TclObject nameObj, VarTrace trace, int flags) throws TclException {
 		Var.traceVar(this, nameObj.toString(), null, flags, trace);
 	}
 
@@ -1496,11 +1350,9 @@ public class Interp extends EventuallyFreed {
 	 * @param name
 	 *            name of variable, may contain a parenthesized index value
 	 * @param trace
-	 *            object to notify when specified ops are invoked upon the
-	 *            variable
+	 *            object to notify when specified ops are invoked upon the variable
 	 * @param flags
-	 *             OR-ed collection of bits, including any  of
-	 *            TCL.TRACE_READS, TCL.TRACE_WRITES, TCL.TRACE_UNSETS,
+	 *            OR-ed collection of bits, including any of TCL.TRACE_READS, TCL.TRACE_WRITES, TCL.TRACE_UNSETS,
 	 *            TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY.
 	 */
 
@@ -1509,63 +1361,49 @@ public class Interp extends EventuallyFreed {
 			// to signify an array reference.
 			VarTrace trace, // Object to notify when specified ops are
 			// invoked upon varName.
-			int flags)
-			throws TclException {
+			int flags) throws TclException {
 		Var.traceVar(this, name, null, flags, trace);
 	}
 
 	/**
-	 * Add a trace to a variable.  
+	 * Add a trace to a variable.
 	 * 
-	 * @param part1 name of variable
+	 * @param part1
+	 *            name of variable
 	 * 
 	 * @param part2
-	 *            name of element in within an array, null means part1 is a
-	 *            scalar or entire array
+	 *            name of element in within an array, null means part1 is a scalar or entire array
 	 * @param trace
-	 *            object to notify when specified ops are invoked upon the
-	 *            variable
+	 *            object to notify when specified ops are invoked upon the variable
 	 * @param flags
-	 *            OR-ed collection of bits, including any of TCL.TRACE_READS,
-	 *            TCL.TRACE_WRITES, TCL.TRACE_UNSETS, TCL.GLOBAL_ONLY,
-	 *            TCL.NAMESPACE_ONLY.
+	 *            OR-ed collection of bits, including any of TCL.TRACE_READS, TCL.TRACE_WRITES, TCL.TRACE_UNSETS,
+	 *            TCL.GLOBAL_ONLY, TCL.NAMESPACE_ONLY.
 	 */
 
-	public void traceVar(String part1, 
-			String part2,
-			VarTrace trace, 
-			int flags) 
-			throws TclException {
+	public void traceVar(String part1, String part2, VarTrace trace, int flags) throws TclException {
 		Var.traceVar(this, part1, part2, flags, trace);
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * untraceVar --
-	 * 
+	/**
 	 * Remove a trace from a variable.
 	 * 
 	 * Results: None.
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param nameObj
+	 *            Name of variable; may end with "(index)" to signify an array reference.
+	 * @param trace
+	 *            Object associated with trace.
+	 * @param flags
+	 *            OR-ed collection of bits describing current trace, including any of TCL.TRACE_READS, TCL.TRACE_WRITES,
+	 *            TCL.TRACE_UNSETS, TCL.GLOBAL_ONLY and TCL.NAMESPACE_ONLY.
 	 */
-
-	void untraceVar(TclObject nameObj, // Name of variable; may end with
-										// "(index)"
-			// to signify an array reference.
-			VarTrace trace, // Object associated with trace.
-			int flags) // OR-ed collection of bits describing current
-	// trace, including any of TCL.TRACE_READS,
-	// TCL.TRACE_WRITES, TCL.TRACE_UNSETS,
-	// TCL.GLOBAL_ONLY and TCL.NAMESPACE_ONLY.
-	{
+	void untraceVar(TclObject nameObj, VarTrace trace, int flags) {
 		Var.untraceVar(this, nameObj.toString(), null, flags, trace);
 	}
 
-	/*
+	/**
 	 * ----------------------------------------------------------------------
 	 * 
 	 * untraceVar --
@@ -1576,64 +1414,51 @@ public class Interp extends EventuallyFreed {
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * 
+	 * @param nameObj
+	 *            Name of variable; may end with "(index)" to signify an array reference.
+	 * @param trace
+	 *            Object associated with trace.
+	 * @param flags
+	 *            OR-ed collection of bits describing current trace, including any of TCL.TRACE_READS, TCL.TRACE_WRITES,
+	 *            TCL.TRACE_UNSETS, TCL.GLOBAL_ONLY and TCL.NAMESPACE_ONLY.
 	 */
-
-	public void untraceVar(String name, // Name of variable; may end with
-										// "(index)"
-			// to signify an array reference.
-			VarTrace trace, // Object associated with trace.
-			int flags) // OR-ed collection of bits describing current
-	// trace, including any of TCL.TRACE_READS,
-	// TCL.TRACE_WRITES, TCL.TRACE_UNSETS,
-	// TCL.GLOBAL_ONLY and TCL.NAMESPACE_ONLY.
-	{
+	public void untraceVar(String name, VarTrace trace, int flags) {
 		Var.untraceVar(this, name, null, flags, trace);
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * untraceVar --
-	 * 
+	/**
 	 * Remove a trace from a variable.
 	 * 
 	 * Results: None.
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param part1
+	 *            Name of scalar variable or array.
+	 * @param part2
+	 *            Name of element within array; null means trace applies to scalar variable or array as-a-whole.
+	 * @param trace
+	 *            Object associated with trace.
+	 * @param flags
+	 *            OR-ed collection of bits describing current trace, including any of TCL.TRACE_READS, TCL.TRACE_WRITES,
+	 *            TCL.TRACE_UNSETS, TCL.GLOBAL_ONLY and TCL.NAMESPACE_ONLY.
 	 */
-
-	public void untraceVar(String part1, // Name of scalar variable or array.
-			String part2, // Name of element within array; null means
-			// trace applies to scalar variable or array
-			// as-a-whole.
-			VarTrace trace, // Object associated with trace.
-			int flags) // OR-ed collection of bits describing current
-	// trace, including any of TCL.TRACE_READS,
-	// TCL.TRACE_WRITES, TCL.TRACE_UNSETS,
-	// TCL.GLOBAL_ONLY and TCL.NAMESPACE_ONLY.
-	{
+	public void untraceVar(String part1, String part2, VarTrace trace, int flags) {
 		Var.untraceVar(this, part1, part2, flags, trace);
 	}
 
 	/**
-	 * Define a new command in the interpreter. Side effects: If a command named
-	 * cmdName already exists for interp, it is deleted. In the future, when
-	 * cmdName is seen as the name of a command by eval(), cmd will be called.
-	 * When the command is deleted from the table, cmd.disposeCmd() be called if
-	 * cmd implements the CommandWithDispose interface.
+	 * Define a new command in the interpreter. Side effects: If a command named cmdName already exists for interp, it
+	 * is deleted. In the future, when cmdName is seen as the name of a command by eval(), cmd will be called. When the
+	 * command is deleted from the table, cmd.disposeCmd() be called if cmd implements the CommandWithDispose interface.
 	 * 
 	 * @param cmdName
 	 *            name of the command
 	 * @param cmdImpl
 	 *            Command instance that implements the command
 	 */
-	public void createCommand(String cmdName, // Name of command.
-			Command cmdImpl) // Command object to associate with
-	// cmdName.
-	{
+	public void createCommand(String cmdName, Command cmdImpl) {
 		ImportRef oldRef = null;
 		Namespace ns;
 		WrappedCommand cmd, refCmd;
@@ -1653,8 +1478,7 @@ public class Interp extends EventuallyFreed {
 
 		if (cmdName.indexOf("::") != -1) {
 			Namespace.GetNamespaceForQualNameResult gnfqnr = this.getnfqnResult;
-			Namespace.getNamespaceForQualName(this, cmdName, null,
-					Namespace.CREATE_NS_IF_UNKNOWN, gnfqnr);
+			Namespace.getNamespaceForQualName(this, cmdName, null, Namespace.CREATE_NS_IF_UNKNOWN, gnfqnr);
 			ns = gnfqnr.ns;
 			tail = gnfqnr.simpleName;
 
@@ -1723,18 +1547,15 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 * Given a token returned by, e.g., Tcl_CreateCommand or Tcl_FindCommand,
-	 * this procedure returns the command's full name, qualified by a sequence
-	 * of parent namespace names. The command's fully-qualified name may have
-	 * changed due to renaming.
+	 * Given a token returned by, e.g., Tcl_CreateCommand or Tcl_FindCommand, this procedure returns the command's full
+	 * name, qualified by a sequence of parent namespace names. The command's fully-qualified name may have changed due
+	 * to renaming.
 	 * 
 	 * @param cmd
 	 *            command of which to get the full name
 	 * @return full name, including namepaces, of the command
 	 */
-	public String getCommandFullName(WrappedCommand cmd) // Token for the
-															// command.
-	{
+	public String getCommandFullName(WrappedCommand cmd) {
 		Interp interp = this;
 		StringBuffer name = new StringBuffer();
 
@@ -1757,17 +1578,15 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 * Given a token returned by, e.g., Tcl_CreateCommand or Tcl_FindCommand,
-	 * this procedure returns the command's name. The command's fully-qualified
-	 * name may have changed due to renaming.
+	 * Given a token returned by, e.g., Tcl_CreateCommand or Tcl_FindCommand, this procedure returns the command's name.
+	 * The command's fully-qualified name may have changed due to renaming.
 	 * 
 	 * @param cmd
 	 *            command of which to get the name of
 	 * @return name of the command
 	 */
 
-	public String getCommandName(WrappedCommand cmd) // Token for the command.
-	{
+	public String getCommandName(WrappedCommand cmd) {
 		if ((cmd == null) || (cmd.table == null)) {
 			// This should only happen if command was "created" after the
 			// interpreter began to be deleted, so there isn't really any
@@ -1781,17 +1600,15 @@ public class Interp extends EventuallyFreed {
 	/**
 	 * Remove the given command from the this interpreter.
 	 * 
-	 * Side effects: CmdName will no longer be recognized as a valid command for
-	 * the interpreter.
+	 * Side effects: CmdName will no longer be recognized as a valid command for the interpreter.
 	 * 
 	 * @param cmdName
 	 *            name of command to remove in this interpreter
-	 * @return 0 is returned if the command was deleted successfully. -1 is
-	 *         returned if there didn't exist a command by that name.
+	 * @return 0 is returned if the command was deleted successfully. -1 is returned if there didn't exist a command by
+	 *         that name.
 	 */
 
-	public int deleteCommand(String cmdName) // Name of command to remove.
-	{
+	public int deleteCommand(String cmdName) {
 		WrappedCommand cmd;
 
 		// Find the desired command and delete it.
@@ -1811,24 +1628,24 @@ public class Interp extends EventuallyFreed {
 	/**
 	 * Remove the given command from the given interpreter.
 	 * 
-	 * Side effects: cmdName will no longer be recognized as a valid command for
-	 * the interpreter.
+	 * Side effects: cmdName will no longer be recognized as a valid command for the interpreter.
 	 * 
 	 * @param cmd
 	 *            wrapper token for the command to delete; may be null
-	 * @return 0 is returned if the command was deleted successfully. -1 is
-	 *         returned if there didn't exist a command by that name (cmd is null)
+	 * @return 0 is returned if the command was deleted successfully. -1 is returned if there didn't exist a command by
+	 *         that name (cmd is null)
 	 */
 
-	public int deleteCommandFromToken(WrappedCommand cmd) 
-	{
-		/* dont' try to delete a command in a delete trace callback; it's going to be deleted anyway */
+	public int deleteCommandFromToken(WrappedCommand cmd) {
+		/*
+		 * dont' try to delete a command in a delete trace callback; it's going to be deleted anyway
+		 */
 		if (cmd == null) {
 			return -1;
 		}
 		/* Call the command traces */
-		cmd.callCommandTraces(CommandTrace.DELETE,"");
-		
+		cmd.callCommandTraces(CommandTrace.DELETE, "");
+
 		ImportRef ref, nextRef;
 		WrappedCommand importCmd;
 
@@ -1895,22 +1712,19 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 * Called to give an existing Tcl command a different name. Both the old
-	 * command name and the new command name can have "::" namespace qualifiers.
-	 * If the new command has a different namespace context, the command will be
-	 * moved to that namespace and will execute in the context of that new
-	 * namespace.
+	 * Called to give an existing Tcl command a different name. Both the old command name and the new command name can
+	 * have "::" namespace qualifiers. If the new command has a different namespace context, the command will be moved
+	 * to that namespace and will execute in the context of that new namespace.
 	 * 
-	 * If the new command name is null or the empty string, the command is
-	 * deleted.
+	 * If the new command name is null or the empty string, the command is deleted.
 	 * 
-	 * @param oldName existing command name
-	 * @param newName new name
+	 * @param oldName
+	 *            existing command name
+	 * @param newName
+	 *            new name
 	 * @throws TclException
 	 */
-	public void renameCommand(String oldName, // Existing command name.
-			String newName) // New command name.
-			throws TclException {
+	public void renameCommand(String oldName, String newName) throws TclException {
 		Interp interp = this;
 		String newTail;
 		Namespace cmdNs, newNs;
@@ -1923,12 +1737,9 @@ public class Interp extends EventuallyFreed {
 
 		cmd = Namespace.findCommand(interp, oldName, null, 0);
 		if (cmd == null) {
-			throw new TclException(
-					interp,
-					"can't "
-							+ (((newName == null) || (newName.length() == 0)) ? "delete"
-									: "rename") + " \"" + oldName
-							+ "\": command doesn't exist");
+			throw new TclException(interp, "can't "
+					+ (((newName == null) || (newName.length() == 0)) ? "delete" : "rename") + " \"" + oldName
+					+ "\": command doesn't exist");
 		}
 		cmdNs = cmd.ns;
 
@@ -1940,25 +1751,21 @@ public class Interp extends EventuallyFreed {
 			return;
 		}
 
-	
 		// Make sure that the destination command does not already exist.
 		// The rename operation is like creating a command, so we should
 		// automatically create the containing namespaces just like
 		// Tcl_CreateCommand would.
 
 		Namespace.GetNamespaceForQualNameResult gnfqnr = interp.getnfqnResult;
-		Namespace.getNamespaceForQualName(interp, newName, null,
-				Namespace.CREATE_NS_IF_UNKNOWN, gnfqnr);
+		Namespace.getNamespaceForQualName(interp, newName, null, Namespace.CREATE_NS_IF_UNKNOWN, gnfqnr);
 		newNs = gnfqnr.ns;
 		newTail = gnfqnr.simpleName;
 
 		if ((newNs == null) || (newTail == null)) {
-			throw new TclException(interp, "can't rename to \"" + newName
-					+ "\": bad command name");
+			throw new TclException(interp, "can't rename to \"" + newName + "\": bad command name");
 		}
 		if (newNs.cmdTable.get(newTail) != null) {
-			throw new TclException(interp, "can't rename to \"" + newName
-					+ "\": command already exists");
+			throw new TclException(interp, "can't rename to \"" + newName + "\": command already exists");
 		}
 
 		/* Call the command traces */
@@ -1966,8 +1773,9 @@ public class Interp extends EventuallyFreed {
 		cmd.callCommandTraces(CommandTrace.RENAME, newCommand);
 		/* It's possible that the command was deleted in one of the callbacks */
 		cmd = Namespace.findCommand(interp, oldName, null, 0);
-		if (cmd==null) return;
-		
+		if (cmd == null)
+			return;
+
 		// Warning: any changes done in the code here are likely
 		// to be needed in Tcl_HideCommand() code too.
 		// (until the common parts are extracted out) --dl
@@ -2007,29 +1815,26 @@ public class Interp extends EventuallyFreed {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
+	/**
 	 * TclPreventAliasLoop -> preventAliasLoop
 	 * 
-	 * When defining an alias or renaming a command, prevent an alias loop from
-	 * being formed.
+	 * When defining an alias or renaming a command, prevent an alias loop from being formed.
 	 * 
 	 * Results: A standard Tcl object result.
 	 * 
-	 * Side effects: If TCL_ERROR is returned, the function also stores an error
-	 * message in the interpreter's result object.
+	 * Side effects: If TCL_ERROR is returned, the function also stores an error message in the interpreter's result
+	 * object.
 	 * 
-	 * NOTE: This function is public internal (instead of being static to this
-	 * file) because it is also used from TclRenameCommand.
+	 * NOTE: This function is public internal (instead of being static to this file) because it is also used from
+	 * TclRenameCommand.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param cmdInterp
+	 *            Interp in which the command is being defined.
+	 * @param cmd
+	 *            Tcl command we are attempting to define.
+	 * @throws TclException
 	 */
-
-	public void preventAliasLoop(Interp cmdInterp, // Interp in which the
-													// command is being defined.
-			WrappedCommand cmd) // Tcl command we are attempting to define.
-			throws TclException {
+	public void preventAliasLoop(Interp cmdInterp, WrappedCommand cmd) throws TclException {
 		// If we are not creating or renaming an alias, then it is
 		// always OK to create or rename the command.
 
@@ -2053,8 +1858,8 @@ public class Interp extends EventuallyFreed {
 				return;
 			}
 			if (aliasCmd.cmd == cmd.cmd) {
-				throw new TclException(this, "cannot define or rename alias \""
-						+ alias.name + "\": would create a loop");
+				throw new TclException(this, "cannot define or rename alias \"" + alias.name
+						+ "\": would create a loop");
 			}
 
 			// Otherwise, follow the chain one step further. See if the target
@@ -2071,14 +1876,13 @@ public class Interp extends EventuallyFreed {
 	/**
 	 * Returns the command procedure of the given command.
 	 * 
-	 * @param cmdName string name of the command
+	 * @param cmdName
+	 *            string name of the command
 	 * 
-	 * @return The command procedure of the given command, or null if the
-	 * command doesn't exist.  Do not directly call getCommand().cmdProc();
-	 * see WrappedCommand.invoke() and WrappedCommand.mustCallInvoke()
+	 * @return The command procedure of the given command, or null if the command doesn't exist. Do not directly call
+	 *         getCommand().cmdProc(); see WrappedCommand.invoke() and WrappedCommand.mustCallInvoke()
 	 */
-	public Command getCommand(String cmdName) 
-	{
+	public Command getCommand(String cmdName) {
 		// Find the desired command and return it.
 
 		WrappedCommand cmd;
@@ -2092,9 +1896,10 @@ public class Interp extends EventuallyFreed {
 
 		return ((cmd == null) ? null : cmd.cmd);
 	}
-	
+
 	/**
-	 * @param cmdName name of command to get
+	 * @param cmdName
+	 *            name of command to get
 	 * @return WrappedCommand object for given command
 	 */
 	public WrappedCommand getWrappedCommand(String cmdName) {
@@ -2113,39 +1918,42 @@ public class Interp extends EventuallyFreed {
 	 * 
 	 * Check if the string is a complete Tcl command string.
 	 * 
-	 * Result: A boolean value indicating whether the string is a complete Tcl
-	 * command string.
+	 * Result: A boolean value indicating whether the string is a complete Tcl command string.
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param string The string to check.
+	 * 
+	 * @return
 	 */
-
-	public static boolean commandComplete(String string) // The string to check.
-	{
+	public static boolean commandComplete(String string) {
 		return Parser.commandComplete(string, string.length());
 	}
 
-	
 	/**
 	 * Set a command trace on a command
 	 * 
-	 * @param command fully qualified command name
-	 * @param trace trace to add to command
-	 * @throws TclException 
+	 * @param command
+	 *            fully qualified command name
+	 * @param trace
+	 *            trace to add to command
+	 * @throws TclException
 	 */
 	public void traceCommand(String command, CommandTrace trace) throws TclException {
 		WrappedCommand wrappedCommand = Namespace.findCommand(this, command, null, TCL.LEAVE_ERR_MSG);
 		wrappedCommand.traceCommand(trace);
 	}
-	
+
 	/**
 	 * Remove a command trace on a command
 	 * 
-	 * @param command fully qualified command name
-	 * @param type CommandTrace.RENAME or CommandTrace.DELETE
-	 * @param callbackCmd callback command to remove
-	 * @throws TclException 
+	 * @param command
+	 *            fully qualified command name
+	 * @param type
+	 *            CommandTrace.RENAME or CommandTrace.DELETE
+	 * @param callbackCmd
+	 *            callback command to remove
+	 * @throws TclException
 	 */
 	public void untraceCommand(String command, int type, TclObject callbackCmd) throws TclException {
 		WrappedCommand cmd = Namespace.findCommand(this, command, null, TCL.LEAVE_ERR_MSG);
@@ -2155,7 +1963,8 @@ public class Interp extends EventuallyFreed {
 	/**
 	 * Get a list of all command traces on a command
 	 * 
-	 * @param command fully qualified name of command
+	 * @param command
+	 *            fully qualified name of command
 	 * @return List, in the form of [trace command info]
 	 * @throws TclException
 	 */
@@ -2163,38 +1972,43 @@ public class Interp extends EventuallyFreed {
 		WrappedCommand wrappedCommand = Namespace.findCommand(this, command, null, TCL.LEAVE_ERR_MSG);
 		return wrappedCommand.traceCommandInfo(this);
 	}
-	
-	
+
 	/**
 	 * Set a execution trace on a command
 	 * 
-	 * @param command fully qualified command name
-	 * @param trace trace to add to command
-	 * @throws TclException 
+	 * @param command
+	 *            fully qualified command name
+	 * @param trace
+	 *            trace to add to command
+	 * @throws TclException
 	 */
 	public void traceExecution(String command, ExecutionTrace trace) throws TclException {
 		WrappedCommand wrappedCommand = Namespace.findCommand(this, command, null, TCL.LEAVE_ERR_MSG);
 		wrappedCommand.traceExecution(trace);
 	}
-	
+
 	/**
 	 * Remove an execution trace on a command
 	 * 
-	 * @param command fully qualified command name
-	 * @param type ExecutionTrace.ENTER, ExecutionTrace.LEAVE, ExecutionTrace.ENTERSTEP, ExecutionTrace.LEAVESTEP
-	 * @param callbackCmd callback command to remove
-	 * @throws TclException 
+	 * @param command
+	 *            fully qualified command name
+	 * @param type
+	 *            ExecutionTrace.ENTER, ExecutionTrace.LEAVE, ExecutionTrace.ENTERSTEP, ExecutionTrace.LEAVESTEP
+	 * @param callbackCmd
+	 *            callback command to remove
+	 * @throws TclException
 	 */
 	public void untraceExecution(String command, int type, TclObject callbackCmd) throws TclException {
 		WrappedCommand cmd = Namespace.findCommand(this, command, null, TCL.LEAVE_ERR_MSG);
 		cmd.untraceExecution(type, callbackCmd.toString());
 		deactivateExecutionStepTrace(cmd);
 	}
-	
+
 	/**
 	 * Get a list of all execution traces on a command
 	 * 
-	 * @param command fully qualified name of command
+	 * @param command
+	 *            fully qualified name of command
 	 * @return List, in the form of [trace command info]
 	 * @throws TclException
 	 */
@@ -2206,50 +2020,56 @@ public class Interp extends EventuallyFreed {
 	/**
 	 * Add a new execution step trace to the active traces
 	 * 
-	 * @param cmd Command which will be stepped through
+	 * @param cmd
+	 *            Command which will be stepped through
 	 * @return true if it was added
 	 */
 	boolean activateExecutionStepTrace(WrappedCommand cmd) {
 		if (activeExecutionStepTraces == null) {
 			activeExecutionStepTraces = new ArrayList<WrappedCommand>();
 		}
-		if (activeExecutionStepTraces.contains(cmd)) return false;
+		if (activeExecutionStepTraces.contains(cmd))
+			return false;
 		activeExecutionStepTraces.add(cmd);
 		return true;
 	}
-	
+
 	/**
 	 * Remove an execution step trace from the active traces
 	 * 
-	 * @param cmd Command which was being stepped through
+	 * @param cmd
+	 *            Command which was being stepped through
 	 */
 	void deactivateExecutionStepTrace(WrappedCommand cmd) {
-		if (activeExecutionStepTraces == null) return;
+		if (activeExecutionStepTraces == null)
+			return;
 		activeExecutionStepTraces.remove(cmd);
-		if (activeExecutionStepTraces.size()==0) {
+		if (activeExecutionStepTraces.size() == 0) {
 			activeExecutionStepTraces = null;
 		}
 	}
-	
+
 	/**
 	 * @return true if there are active execution step traces in effect
 	 */
 	final boolean hasActiveExecutionStepTraces() {
-		return (stepTracingEnabled && activeExecutionStepTraces!=null);
+		return (stepTracingEnabled && activeExecutionStepTraces != null);
 	}
+
 	/**
-	 * @return a copy of the active execution step traces.  A zero-length array
-	 * is returned if there are no active traces
+	 * @return a copy of the active execution step traces. A zero-length array is returned if there are no active traces
 	 */
-	WrappedCommand [] getCopyOfActiveExecutionStepTraces() {
-		WrappedCommand [] rv = new WrappedCommand[0];
-		if (activeExecutionStepTraces == null) return rv;
+	WrappedCommand[] getCopyOfActiveExecutionStepTraces() {
+		WrappedCommand[] rv = new WrappedCommand[0];
+		if (activeExecutionStepTraces == null)
+			return rv;
 		rv = activeExecutionStepTraces.toArray(rv);
 		return rv;
 	}
-	
+
 	/**
-	 * @param enable if false, suppress execution step tracing.  If true, re-enable step tracing
+	 * @param enable
+	 *            if false, suppress execution step tracing. If true, re-enable step tracing
 	 */
 	void enableExecutionStepTracing(boolean enable) {
 		stepTracingEnabled = enable;
@@ -2266,7 +2086,7 @@ public class Interp extends EventuallyFreed {
 	 * Queries the value of this interpreter's result value
 	 * 
 	 * @return The current result in the interpreter.
-	 *
+	 * 
 	 */
 
 	public final TclObject getResult() {
@@ -2274,16 +2094,15 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 * Arrange for the given Tcl Object to be placed as the result object for
-	 * the interpreter. Convenience functions are also available to create a Tcl
-	 * Object out of the most common Java types. Note that the ref count for
-	 * m_nullResult is not changed.
+	 * Arrange for the given Tcl Object to be placed as the result object for the interpreter. Convenience functions are
+	 * also available to create a Tcl Object out of the most common Java types. Note that the ref count for m_nullResult
+	 * is not changed.
 	 * 
-	 * @param newResult A Tcl Object to be set as the result of this interpreter
+	 * @param newResult
+	 *            A Tcl Object to be set as the result of this interpreter
 	 */
 
-	public final void setResult(TclObject newResult)
-	{
+	public final void setResult(TclObject newResult) {
 		if (newResult == m_result) {
 			// Setting to current value (including m_nullResult) is a no-op.
 			return;
@@ -2301,47 +2120,43 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-
 	/**
 	 * Set this interpreter's result object to a String value.
 	 * 
-	 * @param r value to set result to
+	 * @param r
+	 *            value to set result to
 	 */
-	public final void setResult(String r) // A string result.
-	{
+	public final void setResult(String r) {
 		setResult(checkCommonString(r));
 	}
-
 
 	/**
 	 * Set this interpreter's result object to a long value.
 	 * 
-	 * @param r value to set result to
+	 * @param r
+	 *            value to set result to
 	 */
-	public final void setResult(final long r) // An int result.
-	{
+	public final void setResult(final long r) {
 		setResult(checkCommonInteger(r));
 	}
 
-	
 	/**
 	 * Set this interpreter's result object to a double value.
 	 * 
-	 * @param r value to set result to
+	 * @param r
+	 *            value to set result to
 	 */
-	public final void setResult(final double r) // A double result.
-	{
+	public final void setResult(final double r) {
 		setResult(checkCommonDouble(r));
 	}
-
 
 	/**
 	 * Set this interpreter's result object to a boolean value.
 	 * 
-	 * @param r value to set result to
+	 * @param r
+	 *            value to set result to
 	 */
-	public final void setResult(final boolean r) // A boolean result.
-	{
+	public final void setResult(final boolean r) {
 		if (VALIDATE_SHARED_RESULTS) {
 			setResult(checkCommonBoolean(r));
 		} else {
@@ -2354,8 +2169,8 @@ public class Interp extends EventuallyFreed {
 	 * 
 	 * Results: None.
 	 * 
-	 * Side effects: It resets the result object to an unshared empty object. It
-	 * also clears any error information for the interpreter.
+	 * Side effects: It resets the result object to an unshared empty object. It also clears any error information for
+	 * the interpreter.
 	 */
 	public final void resetResult() {
 		if (m_result != m_nullResult) {
@@ -2374,27 +2189,21 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 * Convert a string to a valid Tcl list element and append it to the result
-	 * (which is ostensibly a list).
+	 * Convert a string to a valid Tcl list element and append it to the result (which is ostensibly a list).
 	 * 
 	 * Results: None.
 	 * 
-	 * Side effects: The result in the interpreter given by the first argument
-	 * is extended with a list element converted from string. A separator space
-	 * is added before the converted list element unless the current result is
-	 * empty, contains the single character "{", or ends in " {".
+	 * Side effects: The result in the interpreter given by the first argument is extended with a list element converted
+	 * from string. A separator space is added before the converted list element unless the current result is empty,
+	 * contains the single character "{", or ends in " {".
 	 * 
-	 * If the string result is empty, the object result is moved to the string
-	 * result, then the object result is reset.
+	 * If the string result is empty, the object result is moved to the string result, then the object result is reset.
 	 * 
-	 * @param string String to append to list result
+	 * @param string
+	 *            String to append to list result
 	 */
 
-	public void appendElement(String string) /*
-											 * String to convert to list element
-											 * and add to result.
-											 */
-	throws TclException {
+	public void appendElement(String string) throws TclException {
 		TclObject result;
 
 		result = getResult();
@@ -2408,32 +2217,30 @@ public class Interp extends EventuallyFreed {
 	/**
 	 * Execute a Tcl command in a string.
 	 * 
-	 * A standard Tcl Exception may
-	 * be generated. The interpreter's result object will contain the value of
-	 * the evaluation but will persist only until the next call to one of the
-	 * eval functions.
+	 * A standard Tcl Exception may be generated. The interpreter's result object will contain the value of the
+	 * evaluation but will persist only until the next call to one of the eval functions.
 	 * 
-	 * @param script The script to be evaluated
-	 * @throws TclException on any TCL errors generated by the script
+	 * @param script
+	 *            The script to be evaluated
+	 * @throws TclException
+	 *             on any TCL errors generated by the script
 	 */
 
-	public void eval(String script) // A script to evaluate.
-			throws TclException // A standard Tcl exception.
-	{
+	public void eval(String script) throws TclException {
 		eval(script, 0);
 	}
 
 	/**
 	 * Evaluate a TCL script in a string
 	 * 
-	 * @param string containing the TCL script
-	 * @param flags Either 0 or TCL.EVAL_GLOBAL
-	 * @throws TclException on any TCL error
+	 * @param string
+	 *            containing the TCL script
+	 * @param flags
+	 *            Either 0 or TCL.EVAL_GLOBAL
+	 * @throws TclException
+	 *             on any TCL error
 	 */
-	public void eval(String string, 
-			int flags)
-			throws TclException 
-	{
+	public void eval(String string, int flags) throws TclException {
 		if (string == null) {
 			throw new NullPointerException("passed null String to eval()");
 		}
@@ -2443,8 +2250,7 @@ public class Interp extends EventuallyFreed {
 
 		CharPointer script = new CharPointer(string);
 		try {
-			Parser.eval2(this, script.array, script.index, script.length(),
-					flags);
+			Parser.eval2(this, script.array, script.index, script.length(), flags);
 		} catch (TclException e) {
 
 			if (nestLevel != 0) {
@@ -2462,23 +2268,23 @@ public class Interp extends EventuallyFreed {
 			if (result == TCL.RETURN) {
 				result = updateReturnInfo();
 			}
-			if (result != TCL.OK && result != TCL.ERROR
-					&& (evalFlags & Parser.TCL_ALLOW_EXCEPTIONS) == 0) {
-				/* set the line number on which we got the unexpected result, which is really
-				 * probably a break or continue outside of the loop.  Also get the contents of
-				 * that line for the error message
+			if (result != TCL.OK && result != TCL.ERROR && (evalFlags & Parser.TCL_ALLOW_EXCEPTIONS) == 0) {
+				/*
+				 * set the line number on which we got the unexpected result, which is really probably a break or
+				 * continue outside of the loop. Also get the contents of that line for the error message
 				 */
 				errorLine = 1;
 				int lineEnd = 0;
 				int lineStart = 0;
-				while (lineEnd < termOffset-1) {
-					if (script.charAt(lineEnd)=='\n') {
+				while (lineEnd < termOffset - 1) {
+					if (script.charAt(lineEnd) == '\n') {
 						++errorLine;
-						lineStart = lineEnd+1;
+						lineStart = lineEnd + 1;
 					}
 					++lineEnd;
 				}
-				while (Character.isWhitespace(script.charAt(lineStart)) && lineStart < lineEnd) ++lineStart;
+				while (Character.isWhitespace(script.charAt(lineStart)) && lineStart < lineEnd)
+					++lineStart;
 				try {
 					processUnexpectedResult(result);
 				} catch (TclException e1) {
@@ -2496,18 +2302,17 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-
-	/** 
+	/**
 	 * Execute a Tcl script in a TclObject.
 	 * 
-	 * @param tobj A Tcl object holding a script to evaluate
-	 * @param flags either 0 or TCL.EVAL_GLOBAL
-	 * @throws TclException on any TCL error
+	 * @param tobj
+	 *            A Tcl object holding a script to evaluate
+	 * @param flags
+	 *            either 0 or TCL.EVAL_GLOBAL
+	 * @throws TclException
+	 *             on any TCL error
 	 */
-	public void eval(TclObject tobj, 
-			int flags) 
-			throws TclException 
-	{
+	public void eval(TclObject tobj, int flags) throws TclException {
 		boolean isPureList = false;
 
 		if (tobj.hasNoStringRep() && tobj.isListType()) {
@@ -2578,8 +2383,7 @@ public class Interp extends EventuallyFreed {
 				int script_index = 0;
 				int command_start = 0;
 				int command_length = cmd_str.length();
-				Parser.logCommandInfo(this, script_array, script_index,
-						command_start, command_length, e);
+				Parser.logCommandInfo(this, script_array, script_index, command_start, command_length, e);
 			}
 
 			// Process results when the next level is zero
@@ -2598,8 +2402,7 @@ public class Interp extends EventuallyFreed {
 			if (result == TCL.RETURN) {
 				result = updateReturnInfo();
 			}
-			if (result != TCL.OK && result != TCL.ERROR
-					&& (evalFlags & Parser.TCL_ALLOW_EXCEPTIONS) == 0) {
+			if (result != TCL.OK && result != TCL.ERROR && (evalFlags & Parser.TCL_ALLOW_EXCEPTIONS) == 0) {
 				processUnexpectedResult(result);
 			}
 			if (result != TCL.OK) {
@@ -2623,31 +2426,23 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 * This procedure adds its command argument to the current list of recorded
-	 * events and then executes the command by calling eval.
+	 * This procedure adds its command argument to the current list of recorded events and then executes the command by
+	 * calling eval.
 	 * 
-	 * Results: The return value is void. However, a standard Tcl Exception may
-	 * be generated. The interpreter's result object will contain the value of
-	 * the evaluation but will persist only until the next call to one of the
-	 * eval functions.
+	 * Results: The return value is void. However, a standard Tcl Exception may be generated. The interpreter's result
+	 * object will contain the value of the evaluation but will persist only until the next call to one of the eval
+	 * functions.
 	 * 
-	 * Side effects: The side effects will be determined by the exact Tcl code
-	 * to be evaluated.
-	 *
-	 * @param script a script to evaluate
-	 * @param flags TCL.NO_EVAL records only; TCL.EVAL_GLOBAL evalutes the script in a global
-	 * context
+	 * Side effects: The side effects will be determined by the exact Tcl code to be evaluated.
+	 * 
+	 * @param script
+	 *            a script to evaluate
+	 * @param flags
+	 *            TCL.NO_EVAL records only; TCL.EVAL_GLOBAL evalutes the script in a global context
 	 * @throws TclException
 	 */
 
-	public void recordAndEval(TclObject script, // A script to evaluate.
-			int flags) // Additional flags. TCL.NO_EVAL means
-			// record only: don't execute the command.
-			// TCL.EVAL_GLOBAL means evaluate the
-			// script in global variable context instead
-			// of the current procedure.
-			throws TclException // A standard Tcl exception.
-	{
+	public void recordAndEval(TclObject script, int flags) throws TclException {
 		// Append the script to the event list by calling
 		// "history add <script>".
 		// We call the eval method with the command of type TclObject, so that
@@ -2671,16 +2466,15 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-
 	/**
-	 * Loads a Tcl script from a file and evaluates it in the
-	 * current interpreter.
+	 * Loads a Tcl script from a file and evaluates it in the current interpreter.
 	 * 
-	 * @param s Name of the file to evaluate
-	 * @throws TclException on any TCL error or on a file read error
+	 * @param s
+	 *            Name of the file to evaluate
+	 * @throws TclException
+	 *             on any TCL error or on a file read error
 	 */
-	public void evalFile(String s) // The name of file to evaluate.
-			throws TclException {
+	public void evalFile(String s) throws TclException {
 		String fileContent; // Contains the content of the file.
 
 		fileContent = readScriptFromFile(s);
@@ -2697,8 +2491,7 @@ public class Interp extends EventuallyFreed {
 			eval(fileContent, 0);
 		} catch (TclException e) {
 			if (e.getCompletionCode() == TCL.ERROR) {
-				addErrorInfo("\n    (file \"" + s + "\" line " + errorLine
-						+ ")");
+				addErrorInfo("\n    (file \"" + s + "\" line " + errorLine + ")");
 			}
 			throw e;
 		} finally {
@@ -2707,17 +2500,17 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-
 	/**
 	 * Loads a Tcl script from a URL and evaluate it in the current interpreter.
 	 * 
-	 * @param context URL context under which s is to be interpreted
-	 * @param s the URL
-	 * @throws TclException on any TCL or read error
+	 * @param context
+	 *            URL context under which s is to be interpreted
+	 * @param s
+	 *            the URL
+	 * @throws TclException
+	 *             on any TCL or read error
 	 */
-	public void evalURL(URL context, 								
-			String s) 
-			throws TclException {
+	public void evalURL(URL context, String s) throws TclException {
 		String fileContent; // Contains the content of the file.
 
 		fileContent = readScriptFromURL(context, s);
@@ -2738,14 +2531,15 @@ public class Interp extends EventuallyFreed {
 	/**
 	 * Read the script file into a string.
 	 * 
-	 * @param s name of file
+	 * @param s
+	 *            name of file
 	 * @returns script as a String, or null if it can't be read
 	 * 
-	 * @throws TclException on file errors
+	 * @throws TclException
+	 *             on file errors
 	 */
 
-	private String readScriptFromFile(String s) throws TclException 
-	{
+	private String readScriptFromFile(String s) throws TclException {
 		File sourceFile;
 		FileChannel fchan = new FileChannel();
 		boolean wasOpened = false;
@@ -2759,9 +2553,9 @@ public class Interp extends EventuallyFreed {
 			// return up to ^Z for tcl8.4 compatibility
 			return trimToCtrlZ(result.toString());
 		} catch (TclPosixException e) {
-			throw new TclPosixException(this, e.getErrorNo(), true,"couldn't read file \""+s+"\"" );
+			throw new TclPosixException(this, e.getErrorNo(), true, "couldn't read file \"" + s + "\"");
 		} catch (IOException e) {
-			throw new TclPosixException(this, e, true, "couldn't read file \""+s+"\"");
+			throw new TclPosixException(this, e, true, "couldn't read file \"" + s + "\"");
 		} catch (SecurityException e) {
 			throw new TclException(this, e.getMessage());
 		} finally {
@@ -2773,6 +2567,7 @@ public class Interp extends EventuallyFreed {
 
 	/**
 	 * Retrun a string, up to the first ^Z, if any.
+	 * 
 	 * @param source
 	 * @return
 	 */
@@ -2782,21 +2577,20 @@ public class Interp extends EventuallyFreed {
 		if (end == -1) {
 			return source;
 		} else {
-			return source.substring(0,end);
+			return source.substring(0, end);
 		}
 	}
-	
+
 	/**
 	 * Read the script file into a string, treating the file as an URL.
-	 *
-	 * @param context the context for the URL.   @see java.net.URL.URL.
-	 * @param s URL to be read (based on the context)
-	 * @return  The content of the script file.
+	 * 
+	 * @param context
+	 *            the context for the URL. @see java.net.URL.URL.
+	 * @param s
+	 *            URL to be read (based on the context)
+	 * @return The content of the script file.
 	 */
-	private String readScriptFromURL(URL context, // Use as the URL context if s
-													// is a relative URL.
-			String s) // ???
-	{
+	private String readScriptFromURL(URL context, String s) {
 		Object content = null;
 		URL url;
 
@@ -2858,11 +2652,11 @@ public class Interp extends EventuallyFreed {
 	/**
 	 * Convert CRLF sequences into LF sequences in a String.
 	 * 
-	 * @param inString string that may contain CRLF
-	 *@return A new string with LF instead of CRLF.
+	 * @param inString
+	 *            string that may contain CRLF
+	 * @return A new string with LF instead of CRLF.
 	 */
-	String convertStringCRLF(String inStr) // String that could contain CRLFs
-	{
+	String convertStringCRLF(String inStr) {
 		String str = inStr;
 		StringBuffer sb = new StringBuffer(str.length());
 		char c, prev = '\n';
@@ -2895,10 +2689,9 @@ public class Interp extends EventuallyFreed {
 	 * 
 	 * @param s
 	 *            Java InputStream containing script
-	 *@return the content of the script.
+	 * @return the content of the script.
 	 */
-	private String readScriptFromInputStream(InputStream s)
-	{
+	private String readScriptFromInputStream(InputStream s) {
 		TclObject result = TclString.newInstance(new StringBuffer(64));
 		ReadInputStreamChannel rc = new ReadInputStreamChannel(this, s);
 
@@ -2924,7 +2717,8 @@ public class Interp extends EventuallyFreed {
 	/**
 	 * Close the InputStream; catch any IOExceptions and ignore them.
 	 * 
-	 * @param fs input stream to close
+	 * @param fs
+	 *            input stream to close
 	 */
 	private void closeInputStream(InputStream fs) {
 		try {
@@ -2937,7 +2731,8 @@ public class Interp extends EventuallyFreed {
 	/**
 	 * Close the Channel; catch any IOExceptions and ignore them.
 	 * 
-	 * @param chan Channel to close
+	 * @param chan
+	 *            Channel to close
 	 */
 	private void closeChannel(Channel chan) {
 		try {
@@ -2949,23 +2744,18 @@ public class Interp extends EventuallyFreed {
 	/**
 	 * Execute a Tcl script stored in the given Java resource location.
 	 * 
-	 * Results: The return value is void. However, a standard Tcl Exception may
-	 * be generated. The interpreter's result object will contain the value of
-	 * the evaluation but will persist only until the next call to one of the
-	 * eval functions.
+	 * Results: The return value is void. However, a standard Tcl Exception may be generated. The interpreter's result
+	 * object will contain the value of the evaluation but will persist only until the next call to one of the eval
+	 * functions.
 	 * 
-	 * Side effects: The side effects will be determined by the exact Tcl code
-	 * to be evaluated.
+	 * Side effects: The side effects will be determined by the exact Tcl code to be evaluated.
 	 * 
 	 * @param resName
-	 *            the location of the Java resource. See the Java
-	 *            documentation of Class.getResourceAsStream() for details
-	 *            on resource naming.
+	 *            the location of the Java resource. See the Java documentation of Class.getResourceAsStream() for
+	 *            details on resource naming.
 	 */
 
-	public void evalResource(String resName)
-			throws TclException {
-		final boolean debug = false;
+	public void evalResource(String resName) throws TclException {
 		final boolean USE_SCRIPT_CACHE = true;
 
 		boolean couldBeCached = false;
@@ -2973,22 +2763,13 @@ public class Interp extends EventuallyFreed {
 		InputStream stream;
 		String script = null;
 
-		if (debug) {
-			System.out.println("evalResource " + resName);
-		}
-
 		// Tcl library scripts can be cached since they will not change
 		// after the JVM has started. A String value for the script is
 		// cached after it has been read from the filesystem and been
 		// processed for CRLF by the Tcl IO subsystem.
 
-		if (USE_SCRIPT_CACHE
-				&& resName.startsWith("/tcl/lang/library/")
-				&& (resName.equals("/tcl/lang/library/tclIndex") || resName
-						.endsWith(".tcl"))) {
-			if (debug) {
-				System.out.println("Tcl script could be cached: " + resName);
-			}
+		if (USE_SCRIPT_CACHE && resName.startsWith("/tcl/lang/library/")
+				&& (resName.equals("/tcl/lang/library/tclIndex") || resName.endsWith(".tcl"))) {
 			couldBeCached = true;
 		}
 
@@ -3005,48 +2786,34 @@ public class Interp extends EventuallyFreed {
 				}
 
 				if (!isCached) {
-					if (debug) {
-						System.out.println("Tcl script is not cached");
-					}
 
 					// When not cached, attempt to load via
 					// getResourceAsStream and then add to the cache.
 
 					stream = getResourceAsStream(resName);
 					if (stream == null) {
-						throw new TclException(this, "cannot read resource \""
-								+ resName + "\"");
+						throw new TclException(this, "cannot read resource \"" + resName + "\"");
 					}
 					script = readScriptFromInputStream(stream);
 					if (script == null) {
-						throw new TclException(this, "cannot read resource \""
-								+ resName + "\"");
+						throw new TclException(this, "cannot read resource \"" + resName + "\"");
 					}
 
 					tclLibraryScripts.put(resName, script);
 				} else {
-					if (debug) {
-						System.out.println("Tcl script is cached");
-					}
 
 					// No-op, just use script that was set above
 				}
 			}
 		} else {
-			if (debug) {
-				System.out
-						.println("Not a Tcl library script, loading normally");
-			}
 
 			stream = getResourceAsStream(resName);
 			if (stream == null) {
-				throw new TclException(this, "cannot read resource \""
-						+ resName + "\"");
+				throw new TclException(this, "cannot read resource \"" + resName + "\"");
 			}
 			script = readScriptFromInputStream(stream);
 			if (script == null) {
-				throw new TclException(this, "cannot read resource \""
-						+ resName + "\"");
+				throw new TclException(this, "cannot read resource \"" + resName + "\"");
 			}
 		}
 
@@ -3064,24 +2831,20 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
+	 * Figure out how to handle a backslash sequence. The index of the ChapPointer must be pointing to the first /.
 	 * 
-	 * backslash --
-	 * 
-	 * Figure out how to handle a backslash sequence. The index of the
-	 * ChapPointer must be pointing to the first /.
-	 * 
-	 * Results: The return value is an instance of BackSlashResult that contains
-	 * the character that should be substituted in place of the backslash
-	 * sequence that starts at src.index, and an index to the next character
-	 * after the backslash sequence.
+	 * Results: The return value is an instance of BackSlashResult that contains the character that should be
+	 * substituted in place of the backslash sequence that starts at src.index, and an index to the next character after
+	 * the backslash sequence.
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param s
+	 * @param i
+	 * @param len
+	 * @return
 	 */
-
 	public static BackSlashResult backslash(String s, int i, int len) {
 		CharPointer script = new CharPointer(s.substring(0, len));
 		script.index = i;
@@ -3089,24 +2852,21 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 * This procedure is called to record machine-readable information about an
-	 * error that is about to be returned. The caller should build a list object
-	 * up and pass it to this routine.
+	 * This procedure is called to record machine-readable information about an error that is about to be returned. The
+	 * caller should build a list object up and pass it to this routine.
 	 * 
 	 * Results: None.
 	 * 
-	 * Side effects: The errorCode global variable is modified to be the new
-	 * value. A flag is set internally to remember that errorCode has been set,
-	 * so the variable doesn't get set automatically when the error is returned.
+	 * Side effects: The errorCode global variable is modified to be the new value. A flag is set internally to remember
+	 * that errorCode has been set, so the variable doesn't get set automatically when the error is returned.
 	 * 
-	 * If the errorCode variable have write traces, any arbitrary side effects
-	 * may happen in those traces. TclException's caused by the traces, however,
-	 * are ignored and not passed back to the caller of this function.
-	 *
-	 * @param code the errorCode object
+	 * If the errorCode variable have write traces, any arbitrary side effects may happen in those traces.
+	 * TclException's caused by the traces, however, are ignored and not passed back to the caller of this function.
+	 * 
+	 * @param code
+	 *            the errorCode object
 	 */
-	public void setErrorCode(TclObject code) // The errorCode object.
-	{
+	public void setErrorCode(TclObject code) {
 		try {
 			setVar("errorCode", null, code, TCL.GLOBAL_ONLY);
 			errCodeSet = true;
@@ -3118,27 +2878,22 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 * Add information to the "errorInfo" variable that describes the current
-	 * error. Side effects: The contents of message are added to the "errorInfo"
-	 * variable. If eval() has been called since the current value of errorInfo
-	 * was set, errorInfo is cleared before adding the new message. If we are
-	 * just starting to log an error, errorInfo is initialized from the error
-	 * message in the interpreter's result. If the errorInfo variable have write
-	 * traces, any arbitrary side effects may happen in those traces.
-	 * TclException's caused by the traces, however, are ignored and not passed
-	 * back to the caller of this function.
+	 * Add information to the "errorInfo" variable that describes the current error. Side effects: The contents of
+	 * message are added to the "errorInfo" variable. If eval() has been called since the current value of errorInfo was
+	 * set, errorInfo is cleared before adding the new message. If we are just starting to log an error, errorInfo is
+	 * initialized from the error message in the interpreter's result. If the errorInfo variable have write traces, any
+	 * arbitrary side effects may happen in those traces. TclException's caused by the traces, however, are ignored and
+	 * not passed back to the caller of this function.
 	 * 
 	 * @param message
 	 *            message to record in errorInfo
 	 */
-	public void addErrorInfo(String message) // The message to record.
-	{
+	public void addErrorInfo(String message) {
 		if (!errInProgress) {
 			errInProgress = true;
 
 			try {
-				setVar("::errorInfo", null, getResult().toString(),
-						TCL.GLOBAL_ONLY);
+				setVar("::errorInfo", null, getResult().toString(), TCL.GLOBAL_ONLY);
 			} catch (TclException e1) {
 				// Ignore (see try-block above).
 			}
@@ -3156,58 +2911,47 @@ public class Interp extends EventuallyFreed {
 		}
 
 		try {
-			setVar("::errorInfo", null, message, TCL.APPEND_VALUE
-					| TCL.GLOBAL_ONLY);
+			setVar("::errorInfo", null, message, TCL.APPEND_VALUE | TCL.GLOBAL_ONLY);
 		} catch (TclException e1) {
 			// Ignore (see try-block above).
 		}
 	}
 
-
 	/**
-	 * Procedure called by Tcl_EvalObj to set the interpreter's result value to
-	 * an appropriate error message when the code it evaluates returns an
-	 * unexpected result code (not TCL_OK and not TCL_ERROR) to the topmost
-	 * evaluation level.
+	 * Procedure called by Tcl_EvalObj to set the interpreter's result value to an appropriate error message when the
+	 * code it evaluates returns an unexpected result code (not TCL_OK and not TCL_ERROR) to the topmost evaluation
+	 * level.
 	 * 
 	 * Results: None.
 	 * 
-	 * Side effects: The interpreter result is set to an error message
-	 * appropriate to the result code.
+	 * Side effects: The interpreter result is set to an error message appropriate to the result code.
 	 * 
-	 * @param returnCode the unexpected result code
+	 * @param returnCode
+	 *            the unexpected result code
 	 */
 
-	public void processUnexpectedResult(int returnCode) 
-			throws TclException // A standard Tcl exception.
-	{
+	public void processUnexpectedResult(int returnCode) throws TclException {
 		resetResult();
 		if (returnCode == TCL.BREAK) {
 			throw new TclException(this, "invoked \"break\" outside of a loop");
 		} else if (returnCode == TCL.CONTINUE) {
-			throw new TclException(this,
-					"invoked \"continue\" outside of a loop");
+			throw new TclException(this, "invoked \"continue\" outside of a loop");
 		} else {
-			throw new TclException(this, "command returned bad code: "
-					+ returnCode);
+			throw new TclException(this, "command returned bad code: " + returnCode);
 		}
 	}
 
 	/**
-	 * This method is used by various parts of the Jacl and external packages.
-	 * interpreter when a TclException of TCL.RETURN is received. The most
-	 * common case is when the "return" command is executed inside a Tcl
-	 * procedure. This method examines fields such as interp.returnCode and
-	 * interp.errorCode and determines the real return status of the Tcl
-	 * procedure accordingly. Side effects: The errorInfo and errorCode
-	 * variables may get modified.
+	 * This method is used by various parts of the Jacl and external packages. interpreter when a TclException of
+	 * TCL.RETURN is received. The most common case is when the "return" command is executed inside a Tcl procedure.
+	 * This method examines fields such as interp.returnCode and interp.errorCode and determines the real return status
+	 * of the Tcl procedure accordingly. Side effects: The errorInfo and errorCode variables may get modified.
 	 * 
-	 * @return The return value is the true completion code to use for the Tcl
-	 *         procedure, instead of TCL.RETURN. It's the same value that was
-	 *         given to the "return -code" option.
+	 * @return The return value is the true completion code to use for the Tcl procedure, instead of TCL.RETURN. It's
+	 *         the same value that was given to the "return -code" option.
 	 * 
-	 *         If TCL.OK is returned, it means than the caller of this method
-	 *         should ignore any TclException that it has received.
+	 *         If TCL.OK is returned, it means than the caller of this method should ignore any TclException that it has
+	 *         received.
 	 */
 	public int updateReturnInfo() {
 		int code;
@@ -3217,8 +2961,7 @@ public class Interp extends EventuallyFreed {
 
 		if (code == TCL.ERROR) {
 			try {
-				setVar("errorCode", null, (errorCode != null) ? errorCode
-						: "NONE", TCL.GLOBAL_ONLY);
+				setVar("errorCode", null, (errorCode != null) ? errorCode : "NONE", TCL.GLOBAL_ONLY);
 			} catch (TclException e) {
 				// An error may happen during a trace to errorCode. We ignore
 				// it.
@@ -3244,25 +2987,22 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 * Creates a new callframe. This method can be overrided to provide
-	 * debugging support.
+	 * Creates a new callframe. This method can be overrided to provide debugging support.
 	 * 
-	 * @param proc the procedure which will later execute in the new CallFrame
-	 * @param objv the arguments that will be passed to the procedure
+	 * @param proc
+	 *            the procedure which will later execute in the new CallFrame
+	 * @param objv
+	 *            the arguments that will be passed to the procedure
 	 * @return A new CallFrame.
+	 * @throws TclException
+	 *             incorrect arguments passed.
 	 */
-	protected CallFrame newCallFrame(Procedure proc, // The procedure which will
-														// later be
-			// execute inside the new callframe.
-			TclObject[] objv) // The arguments to pass to the procedure.
-			throws TclException // Incorrect number of arguments passed.
-	{
+	protected CallFrame newCallFrame(Procedure proc, TclObject[] objv) throws TclException {
 		return new CallFrame(this, proc, objv);
 	}
 
 	/**
-	 * Creates a new callframe. This method can be overrided to provide
-	 * debugging support.
+	 * Creates a new callframe. This method can be overrided to provide debugging support.
 	 * 
 	 * @return A new CallFrame.
 	 */
@@ -3272,8 +3012,8 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 * Retrieve the current working directory for this interpreter. Side
-	 * effects: If the working dir is null, set it to env(HOME)
+	 * Retrieve the current working directory for this interpreter. Side effects: If the working dir is null, set it to
+	 * env(HOME)
 	 * 
 	 * @return the File for the current directory
 	 */
@@ -3293,7 +3033,8 @@ public class Interp extends EventuallyFreed {
 	/**
 	 * Set the current working directory for this interpreter.
 	 * 
-	 * @param dirName name of directory that will become working directory
+	 * @param dirName
+	 *            name of directory that will become working directory
 	 */
 	public void setWorkingDir(String dirName) throws TclException {
 		File dirObj = FileUtil.getNewFileObj(this, dirName);
@@ -3305,7 +3046,7 @@ public class Interp extends EventuallyFreed {
 		} catch (IOException e) {
 		}
 
-		if (dirObj.isDirectory() && dirName.length()>0) {
+		if (dirObj.isDirectory() && dirName.length() > 0) {
 			workingDir = dirObj;
 		} else {
 			String dname = FileUtil.translateFileName(this, dirName);
@@ -3314,17 +3055,15 @@ public class Interp extends EventuallyFreed {
 			} else {
 				dname = dirObj.getPath();
 			}
-			throw new TclException(this,
-					"couldn't change working directory to \"" + dname
-							+ "\": no such file or directory");
+			throw new TclException(this, "couldn't change working directory to \"" + dname
+					+ "\": no such file or directory");
 		}
 	}
 
 	/**
-	 * Retrieve the Notifier associated with this Interp. This method can safely
-	 * be invoked from a thread other than the thread the Interp was created in.
-	 * If this method is invoked after the Interp object has been disposed of
-	 * then null will be returned.
+	 * Retrieve the Notifier associated with this Interp. This method can safely be invoked from a thread other than the
+	 * thread the Interp was created in. If this method is invoked after the Interp object has been disposed of then
+	 * null will be returned.
 	 * 
 	 * @return the Notifier for the thread the interp was created in.
 	 */
@@ -3333,89 +3072,78 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 * This procedure is invoked to declare that a particular version of a
-	 * particular package is now present in an interpreter. There must not be
-	 * any other version of this package already provided in the interpreter.
+	 * This procedure is invoked to declare that a particular version of a particular package is now present in an
+	 * interpreter. There must not be any other version of this package already provided in the interpreter.
 	 * 
-	 * Results: Normally does nothing; if there is already another version of
-	 * the package loaded then an error is raised.
+	 * Results: Normally does nothing; if there is already another version of the package loaded then an error is
+	 * raised.
 	 * 
-	 * Side effects: The interpreter remembers that this package is available,
-	 * so that no other version of the package may be provided for the
-	 * interpreter.
+	 * Side effects: The interpreter remembers that this package is available, so that no other version of the package
+	 * may be provided for the interpreter.
 	 * 
-	 * @param name name of package
-	 * @param version version of package
+	 * @param name
+	 *            name of package
+	 * @param version
+	 *            version of package
 	 * @throws TclException
 	 */
-	public final void pkgProvide(String name, String version)
-			throws TclException {
+	public final void pkgProvide(String name, String version) throws TclException {
 		PackageCmd.pkgProvide(this, name, version);
 	}
 
 	/**
-	 * This procedure is called by code that depends on a particular version of
-	 * a particular package. If the package is not already provided in the
-	 * interpreter, this procedure invokes a Tcl script to provide it. If the
-	 * package is already provided, this procedure makes sure that the caller's
-	 * needs don't conflict with the version that is present.
-	 * 	Side effects: The script from some previous "package ifneeded" command
-	 * may be invoked to provide the package.
+	 * This procedure is called by code that depends on a particular version of a particular package. If the package is
+	 * not already provided in the interpreter, this procedure invokes a Tcl script to provide it. If the package is
+	 * already provided, this procedure makes sure that the caller's needs don't conflict with the version that is
+	 * present. Side effects: The script from some previous "package ifneeded" command may be invoked to provide the
+	 * package.
 	 * 
-	 * @param pkgname name of the package to require
-	 * @param version version to require
-	 * @param exact if true, require the exact versions specified
+	 * @param pkgname
+	 *            name of the package to require
+	 * @param version
+	 *            version to require
+	 * @param exact
+	 *            if true, require the exact versions specified
 	 * 
-	 * @return If successful, returns the version string for the currently
-	 * provided version of the package, which may be different from the
-	 * "version" argument. 
+	 * @return If successful, returns the version string for the currently provided version of the package, which may be
+	 *         different from the "version" argument.
 	 * 
-	 * @throws TclException If the caller's requirements cannot be met (e.g. the
-	 * version requested conflicts with a currently provided version, or the
-	 * required version cannot be found, or the script to provide the required
-	 * version generates an error), a TclException is raised.
+	 * @throws TclException
+	 *             If the caller's requirements cannot be met (e.g. the version requested conflicts with a currently
+	 *             provided version, or the required version cannot be found, or the script to provide the required
+	 *             version generates an error), a TclException is raised.
 	 */
-	public final String pkgRequire(String pkgname, String version, boolean exact)
-			throws TclException {
+	public final String pkgRequire(String pkgname, String version, boolean exact) throws TclException {
 		return PackageCmd.pkgRequire(this, pkgname, version, exact);
 	}
-
 
 	protected DebugInfo dbg;
 
 	/**
-	 * Initialize the debugging information.
-	 *  * Debugging API.
+	 * Initialize the debugging information. * Debugging API.
 	 * 
-	 * The following section defines two debugging API functions for logging
-	 * information about the point of execution of Tcl scripts:
+	 * The following section defines two debugging API functions for logging information about the point of execution of
+	 * Tcl scripts:
 	 * 
-	 * - pushDebugStack() is called when a procedure body is executed, or when a
-	 * file is source'd. - popDebugStack() is called when the flow of control is
-	 * about to return from a procedure body, or from a source'd file.
+	 * - pushDebugStack() is called when a procedure body is executed, or when a file is source'd. - popDebugStack() is
+	 * called when the flow of control is about to return from a procedure body, or from a source'd file.
 	 * 
-	 * Two other API functions are used to determine the current point of
-	 * execution:
+	 * Two other API functions are used to determine the current point of execution:
 	 * 
-	 * - getScriptFile() returns the script file current being executed. -
-	 * getArgLineNumber(i) returns the line number of the i-th argument of the
-	 * current command.
+	 * - getScriptFile() returns the script file current being executed. - getArgLineNumber(i) returns the line number
+	 * of the i-th argument of the current command.
 	 * 
-	 * Note: The point of execution is automatically maintained for control
-	 * structures such as while, if, for and foreach, as long as they use
-	 * Interp.eval(argv[?]) to evaluate control blocks.
+	 * Note: The point of execution is automatically maintained for control structures such as while, if, for and
+	 * foreach, as long as they use Interp.eval(argv[?]) to evaluate control blocks.
 	 * 
-	 * The case and switch commands need to set dbg.cmdLine explicitly because
-	 * they may evaluate control blocks that are not elements inside the argv[]
-	 * array. ** This feature not yet implemented. **
+	 * The case and switch commands need to set dbg.cmdLine explicitly because they may evaluate control blocks that are
+	 * not elements inside the argv[] array. ** This feature not yet implemented. **
 	 * 
-	 * The proc command needs to call getScriptFile() and getArgLineNumber(3) to
-	 * find out the location of the proc body.
+	 * The proc command needs to call getScriptFile() and getArgLineNumber(3) to find out the location of the proc body.
 	 * 
-	 * The debugging API functions in the Interp class are just dummy stub
-	 * functions. These functions are usually implemented in a subclass of
-	 * Interp (e.g. DbgInterp) that has real debugging support.
-	 *
+	 * The debugging API functions in the Interp class are just dummy stub functions. These functions are usually
+	 * implemented in a subclass of Interp (e.g. DbgInterp) that has real debugging support.
+	 * 
 	 * 
 	 * @return a DebugInfo object used by Interp in non-debugging mode.
 	 */
@@ -3429,8 +3157,7 @@ public class Interp extends EventuallyFreed {
 	 * @param fileName
 	 *            the filename for the new stack level
 	 * @param lineNumber
-	 *            the line number at which the execution of the new stack level
-	 *            begins.
+	 *            the line number at which the execution of the new stack level begins.
 	 */
 	void pushDebugStack(String fileName, int lineNumber) {
 		// do nothing.
@@ -3453,8 +3180,7 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 * Returns the line number where the given command argument begins. E.g, if
-	 * the following command is at line 10:
+	 * Returns the line number where the given command argument begins. E.g, if the following command is at line 10:
 	 * 
 	 * foo {a b } c
 	 * 
@@ -3469,42 +3195,30 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 * Copy the result (and error information) from one interp to another. Used
-	 * when one interp has caused another interp to evaluate a script and then
-	 * wants to transfer the results back to itself.
+	 * Copy the result (and error information) from one interp to another. Used when one interp has caused another
+	 * interp to evaluate a script and then wants to transfer the results back to itself.
 	 * 
-	 * This routine copies the string reps of the result and error information.
-	 * It does not simply increment the refcounts of the result and error
-	 * information objects themselves. It is not legal to exchange objects
-	 * between interps, because an object may be kept alive by one interp, but
-	 * have an internal rep that is only valid while some other interp is alive.
+	 * This routine copies the string reps of the result and error information. It does not simply increment the
+	 * refcounts of the result and error information objects themselves. It is not legal to exchange objects between
+	 * interps, because an object may be kept alive by one interp, but have an internal rep that is only valid while
+	 * some other interp is alive.
 	 * 
-	 * Results: The target interp's result is set to a copy of the source
-	 * interp's result. The source's error information "$errorInfo" may be
-	 * appended to the target's error information and the source's error code
+	 * Results: The target interp's result is set to a copy of the source interp's result. The source's error
+	 * information "$errorInfo" may be appended to the target's error information and the source's error code
 	 * "$errorCode" may be stored in the target's error code.
 	 * 
 	 * Side effects: None.
 	 * 
 	 * @param sourceInterp
-	 *            interp whose result and error information should be moved to
-	 *            the target interp. AFter moving the results, the interp's
-	 *            result is reset
+	 *            interp whose result and error information should be moved to the target interp. AFter moving the
+	 *            results, the interp's result is reset
 	 * @param result
-	 *            TCL.OK if just the result should be copied, TCL.ERROR if both
-	 *            teh result and the error information should be copied
+	 *            TCL.OK if just the result should be copied, TCL.ERROR if both teh result and the error information
+	 *            should be copied
 	 * @throws TclException
 	 */
 
-	public void transferResult(Interp sourceInterp, // Interp whose result and
-													// error information
-			// should be moved to the target interp.
-			// After moving result, this interp's result
-			// is reset.
-			int result) // TCL.OK if just the result should be copied,
-			// TCL.ERROR if both the result and error
-			// information should be copied.
-			throws TclException {
+	public void transferResult(Interp sourceInterp, int result) throws TclException {
 		if (sourceInterp == this) {
 			if (result != TCL.OK) {
 				throw new TclException(this, getResult().toString(), result);
@@ -3546,29 +3260,22 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-	/*
-	 * --------------------------------------------------------------------------
-	 * -
+	/**
+	 * Makes a command hidden so that it cannot be invoked from within an interpreter, only from within an ancestor.
 	 * 
-	 * Tcl_HideCommand -> hideCommand
+	 * Results: A standard Tcl result; also leaves a message in the interp's result if an error occurs.
 	 * 
-	 * Makes a command hidden so that it cannot be invoked from within an
-	 * interpreter, only from within an ancestor.
-	 * 
-	 * Results: A standard Tcl result; also leaves a message in the interp's
-	 * result if an error occurs.
-	 * 
-	 * Side effects: Removes a command from the command table and create an
-	 * entry into the hidden command table under the specified token name.
+	 * Side effects: Removes a command from the command table and create an entry into the hidden command table under
+	 * the specified token name.
 	 * 
 	 * 
-	 * --------------------------------------------------------------------------
-	 * -
+	 * @param cmdName
+	 *            Name of command to hide.
+	 * @param hiddenCmdToken
+	 *            Token name of the to-be-hidden command.
+	 * @throws TclException
 	 */
-
-	public void hideCommand(String cmdName, // Name of command to hide.
-			String hiddenCmdToken) // Token name of the to-be-hidden command.
-			throws TclException {
+	public void hideCommand(String cmdName, String hiddenCmdToken) throws TclException {
 		WrappedCommand cmd;
 
 		if (deleted) {
@@ -3598,8 +3305,7 @@ public class Interp extends EventuallyFreed {
 		// lets prevent "::" in the token too. --dl
 
 		if (hiddenCmdToken.indexOf("::") >= 0) {
-			throw new TclException(this, "cannot use namespace qualifiers in "
-					+ "hidden command token (rename)");
+			throw new TclException(this, "cannot use namespace qualifiers in " + "hidden command token (rename)");
 		}
 
 		// Find the command to hide. An error is returned if cmdName can't
@@ -3612,9 +3318,7 @@ public class Interp extends EventuallyFreed {
 		// Check that the command is really in global namespace
 
 		if (cmd.ns != globalNs) {
-			throw new TclException(this,
-					"can only hide global namespace commands"
-							+ " (use rename then hide)");
+			throw new TclException(this, "can only hide global namespace commands" + " (use rename then hide)");
 		}
 
 		// Initialize the hidden command table if necessary.
@@ -3629,8 +3333,7 @@ public class Interp extends EventuallyFreed {
 		// exists.
 
 		if (hiddenCmdTable.containsKey(hiddenCmdToken)) {
-			throw new TclException(this, "hidden command named \""
-					+ hiddenCmdToken + "\" already exists");
+			throw new TclException(this, "hidden command named \"" + hiddenCmdToken + "\" already exists");
 		}
 
 		// Nb : This code is currently 'like' a rename to a specialy set apart
@@ -3655,26 +3358,20 @@ public class Interp extends EventuallyFreed {
 		hiddenCmdTable.put(hiddenCmdToken, cmd);
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
+	 * Makes a previously hidden command callable from inside the interpreter instead of only by its ancestors.
 	 * 
-	 * Tcl_ExposeCommand -> exposeCommand
-	 * 
-	 * Makes a previously hidden command callable from inside the interpreter
-	 * instead of only by its ancestors.
-	 * 
-	 * Results: A standard Tcl result. If an error occurs, a message is left in
-	 * the interp's result.
+	 * Results: A standard Tcl result. If an error occurs, a message is left in the interp's result.
 	 * 
 	 * Side effects: Moves commands from one hash table to another.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param hiddenCmdToken
+	 *            Token name of the to-be-hidden command.
+	 * @param cmdName
+	 *            Name of command to hide.
+	 * @throws TclException
 	 */
-
-	public void exposeCommand(String hiddenCmdToken, // Token name of the
-														// to-be-hidden command.
-			String cmdName) // Name of command to hide.
-			throws TclException {
+	public void exposeCommand(String hiddenCmdToken, String cmdName) throws TclException {
 		WrappedCommand cmd;
 
 		if (deleted) {
@@ -3688,16 +3385,13 @@ public class Interp extends EventuallyFreed {
 		// (to another namespace) at the same time)
 
 		if (cmdName.indexOf("::") >= 0) {
-			throw new TclException(this, "can not expose to a namespace "
-					+ "(use expose to toplevel, then rename)");
+			throw new TclException(this, "can not expose to a namespace " + "(use expose to toplevel, then rename)");
 		}
 
 		// Get the command from the hidden command table:
 
-		if (hiddenCmdTable == null
-				|| !hiddenCmdTable.containsKey(hiddenCmdToken)) {
-			throw new TclException(this, "unknown hidden command \""
-					+ hiddenCmdToken + "\"");
+		if (hiddenCmdTable == null || !hiddenCmdTable.containsKey(hiddenCmdToken)) {
+			throw new TclException(this, "unknown hidden command \"" + hiddenCmdToken + "\"");
 		}
 		cmd = (WrappedCommand) hiddenCmdTable.get(hiddenCmdToken);
 
@@ -3711,8 +3405,7 @@ public class Interp extends EventuallyFreed {
 			// This case is theoritically impossible,
 			// we might rather panic() than 'nicely' erroring out ?
 
-			throw new TclException(this, "trying to expose "
-					+ "a non global command name space command");
+			throw new TclException(this, "trying to expose " + "a non global command name space command");
 		}
 
 		// This is the global table
@@ -3722,8 +3415,7 @@ public class Interp extends EventuallyFreed {
 		// of exposing a previously hidden command.
 
 		if (ns.cmdTable.containsKey(cmdName)) {
-			throw new TclException(this, "exposed command \"" + cmdName
-					+ "\" already exists");
+			throw new TclException(this, "exposed command \"" + cmdName + "\" already exists");
 		}
 
 		// Remove the hash entry for the command from the interpreter hidden
@@ -3748,7 +3440,7 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 *----------------------------------------------------------------------
+	 * ----------------------------------------------------------------------
 	 * 
 	 * TclHideUnsafeCommands -> hideUnsafeCommands
 	 * 
@@ -3758,7 +3450,7 @@ public class Interp extends EventuallyFreed {
 	 * 
 	 * Side effects: Hides functionality in an interpreter.
 	 * 
-	 *----------------------------------------------------------------------
+	 * ----------------------------------------------------------------------
 	 */
 
 	public void hideUnsafeCommands() throws TclException {
@@ -3773,30 +3465,23 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * TclObjInvokeGlobal -> invokeGlobal
-	 * 
-	 * Invokes a Tcl command, given an objv/objc, from either the exposed or
-	 * hidden set of commands in the given interpreter. NOTE: The command is
-	 * invoked in the global stack frame of the interpreter, thus it cannot see
-	 * any current state on the stack of that interpreter.
+	/**
+	 * Invokes a Tcl command, given an objv/objc, from either the exposed or hidden set of commands in the given
+	 * interpreter. NOTE: The command is invoked in the global stack frame of the interpreter, thus it cannot see any
+	 * current state on the stack of that interpreter.
 	 * 
 	 * Results: A standard Tcl result.
 	 * 
 	 * Side effects: Whatever the command does.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param objv
+	 *            Argument objects; objv[0] points to the name of the command to invoke.
+	 * @param flags
+	 *            Combination of flags controlling the call: INVOKE_HIDDEN,_INVOKE_NO_UNKNOWN, or INVOKE_NO_TRACEBACK.
+	 * @return
+	 * @throws TclException
 	 */
-
-	public int invokeGlobal(TclObject[] objv, // Argument objects; objv[0]
-												// points to the
-			// name of the command to invoke.
-			int flags) // Combination of flags controlling the call:
-			// INVOKE_HIDDEN,_INVOKE_NO_UNKNOWN,
-			// or INVOKE_NO_TRACEBACK.
-			throws TclException {
+	public int invokeGlobal(TclObject[] objv, int flags) throws TclException {
 		CallFrame savedVarFrame = varFrame;
 
 		try {
@@ -3808,20 +3493,17 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 * Invokes a Tcl command, given an objv/objc, from either the exposed or the
-	 * hidden sets of commands in the given interpreter.
+	 * Invokes a Tcl command, given an objv/objc, from either the exposed or the hidden sets of commands in the given
+	 * interpreter.
 	 * 
 	 * @param objv
 	 *            argument objects, objv[0] is the name of the command to invoke
 	 * @param flags
-	 *            Combination of flags controlling the call: 
-	 *            INVOKE_HIDDEN,_INVOKE_NO_UNKNOWN,  or INVOKE_NO_TRACEBACK.
+	 *            Combination of flags controlling the call: INVOKE_HIDDEN,_INVOKE_NO_UNKNOWN, or INVOKE_NO_TRACEBACK.
 	 * @return A standard Tcl object result.
 	 */
 
-	public int invoke(TclObject[] objv,
-			int flags) 
-			throws TclException {
+	public int invoke(TclObject[] objv, int flags) throws TclException {
 		if ((objv.length < 1) || (objv == null)) {
 			throw new TclException(this, "illegal argument vector");
 		}
@@ -3837,16 +3519,14 @@ public class Interp extends EventuallyFreed {
 			// We never invoke "unknown" for hidden commands.
 
 			if (hiddenCmdTable == null || !hiddenCmdTable.containsKey(cmdName)) {
-				throw new TclException(this, "invalid hidden command name \""
-						+ cmdName + "\"");
+				throw new TclException(this, "invalid hidden command name \"" + cmdName + "\"");
 			}
 			cmd = (WrappedCommand) hiddenCmdTable.get(cmdName);
 		} else {
 			cmd = Namespace.findCommand(this, cmdName, null, TCL.GLOBAL_ONLY);
 			if (cmd == null) {
 				if ((flags & INVOKE_NO_UNKNOWN) == 0) {
-					cmd = Namespace.findCommand(this, "unknown", null,
-							TCL.GLOBAL_ONLY);
+					cmd = Namespace.findCommand(this, "unknown", null, TCL.GLOBAL_ONLY);
 					if (cmd != null) {
 						localObjv = new TclObject[objv.length + 1];
 						localObjv[0] = TclString.newInstance("unknown");
@@ -3863,8 +3543,7 @@ public class Interp extends EventuallyFreed {
 				// call "unknown" (they specified TCL_INVOKE_NO_UNKNOWN).
 
 				if (cmd == null) {
-					throw new TclException(this, "invalid command name \""
-							+ cmdName + "\"");
+					throw new TclException(this, "invalid command name \"" + cmdName + "\"");
 				}
 			}
 		}
@@ -3878,8 +3557,10 @@ public class Interp extends EventuallyFreed {
 
 		int result = TCL.OK;
 		try {
-			if (cmd.mustCallInvoke(this)) cmd.invoke(this, objv);
-			else cmd.cmd.cmdProc(this, objv);
+			if (cmd.mustCallInvoke(this))
+				cmd.invoke(this, objv);
+			else
+				cmd.cmd.cmdProc(this, objv);
 		} catch (TclException e) {
 			result = e.getCompletionCode();
 		}
@@ -3904,8 +3585,7 @@ public class Interp extends EventuallyFreed {
 		// If an error occurred, record information about what was being
 		// executed when the error occurred.
 
-		if ((result == TCL.ERROR) && ((flags & INVOKE_NO_TRACEBACK) == 0)
-				&& !errAlreadyLogged) {
+		if ((result == TCL.ERROR) && ((flags & INVOKE_NO_TRACEBACK) == 0) && !errAlreadyLogged) {
 			StringBuffer ds;
 
 			if (errInProgress) {
@@ -3937,13 +3617,13 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 * Sets a flag in an interpreter so that exceptions can occur in the next
-	 * call to Tcl_Eval without them being turned into errors.
+	 * Sets a flag in an interpreter so that exceptions can occur in the next call to Tcl_Eval without them being turned
+	 * into errors.
 	 * 
 	 * Results: None.
 	 * 
-	 * Side effects: The TCL_ALLOW_EXCEPTIONS flag gets set in the interpreter's
-	 * evalFlags structure. See the reference documentation for more details.
+	 * Side effects: The TCL_ALLOW_EXCEPTIONS flag gets set in the interpreter's evalFlags structure. See the reference
+	 * documentation for more details.
 	 */
 	public void allowExceptions() {
 		evalFlags |= Parser.TCL_ALLOW_EXCEPTIONS;
@@ -3960,34 +3640,29 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 *----------------------------------------------------------------------
+	 * ----------------------------------------------------------------------
 	 * 
 	 * Tcl_AddInterpResolvers -> addInterpResolver
 	 * 
-	 * Adds a set of command/variable resolution procedures to an interpreter.
-	 * These procedures are consulted when commands are resolved in
-	 * Namespace.findCommand, and when variables are resolved in
-	 * Namespace.findNamespaceVar and thus Var.lookupVar. Each namespace may
-	 * also have its own resolution object which take precedence over those for
+	 * Adds a set of command/variable resolution procedures to an interpreter. These procedures are consulted when
+	 * commands are resolved in Namespace.findCommand, and when variables are resolved in Namespace.findNamespaceVar and
+	 * thus Var.lookupVar. Each namespace may also have its own resolution object which take precedence over those for
 	 * the interpreter.
 	 * 
-	 * When a name is resolved, it is handled as follows. First, the name is
-	 * passed to the resolution objects for the namespace. If not resolved, the
-	 * name is passed to each of the resolution procedures added to the
-	 * interpreter. Finally, if still not resolved, the name is handled using
-	 * the default Tcl rules for name resolution.
+	 * When a name is resolved, it is handled as follows. First, the name is passed to the resolution objects for the
+	 * namespace. If not resolved, the name is passed to each of the resolution procedures added to the interpreter.
+	 * Finally, if still not resolved, the name is handled using the default Tcl rules for name resolution.
 	 * 
 	 * Results: None.
 	 * 
 	 * Side effects: The list of resolvers of the given interpreter is modified.
 	 * 
-	 *----------------------------------------------------------------------
+	 * @param name
+	 *            Name of this resolution scheme
+	 * @param resolver
+	 *            Object to resolve commands/variables.
 	 */
-
-	public void addInterpResolver(String name, // Name of this resolution
-												// scheme.
-			Resolver resolver) // Object to resolve commands/variables.
-	{
+	public void addInterpResolver(String name, Resolver resolver) {
 		ResolverScheme res;
 
 		// Look for an existing scheme with the given name.
@@ -4016,26 +3691,19 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 *----------------------------------------------------------------------
+	 * Looks for a set of command/variable resolution procedures with the given name in an interpreter. These procedures
+	 * are registered by calling addInterpResolver.
 	 * 
-	 * Tcl_GetInterpResolvers -> getInterpResolver
-	 * 
-	 * Looks for a set of command/variable resolution procedures with the given
-	 * name in an interpreter. These procedures are registered by calling
-	 * addInterpResolver.
-	 * 
-	 * Results: If the name is recognized, this procedure returns the object
-	 * implementing the name resolution procedures. If the name is not
-	 * recognized, this procedure returns null.
+	 * Results: If the name is recognized, this procedure returns the object implementing the name resolution
+	 * procedures. If the name is not recognized, this procedure returns null.
 	 * 
 	 * Side effects: None.
 	 * 
-	 *----------------------------------------------------------------------
+	 * @param name
+	 *            Look for a scheme with scheme.
+	 * @return
 	 */
-
-	public Resolver getInterpResolver(String name) // Look for a scheme with
-													// this name.
-	{
+	public Resolver getInterpResolver(String name) {
 		ResolverScheme res;
 		Enumeration e;
 
@@ -4055,26 +3723,18 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 *----------------------------------------------------------------------
+	 * Removes a set of command/variable resolution procedures previously added by addInterpResolver. The next time a
+	 * command/variable name is resolved, these procedures won't be consulted.
 	 * 
-	 * Tcl_RemoveInterpResolvers -> removeInterpResolver
+	 * Results: Returns true if the name was recognized and the resolution scheme was deleted. Returns false otherwise.
 	 * 
-	 * Removes a set of command/variable resolution procedures previously added
-	 * by addInterpResolver. The next time a command/variable name is resolved,
-	 * these procedures won't be consulted.
+	 * Side effects: The list of resolvers of the given interpreter may be modified.
 	 * 
-	 * Results: Returns true if the name was recognized and the resolution
-	 * scheme was deleted. Returns false otherwise.
-	 * 
-	 * Side effects: The list of resolvers of the given interpreter may be
-	 * modified.
-	 * 
-	 *----------------------------------------------------------------------
+	 * @param name
+	 *            Name of the scheme to be removed.
+	 * @return
 	 */
-
-	public boolean removeInterpResolver(String name) // Name of the scheme to be
-														// removed.
-	{
+	public boolean removeInterpResolver(String name) {
 		ResolverScheme res;
 		boolean found = false;
 
@@ -4095,8 +3755,7 @@ public class Interp extends EventuallyFreed {
 		if (found) {
 			int index = resolvers.indexOf(name);
 			if (index == -1) {
-				throw new TclRuntimeError("name " + name
-						+ " not found in resolvers");
+				throw new TclRuntimeError("name " + name + " not found in resolvers");
 			}
 			resolvers.remove(index);
 		}
@@ -4107,40 +3766,36 @@ public class Interp extends EventuallyFreed {
 	/**
 	 * checkCommonInteger()
 	 * 
-	 * If a given integer value is in the common value pool then return a shared
-	 * object for that integer. If the integer value is not in the common pool
-	 * then use to use the recycled int value or a new TclObject.
+	 * If a given integer value is in the common value pool then return a shared object for that integer. If the integer
+	 * value is not in the common pool then use to use the recycled int value or a new TclObject.
 	 * 
-	 * @param value integer to test
+	 * @param value
+	 *            integer to test
 	 * @return TclObject containing 'value'
 	 */
 
 	public final TclObject checkCommonInteger(long value) {
 		if (VALIDATE_SHARED_RESULTS) {
-			TclObject[] objv = { m_minusoneIntegerResult, m_zeroIntegerResult,
-					m_oneIntegerResult, m_twoIntegerResult };
+			TclObject[] objv = { m_minusoneIntegerResult, m_zeroIntegerResult, m_oneIntegerResult, m_twoIntegerResult };
 			for (int i = 0; i < objv.length; i++) {
 				TclObject obj = objv[i];
 				if (!obj.isShared()) {
-					throw new TclRuntimeError("ref count error: "
-							+ "integer constant for " + obj.toString()
-							+ " should be shared but refCount was "
-							+ obj.getRefCount());
+					throw new TclRuntimeError("ref count error: " + "integer constant for " + obj.toString()
+							+ " should be shared but refCount was " + obj.getRefCount());
 				}
 			}
 		}
 
-		if (value==-1) {
+		if (value == -1) {
 			return m_minusoneIntegerResult;
-		} else if (value==0) {
+		} else if (value == 0) {
 			return m_zeroIntegerResult;
-		} else if (value==1) {
+		} else if (value == 1) {
 			return m_oneIntegerResult;
-		} else if (value==2) {
+		} else if (value == 2) {
 			return m_twoIntegerResult;
 		} else {
-			if ((recycledI.getRefCount() == 1)
-					|| ((recycledI.getRefCount() == 2) && (recycledI == m_result))) {
+			if ((recycledI.getRefCount() == 1) || ((recycledI.getRefCount() == 2) && (recycledI == m_result))) {
 				// If (refCount == 1) then interp result
 				// is not recycledI and nobody else holds a ref,
 				// so we can modify recycledI.
@@ -4164,10 +3819,8 @@ public class Interp extends EventuallyFreed {
 			}
 
 			if (VALIDATE_SHARED_RESULTS) {
-				if (!((recycledI.getRefCount() == 1) || (recycledI
-						.getRefCount() == 2))) {
-					throw new TclRuntimeError("ref count error: "
-							+ "recycledI refCount should be 1 or 2, it was "
+				if (!((recycledI.getRefCount() == 1) || (recycledI.getRefCount() == 2))) {
+					throw new TclRuntimeError("ref count error: " + "recycledI refCount should be 1 or 2, it was "
 							+ recycledI.getRefCount());
 				}
 			}
@@ -4177,28 +3830,19 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 *----------------------------------------------------------------------
+	 * If a given double value is in the common value pool the return a shared object for that double. If the double
+	 * value is not in the common pool then a new TclDouble wrapped in a TclObject will be created.
 	 * 
-	 * checkCommonDouble()
-	 * 
-	 * If a given double value is in the common value pool the return a shared
-	 * object for that double. If the double value is not in the common pool
-	 * then a new TclDouble wrapped in a TclObject will be created.
-	 * 
-	 *----------------------------------------------------------------------
 	 */
 
 	final TclObject checkCommonDouble(double value) {
 		if (VALIDATE_SHARED_RESULTS) {
-			TclObject[] objv = { m_zeroDoubleResult, m_onehalfDoubleResult,
-					m_oneDoubleResult, m_twoDoubleResult };
+			TclObject[] objv = { m_zeroDoubleResult, m_onehalfDoubleResult, m_oneDoubleResult, m_twoDoubleResult };
 			for (int i = 0; i < objv.length; i++) {
 				TclObject obj = objv[i];
 				if (!obj.isShared()) {
-					throw new TclRuntimeError("ref count error: "
-							+ "double constant for " + obj.toString()
-							+ " should be shared but refCount was "
-							+ obj.getRefCount());
+					throw new TclRuntimeError("ref count error: " + "double constant for " + obj.toString()
+							+ " should be shared but refCount was " + obj.getRefCount());
 				}
 			}
 		}
@@ -4212,8 +3856,7 @@ public class Interp extends EventuallyFreed {
 		} else if (value == 2.0) {
 			return m_twoDoubleResult;
 		} else {
-			if ((recycledD.getRefCount() == 1)
-					|| ((recycledD.getRefCount() == 2) && (recycledD == m_result))) {
+			if ((recycledD.getRefCount() == 1) || ((recycledD.getRefCount() == 2) && (recycledD == m_result))) {
 				// If (refCount == 1) then interp result
 				// is not recycledD and nobody else holds a ref,
 				// so we can modify recycledD.
@@ -4237,10 +3880,8 @@ public class Interp extends EventuallyFreed {
 			}
 
 			if (VALIDATE_SHARED_RESULTS) {
-				if (!((recycledD.getRefCount() == 1) || (recycledD
-						.getRefCount() == 2))) {
-					throw new TclRuntimeError("ref count error: "
-							+ "recycledD refCount should be 1 or 2, it was "
+				if (!((recycledD.getRefCount() == 1) || (recycledD.getRefCount() == 2))) {
+					throw new TclRuntimeError("ref count error: " + "recycledD refCount should be 1 or 2, it was "
 							+ recycledD.getRefCount());
 				}
 			}
@@ -4250,13 +3891,8 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 *----------------------------------------------------------------------
-	 * 
-	 * checkCommonBoolean()
-	 * 
 	 * Always return a shared boolean TclObject.
 	 * 
-	 *----------------------------------------------------------------------
 	 */
 
 	final TclObject checkCommonBoolean(boolean value) {
@@ -4265,10 +3901,8 @@ public class Interp extends EventuallyFreed {
 			for (int i = 0; i < objv.length; i++) {
 				TclObject obj = objv[i];
 				if (!obj.isShared()) {
-					throw new TclRuntimeError("ref count error: "
-							+ "boolean constant for " + obj.toString()
-							+ " should be shared but refCount was "
-							+ obj.getRefCount());
+					throw new TclRuntimeError("ref count error: " + "boolean constant for " + obj.toString()
+							+ " should be shared but refCount was " + obj.getRefCount());
 				}
 			}
 		}
@@ -4277,25 +3911,17 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 *----------------------------------------------------------------------
+	 * If a given String value is in the common value pool the return a shared object for that String. If the String
+	 * value is not in the common pool then a new TclString wrapped in a TclObject will be created.
 	 * 
-	 * checkCommonString()
-	 * 
-	 * If a given String value is in the common value pool the return a shared
-	 * object for that String. If the String value is not in the common pool
-	 * then a new TclString wrapped in a TclObject will be created.
-	 * 
-	 *----------------------------------------------------------------------
 	 */
 
 	public final TclObject checkCommonString(String value) {
 		if (value == null || "".equals(value) || value.length() == 0) {
 			if (VALIDATE_SHARED_RESULTS) {
 				if (!m_nullResult.isShared()) {
-					throw new TclRuntimeError(
-							"ref count error: "
-									+ "empty string constant should be shared but refCount was "
-									+ m_nullResult.getRefCount());
+					throw new TclRuntimeError("ref count error: "
+							+ "empty string constant should be shared but refCount was " + m_nullResult.getRefCount());
 				}
 			}
 			return m_nullResult;
@@ -4305,17 +3931,10 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 *----------------------------------------------------------------------
+	 * It is very common to create a TclObject that contains a single character. It can be costly to allocate a
+	 * TclObject, a TclString internal rep, and a String to represent a character. This method avoids that overhead for
+	 * the most common characters. This method will return null if a character does not have a cached value.
 	 * 
-	 * checkCommonCharacter()
-	 * 
-	 * It is very common to create a TclObject that contains a single character.
-	 * It can be costly to allocate a TclObject, a TclString internal rep, and a
-	 * String to represent a character. This method avoids that overhead for the
-	 * most common characters. This method will return null if a character does
-	 * not have a cached value.
-	 * 
-	 *----------------------------------------------------------------------
 	 */
 
 	public final TclObject checkCommonCharacter(int c) {
@@ -4324,49 +3943,35 @@ public class Interp extends EventuallyFreed {
 		}
 		if (VALIDATE_SHARED_RESULTS) {
 			if ((m_charCommon[c] != null) && !m_charCommon[c].isShared()) {
-				throw new TclRuntimeError("ref count error: "
-						+ "common character for '" + c + "' is not shared");
+				throw new TclRuntimeError("ref count error: " + "common character for '" + c + "' is not shared");
 			}
 		}
 		return m_charCommon[c];
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * getErrorLine --
-	 * 
-	 * Query the interp.errorLine member. This is like accessing the public
-	 * Tcl_Interp.errorLine field in the C impl. this method should be used by
-	 * classes outside the tcl.lang package.
+	/**
+	 * Query the interp.errorLine member. This is like accessing the public Tcl_Interp.errorLine field in the C impl.
+	 * this method should be used by classes outside the tcl.lang package.
 	 * 
 	 * Results: None.
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
 	 */
 
 	public int getErrorLine() {
 		return errorLine;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * getClassLoader --
-	 * 
-	 * Get the TclClassLoader used for the interp. This class loader delagates
-	 * to the context class loader which delagates to the system class loader.
-	 * The TclClassLoader will read classes and resources from the
+	/**
+	 * Get the TclClassLoader used for the interp. This class loader delagates to the context class loader which
+	 * delagates to the system class loader. The TclClassLoader will read classes and resources from the
 	 * env(TCL_CLASSPATH).
 	 * 
-	 * Results: This method will return the classloader in use, it will never
-	 * return null.
+	 * Results: This method will return the classloader in use, it will never return null.
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
 	 */
 
 	public ClassLoader getClassLoader() {
@@ -4375,30 +3980,25 @@ public class Interp extends EventuallyFreed {
 		// env(TCL_CLASSPATH) for classes.
 
 		if (classLoader == null) {
-			classLoader = new TclClassLoader(this, null, Thread.currentThread()
-					.getContextClassLoader()
+			classLoader = new TclClassLoader(this, null, Thread.currentThread().getContextClassLoader()
 			// Interp.class.getClassLoader()
 			);
 		}
 		return classLoader;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * getResourceAsStream --
-	 * 
-	 * Resolve a resource name into an InputStream. This method will search for
-	 * a resource using the TclClassLoader. This method will return null if a
-	 * resource can't be found.
+	/**
+	 * Resolve a resource name into an InputStream. This method will search for a resource using the TclClassLoader.
+	 * This method will return null if a resource can't be found.
 	 * 
 	 * Results: None.
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
+	 * @param resName
+	 *            resource to open as InputStream
+	 * @return InputStream
 	 */
-
 	InputStream getResourceAsStream(String resName) {
 		if (classLoader == null) {
 			getClassLoader();
@@ -4423,23 +4023,16 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * setInterrupted --
-	 * 
-	 * Invoke this method to indicate that an executing interp should be
-	 * interrupted at the next safe moment. Interrupting a running interpreter
-	 * will unwind the stack by throwing an exception. This method can safely be
-	 * called from a thread other than the one processsing events. No explicit
-	 * synchronization is needed. Once a thread has been interrupted or disposed
-	 * of, setInterrupted() calls will do nothing.
+	/**
+	 * Invoke this method to indicate that an executing interp should be interrupted at the next safe moment.
+	 * Interrupting a running interpreter will unwind the stack by throwing an exception. This method can safely be
+	 * called from a thread other than the one processsing events. No explicit synchronization is needed. Once a thread
+	 * has been interrupted or disposed of, setInterrupted() calls will do nothing.
 	 * 
 	 * Results: Stops execution of the Interp via an Exception.
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
 	 */
 
 	public void setInterrupted() {
@@ -4483,22 +4076,15 @@ public class Interp extends EventuallyFreed {
 		getNotifier().queueEvent(interruptedEvent, TCL.QUEUE_TAIL);
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
+	 * This method is invoked after an eval operation to check if a running interp has been marked as interrupted. This
+	 * method is not public since it should only be used by the Jacl internal implementation.
 	 * 
-	 * checkInterrupted --
-	 * 
-	 * This method is invoked after an eval operation to check if a running
-	 * interp has been marked as interrupted. This method is not public since it
-	 * should only be used by the Jacl internal implementation.
-	 * 
-	 * Results: This method will raise a TclInterruptedException if the
-	 * Interp.setInterrupted() method was invoked for this interp. This method
-	 * will only raise a TclInterruptedException once.
+	 * Results: This method will raise a TclInterruptedException if the Interp.setInterrupted() method was invoked for
+	 * this interp. This method will only raise a TclInterruptedException once.
 	 * 
 	 * Side effects: None.
 	 * 
-	 * ----------------------------------------------------------------------
 	 */
 
 	public final void checkInterrupted() {
@@ -4513,32 +4099,18 @@ public class Interp extends EventuallyFreed {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
+	/**
+	 * This method is invoked to cleanup an Interp object that has been interrupted and had its stack unwound. This
+	 * method will remove any pending events from the Tcl event queue and then invoke the dispose() method for this
+	 * interp. The interp object should not be used after this method has finished. This method must only ever be
+	 * invoked after catching a TclInterrupted exception at the outermost level of the Tcl event processing loop.
 	 * 
-	 * disposeInterrupted --
-	 * 
-	 * This method is invoked to cleanup an Interp object that has been
-	 * interrupted and had its stack unwound. This method will remove any
-	 * pending events from the Tcl event queue and then invoke the dispose()
-	 * method for this interp. The interp object should not be used after this
-	 * method has finished. This method must only ever be invoked after catching
-	 * a TclInterrupted exception at the outermost level of the Tcl event
-	 * processing loop.
-	 * 
-	 * ----------------------------------------------------------------------
 	 */
 
 	final void disposeInterrupted() {
-		final boolean debug = false;
 
 		if (deleted) {
-			final String msg = "Interp.disposeInterrupted() invoked for "
-					+ "a deleted interp";
-
-			if (debug) {
-				System.out.println(msg);
-			}
+			final String msg = "Interp.disposeInterrupted() invoked for " + "a deleted interp";
 
 			throw new TclRuntimeError(msg);
 		}
@@ -4546,10 +4118,6 @@ public class Interp extends EventuallyFreed {
 		if (interruptedEvent == null) {
 			final String msg = "Interp.disposeInterrupted() invoked for "
 					+ "an interp that was not interrupted via setInterrupted()";
-
-			if (debug) {
-				System.out.println(msg);
-			}
 
 			throw new TclRuntimeError(msg);
 		}
@@ -4559,17 +4127,6 @@ public class Interp extends EventuallyFreed {
 
 		if ((interruptedEvent != null) && !interruptedEvent.wasProcessed) {
 			getNotifier().deleteEvents(interruptedEvent);
-		}
-
-		if (debug) {
-			if (interruptedEvent == null) {
-				System.out.println("interruptedEvent was null");
-			} else if (interruptedEvent.wasProcessed) {
-				System.out.println("interruptedEvent was processed already");
-			} else {
-				System.out
-						.println("interruptedEvent has not been processed, removed from queue");
-			}
 		}
 
 		// Remove each after event from the Tcl event queue.
@@ -4583,10 +4140,6 @@ public class Interp extends EventuallyFreed {
 		// here to cleanup after events.
 
 		try {
-			if (debug) {
-				System.out.println("eval: after info");
-			}
-
 			eval("after info", 0);
 			TclObject tobj = getResult();
 			tobj.preserve();
@@ -4594,25 +4147,16 @@ public class Interp extends EventuallyFreed {
 			for (int i = 0; i < len; i++) {
 				TclObject evt = TclList.index(this, tobj, i);
 				String cmd = "after cancel " + evt;
-				if (debug) {
-					System.out.println("eval: " + cmd);
-				}
 				eval(cmd, 0);
 			}
 			tobj.release();
 		} catch (TclException te) {
-			if (debug) {
-				te.printStackTrace(System.err);
-			}
+			// ignored
 		}
 
 		// Actually dispose of the interp. After this dispose
 		// call is invoked, it should not be possible to invoke
 		// commands in this interp.
-
-		if (debug) {
-			System.out.println("Invoking Interp.dispose()");
-		}
 
 		dispose();
 	}
@@ -4621,7 +4165,8 @@ public class Interp extends EventuallyFreed {
 	 * 
 	 * Set new value for maxNestingDepth
 	 * 
-	 * @param depth If > 0, set as new depth; otherwise don't set new value
+	 * @param depth
+	 *            If > 0, set as new depth; otherwise don't set new value
 	 * @return old value, or current value if depth <= 0
 	 */
 
@@ -4667,5 +4212,4 @@ public class Interp extends EventuallyFreed {
 		return buffer.toString();
 	}
 
-} // end Interp
-
+}
