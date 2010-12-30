@@ -37,6 +37,11 @@ import java.util.HashMap;
  * returns the Notifier for that interpreter (thread).
  */
 public class Notifier implements EventDeleter {
+	
+	/**
+	 * timeout for doOneEvent wait()
+	 */
+	private static final long PAUSE_WAIT = 100L;
 
 	/**
 	 *  First pending event, or null if none.
@@ -575,10 +580,10 @@ public class Notifier implements EventDeleter {
 						TimerHandler h = (TimerHandler) timerList.get(0);
 						long waitTime = h.atTime - sysTime;
 						if (waitTime > 0) {
-							wait(waitTime);
+							wait(waitTime<PAUSE_WAIT ? waitTime: PAUSE_WAIT);
 						}
 					} else {
-						wait();
+						wait(PAUSE_WAIT);
 					}
 				} // synchronized (this)
 			} catch (InterruptedException e) {
