@@ -1,0 +1,66 @@
+<assembly>
+  <id>bin</id>
+  <formats>
+    <format>dir</format>
+    <format>zip</format>
+  </formats>
+  <includeBaseDirectory>true</includeBaseDirectory>
+  <fileSets>
+    <fileSet>
+      <directory>src/main/config</directory>
+      <outputDirectory>config/</outputDirectory>
+      <includes>
+        <include>*</include>
+      </includes>
+      <excludes>
+        <exclude>CVS</exclude>
+      </excludes>
+    </fileSet>
+    <fileSet>
+      <directory>src/main/licenses</directory>
+      <outputDirectory></outputDirectory>
+      <includes>
+        <include>**/*</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <directory>src/main/readmes</directory>
+      <outputDirectory></outputDirectory>
+      <includes>
+        <include>*</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <directory>target</directory>
+      <outputDirectory></outputDirectory>
+      <includes>
+        <include>${artifactId}-${version}.jar</include>
+      </includes>
+    </fileSet>
+  </fileSets>
+  <files>
+    <file>
+      <source>src/main/scripts/jtcl.bat</source>
+      <filtered>true</filtered>
+    </file>
+    <file>
+      <source>src/main/scripts/jtcl</source>
+      <filtered>true</filtered>
+      <fileMode>0744</fileMode>
+    </file>
+  </files>
+  <dependencySets>
+    <dependencySet>
+      <outputDirectory>lib</outputDirectory>
+      <excludes>
+         <exclude>jtcl:jtcl:*</exclude>
+         <exclude>jtcl:*</exclude>
+      </excludes>
+      <unpack>false</unpack>
+    </dependencySet>
+  </dependencySets>
+                  <filterset begintoken="%" endtoken="%">
+                   <filter token="VERSION" value="${project.version}"/>
+                   </filterset>
+
+</assembly>

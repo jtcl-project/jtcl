@@ -87,6 +87,28 @@
 				<artifactId>maven-ant-plugin</artifactId>
 				<version>2.3</version>
 			</plugin>
+                        <plugin>
+                                <groupId>org.apache.maven.plugins</groupId>
+                                <artifactId>maven-assembly-plugin</artifactId>
+                                <executions>
+                                        <execution>
+                                                <id>assembly:package</id>
+                                                <phase>package</phase>
+                                                <goals>
+                                                        <!--
+                  Work around for http://jira.codehaus.org/browse/MASSEMBLY-97
+                  as the goal should be attached.
+                -->
+                                                        <goal>single</goal>
+                                                </goals>
+                                                <configuration>
+                                                        <descriptors>
+                                                                <descriptor>src/main/assembly/bin.xml</descriptor>
+                                                        </descriptors>
+                                                </configuration>
+                                        </execution>
+                                </executions>
+                        </plugin>
 		</plugins>
 	</build>
 </project>
