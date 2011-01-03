@@ -8,7 +8,25 @@
 #  RCS: @(#) $Id: main.tcl,v 1.5 2006/03/04 22:18:34 mdejong Exp $
 #
 #
-
+proc checkStatus {tclFiles jarFile} {
+    set maxTime 0
+    foreach file $tclFiles {
+        set mTime [file mtime $file]
+        if {$mTime > $maxTime} {
+            set maxTime $mTime
+        }
+    }
+    set jarTime 0
+    if {[file exists $jarFile]} {
+        set jarTime [file mtime $jarFile]
+    }
+    set status 1
+    if {$jarTime < $maxTime} {
+        puts "Need to regenerate $jarFile"
+        set status 0
+    }
+    return $status
+}
 # Process list of command line argments and assign
 # values to the _cmdline array.
 
@@ -230,6 +248,13 @@ proc process_module_file { filename } {
 
     set source_files [module_filter_include_source \
         $source_files $include_source_files]
+
+    set tail [file tail $filename]
+    set tailr [file rootname $tail]
+    set jar_name "${tailr}.jar"
+    if {[checkStatus $source_files $jar_name]} {
+        return 0
+    }
 
     # Parse source Tcl file, extract proc declarations, and save
     # the modified Tcl source into the build directory.
