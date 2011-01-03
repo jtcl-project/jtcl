@@ -20,7 +20,7 @@ if {![info exists JAVA_DRIVER]} {
 }
 set JAVA_HOLD_REF ""
 
-puts "sourced tjcthread.tcl in second thread"
+#puts "sourced tjcthread.tcl in second thread"
 
 proc processJavaSource { filename javasrc } {
     global JAVA_INIT JAVA_CMD
@@ -334,7 +334,7 @@ proc janinoCompile { filename srccode } {
 proc processTclSource { java_filename proc_source } {
     global _tjc
 
-    puts "processTclSource $java_filename $proc_source"
+    #puts "processTclSource $java_filename $proc_source"
 
     set len [llength $proc_source]
     if {$len != 4} {
