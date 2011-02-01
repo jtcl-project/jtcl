@@ -93,8 +93,8 @@ public class Procedure implements Command, CommandWithDispose {
 			int specLen = TclList.getLength(interp, argSpec);
 
 			if (specLen == 0) {
-				throw new TclException(interp, "procedure \"" + name
-						+ "\" has argument with no name");
+				// NEM 2010-06-14: updated to match Tcl 8.5+ and [apply]
+                throw new TclException(interp, "argument with no name");
 			}
 			if (specLen > 2) {
 				throw new TclException(interp, "too many fields in argument "
@@ -103,13 +103,13 @@ public class Procedure implements Command, CommandWithDispose {
 			TclObject argName = TclList.index(interp, argSpec, 0);
 			String argNameStr = argName.toString();
 			if (argNameStr.indexOf("::") != -1) {
-				throw new TclException(interp, "procedure \"" + name
-						+ "\" has formal parameter \"" + argSpec
-						+ "\" that is not a simple name");
+				// NEM: 2010-06-14: updated to match Tcl 8.5+
+                throw new TclException(interp, "formal parameter \"" + argSpec +
+                        "\" is not a simple name");
 			} else if (Var.isArrayVarname(argNameStr)) {
-				throw new TclException(interp, "procedure \"" + name
-						+ "\" has formal parameter \"" + argSpec
-						+ "\" that is an array element");
+				// NEM: 2010-06-14: updated to match Tcl 8.5+
+                throw new TclException(interp, "formal parameter \"" + argSpec +
+                        "\" is an array element");
 			}
 
 			argList[i][0] = argName;
@@ -169,8 +169,16 @@ public class Procedure implements Command, CommandWithDispose {
 					throw e;
 				}
 			} else if (code == TCL.ERROR) {
+                if (this.isLambda()) {
+                    TclObject name = TclList.newInstance();
+                    TclList.append(interp, name, argv, 0, 2);
+                    interp.addErrorInfo("\n    (lambda term \""
+                            + name.toString()
+                            + "\" line " + interp.errorLine + ")");
+                } else {
 				interp.addErrorInfo("\n    (procedure \"" + argv[0]
 						+ "\" line " + interp.errorLine + ")");
+                }
 				throw e;
 			} else if (code == TCL.BREAK) {
 				throw new TclException(interp,
@@ -235,6 +243,13 @@ public class Procedure implements Command, CommandWithDispose {
 		}
 		argList = null;
 	}
+
+    /**
+     * @return true if the procedure is anonymous, created with [apply].
+     */
+    public boolean isLambda() {
+        return wcmd.hashKey == null;
+    }
 
 	/*
 	 * ----------------------------------------------------------------------

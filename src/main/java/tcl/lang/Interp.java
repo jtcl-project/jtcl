@@ -854,6 +854,7 @@ public class Interp extends EventuallyFreed {
 	protected void createCommands() {
 		Extension.loadOnDemand(this, "after", "tcl.lang.cmd.AfterCmd");
 		Extension.loadOnDemand(this, "append", "tcl.lang.cmd.AppendCmd");
+        Extension.loadOnDemand(this, "apply", "tcl.lang.cmd.ApplyCmd");
 		Extension.loadOnDemand(this, "array", "tcl.lang.cmd.ArrayCmd");
 		Extension.loadOnDemand(this, "binary", "tcl.lang.cmd.BinaryCmd");
 		Extension.loadOnDemand(this, "break", "tcl.lang.cmd.BreakCmd");

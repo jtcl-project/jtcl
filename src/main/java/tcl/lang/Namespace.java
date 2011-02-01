@@ -1730,7 +1730,13 @@ public class Namespace {
 			 */
 
 			// FIXME : is there a test case for this error?
-			interp.setResult("unknown namespace \"" + name + "\"");
+            if (name.startsWith("::")) {
+                interp.setResult("namespace \"" + name + "\" not found");
+            } else {
+                Namespace current = getCurrentNamespace(interp);
+                interp.setResult("namespace \"" + name + "\" not found in \"" +
+                        current.fullName + "\"");
+		}
 		}
 		return null;
 	}

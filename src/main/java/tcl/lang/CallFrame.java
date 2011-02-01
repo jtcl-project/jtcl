@@ -171,12 +171,15 @@ public class CallFrame {
 
 		int numArgs = proc.argList.length;
 
-		if ((!proc.isVarArgs) && (objv.length - 1 > numArgs)) {
-			wrongNumProcArgs(objv[0], proc);
+        // If the proc is a lambda, invoked by [apply], then there will be an
+        // extra argument: apply lambda args... vs procName args...
+        int startIndex = proc.isLambda() ? 2 : 1;
+		if ((!proc.isVarArgs) && (objv.length - startIndex > numArgs)) {
+			wrongNumProcArgs(objv, proc);
 		}
 
 		int i, j;
-		for (i = 0, j = 1; i < numArgs; i++, j++) {
+		for (i = 0, j = startIndex; i < numArgs; i++, j++) {
 			// Handle the special case of the last formal being
 			// "args". When it occurs, assign it a list consisting of
 			// all the remaining actual arguments.
@@ -198,20 +201,24 @@ public class CallFrame {
 				} else if (proc.argList[i][1] != null) {
 					value = proc.argList[i][1];
 				} else {
-					wrongNumProcArgs(objv[0], proc);
+					wrongNumProcArgs(objv, proc);
 				}
 				interp.setVar(varName, value, 0);
 			}
 		}
 	}
 
-	private String wrongNumProcArgs(TclObject name, Procedure proc)
+	private String wrongNumProcArgs(TclObject[] objv, Procedure proc)
 			throws TclException {
 		int i;
 		StringBuffer sbuf = new StringBuffer(200);
 		sbuf.append("wrong # args: should be \"");
 		TclObject procNameList = TclList.newInstance();
-		TclList.append(interp, procNameList, name);
+        if (proc.isLambda()) {
+            TclList.append(interp, procNameList, objv, 0, 2);
+        } else {
+            TclList.append(interp, procNameList, objv[0]);
+        }
 		sbuf.append(procNameList.toString());
 		for (i = 0; i < proc.argList.length; i++) {
 			TclObject arg = proc.argList[i][0];

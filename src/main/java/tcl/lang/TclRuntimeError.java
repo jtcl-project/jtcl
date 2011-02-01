@@ -27,4 +27,15 @@ public class TclRuntimeError extends RuntimeException {
 	public TclRuntimeError(String s) {
 		super(s);
 	}
+
+    /**
+     * Constructs a TclRuntimeError with the specified detail message and
+     * cause.
+     *
+     * @param msg   the detail message.
+     * @param cause the cause.
+     */
+    public TclRuntimeError(String msg, Throwable cause) {
+        super(msg, cause);
+}
 }
