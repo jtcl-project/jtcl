@@ -1,0 +1,82 @@
+Adding/updating Tcllib:
+
+1. grab latest dist from sf.net/projects/tcllib
+   using tcllib1.12 as example, adjust as needed
+
+2. unpack
+   tar zxf tcllib-1.13.tar.gz
+
+3. modify: support/installation/modules.tcl
+
+  cd tcllib-1.13
+  vi support/installation/modules.tcl
+
+
+  add "Exclude directives" for modules not JTcl 8.4 compatible
+  on or about line: 36
+
+    Exclude amazon-s3
+    Exclude coroutine
+    Exclude devtools
+    Exclude gpx
+    Exclude grammar_aycock
+    Exclude hook
+    Exclude imap4
+    Exclude namespacex
+    Exclude pki
+    Exclude pt
+    Exclude rest
+    Exclude virtchannel_base
+    Exclude virtchannel_core
+    Exclude virtchannel_transform
+
+
+4. remove modules/ 
+
+   cd modules
+   grep Exclude ../support/installation/modules.tcl | grep -v proc | awk '{print $2}' | while read d ; do /bin/rm -rf $d; done
+
+
+5. build into a temp location
+
+  ./configure --prefix=/tmp/jtcllib
+  make; make install
+
+6. Edit /tmp/jtcllib/pkgIndex.tcl
+
+   comment out or remove on or about line: 13
+
+    # jtcl - comment this block out, need to source all of the modules
+    # # For Tcl 8.3.1 and later, that's all we need
+    # if {[package vsatisfies [package provide Tcl] 8.4]} {return}
+    # if {(0 == [catch {
+    #     package vcompare [info patchlevel] [info patchlevel]
+    # }]) && (
+    #     [package vcompare [info patchlevel] 8.3.1] >= 0
+    # )} {return}
+    # 
+    # # For older Tcl releases, here are equivalent contents
+    # # of the pkgIndex.tcl files of all the modules
+    # 
+    # if {![package vsatisfies [package provide Tcl] 8.0]} {return}
+
+7. copy modules into jtcl library
+
+   cd jtcl
+   cp -r /tmp/jtcllib/lib/tcllib1.13/*  src/main/resources/tcl/pkg/tcllib/library/
+
+
+8. build docs
+
+   cd tcllib1.13
+   mkdir tcllib_1_13
+   cd modules
+   tar cf - `find . -name *.man` | (cd ../tcllib_1_13; tar xf -)
+   tar cf - `find . -name *.inc` | (cd ../tcllib_1_13; tar xf -)
+   cd ../tcllib_1_13
+   dtplite -o /tmp/jtclhtml html tcllib_1_13
+
+7. copy docs into jtcl site
+   
+   cd jtcl
+   cp -r /tmp/jtclhtml/* src/site/resources/docs/tcllib1.13
