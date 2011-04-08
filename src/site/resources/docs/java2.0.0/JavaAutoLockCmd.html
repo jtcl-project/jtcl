@@ -1,0 +1,61 @@
+<HTML>
+<TITLE>
+The java::autolock Command
+</TITLE>
+
+<BODY>
+<HR>
+
+<H3>
+The java::autolock Command
+</H3>
+
+<HR>
+
+<DL>
+
+<H3>
+Usage:
+</H3>
+
+<DD><B>java::autolock</B> ?<I>activate</I>?
+
+<P>
+
+The <B>java::autolock</B> command will halt garbage collection for
+every Java object that is reflected inside the Tcl interpreter.
+In normal operation, a reference to a Java object needs
+to be assigned to a Tcl variable otherwise it will garbage collected.
+In some cases, one might want to interactively call methods on java
+objects without the extra step of assigning results to variables.
+If you want to enable such functionality call the
+<B>java::autolock</B> command with no arguments or with the optional
+<I>activate</I> argument set to 1. Activating the auto locking feature
+will keep java object references from being garbage collected. You
+can deactivate the auto locking feature by calling the
+<B>java::autolock</B> command with the <I>activate</I> argument set to 0.
+When autolocking is deactivated, all auto locked java references will be
+garbage collected unless the reference had been assigned to a variable.
+
+<P>
+
+When auto locking is enabled you will notice a significant slowdown.
+This is a direct result of the overhead required to implement auto
+locking. This should not matter for interactive sessions, but scripts
+run with auto locking activated will be a lot slower. For this
+reason (and others which are harder to explain) you should never
+use the <b>java::autolock</b> command in a finished script. The
+auto locking feature should only be used in an interactive session.
+
+<P>
+
+</DL>
+
+<PRE>
+<A HREF="../license.html">Copyright</A> &#169; 1997-1998 Sun Microsystems, Inc.
+</PRE>
+
+
+</BODY>
+</HTML>
+

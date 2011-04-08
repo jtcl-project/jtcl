@@ -1,0 +1,743 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+</head>
+<body>
+<div style="text-align: center;"><big><big><span
+ style="font-weight: bold;">Future Improvements to TJC<br>
+</span></big></big><br>
+<div style="text-align: left;">The TJC compiler could benefit from
+additional work in the following areas, sorted by priority.<br>
+<h4>Inline Additional Commands<br>
+</h4>
+Quite a few Tcl commands that are suitable for inlining have not had
+inline support added to TJC. Commands that should be inlined include
+the following:<br>
+<ul>
+  <li>append&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(done)</li>
+  <li>global&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(done)</li>
+  <li>incr&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(done)<br>
+  </li>
+  <li>info exists</li>
+  <li>lappend&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (done)</li>
+  <li>lindex&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(done)<br>
+  </li>
+  <li>list&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(done)<br>
+  </li>
+  <li>llength&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;
+(done)<br>
+  </li>
+  <li>lrange</li>
+  <li>lset</li>
+  <li>regexp</li>
+  <li>regsub</li>
+  <li>set&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(done)<br>
+  </li>
+  <li>string index&nbsp;&nbsp; (done)<br>
+  </li>
+  <li>string length&nbsp; (done)<br>
+  </li>
+  <li>string compare (done)<br>
+  </li>
+  <li>string equal&nbsp;&nbsp; (done)<br>
+  </li>
+  <li>string range&nbsp;&nbsp; (done)<br>
+  </li>
+</ul>
+<h4>Inlined Integer Expr Operations<br>
+</h4>
+It is very common for a math expression to deal only with integer
+values. Tcl's expr command is written in such a way that either double
+or integer values can be used in an expression at any time. The actual
+type used for calculations changes depending on the type of the
+operands. The compiled expr implementation in TJC could be improved so
+that it would be possible to determine what types were being used at
+each stage of a calculation and emit inline code for the case of an
+integer operation. Additional testing is needed to determine how much
+this could speed up math operations and if the performance gain would
+be worth the effort required.<br>
+<br>
+For example, the following Tcl code:<br>
+<br>
+<span style="font-family: monospace;">expr {$a == 0}<br>
+</span><span style="font-family: monospace;"></span><br>
+Would be compiled into an inlined expr like the following:<br>
+<br>
+<span style="font-family: monospace;"><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+Binary operator: $a == 0<br>
+</span></span><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TclObject tmp0 = interp.getVar("a", null, 0);</span></span></span></span><br>
+</span></span><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ExprValue tmp1 = TJC.exprGetValue(interp, tmp0);</span></span><br>
+</span></span><span style="font-family: monospace;"><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ExprValue tmp2 = TJC.exprGetValue(interp, 0, null);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TJC.exprBinaryOperator(interp, TJC.EXPR_OP_EQUAL, tmp1, tmp2);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //
+End Binary operator: ==<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+boolean tmp3 = tmp1.getBooleanValue(interp);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TJC.exprReleaseValue(interp, tmp1);</span></span><br>
+<br>
+The above code works as expected, but it could be further optimized.
+For example, the <span style="font-family: monospace;"><span
+ style="font-family: monospace;">exprBinaryOperator() </span></span>method
+must always check the type of each argument to the operator. In the Tcl
+expr command above, the type of the constant 0 is always the integer
+type. The compiler is currently unable to take advantage of this
+information to emit optimized logic when the type of the right hand
+operator is known. When used with integer arguments, the binary
+operators <span style="font-family: monospace;">* + - &lt; &gt; &lt;=
+&gt;= == != eq ne &amp; ^ and |</span> a Tcl expr operator can be
+represented by a single Java statement. An improved TJC compiler could
+emit optimized code for the code above, like the following:<br>
+<br>
+<span style="font-family: monospace;"><span
+ style="font-family: monospace;">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //
+Binary operator: $a == 0<br>
+</span></span><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TclObject tmp0 = interp.getVar("a", null, 0);</span></span></span></span><br>
+</span></span><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ExprValue tmp1 = TJC.exprGetValue(interp, tmp0);<br>
+</span></span></span></span><span style="font-family: monospace;"><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if (tmp1.isIntType()) {<br>
+</span></span><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+tmp1.setIntValue( tmp1.getIntValue() == 0 );<br>
+</span></span></span></span><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+} else {</span></span></span></span><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><br>
+</span></span><span style="font-family: monospace;"><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ExprValue tmp2 = TJC.exprGetValue(interp, 0, null);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TJC.exprBinaryOperator(interp, TJC.EXPR_OP_EQUAL, tmp1, tmp2);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //
+End Binary operator: ==<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+boolean tmp3 = tmp1.getBooleanValue(interp);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TJC.exprReleaseValue(interp, tmp1);</span></span><br>
+<br>
+The optimized integer version of this expr command would execute more
+quickly because type checking for the right hand operator need not be
+done. Also, the operator logic is inlined in the code, which will
+execute more quickly than a call to the <span
+ style="font-family: monospace;"><span style="font-family: monospace;">exprBinaryOperator()
+</span></span>method.<br>
+<h4>Shared Constant Table<br>
+</h4>
+Currently, each command maintains a separate constant table. For
+example,
+the string "foo" is saved in a TclObject of type TclString. This
+implementation makes access to the constant string "foo" very
+efficient. Trouble is, there is no way to share constants across
+multiple commands. If a command c1 defines a constant string "foo" and
+another command c2 also defines a constant string "foo", then two
+instances of a constant TclObject are created for the same string. It
+is likely that memory usage could be significantly reduced if commands
+were able to share a common constant pool.<br>
+<h4>Eliminate Unused Interp Result Operations<br>
+</h4>
+Consider the following Tcl code:<br>
+<br>
+<span style="font-family: monospace;">proc p {} {</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; set items
+[list ONE TWO THREE]</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; set e [lindex
+$items 0]</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; return $e</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">}</span><br
+ style="font-family: monospace;">
+<br>
+The proc defined above will set the interp result 5 times, twice for
+the <span style="font-family: monospace;">set</span> command
+invocations, once for the <span style="font-family: monospace;">list</span>
+command, once for the <span style="font-family: monospace;">lindex</span>
+command, and once for the <span style="font-family: monospace;">return</span>
+command. It should be possible to optimize away 4 of these result set
+operations. The two calls to the <span style="font-family: monospace;">set</span>
+command are not nested commands and they are followed by a return
+command, so these result set operations can easily be removed. The two
+nested commands can also avoid the interp result set operations by
+directly setting the value of the variable instead of the interp
+result. The final interp result set operation invoked by the return
+command would set the interp result for the whole command and could not
+be optimized away.<br>
+<br>
+To illustrate how this would actually work, a portion of the source
+code generated for the proc defined above is shown here. This is the
+code for the first <span style="font-family: monospace;">set</span>
+command that defines the <span style="font-family: monospace;">items</span>
+variable in the proc p.<br>
+<br>
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+{ // Invoke: set items [...]</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TclObject tmp0;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+{ // Invoke: list ONE TWO THREE</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TclObject tmp1 = TclList.newInstance();</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+try {</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TclList.append(interp, tmp1, const0);</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TclList.append(interp, tmp1, const1);</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TclList.append(interp, tmp1, const2);</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+} catch (TclException ex) {</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+tmp1.release();</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+throw ex;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+interp.setResult(tmp1);</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+} // End Invoke: list</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+tmp0 = interp.getResult();</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+tmp0 = setVarScalar(interp, "items", tmp0, 0, varcache1, 1);</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+interp.setResult(tmp0);</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+} // End Invoke: set<br>
+</span><span style="font-family: monospace;"><br>
+</span>The code above invokes <span style="font-family: monospace;">interp.setResult()
+</span>two times, once for the nested <span
+ style="font-family: monospace;">list</span> command and once for the <span
+ style="font-family: monospace;">set</span> command.&nbsp; Ignoring the
+second result set operation and optimizing the first would result in
+functionally equivilent code. The following code example shows how the <span
+ style="font-family: monospace;">interp.setResult() </span>operations
+could be commented out and replaced with inlined logic that avoids the
+unneeded invocations.<br>
+<br>
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+{ // Invoke: set items [...]</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TclObject tmp0;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+{ // Invoke: list ONE TWO THREE</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TclObject tmp1 = TclList.newInstance();</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+try {</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TclList.append(interp, tmp1, const0);</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TclList.append(interp, tmp1, const1);</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TclList.append(interp, tmp1, const2);</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+} catch (TclException ex) {</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+tmp1.release();</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+throw ex;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}<br>
+</span><span style="font-family: monospace;"><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//interp.setResult(tmp1);</span><br style="font-family: monospace;">
+</span><span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+tmp0 = tmp1;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+} // End Invoke: list<br>
+</span><span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//tmp0 = interp.getResult();</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+tmp0 = setVarScalar(interp, "items", tmp0, 0, varcache1, 1);</span><br>
+<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//interp.setResult(tmp0);</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+} // End Invoke: set<br>
+<br>
+</span>Avoiding invocations of the <span
+ style="font-family: monospace;">interp.setResult()</span> method in
+cases where it is not needed will increase performance
+of TJC compiled commands. Implementing this feature in TJC will require
+addition of logic to detect and handle these situations and addition of
+a number of test cases to validate the correctness of the optimized
+code.<br>
+<br>
+Testing shows that the following Tcl command:<br>
+<br>
+<span style="font-family: monospace;">proc result1 {} {</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; set sum 0</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; for {set i 0}
+{$i &lt; 1000} {incr i} {</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+incr sum $i</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; }</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; return $sum</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">}</span><br
+ style="font-family: monospace;">
+<br>
+Executes in about 850 ms when interp result setting is emitted. When
+modified to remove unneeded result setting operations, the same code
+executes in about 650 ms. These results show that this result set
+optimization can improve runtime performance by 25% in some cases.<br>
+<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span>
+<h4>Local Variable Type Determination<br>
+</h4>
+A number of optimizations could be applied if the compiler were able to
+tell that a given variable was used only as a single type throughout a
+command. For example, a variable that was accessed only as an integer
+could be saved in a local variable of type int. Another example would
+be a variable that was accessed only as a list. Currently, there is
+currently no type determination support in TJC.<br>
+<br>
+Consider the following Tcl for loop:<br>
+<span style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">for {set i 0} {$i &lt; 1000}
+{incr i} {</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; # Do Something</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">}</span><br>
+<br>
+Currently, code like the following is emitted. This example is
+significantly simplified, the <span style="font-family: monospace;">set</span>
+and <span style="font-family: monospace;">incr</span> command
+invocations have been replaced by a comment showing where they would be
+emitted:<br>
+<span style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+{ // Invoke: for {set i 0} {$i &lt; 1000} {incr i} ...</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Invoke: set i 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+for ( boolean skip = true ; true ; ) {</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if ( skip ) {</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+skip = false;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+} else {</span><br style="font-family: monospace;">
+<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Invoke: incr i</span><br style="font-family: monospace;">
+<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</span><br style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Binary operator: $i &lt; 1000</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TclObject tmp1 = getVarScalar(interp, "i", 0, varcache1, 1);</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ExprValue tmp2 = TJC.exprGetValue(interp, tmp1);</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ExprValue tmp3 = TJC.exprGetValue(interp, 1000, null);</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TJC.exprBinaryOperator(interp, TJC.EXPR_OP_LESS, tmp2, tmp3);</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// End Binary operator: &lt;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+boolean tmp4 = tmp2.getBooleanValue(interp);</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TJC.exprReleaseValue(interp, tmp2);</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if ( ! tmp4 ) { break; }<br>
+<br>
+</span><span style="font-family: monospace;"><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Do Something</span><br style="font-family: monospace;">
+</span><span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+interp.resetResult();</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+} // End Invoke: for</span><br>
+<br>
+If the compiler was able to determine that the loop variable <span
+ style="font-family: monospace;">$i</span> is always used as an <span
+ style="font-family: monospace;">int</span>, then code like the
+following could be emitted.<br>
+<br>
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+{ // Invoke: for {set i 0} {$i &lt; 1000} {incr i} ...</span><span
+ style="font-family: monospace;"></span><span
+ style="font-family: monospace;"><span style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+</span><span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+for ( </span><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;">int
+i = 0 </span></span></span><span style="font-family: monospace;">;
+true ; i++ ) {</span><span style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Binary operator: $i &lt; 1000</span><span
+ style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ExprValue tmp0 = TJC.exprGetValue(interp, i, null);</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ExprValue tmp1 = TJC.exprGetValue(interp, 1000, null);</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TJC.exprBinaryOperator(interp, TJC.EXPR_OP_LESS, tmp0, tmp1);</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// End Binary operator: &lt;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+boolean tmp4 = tmp2.getBooleanValue(interp);</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TJC.exprReleaseValue(interp, tmp2);</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if ( ! tmp4 ) { break; }<br>
+<br>
+</span><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Do Something</span></span><br style="font-family: monospace;">
+</span><span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+interp.resetResult();</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+} // End Invoke: for</span><br>
+<span style="font-family: monospace;"></span><br>
+Assuming that inlined int expression optimizations were also
+implemented, it should be possible to further simplify this code into
+the following:<br>
+<br>
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+{ // Invoke: for {set i 0} {$i &lt; 1000} {incr i} ...</span><span
+ style="font-family: monospace;"><span style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+</span>
+<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+for ( </span><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;">int i = 0 </span></span></span></span><span
+ style="font-family: monospace;">; i &lt; 1000 ; i++ ) {<br>
+</span><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Do Something</span></span></span></span><span
+ style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+interp.resetResult();</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+} // End Invoke: for</span><br>
+<h4>Loop Invariant Determination<br>
+</h4>
+Consider the following Tcl for loop:<br>
+<br>
+<span style="font-family: monospace;">set max 1000</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">for {set i 0} {$i &lt; $max}
+{incr i} {</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; # Do Something</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">}</span><br>
+<br>
+At the start of each loop, the expression <span
+ style="font-family: monospace;">{$i &lt; $max}</span> is evaluated by
+code like the following:<br>
+<br>
+<span style="font-family: monospace;"><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+Binary operator: $i &lt; $max<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TclObject tmp0 = interp.getVar("i", null, 0);<br>
+</span></span><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ExprValue tmp1 = TJC.exprGetValue(interp, tmp0);</span></span><br>
+</span></span><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TclObject tmp2 = interp.getVar("max", null, 0);</span></span></span></span><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ExprValue tmp3 = TJC.exprGetValue(interp, tmp2);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TJC.exprBinaryOperator(interp, TJC.EXPR_OP_LESS, tmp1, tmp3);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //
+End Binary operator: &lt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+boolean tmp4 = tmp1.getBooleanValue(interp);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TJC.exprReleaseValue(interp, tmp1);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (
+! tmp4 ) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// break out of loop<br>
+</span></span><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}<br>
+<br>
+</span></span></span></span>The value of the variable <span
+ style="font-family: monospace;">$max</span> does not change during the
+body of the loop, but the compiler does not know about this invariant.
+This loop would execute more quickly if the compiler was able to query
+the value of <span style="font-family: monospace;">$max</span> and
+then extract the integer value contained in the <span
+ style="font-family: monospace;">TclObject</span>&nbsp;<span
+ style="font-family: monospace;"></span>once at the start of the loop.<br>
+<h4>Emit Compact Code<br>
+</h4>
+For many simple cases, the compiler could emit significantly smaller
+code for operations that appear frequently. Consider the following Tcl
+commands:<br>
+<br>
+<span style="font-family: monospace;">set i 0<br>
+set j 10<br>
+set k 100<br>
+</span><br>
+These three set operations could be emitted as inlined code like the
+following:<br>
+<br>
+<span style="font-family: monospace;"><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+{ // Invoke: set i 0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TclObject tmp0;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tmp0
+= setVarScalar(interp, "i", const0, 0, varcache1, 1);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+interp.setResult(tmp0);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; } // End Invoke: set<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; { // Invoke: set j 10<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TclObject tmp1;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tmp1
+= setVarScalar(interp, "j", const1, 0, varcache2, 2);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+interp.setResult(tmp1);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; } // End Invoke: set<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; { // Invoke: set k 100<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TclObject tmp2;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tmp2
+= setVarScalar(interp, "k", const2, 0, varcache3, 3);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+interp.setResult(tmp2);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; } // End Invoke: set<br>
+</span></span><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><br>
+</span></span></span></span>This inlined code is already very compact,
+but it could be further simplified by creating a static method that
+invokes these same operations:<br>
+<span style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; public static
+void setScalarConstant(Interp interp, String varname, TclObject const,
+Var cache, int cacheID) {</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TclObject tmp;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+tmp = setVarScalar(interp, varname, const, 0, cache, cacheID);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; interp.setResult(tmp);<br>
+&nbsp;&nbsp;&nbsp; }</span><span style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+<br>
+This emitted code could then invoke the <span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;">setScalarConstant()</span></span></span></span></span></span>
+method for each instance of the command:<br>
+<span style="font-family: monospace;"><span
+ style="font-family: monospace;"><br>
+<span style="font-family: monospace;"></span></span></span><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+{ // Invoke: set i 0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span></span></span></span><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;">setScalarConstant(interp,
+"i", const0, </span></span></span></span></span></span><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;">varcache1, 1);</span></span></span></span></span></span></span></span></span></span></span><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"></span><br>
+</span></span></span></span></span><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+} // End Invoke: set<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; { // Invoke: set j 10<br>
+</span></span></span></span></span><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span></span></span><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;">setScalarConstant(interp, "j", const1,
+</span></span></span></span></span></span><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;">varcache2, 2);</span></span></span></span></span></span></span></span></span></span></span><br>
+</span></span></span></span></span><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+} // End Invoke: set<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; { // Invoke: set k 100<br>
+</span></span></span></span></span><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span></span></span><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;">setScalarConstant(interp, "k", const2,
+</span></span></span></span></span></span><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;">varcache3, 3);</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; } // End Invoke: set<br>
+</span></span><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"></span></span></span></span></span></span></span><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"></span><span
+ style="font-family: monospace;"><span style="font-family: monospace;"></span></span><br>
+</span></span>The example above is extremely simplified, but it shows
+how the size of emitted Java code can be significantly reduced for many
+common cases. At runtime, the hotspot compiler should inline the method
+invocation so there should be no decrease in runtime performance. This
+change should reduce memory requirements since the emitted class files
+will be much smaller. This change should also speed up compile times
+since far fewer lines of code are passed to <span
+ style="font-family: monospace;">javac</span>.<span
+ style="font-family: monospace;"><span style="font-family: monospace;"><br>
+</span></span>
+<h4>Compile Itcl methods<br>
+</h4>
+Jacl supports the Itcl object system, but the TJC compiler does not
+compile the bodies of Itcl methods. The <span
+ style="font-family: monospace;">itcl::body</span> command as well as
+method or proc declarations inside a class declaration should be
+supported as container commands.<br>
+<h4>Compile Time Usage Warnings<br>
+</h4>
+Users of the <span style="font-family: monospace;">tjc</span>
+executable could find it useful to be able to display warnings and
+possible usage errors at compile time. Currently, TJC does not attempt
+to report syntax errors or usage issues at compile time. For example,
+TJC will not compile math expressions unless they are brace quoted, but
+there is no way to have the compiler print a warning when it finds an
+expression that is not brace quoted.<br>
+<h4>Tcl Source Include<br>
+</h4>
+Users might find it useful to have a module file OPTIONS flag that
+would include the original Tcl source for a proc declaration at the top
+of the generated Java source. This feature would make it easier to
+compare the original Tcl to the generated source code.<br>
+<h4>Javac Flags Option<br>
+</h4>
+Users might want to compile generated Java source files with special <span
+ style="font-family: monospace;">javac</span> command line options.
+Currently, all source code is compiled with the <span
+ style="font-family: monospace;">-g</span> option to support debugging
+the generated source. For example, passing the <span
+ style="font-family: monospace;">-O</span> option to some versions of <span
+ style="font-family: monospace;">javac</span> will enable compile time
+inlining of certain methods. Some options that users might want to pass
+include <span style="font-family: monospace;">-encoding</span>, <span
+ style="font-family: monospace;">-source</span>, <span
+ style="font-family: monospace;">-target</span>, and others.<br>
+<br>
+<big><big><span style="font-weight: bold;"></span></big></big></div>
+</div>
+</body>
+</html>

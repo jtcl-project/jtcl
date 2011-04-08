@@ -1,0 +1,209 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML><HEAD><TITLE>Man page of itcl</TITLE>
+</HEAD><BODY>
+<H1>itcl</H1>
+Section: [incr&nbsp;Tcl] (n)<BR>Updated: 3.0<BR><A HREF="#index">Index</A>
+<A HREF="index.html">Return to Main Contents</A><HR>
+
+
+<BR>
+
+
+
+<PRE>
+<BR>
+<HR></PRE>
+
+
+
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+itcl - object-oriented extensions to Tcl
+
+<PRE>
+<BR>
+<HR>
+
+</PRE>
+
+<BR>
+
+
+
+<P>
+<A NAME="lbAC">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<P>
+
+<B>[incr&nbsp;Tcl]</B> provides object-oriented extensions to Tcl, much as
+C++ provides object-oriented extensions to C.  The emphasis of this
+work, however, is not to create a whiz-bang object-oriented
+programming environment.  Rather, it is to support more structured
+programming practices in Tcl without changing the flavor of the language.
+More than anything else, <B>[incr&nbsp;Tcl]</B> provides a means of
+encapsulating related procedures together with their shared data
+in a namespace that is hidden from the outside world.
+It encourages better programming by promoting the object-oriented
+&quot;library&quot; mindset.  It also allows for code re-use through inheritance.
+<P>
+<A NAME="lbAD">&nbsp;</A>
+<H2>CLASSES</H2>
+
+<P>
+
+The fundamental construct in <B>[incr&nbsp;Tcl]</B> is the class definition.
+Each class acts as a template for actual objects that can be created.
+Each object has its own unique bundle of data, which contains instances
+of the &quot;variables&quot; defined in the class.  Special procedures called
+&quot;methods&quot; are used to manipulate individual objects.  Methods are just
+like the operations that are used to manipulate Tk widgets.  The
+&quot;<B>button</B>&quot; widget, for example, has methods such as &quot;flash&quot; and
+&quot;invoke&quot; that cause a particular button to blink and invoke its command.
+<P>
+
+Within the body of a method, the &quot;variables&quot; defined in the class
+are automatically available.  They need not be declared with anything
+like the <B>global</B> command.  Within another class method, a method
+can be invoked like any other command-simply by using its name.
+From any other context, the method name must be prefaced by an object
+name, which provides a context for the data that the method can access.
+<P>
+
+Each class has its own namespace containing things that are common
+to all objects which belong to the class.  For example, &quot;common&quot; data
+members are shared by all objects in the class.  They are global
+variables that exist in the class namespace, but since they are
+included in the class definition, they need not be declared using
+the <B>global</B> command; they are automatically available to any
+code executing in the class context.  A class can also create
+ordinary global variables, but these must be declared using the
+<B>global</B> command each time they are used.
+<P>
+
+Classes can also have ordinary procedures declared as &quot;procs&quot;.
+Within another class method or proc, a proc can be invoked like
+any other command-simply by using its name.  From any other context,
+the procedure name should be qualified with the class namespace
+like &quot;<I>className</I><B>::</B><I>proc</I>&quot;.  Class procs execute in the
+class context, and therefore have automatic access to all &quot;common&quot;
+data members.  However, they cannot access object-specific &quot;variables&quot;,
+since they are invoked without reference to any specific object.
+They are usually used to perform generic operations which affect
+all objects belonging to the class.
+<P>
+
+Each of the elements in a class can be declared &quot;public&quot;, &quot;protected&quot;
+or &quot;private&quot;.  Public elements can be accessed by the class, by
+derived classes (other classes that inherit this class), and by
+external clients that use the class.  Protected elements can be
+accessed by the class, and by derived classes.  Private elements
+are only accessible in the class where they are defined.
+<P>
+
+The &quot;public&quot; elements within a class define its interface to the
+external world.  Public methods define the operations that can
+be used to manipulate an object.  Public variables are recognized
+as configuration options by the &quot;configure&quot; and &quot;cget&quot; methods
+that are built into each class.  The public interface says
+<I>what</I> an object will do but not <I>how</I> it will do it.
+Protected and private members, along with the bodies of class
+methods and procs, provide the implementation details.  Insulating
+the application developer from these details leaves the class designer
+free to change them at any time, without warning, and without affecting
+programs that rely on the class.  It is precisely this encapsulation
+that makes object-oriented programs easier to understand and maintain.
+<P>
+
+The fact that <B>[incr&nbsp;Tcl]</B> objects look like Tk widgets is
+no accident.  <B>[incr&nbsp;Tcl]</B> was designed this way, to blend
+naturally into a Tcl/Tk application.  But <B>[incr&nbsp;Tcl]</B>
+extends the Tk paradigm from being merely object-based to being
+fully object-oriented.  An object-oriented system supports
+inheritance, allowing classes to share common behaviors by
+inheriting them from an ancestor or base class.  Having a base
+class as a common abstraction allows a programmer to treat
+related classes in a similar manner.  For example, a toaster
+and a blender perform different (specialized) functions, but
+both share the abstraction of being appliances.  By abstracting
+common behaviors into a base class, code can be <I>shared</I> rather
+than <I>copied</I>.  The resulting application is easier to
+understand and maintain, and derived classes (e.g., specialized
+appliances) can be added or removed more easily.
+<P>
+
+This description was merely a brief overview of object-oriented
+programming and <B>[incr&nbsp;Tcl]</B>.  A more tutorial introduction is
+presented in the paper included with this distribution.  See the
+<B>class</B> command for more details on creating and using classes.
+<P>
+<A NAME="lbAE">&nbsp;</A>
+<H2>NAMESPACES</H2>
+
+<P>
+
+<B>[incr&nbsp;Tcl]</B> now includes a complete namespace facility.
+A namespace is a collection of commands and global variables that
+is kept apart from the usual global scope.  This allows Tcl code
+libraries to be packaged in a well-defined manner, and prevents
+unwanted interactions with other libraries.  A namespace can also
+have child namespaces within it, so one library can contain its
+own private copy of many other libraries.  A namespace can also
+be used to wrap up a group of related classes.  The global scope
+(named &quot;::&quot;) is the root namespace for an interpreter; all
+other namespaces are contained within it.
+<P>
+
+See the <B>namespace</B> command for details on creating and
+using namespaces.
+<P>
+<A NAME="lbAF">&nbsp;</A>
+<H2>MEGA-WIDGETS</H2>
+
+<P>
+
+Mega-widgets are high-level widgets that are constructed using
+Tk widgets as component parts, usually without any C code.  A
+fileselectionbox, for example, may have a few listboxes, some
+entry widgets and some control buttons.  These individual widgets
+are put together in a way that makes them act like one big
+widget.
+<P>
+
+<B>[incr&nbsp;Tk]</B> is a framework for building mega-widgets.  It
+uses <B>[incr&nbsp;Tcl]</B> to support the object paradigm, and adds
+base classes which provide default widget behaviors.  See the
+<B>itk</B> man page for more details.
+<P>
+
+<B>[incr&nbsp;Widgets]</B> is a library of mega-widgets built using
+<B>[incr&nbsp;Tk]</B>.  It contains more than 30 different widget
+classes that can be used right out of the box to build Tcl/Tk
+applications.  Each widget class has its own man page describing
+the features available.
+<P>
+<A NAME="lbAG">&nbsp;</A>
+<H2>KEYWORDS</H2>
+
+class, object, object-oriented, namespace, mega-widget
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAD">CLASSES</A><DD>
+<DT><A HREF="#lbAE">NAMESPACES</A><DD>
+<DT><A HREF="#lbAF">MEGA-WIDGETS</A><DD>
+<DT><A HREF="#lbAG">KEYWORDS</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="index.html">man2html</A>,
+using the manual pages.<BR>
+Time: 20:52:35 GMT, December 21, 2006
+</BODY>
+</HTML>

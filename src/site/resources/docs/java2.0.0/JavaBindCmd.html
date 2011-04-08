@@ -1,0 +1,116 @@
+<HTML>
+<TITLE>
+The java::bind Command
+</TITLE>
+
+<BODY>
+<HR>
+
+<H3>
+The java::bind Command
+</H3>
+
+<HR>
+
+<DL>
+
+<H3>
+Usage:
+</H3>
+
+<DD><B>java::bind </B><I>javaObj</I>
+<DD><B>java::bind </B><I>javaObj eventName</I>
+<DD><B>java::bind </B><I>javaObj eventName script</I>
+
+<P>
+
+The <B>java::bind</B> command is used to associate scripts with events
+fired by Java objects. The <I>javaObj</I> argument specifies a Java
+object. The <I>eventName</I> argument identifies an event fired by the
+object.
+<P>
+The events fired by Java objects are divided into <I>event
+interfaces</I>. Each event is represented by an <I>event method</I> in
+an event interface. For example, objects of the <B>java.awt.Button</B>
+class can fire events in the <B>ActionListener</B>,
+<B>ComponentListener</B>, <B>FocusListener</B>, <B>KeyListener</B>,
+<B>MouseListener</B> and <B>MouseMotionListener</B> interfaces (all
+these interfaces are defined in the JDK package <B>java.awt.event</B>.)
+The <B>KeyListener</B> interface in turn contains the event methods
+<B>keyPressed</B>, <B>keyReleased</B> and <B>keyTyped</B>. To find out
+what events are fired by different Java classes, please consult their
+API documentation.
+<P>
+The <I>eventName</I> argument for the <B>java::bind</B> command is the
+full or abbreviated name of the event. The full event name is the name
+of an event interface, followed by the character &quot;<B>.</B>&quot;, followed
+by the name of the event method. For example,
+<B>java.awt.event.KeyListener.keyTyped</B>.  The abbreviated event name
+is just the name of the event method. For example, <B>keyTyped</B>.
+Abbreviated event names may be used only if the event method name
+appears in exactly one of the event interfaces of the object.
+<P>
+If the <I>script</I> argument is given, it specifies a <I>callback
+script</I> to to be executed when the given event is fired in the
+<I>javaObj</I>. If a callback script already exists for the given event
+in <I>javaObj</I>, it will be replaced by <I>script</I>. If <I>script</I>
+is the empty string, any previously installed callback
+scripts for the given event in <I>javaObj</I> will be removed.
+See the <A HREF="JavaEventScripts.html">Event Scripts</A> section for
+more information.
+<P>
+If the <I>script</I> argument is not given, the <B>java::bind</B>
+command returns the current callback script, if any, for the given
+event in <I>javaObj</I>.
+<P>
+If the <I>eventName</I> and <I>script</I> arguments are both omitted,
+the <B>java::bind</B> command returns a Tcl list of the full names
+of all the events that are currently associated with
+callback scripts for the given <I>javaObj</I>.
+<P>
+
+</DL>
+
+<DL>
+
+<H3>
+Example:
+</H3>
+
+<DD>
+
+This example creates a frame containing a single button widget. It then
+uses the <B>java::bind</B> command to associate a Tcl script that will
+be invoked when the <B>ActionListener.actionPerformed</B> interface method
+is invoked. When the user presses the button, the Tcl script will be
+evaluated inside the interpreter.
+
+<P>
+
+<code>
+<pre>
+package require java
+java::import -package java.awt Frame Button
+
+set f [java::new Frame]
+set b [java::new Button "Hi"]
+$f setSize 70 70
+$f add $b
+$f show
+
+java::bind $b actionPerformed {
+    puts "Hi there"
+}
+</pre>
+</code>
+
+<P>
+
+</DL>
+
+<PRE>
+<A HREF="../license.html">Copyright</A> &#169; 1997-1998 Sun Microsystems, Inc.
+</PRE>
+
+</BODY>
+</HTML>

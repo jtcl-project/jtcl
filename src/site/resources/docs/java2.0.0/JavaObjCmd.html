@@ -1,0 +1,51 @@
+<HTML>
+<TITLE>
+The javaObj Command
+</TITLE>
+
+<BODY>
+<HR>
+
+<H3>
+The javaObj Command
+</H3>
+
+<HR>
+
+<DL>
+
+<H3>
+Usage:
+</H3>
+
+<DD><I>javaObj</I> ?<B>-noconvert</B>? <I>signature</I> ?<I>arg arg ...</I>?
+
+<P>
+
+Each Java object handle is also the name of a Tcl command that can be
+used to invoke accessible methods of that object from Tcl. The
+<I>signature</I> argument specifies which instance method to invoke.
+The <A HREF="JavaSignatures.html">Signatures</A> section covers the
+form of the <I>signature</I> argument in more detail. Additional
+parameters to an object command are converted to Java objects or
+primitive Java values and passed to the method. It is not
+possible to invoke static methods via a <I>javaObj</I> handle,
+use the <B>java::call</B> method instead.
+
+<P>
+
+The <A HREF="JavaConversions.html">Conversions</a> section describes the result
+and possible error conditions of the object command, including the
+effect of the optional <B>-noconvert</B> flag.
+
+<P>
+
+</DL>
+
+<PRE>
+<A HREF="../license.html">Copyright</A> &#169; 1997-1998 Sun Microsystems, Inc.
+</PRE>
+
+
+</BODY>
+</HTML>

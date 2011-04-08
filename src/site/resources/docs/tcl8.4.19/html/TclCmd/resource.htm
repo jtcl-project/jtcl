@@ -1,0 +1,169 @@
+<HTML><HEAD><TITLE>Tcl Built-In Commands - resource manual page</TITLE></HEAD><BODY>
+<DL>
+<DD><A HREF="resource.htm#M2" NAME="L1139">NAME</A>
+<DL><DD>resource - Manipulate Macintosh resources</DL>
+<DD><A HREF="resource.htm#M3" NAME="L1140">SYNOPSIS</A>
+<DL>
+<DD><B>resource </B><I>option</I> ?<I>arg arg ...</I>?
+</DL>
+<DD><A HREF="resource.htm#M4" NAME="L1141">DESCRIPTION</A>
+<DL>
+<DD><A HREF="resource.htm#M5" NAME="L1142"><B>resource close </B><I>rsrcRef</I></A>
+<DD><A HREF="resource.htm#M6" NAME="L1143"><B>resource delete</B> ?<I>options</I>? <I>resourceType</I></A>
+<DL>
+<DD><A HREF="resource.htm#M7" NAME="L1144"><B>-id</B> <I>resourceId</I></A>
+<DD><A HREF="resource.htm#M8" NAME="L1145"><B>-name</B> <I>resourceName</I></A>
+<DD><A HREF="resource.htm#M9" NAME="L1146"><B>-file</B> <I>resourceRef</I></A>
+</DL>
+<DD><A HREF="resource.htm#M10" NAME="L1147"><B>resource files ?</B><I>resourceRef</I>?</A>
+<DD><A HREF="resource.htm#M11" NAME="L1148"><B>resource list </B><I>resourceType</I> ?<I>resourceRef</I>?</A>
+<DD><A HREF="resource.htm#M12" NAME="L1149"><B>resource open </B><I>fileName</I> ?<I>access</I>?</A>
+<DD><A HREF="resource.htm#M13" NAME="L1150"><B>resource read </B><I>resourceType</I> <I>resourceId</I> ?<I>resourceRef</I>?</A>
+<DD><A HREF="resource.htm#M14" NAME="L1151"><B>resource types ?</B><I>resourceRef</I>?</A>
+<DD><A HREF="resource.htm#M15" NAME="L1152"><B>resource write</B> ?<I>options</I>? <I>resourceType</I> <I>data</I></A>
+<DL>
+<DD><A HREF="resource.htm#M16" NAME="L1153"><B>-id</B> <I>resourceId</I></A>
+<DD><A HREF="resource.htm#M17" NAME="L1154"><B>-name</B> <I>resourceName</I></A>
+<DD><A HREF="resource.htm#M18" NAME="L1155"><B>-file</B> <I>resourceRef</I></A>
+<DD><A HREF="resource.htm#M19" NAME="L1156"><B>-force</B></A>
+</DL>
+</DL>
+<DD><A HREF="resource.htm#M20" NAME="L1157">RESOURCE TYPES</A>
+<DD><A HREF="resource.htm#M21" NAME="L1158">RESOURCE IDS</A>
+<DD><A HREF="resource.htm#M22" NAME="L1159">PORTABILITY ISSUES</A>
+<DD><A HREF="resource.htm#M23" NAME="L1160">SEE ALSO</A>
+<DD><A HREF="resource.htm#M24" NAME="L1161">KEYWORDS</A>
+</DL><HR>
+<H3><A NAME="M2">NAME</A></H3>
+resource - Manipulate Macintosh resources
+<H3><A NAME="M3">SYNOPSIS</A></H3>
+<B>resource </B><I>option</I> ?<I>arg arg ...</I>?<BR>
+<H3><A NAME="M4">DESCRIPTION</A></H3>
+The <B>resource</B> command provides some generic operations for
+dealing with Macintosh resources.  This command is only supported on
+the Macintosh platform.  Each Macintosh file consists of two
+<I>forks</I>: a <I>data</I> fork and a <I>resource</I> fork.  You use the
+normal open, puts, close, etc. commands to manipulate the data fork.
+You must use this command, however, to interact with the resource
+fork.  <I>Option</I> indicates what resource command to perform.  Any
+unique abbreviation for <I>option</I> is acceptable.  The valid options
+are:
+<P>
+<DL>
+<DT><A NAME="M5"><B>resource close </B><I>rsrcRef</I></A><DD>
+Closes the given resource reference (obtained from <B>resource
+open</B>).  Resources from that resource file will no longer be
+available.
+<P><DT><A NAME="M6"><B>resource delete</B> ?<I>options</I>? <I>resourceType</I></A><DD>
+This command will delete the resource specified by <I>options</I> and
+type <I>resourceType</I> (see RESOURCE TYPES below).  The options
+give you several ways to specify the resource to be deleted.
+<P>
+<DL>
+<DT><A NAME="M7"><B>-id</B> <I>resourceId</I></A><DD>
+If the <B>-id</B> option is given the id <I>resourceId</I> (see RESOURCE
+IDS below) is used to specify the resource to be deleted.  The id must 
+be a number - to specify a name use the <B>-name</B> option.
+<P><DT><A NAME="M8"><B>-name</B> <I>resourceName</I></A><DD>
+If <B>-name</B> is specified, the resource named
+<I>resourceName</I> will be deleted.  If the <B>-id</B> is also
+provided, then there must be a resource with BOTH this name and
+this id.  If no name is provided, then the id will be used regardless
+of the name of the actual resource.
+<P><DT><A NAME="M9"><B>-file</B> <I>resourceRef</I></A><DD>
+If the <B>-file</B> option is specified then the resource will be
+deleted from the file pointed to by <I>resourceRef</I>.  Otherwise the
+first resource with the given <I>resourceName</I> and or
+<I>resourceId</I> which is found on the resource file path will be 
+deleted.  To inspect the file path, use the <I>resource files</I> command.
+<P></DL>
+<P><DT><A NAME="M10"><B>resource files ?</B><I>resourceRef</I>?</A><DD>
+If <I>resourceRef</I>is not provided, this command returns a Tcl list
+of the resource references for all the currently open resource files.
+The list is in the normal Macintosh search order for resources.  If 
+<I>resourceRef</I> is specified, the command will
+return the path to the file whose resource fork is represented by that
+token.
+<P><DT><A NAME="M11"><B>resource list </B><I>resourceType</I> ?<I>resourceRef</I>?</A><DD>
+List all of the resources ids of type <I>resourceType</I> (see RESOURCE
+TYPES below).  If <I>resourceRef</I> is specified then the command will
+limit the search to that particular resource file.  Otherwise, all
+resource files currently opened by the application will be searched.
+A Tcl list of either the resource name's or resource id's of the found
+resources will be returned.  See the RESOURCE IDS section below for
+more details about what a resource id is.
+<P><DT><A NAME="M12"><B>resource open </B><I>fileName</I> ?<I>access</I>?</A><DD>
+Open the resource for the file <I>fileName</I>.  Standard file access
+permissions may also be specified (see the manual entry for <B><A HREF="../TclCmd/open.htm">open</A></B>
+for details).  A resource reference (<I>resourceRef</I>) is returned
+that can be used by the other resource commands.  An error can occur
+if the file doesn't exist or the file does not have a resource fork.
+However, if you open the file with write permissions the file and/or
+resource fork will be created instead of generating an error.
+<P><DT><A NAME="M13"><B>resource read </B><I>resourceType</I> <I>resourceId</I> ?<I>resourceRef</I>?</A><DD>
+Read the entire resource of type <I>resourceType</I> (see RESOURCE
+TYPES below) and the name or id of <I>resourceId</I> (see RESOURCE IDS
+below) into memory and return the result.  If <I>resourceRef</I> is
+specified we limit our search to that resource file, otherwise we
+search all open resource forks in the application.  It is important to
+note that most Macintosh resource use a binary format and the data
+returned from this command may have embedded NULLs or other non-ASCII
+data.
+<P><DT><A NAME="M14"><B>resource types ?</B><I>resourceRef</I>?</A><DD>
+This command returns a Tcl list of all resource types (see RESOURCE
+TYPES below) found in the resource file pointed to by
+<I>resourceRef</I>.  If <I>resourceRef</I> is not specified it will
+return all the resource types found in every resource file currently
+opened by the application.
+<P><DT><A NAME="M15"><B>resource write</B> ?<I>options</I>? <I>resourceType</I> <I>data</I></A><DD>
+This command will write the passed in <I>data</I> as a new resource of
+type <I>resourceType</I> (see RESOURCE TYPES below).  Several options
+are available that describe where and how the resource is stored.
+<P>
+<DL>
+<DT><A NAME="M16"><B>-id</B> <I>resourceId</I></A><DD>
+If the <B>-id</B> option is given the id <I>resourceId</I> (see RESOURCE
+IDS below) is used for the new resource, otherwise a unique id will be
+generated that will not conflict with any existing resource.  However,
+the id must be a number - to specify a name use the <B>-name</B> option.
+<P><DT><A NAME="M17"><B>-name</B> <I>resourceName</I></A><DD>
+If <B>-name</B> is specified the resource will be named
+<I>resourceName</I>, otherwise it will have the empty string as the
+name.
+<P><DT><A NAME="M18"><B>-file</B> <I>resourceRef</I></A><DD>
+If the <B>-file</B> option is specified then the resource will be
+written in the file pointed to by <I>resourceRef</I>, otherwise the
+most recently open resource will be used.
+<P><DT><A NAME="M19"><B>-force</B></A><DD>
+If the target resource already exists, then by default Tcl will not
+overwrite it, but raise an error instead.  Use the -force flag to
+force overwriting the extant resource.
+<P></DL>
+<P></DL>
+<H3><A NAME="M20">RESOURCE TYPES</A></H3>
+Resource types are defined as a four character string that is then
+mapped to an underlying id.  For example, <B><A HREF="../TkCmd/text.htm">TEXT</A></B> refers to the
+Macintosh resource type for text.  The type <B>STR#</B> is a list of
+counted strings.  All Macintosh resources must be of some type.  See
+Macintosh documentation for a more complete list of resource types
+that are commonly used.
+
+<H3><A NAME="M21">RESOURCE IDS</A></H3>
+For this command the notion of a resource id actually refers to two
+ideas in Macintosh resources.  Every place you can use a resource Id
+you can use either the resource name or a resource number.  Names are
+always searched or returned in preference to numbers.  For example,
+the <B>resource list</B> command will return names if they exist or
+numbers if the name is NULL.
+
+<H3><A NAME="M22">PORTABILITY ISSUES</A></H3>
+The resource command is only available on Macintosh.
+
+<H3><A NAME="M23">SEE ALSO</A></H3>
+<B><A HREF="../TclCmd/open.htm">open</A></B>
+<H3><A NAME="M24">KEYWORDS</A></H3>
+<A href="../Keywords/O.htm#open">open</A>, <A href="../Keywords/R.htm#resource">resource</A>
+<HR><PRE>
+<A HREF="../copyright.htm">Copyright</A> &#169; 1997 Sun Microsystems, Inc.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1995-1997 Roger E. Critchlow Jr.</PRE>
+</BODY></HTML>

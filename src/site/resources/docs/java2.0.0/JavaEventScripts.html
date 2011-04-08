@@ -1,0 +1,76 @@
+<HTML>
+<TITLE>
+Java Event Scripts
+</TITLE>
+
+<BODY>
+<HR>
+<H3>
+Java Event Scripts
+</H3>
+
+<HR>
+
+
+<DL>
+
+<H3>
+About:
+</H3>
+
+<DD>
+
+A callback script is evaluated when a Java object fires an event. In most cases,
+the script does not need to return a value to the caller. There are some cases
+where a return value is needed. In such a case, the event method corresponding
+to the event has a <B>non-void</B> return type. The callback script should
+use the <B>return</B> command to return the desired value or Java object.
+
+<P>
+
+When a Java object fires an event, it may expect the callback script
+to throw an exception to indicate certain conditions. This can be done
+using the <B>java::throw</B> command. For example: the
+<B>vetoableChange</B> event requires the callback script to throw a
+<B>java.beans.PropertyVetoException</B> if the script deems the new value of a
+property unaccecptable, as in the following code fragment:
+<P>
+
+<CODE>
+<PRE>
+java::bind $b vetoableChange {
+    if {[java::event propertyName] == &quot;size&quot;} {
+        if {[java::event newValue] &gt; 10} {
+            java::throw [java::new java.beans.PropertyVetoException \
+                &quot;value too large&quot; [java::event]]
+        }
+    }
+}
+</PRE>
+</CODE>
+
+<P>
+
+The callback script can throw any unchecked exception object (e.g.,
+instances of <B>java.lang.Error</B> or
+<B>java.lang.RuntimeException</B>.) The callback script can also throw
+any checked exception allowed by the signature of the event method.
+<P>
+If the callback script throws a checked exception which is not allowed
+for the event, a Tcl background error is generated. If the callback
+script is expected to return a value, an undefined value is returned
+to the Java object.
+<P>
+
+
+
+</DL>
+
+<PRE>
+<A HREF="../license.html">Copyright</A> &#169; 1997-1998 Sun Microsystems, Inc.
+</PRE>
+
+
+</BODY>
+</HTML>
+

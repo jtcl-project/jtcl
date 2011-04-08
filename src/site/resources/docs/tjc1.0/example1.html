@@ -1,0 +1,206 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+</head>
+<body>
+<div style="text-align: center;"><big><big><span
+ style="font-weight: bold;">Simple Example<br>
+</span></big></big><br>
+<div style="text-align: left;">In the following example, a TJC module
+containing a single Tcl script file and a single compiled proc will be
+created and loaded into the Jacl shell. This example makes use of the <span
+ style="font-family: monospace;">tjc</span> executable and the <span
+ style="font-family: monospace;">TJC::package</span> command.<br>
+<br>
+In this example, the Tcl source file used as input to the TJC compiler
+is defined as follows:<br>
+<br>
+<span style="font-family: monospace;">$ cat simple.tcl<br>
+proc simple {} {<br>
+&nbsp;&nbsp;&nbsp; return "SIMPLE"<br>
+}<br>
+<br>
+</span>The user will now need to create a TJC module file for the TJC
+package. The name of the module file will be <span
+ style="font-family: monospace;">simple.tjc</span>. The name of the
+Java package will also be <span style="font-family: monospace;">simple</span>,
+this is the same package name that will later be passed to the <span
+ style="font-family: monospace;">TJC::package</span> command. The <span
+ style="font-family: monospace;">SOURCE</span> and <span
+ style="font-family: monospace;">INIT_SOURCE</span> declarations will
+list only the <span style="font-family: monospace;">simple.tcl</span>
+file. Finally, the <span style="font-family: monospace;">OPTIONS</span>
+declaration will define the -compile option to indicate that the proc
+body string will not be compiled.<br>
+<br>
+<span style="font-family: monospace;">$ cat simple.tjc</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">PACKAGE simple</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">SOURCE simple.tcl</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">INIT_SOURCE simple.tcl</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">OPTIONS -compile<br>
+<br>
+</span>Assuming that the<span style="font-family: monospace;"> tjc </span>executable
+is already on the <span style="font-family: monospace;">PATH</span>,
+the TJC compiler is invoke via:<br>
+<br>
+<span style="font-family: monospace;">$ tjc simple.tjc</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+If no error is generated, then nothing is printed and the files <span
+ style="font-family: monospace;">simple.jar</span> and <span
+ style="font-family: monospace;">simplesrc.jar</span> are created in
+the current directory.<br>
+<br>
+The contents of the generated <span style="font-family: monospace;">simple.jar</span>
+are as follows:<br>
+<br>
+<span style="font-family: monospace;">$ jar -tf simple.jar</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">META-INF/</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">META-INF/MANIFEST.MF</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">simple/</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">simple/library/</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">simple/library/simple.tcl</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">simple/SimpleCmd.class</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">simple/TJCExtension.class</span><br
+ style="font-family: monospace;">
+<br>
+Note that <span style="font-family: monospace;">simple.jar</span>
+contains both the compiled version of the proc <span
+ style="font-family: monospace;">simple</span> and the script <span
+ style="font-family: monospace;">simple.tcl</span>.<br>
+<br>
+This TJC package can be loaded into a Jacl shell by adding <span
+ style="font-family: monospace;">simple.jar</span> to the <span
+ style="font-family: monospace;">CLASSPATH</span> and invoking Jacl.<br>
+<br>
+<span style="font-family: monospace;">$ export
+CLASSPATH=${CLASSPATH}:`pwd`/simple.jar</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">$ java tcl.lang.Shell</span><br>
+<br>
+At the Jacl shell prompt the following Tcl commands would be entered to
+load the TJC package and init the<br>
+simple package.<br>
+<br>
+<span style="font-family: monospace;">% package require TJC</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">1.0</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">% TJC::package simple</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">% simple</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">SIMPLE</span><br
+ style="font-family: monospace;">
+<br>
+When the simple package is loaded into Jacl via the <span
+ style="font-family: monospace;">TJC::package</span> command, a Tcl
+command named simple is created. This new command is the compiled
+version of the simple proc defined in simple.tcl.<br>
+<br>
+To explain how package loading is implemented, it is useful to compare
+the original simple.tcl script to the version that gets executed when
+the simple package is loaded into Jacl.<br>
+<br>
+The contents of the generated <span style="font-family: monospace;">simplesrc.jar</span>
+are as follows:<br>
+<br>
+<span style="font-family: monospace;">$ jar -tf simplesrc.jar</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">META-INF/</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">META-INF/MANIFEST.MF</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">simple/</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">simple/library/</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">simple/library/simple.tcl</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">simple/SimpleCmd.java</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">simple/TJCExtension.java</span><br
+ style="font-family: monospace;">
+<br>
+Note that the <span style="font-family: monospace;">simple/library/simple.tcl</span>
+Tcl script in <span style="font-family: monospace;">simplesrc.jar</span>
+is not the same as the <span style="font-family: monospace;">simple/library/simple.tcl</span>
+Tcl script in<span style="font-family: monospace;"> simple.jar</span>.
+The Tcl script in <span style="font-family: monospace;">simplesrc.jar</span>
+is the original while the one in <span style="font-family: monospace;">simple.jar</span>
+has been modified to support loading into TJC. Comparing the two Tcl
+files will make the difference clear.<br>
+<br style="font-family: monospace;">
+<span style="font-family: monospace;"><span
+ style="font-family: monospace;">$ mkdir simple simplesrc<br>
+</span></span><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;">$ cd </span></span><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;">simple<br>
+</span></span></span></span><span style="font-family: monospace;">$ jar
+-xf ../simple.jar<br>
+</span></span></span><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;">$
+cd </span></span><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;">..</span></span></span></span></span></span></span></span></span><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span><br>
+</span></span><span style="font-family: monospace;"><span
+ style="font-family: monospace;">$ cd </span></span><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;">simplesrc</span></span><br>
+</span></span><span style="font-family: monospace;">$ jar -xf
+../simplesrc.jar</span><br style="font-family: monospace;">
+<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;">$ cd </span></span><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;">..<br>
+<br>
+$ cat simplesrc/simple/library/simple.tcl<br>
+proc simple {} {<br>
+&nbsp;&nbsp;&nbsp; return "SIMPLE"<br>
+}<br>
+<br style="font-family: monospace;">
+</span></span></span></span></span></span></span></span></span><span
+ style="font-family: monospace;">$ cat simple/simple/library/simple.tcl</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">TJC::command simple
+simple.SimpleCmd</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">#</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">#</span><br
+ style="font-family: monospace;">
+<br>
+The original Tcl script defines a command via the proc command while
+the modified version defines a compiled command using <span
+ style="font-family: monospace;">TJC::command</span>. This modified
+version of simple.tcl is sourced into the Jacl shell when the <span
+ style="font-family: monospace;">[TJC::package simple]</span> command
+is executed.<br>
+<br>
+<big><big><span style="font-weight: bold;"></span></big></big></div>
+</div>
+</body>
+</html>

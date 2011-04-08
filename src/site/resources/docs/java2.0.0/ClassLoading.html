@@ -1,0 +1,139 @@
+<HTML>
+<TITLE>
+Class Loading
+</TITLE>
+
+<BODY>
+<HR>
+<H3>
+Class Loading
+</H3>
+
+<HR>
+
+
+<DL>
+
+<H3>
+About:
+</H3>
+
+<DD>
+
+This section describes the order in which the class
+loader searches for classes on the file system and how additional
+classes are automatically loaded. This section is also
+relevant to any command in the java package that makes a reference to
+a java class (i.e. <b><code>java::new</code></b>).
+References to unresolved classes will implicitly use the
+TclClassLoader to find unresolved classes.
+
+<P>
+
+The process of resolving a class is done by searching for the class
+in the following locations.
+
+<P>
+<ol>
+
+<li>
+Search the cache of previously loaded classes.
+</li>
+
+<br>
+
+<li>
+Search for the class using the context class loader.
+Typically, this means searching on the <b><code>CLASSPATH</code></b>
+via the system class loader.
+</li>
+
+<br>
+
+<li>
+Search the <I>pathList</I> list, looking only in directories or jar
+files specified by <I>pathList</I>.
+(Available only for the <B><code>java::load</code></B> command)
+</li>
+
+<br>
+
+<li>
+Search <I>pathList</I> again, inspecting all jar files found in
+each directory.  (Available only for the <B><code>java::load</code></B> command)
+</li>
+
+<br>
+
+<li>
+Search the <B><code>env(TCL_CLASSPATH)</code></B> list, looking only in directories or jar
+files specified by <B><code>env(TCL_CLASSPATH)</code></B>.
+</li>
+
+<br>
+
+<li>
+Search <B><code>env(TCL_CLASSPATH)</code></B> again, inspecting all jar files found in
+each directory.
+</li>
+
+</ol>
+</P>
+
+<br>
+
+<P>
+
+If the context class loader fails to load the class (step [2]),
+this typically means that the class could not be located on
+the <b><code>CLASSPATH</code></b>. The <b><code>CLASSPATH</code></b> is normally
+set before the JVM is launched, and is not changed after that.
+If the user needs to add a class search path at runtime, the
+<b><code>env(TCL_CLASSPATH)</code></b> environment variable should be used.
+A security check is done to assure that the class does not have access
+to package-protected variables. If the extension name begins with
+&quot;java.&quot; or &quot;tcl.&quot;, a Tcl error is generated.
+
+<P>
+
+If a path in <I>pathList</I> or <B><code>env(TCL_CLASSPATH)</code></B> is not an
+absolute path, it is assumed to be a relative path from the
+interpreter's current directory.
+
+<P>
+
+Steps [3] and [5] only use the paths in <I>pathList</I> or
+<B><code>env(TCL_CLASSPATH)</code></B> to locate the class file.  If the path is a
+directory, the loader looks in that directory for the class file.  If
+the path is a jar file, the jar file is inspected to see if it
+contains the class.  Steps [4] and [6] search <I>pathList</I> and
+<B><code>env(TCL_CLASSPATH)</code></B> again.  If a path in the list is a directory,
+the loader looks for jar files in that directory, inspecting any jar
+files found to locate the class.  The loader is capable of extracting
+files from a compressed jar file.
+
+<P>
+
+Any class referenced by <I>extensionName</I> will also be loaded into
+the VM.  This includes classes used in new expressions as well as
+those whose instances are reported (i.e. the use of static methods.)
+Due to the recursive nature of class loading, any class referenced
+must be located on the <b><code>CLASSPATH</code></b>, <B><code>env(TCL_CLASSPATH)</code></B> or
+<I>pathList</I>.  If a class cannot be located in one of the three
+locations, a Tcl error is generated.
+
+<P>
+
+Currently it is not possible to unload or reload an extension.
+
+</DL>
+
+<DL>
+
+<PRE>
+<A HREF="../license.html">Copyright</A> &#169; 1997-1998 Sun Microsystems, Inc.
+</PRE>
+
+
+</BODY>
+</HTML>

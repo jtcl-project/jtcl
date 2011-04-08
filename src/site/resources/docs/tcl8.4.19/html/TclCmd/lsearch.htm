@@ -1,0 +1,127 @@
+<HTML><HEAD><TITLE>Tcl Built-In Commands - lsearch manual page</TITLE></HEAD><BODY>
+<DL>
+<DD><A HREF="lsearch.htm#M2" NAME="L768">NAME</A>
+<DL><DD>lsearch - See if a list contains a particular element</DL>
+<DD><A HREF="lsearch.htm#M3" NAME="L769">SYNOPSIS</A>
+<DL>
+<DD><B>lsearch </B>?<I>options</I>? <I>list pattern</I>
+</DL>
+<DD><A HREF="lsearch.htm#M4" NAME="L770">DESCRIPTION</A>
+<DL>
+<DD><A HREF="lsearch.htm#M5" NAME="L771"><B>-all</B></A>
+<DD><A HREF="lsearch.htm#M6" NAME="L772"><B>-ascii</B></A>
+<DD><A HREF="lsearch.htm#M7" NAME="L773"><B>-decreasing</B></A>
+<DD><A HREF="lsearch.htm#M8" NAME="L774"><B>-dictionary</B></A>
+<DD><A HREF="lsearch.htm#M9" NAME="L775"><B>-exact</B></A>
+<DD><A HREF="lsearch.htm#M10" NAME="L776"><B>-glob</B></A>
+<DD><A HREF="lsearch.htm#M11" NAME="L777"><B>-increasing</B></A>
+<DD><A HREF="lsearch.htm#M12" NAME="L778"><B>-inline</B></A>
+<DD><A HREF="lsearch.htm#M13" NAME="L779"><B>-integer</B></A>
+<DD><A HREF="lsearch.htm#M14" NAME="L780"><B>-not</B></A>
+<DD><A HREF="lsearch.htm#M15" NAME="L781"><B>-real</B></A>
+<DD><A HREF="lsearch.htm#M16" NAME="L782"><B>-regexp</B></A>
+<DD><A HREF="lsearch.htm#M17" NAME="L783"><B>-sorted</B></A>
+<DD><A HREF="lsearch.htm#M18" NAME="L784"><B>-start</B> <I>index</I></A>
+</DL>
+<DD><A HREF="lsearch.htm#M19" NAME="L785">EXAMPLES</A>
+<DD><A HREF="lsearch.htm#M20" NAME="L786">SEE ALSO</A>
+<DD><A HREF="lsearch.htm#M21" NAME="L787">KEYWORDS</A>
+</DL><HR>
+<H3><A NAME="M2">NAME</A></H3>
+lsearch - See if a list contains a particular element
+<H3><A NAME="M3">SYNOPSIS</A></H3>
+<B>lsearch </B>?<I>options</I>? <I>list pattern</I><BR>
+<H3><A NAME="M4">DESCRIPTION</A></H3>
+This command searches the elements of <I>list</I> to see if one
+of them matches <I>pattern</I>.  If so, the command returns the index
+of the first matching element
+(unless the options <B>-all</B> or <B>-inline</B> are specified.)
+If not, the command returns <B>-1</B>.  The <I>option</I> arguments
+indicates how the elements of the list are to be matched against
+<I>pattern</I> and it must have one of the following values:
+<P>
+<DL>
+<DT><A NAME="M5"><B>-all</B></A><DD>
+Changes the result to be the list of all matching indices (or all
+matching values if <B>-inline</B> is specified as well.)
+<P><DT><A NAME="M6"><B>-ascii</B></A><DD>
+The list elements are to be examined as Unicode strings (the name is
+for backward-compatability reasons.)  This option is only meaningful
+when used with <B>-exact</B> or <B>-sorted</B>.
+<P><DT><A NAME="M7"><B>-decreasing</B></A><DD>
+The list elements are sorted in decreasing order.  This option is only
+meaningful when used with <B>-sorted</B>.
+<P><DT><A NAME="M8"><B>-dictionary</B></A><DD>
+The list elements are to be compared using dictionary-style
+comparisons (see <B><A HREF="../TclCmd/lsort.htm">lsort</A></B> for a fuller description).  This option
+is only meaningful when used with <B>-exact</B> or <B>-sorted</B>, and
+it is only distinguishable from the <B>-ascii</B> option when
+the <B>-sorted</B> option is given, because values are only
+dictionary-equal when exactly equal.
+<P><DT><A NAME="M9"><B>-exact</B></A><DD>
+The list element must contain exactly the same string as <I>pattern</I>.
+<P><DT><A NAME="M10"><B>-glob</B></A><DD>
+<I>Pattern</I> is a glob-style pattern which is matched against each list
+element using the same rules as the <B><A HREF="../TclCmd/string.htm">string match</A></B> command.
+<P><DT><A NAME="M11"><B>-increasing</B></A><DD>
+The list elements are sorted in increasing order.  This option is only
+meaningful when used with <B>-sorted</B>.
+<P><DT><A NAME="M12"><B>-inline</B></A><DD>
+The matching value is returned instead of its index (or an empty
+string if no value matches.)  If <B>-all</B> is also specified, then
+the result of the command is the list of all values that matched.
+<P><DT><A NAME="M13"><B>-integer</B></A><DD>
+The list elements are to be compared as integers.  This option is only
+meaningful when used with <B>-exact</B> or <B>-sorted</B>.
+<P><DT><A NAME="M14"><B>-not</B></A><DD>
+This negates the sense of the match, returning the index of the first
+non-matching value in the list.
+<P><DT><A NAME="M15"><B>-real</B></A><DD>
+The list elements are to be compared as floating-point values.  This
+option is only meaningful when used with <B>-exact</B> or <B>-sorted</B>.
+<P><DT><A NAME="M16"><B>-regexp</B></A><DD>
+<I>Pattern</I> is treated as a regular expression and matched against
+each list element using the rules described in the <B><A HREF="../TclCmd/re_syntax.htm">re_syntax</A></B>
+reference page.
+<P><DT><A NAME="M17"><B>-sorted</B></A><DD>
+The list elements are in sorted order.  If this option is specified,
+<B>lsearch</B> will use a more efficient searching algorithm to search
+<I>list</I>.  If no other options are specified, <I>list</I> is assumed
+to be sorted in increasing order, and to contain ASCII strings.  This
+option is mutually exclusive with <B>-glob</B> and <B>-regexp</B>, and
+is treated exactly like <B>-exact</B> when either <B>-all</B>, or
+<B>-not</B> is specified.
+<P><DT><A NAME="M18"><B>-start</B> <I>index</I></A><DD>
+The list is searched starting at position <I>index</I>.  If <I>index</I>
+has the value <B>end</B>, it refers to the last element in the list,
+and <B>end-</B><I>integer</I> refers to the last element in the list minus
+the specified integer offset.
+<P></DL>
+<P>
+If <I>option</I> is omitted then it defaults to <B>-glob</B>.  If more
+than one of <B>-exact</B>, <B>-glob</B>, <B>-regexp</B>, and
+<B>-sorted</B> is specified, whichever option is specified last takes
+precedence.  If more than one of <B>-ascii</B>, <B>-dictionary</B>,
+<B>-integer</B> and <B>-real</B> is specified, the option specified
+last takes precedence.  If more than one of <B>-increasing</B> and
+<B>-decreasing</B> is specified, the option specified last takes
+precedence.
+
+<H3><A NAME="M19">EXAMPLES</A></H3>
+<PRE><B>lsearch</B> {a b c d e} c <I>=&gt; 2</I>
+<B>lsearch</B> -all {a b c a b c} c <I>=&gt; 2 5</I>
+<B>lsearch</B> -inline {a20 b35 c47} b* <I>=&gt; b35</I>
+<B>lsearch</B> -inline -not {a20 b35 c47} b* <I>=&gt; a20</I>
+<B>lsearch</B> -all -inline -not {a20 b35 c47} b* <I>=&gt; a20 c47</I>
+<B>lsearch</B> -all -not {a20 b35 c47} b* <I>=&gt; 0 2</I>
+<B>lsearch</B> -start 3 {a b c a b c} c <I>=&gt; 5</I></PRE>
+<H3><A NAME="M20">SEE ALSO</A></H3>
+<B><A HREF="../TclCmd/foreach.htm">foreach</A></B>, <B><A HREF="../TclCmd/list.htm">list</A></B>, <B><A HREF="../TclCmd/lappend.htm">lappend</A></B>, <B><A HREF="../TclCmd/lindex.htm">lindex</A></B>, <B><A HREF="../TclCmd/linsert.htm">linsert</A></B>, <B><A HREF="../TclCmd/llength.htm">llength</A></B>, <B><A HREF="../TclCmd/lset.htm">lset</A></B>, <B><A HREF="../TclCmd/lsort.htm">lsort</A></B>, <B><A HREF="../TclCmd/lrange.htm">lrange</A></B>, <B><A HREF="../TclCmd/lreplace.htm">lreplace</A></B>
+<H3><A NAME="M21">KEYWORDS</A></H3>
+<A href="../Keywords/L.htm#list">list</A>, <A href="../Keywords/M.htm#match">match</A>, <A href="../Keywords/P.htm#pattern">pattern</A>, <A href="../Keywords/R.htm#regular expression">regular expression</A>, <A href="../Keywords/S.htm#search">search</A>, <A href="../Keywords/S.htm#string">string</A>
+<HR><PRE>
+<A HREF="../copyright.htm">Copyright</A> &#169; 1993 The Regents of the University of California.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1994-1996 Sun Microsystems, Inc.
+<A HREF="../copyright.htm">Copyright</A> &#169; 2001 Kevin B. Kenny. All rights reserved.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1995-1997 Roger E. Critchlow Jr.</PRE>
+</BODY></HTML>

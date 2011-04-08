@@ -1,0 +1,65 @@
+<HTML>
+<TITLE>
+The java::throw Command
+</TITLE>
+
+<BODY>
+<HR>
+
+<H3>
+The java::throw Command
+</H3>
+
+<HR>
+
+<DL>
+
+<H3>
+Usage:
+</H3>
+
+<DD><B>java::throw</B> <I>throwableObj</I>
+
+<P>
+
+
+The <B>java::throw</B> command throws a Java exception.
+<I>throwableObj</I> must be a valid Java object handle and
+must be an instance of <B>java.lang.Throwable</B>.  Internally, the
+<B>java::throw</B> command sets the <B>errorCode</B> global variable to
+a list whose first element is the string &quot;JAVA&quot; and whose second
+element is <I>throwableObj</I>. Then, it generates a Tcl error to cause
+the script to return abruptly. The effect of calling the
+<B>java::throw</B> command is exactly the same as calling a Java method
+which throws a Java exception.
+
+<P>
+
+
+</DL>
+
+<DL>
+
+<H3>
+Example:
+</H3>
+
+<DD>
+
+The following code will raise a <b>java.lang.ClassNotFoundException</b>.
+
+<code>
+<pre>
+java::throw [java::new ClassNotFoundException "bad class foo"]
+</pre>
+</code>
+
+</DL>
+
+<PRE>
+<A HREF="../license.html">Copyright</A> &#169; 1997-1998 Sun Microsystems, Inc.
+</PRE>
+
+
+</BODY>
+</HTML>

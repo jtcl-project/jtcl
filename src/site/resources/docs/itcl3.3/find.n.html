@@ -1,0 +1,132 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML><HEAD><TITLE>Man page of find</TITLE>
+</HEAD><BODY>
+<H1>find</H1>
+Section: [incr&nbsp;Tcl] (n)<BR>Updated: 3.0<BR><A HREF="#index">Index</A>
+<A HREF="index.html">Return to Main Contents</A><HR>
+
+
+<BR>
+
+
+
+<PRE>
+<BR>
+<HR></PRE>
+
+
+
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+find - search for classes and objects
+<A NAME="lbAC">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+<B>itcl::find </B><I>option</I> ?<I>arg arg ...</I>?
+
+<PRE>
+<BR>
+<HR>
+
+</PRE>
+
+<BR>
+
+
+
+<P>
+<A NAME="lbAD">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<P>
+
+The <B>find</B> command is used to find classes and objects
+that are available in the current interpreter.  Classes and objects
+are reported first in the active namespace, then in all other
+namespaces in the interpreter.
+<P>
+
+The <I>option</I> argument determines what action is carried out
+by the command.  The legal <I>options</I> (which may be abbreviated)
+are:
+<DL COMPACT>
+<DT><B>find classes ?</B><I>pattern</I>?<DD>
+Returns a list of [incr Tcl] classes.  Classes in the current
+namespace are listed first, followed by classes in all other
+namespaces in the interpreter.  If the optional <I>pattern</I>
+is specified, then the reported names are compared using the rules
+of the &quot;<B>string match</B>&quot; command, and only matching names are
+reported.
+<P>
+If a class resides in the current namespace context, this command
+reports its simple name--without any qualifiers.  However, if the
+<I>pattern</I> contains <B>::</B> qualifiers, or if the class resides
+in another context, this command reports its fully-qualified name.
+Therefore, you can use the following command to obtain a list where
+all names are fully-qualified:
+
+<DL COMPACT><DT><DD>
+<PRE>
+
+itcl::find classes ::*
+
+</PRE>
+
+</DL>
+
+
+<DT><B>find objects ?</B><I>pattern</I>? ?<B>-class </B><I>className</I>? ?<B>-isa </B><I>className</I>?<DD>
+Returns a list of [incr Tcl] objects.  Objects in the current
+namespace are listed first, followed by objects in all other
+namespaces in the interpreter.  If the optional <I>pattern</I> is
+specified, then the reported names are compared using the rules
+of the &quot;<B>string match</B>&quot; command, and only matching names are
+reported.
+If the optional &quot;<B>-class</B>&quot; parameter is specified, this list is
+restricted to objects whose most-specific class is <I>className</I>.
+If the optional &quot;<B>-isa</B>&quot; parameter is specified, this list is
+further restricted to objects having the given <I>className</I>
+anywhere in their heritage.
+<P>
+If an object resides in the current namespace context, this command
+reports its simple name--without any qualifiers.  However, if the
+<I>pattern</I> contains <B>::</B> qualifiers, or if the object resides
+in another context, this command reports its fully-qualified name.
+Therefore, you can use the following command to obtain a list where
+all names are fully-qualified:
+
+<DL COMPACT><DT><DD>
+<PRE>
+
+itcl::find objects ::*
+
+</PRE>
+
+</DL>
+
+
+<P>
+</DL>
+<A NAME="lbAE">&nbsp;</A>
+<H2>KEYWORDS</H2>
+
+class, object, search, import
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAD">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAE">KEYWORDS</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="index.html">man2html</A>,
+using the manual pages.<BR>
+Time: 20:52:35 GMT, December 21, 2006
+</BODY>
+</HTML>

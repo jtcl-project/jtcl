@@ -1,0 +1,376 @@
+<HTML>
+<TITLE>
+The java::for Command
+</TITLE>
+
+<BODY>
+<HR>
+
+<H3>
+The java::for Command
+</H3>
+
+<HR>
+
+<DL>
+
+<H3>
+Usage:
+</H3>
+
+<DD><B>java::for</B> <I>type_var</I> <I>collection</I> <I>script</I>
+
+<P>
+
+The <B>java::for</B> command provides a Tcl mapping to the
+enhanced Java for statement that appeared in JDK 1.5.
+The enhanced Java for statement can be used to iterate
+over a collection or over the elements of an array. The
+<B>java::for</B> command is like Tcl's <B>foreach</B>
+command, except that <B>java::for</B> works with
+a Collection object or a Java array object instead of a
+Tcl list or array. The <B>java::for</B> command
+does not require JDK 1.5 or newer, it works in any
+supported JDK version.
+
+<p>
+The <I>type_var</I> argument is a Tcl list that contains two elements.
+The first element is the type of the class, interface, or primitive type
+for the iteration variable. The second element is the name of the
+iteration variable.
+</p>
+<p>
+The <I>collection</I> object is a handle to a Java
+array or a Java object that implements the <code>java.util.Collection</code>
+interface.
+</p>
+<p>
+The <I>script</I> argument is evaluated once for each
+element in the collection. The iteration variable is
+set to an element in the collection before each
+evaluation of the <I>script</I> argument.
+</p>
+
+</DL>
+
+<DL>
+
+<H3>
+Examples:
+</H3>
+
+<DD>
+
+<H4>
+Array Example:
+</H4>
+
+The following example compares how one would iterate
+over an array in Java, in Tcl using a Java array handle,
+and in Tcl using the <B>java::for</B> command.
+
+<P>
+
+A Java programmer would iterate over an array as follows:
+
+<code>
+<pre>
+String[] a = {"str1", "str2", "str3"};
+
+for (int i=0; i < a.length; i++) {
+    String elem = a[i];
+    System.out.println("elem is " + elem);
+}
+</pre>
+</code>
+
+In Tcl, one could iterate over an array with:
+
+<code>
+<pre>
+set a [java::new {String[]} {3} {str1 str2 str3}]
+
+for {set i 0} {$i < [$a length]} {incr i} {
+   set elem [$a get $i]
+   puts "elem is $elem"
+}
+</pre>
+</code>
+
+Using the enhanced Java for syntax, one could iterate
+over an array with the following code:
+
+<code>
+<pre>
+String[] a = {"str1", "str2", "str3"};
+
+for (String elem : a) {
+    System.out.println("elem is " + elem);
+}
+</pre>
+</code>
+
+The same iteration could be implemented in Tcl
+using the <B>java::for</B> command:
+
+<code>
+<pre>
+set a [java::new {String[]} {3} {str1 str2 str3}]
+
+java::for {String elem} $a {
+   puts "elem is $elem"
+}
+</pre>
+</code>
+
+</P>
+
+<H4>
+Collection Example:
+</H4>
+
+<P>
+The <B>java::for</B> command also supports iteration over
+any type of collection object.
+
+Assume for a moment that the user has defined a Java class.
+This class contains a static method that returns a
+collection object. The JDK 1.5 code to iterate over this
+collection would be:
+
+<code>
+<pre>
+Collection&lt;String&gt; c = MyJavaClass.getCollection();
+
+for (String elem : c) {
+    System.out.println("elem is " + elem);
+}
+</pre>
+</code>
+
+This same iteration could be implemented in Tcl, using
+the <b>java::for</b> command.
+
+<code>
+<pre>
+set c [java::call MyJavaClass getCollection]
+
+java::for {String elem} $c {
+    puts "elem is $elem"
+}
+</pre>
+</code>
+
+The reader will note that the type of the iteration variable
+is passed into the <b>java::for</b> command, just like the
+Java for statement. The <b>java::for</b> command uses
+this type information to check that the Java object extracted
+from the collection is of the expected type.
+
+</P>
+
+<H4>
+Multi-Dimensional Arrays:
+</H4>
+
+<P>
+Multiple <B>java::for</B> commands can be used together
+to iterate over all the elements of a multi-dimensional
+array object.
+
+<code>
+<pre>
+set a [java::new {int[][]} {3 3} {{1 2 3} {4 5 6} {7 8 9}}]
+
+java::for {int[] asub} $a {
+    java::for {int e} $asub {
+        puts $e
+    }
+}
+</pre>
+</code>
+
+The code above will print the following to the console:
+
+<code>
+<pre>
+1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre>
+</code>
+
+</P>
+
+
+<H4>
+Multiple Collections:
+</H4>
+
+<P>
+Multiple <B>java::for</B> commands can be used together
+to iterate over multiple collection objects.
+
+<code>
+<pre>
+java::import -package java.util Vector
+set v1 [java::new Vector]
+set v2 [java::new Vector]
+
+$v1 addElement [java::new String "Black"]
+$v1 addElement [java::new String "White"]
+
+$v2 addElement [java::new Integer 0]
+$v2 addElement [java::new Integer 1]
+$v2 addElement [java::new Integer 2]
+
+java::for {String s} $v1 {
+    java::for {int i} $v2 {
+        puts "$s $i"
+    }
+}
+</pre>
+</code>
+
+The code above will print the following to the console:
+
+<code>
+<pre>
+Black 0
+Black 1
+Black 2
+White 0
+White 1
+White 2
+</pre>
+</code>
+
+</P>
+
+
+<H4>
+Elements in a Hashtable:
+</H4>
+
+<P>
+The <B>java::for</B> command can be used to iterate
+over elements in a Hashtable or any other Map implementation.
+
+<code>
+<pre>
+java::import -package java.util Hashtable Map
+set t [java::new Hashtable]
+$t put "One" "onestr"
+$t put "Two" "twostr"
+
+java::for {Map.Entry e} [$t entrySet] {
+    set key [[$e getKey] toString]
+    set value [[$e getValue] toString]
+    puts "$key -> $value"
+}
+</pre>
+</code>
+
+The code above will print the following to the console:
+
+<code>
+<pre>
+One -> onestr
+Two -> twostr
+</pre>
+</code>
+
+</P>
+
+<P>
+
+The next <B>java::for</B> example shows how
+one could iterate over just the keys in a HashMap.
+The key could then be used to lookup the value.
+
+<code>
+<pre>
+java::import -package java.util HashMap
+set t [java::new HashMap]
+$t put "s1" "one"
+$t put "s2" "two"
+
+java::for {String key} [$t keySet] {
+    set value [[$t get $key] toString]
+    puts "$key -> $value"
+}
+</pre>
+</code>
+
+The code above will print the following to the console:
+
+<code>
+<pre>
+s2 -> two
+s1 -> one
+</pre>
+</code>
+
+</P>
+
+<H4>
+Automatic Type Conversion:
+</H4>
+
+<P>
+The <B>java::for</B> command supports automatic conversion
+of a Java primitive wrapper in a collection to a Tcl
+value. For example, a Vector of <code>java.lang.Integer</code>
+objects can be iterated over as Tcl integers with the
+following code:
+
+<code>
+<pre>
+set v [java::new java.util.Vector]
+$v addElement [java::new Integer 0]
+$v addElement [java::new Integer 1]
+$v addElement [java::new Integer 2]
+
+java::for {int e} $v {
+    puts $e
+}
+</pre>
+</code>
+
+One could also iterate over the contents of this same Vector
+as <code>java.lang.Integer</code> objects with the following code:
+
+<code>
+<pre>
+set v [java::new java.util.Vector]
+$v addElement [java::new Integer 0]
+$v addElement [java::new Integer 1]
+$v addElement [java::new Integer 2]
+
+java::for {Integer e} $v {
+    puts [$e toString]
+}
+</pre>
+</code>
+
+Both examples given above will write the same
+output to the console.
+</P>
+
+</DL>
+
+<br>
+
+<PRE>
+<A HREF="../license.html">Copyright</A> &#169; 1997-1998 Sun Microsystems, Inc.
+</PRE>
+
+</BODY>
+</HTML>
+

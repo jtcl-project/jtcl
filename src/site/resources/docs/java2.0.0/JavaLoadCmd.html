@@ -1,0 +1,95 @@
+<HTML>
+<TITLE>
+The java::load Command
+</TITLE>
+
+<BODY>
+<HR>
+
+<H3>
+The java::load Command
+</H3>
+
+<HR>
+
+<DL>
+
+<H3>
+Usage:
+</H3>
+
+<DD><B>java::load</B> ?<I>-classpath pathList</I>? <I>extensionName</I><BR>
+
+<P>
+
+The <B>java::load</B> command loads extensions into the Java VM.  An
+extension is a Java class that specifies a set of class files to load
+into the VM, as well as specifying how the Tcl interpreter should
+interact with these classes.  The primary use for this function is to
+load new Tcl commands into the interpreter, but it may also be
+used to load classes into the VM that
+can be used by the Reflection API.  
+
+<P>
+
+The argument <I>extensionName</I> is the name of the class file to load
+into the VM.  The class referenced by <I>extensionName</I> must be a
+subclass of <I>tcl.lang.Extension</I>.  All subclasses of Extension
+must implement the abstract init method, which is responsible for
+loading commands into the Tcl interpreter or loading any additional
+classes into the java VM.  To load classes that do not subclass
+Extension into the VM, use the <B>java::new, java::class</B> or
+<B>java::defineclass</B> commands.
+
+<P>
+
+</DL>
+
+<H3>
+EXAMPLE:
+</H3>
+
+<DL>
+
+<DD>
+
+<P>
+
+Load an extension stored in /home/user/Foo.class;
+
+<P>
+
+<code>
+<pre>
+java::load -classpath /home/user Foo
+</pre>
+</code>
+
+<P>
+
+</DL>
+
+
+<H3>
+BUGS:
+</H3>
+
+<DL>
+
+<DD>
+
+<P>
+
+Currently '~' substitution is not performed on Unix systems.  The path 
+must be absolute or relative from the current directory.  
+
+<P>
+
+
+<PRE>
+<A HREF="../license.html">Copyright</A> &#169; 1997-1998 Sun Microsystems, Inc.
+</PRE>
+
+
+</BODY>
+</HTML>

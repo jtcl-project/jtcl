@@ -2,6 +2,35 @@
  JTcl News
  ----
 
+April 13, 2011
+
+  JTcl 2.0.0-b1 has been released. New or fixed in this release:
+
+  * <<dict>> and <<apply>> commands have been backported from Tcl 8.5.  A compatibilty package <dict> is included.
+
+  * <<<array unset>>> on an undefined variable will not cause an error.
+
+  * <user> element added to <tcl_platform> array.
+
+  * Tcllib 1.13 is included.  Note that Tcllib modules have not been extensively tested, some may not work due to JTcl differences. 
+
+  * <<java::import>> now imports classes from wildcard package names ("*").  Example: \
+    <java::import java.util.* ; java::new Date>\ \ \ \  will import java.util.Date and create a new instance.
+
+  * Building with Maven is now fully supported, including the TJC stage 2 compiler and JTcl distribution. 
+
+  * Command line program <tjc> (Windows: <tjc.bat>) now included.
+
+  * Documentation for Tcl 8.4 and included packages now local to the website.
+
+
+
+
+ Please report bugs and other unexpected behaviors at the JTcl project
+ site's {{{http://kenai.com/bugzilla/buglist.cgi?product=jtcl}Bug tracking system}}.
+
+ <The JTcl Team>
+
 November 17, 2010
 
   JTcl 2.0.0-a1 has been released!  This is the first release of JTcl, and you may

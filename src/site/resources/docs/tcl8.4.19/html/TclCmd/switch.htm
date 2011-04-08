@@ -1,0 +1,122 @@
+<HTML><HEAD><TITLE>Tcl Built-In Commands - switch manual page</TITLE></HEAD><BODY>
+<DL>
+<DD><A HREF="switch.htm#M2" NAME="L1324">NAME</A>
+<DL><DD>switch - Evaluate one of several scripts, depending on a given value</DL>
+<DD><A HREF="switch.htm#M3" NAME="L1325">SYNOPSIS</A>
+<DL>
+<DD><B>switch </B>?<I>options</I>?<I> string pattern body </I>?<I>pattern body </I>...?
+<DD><B>switch </B>?<I>options</I>?<I> string </I>{<I>pattern body </I>?<I>pattern body </I>...?}
+</DL>
+<DD><A HREF="switch.htm#M4" NAME="L1326">DESCRIPTION</A>
+<DL>
+<DD><A HREF="switch.htm#M5" NAME="L1327"><B>-exact</B></A>
+<DD><A HREF="switch.htm#M6" NAME="L1328"><B>-glob</B></A>
+<DD><A HREF="switch.htm#M7" NAME="L1329"><B>-regexp</B></A>
+<DD><A HREF="switch.htm#M8" NAME="L1330"><B>-&nbsp;-</B></A>
+</DL>
+<DD><A HREF="switch.htm#M9" NAME="L1331">EXAMPLES</A>
+<DD><A HREF="switch.htm#M10" NAME="L1332">SEE ALSO</A>
+<DD><A HREF="switch.htm#M11" NAME="L1333">KEYWORDS</A>
+</DL><HR>
+<H3><A NAME="M2">NAME</A></H3>
+switch - Evaluate one of several scripts, depending on a given value
+<H3><A NAME="M3">SYNOPSIS</A></H3>
+<B>switch </B>?<I>options</I>?<I> string pattern body </I>?<I>pattern body </I>...?<BR>
+<B>switch </B>?<I>options</I>?<I> string </I>{<I>pattern body </I>?<I>pattern body </I>...?}<BR>
+<H3><A NAME="M4">DESCRIPTION</A></H3>
+The <B>switch</B> command matches its <I>string</I> argument against each of
+the <I>pattern</I> arguments in order.
+As soon as it finds a <I>pattern</I> that matches <I>string</I> it
+evaluates the following <I>body</I> argument by passing it recursively
+to the Tcl interpreter and returns the result of that evaluation.
+If the last <I>pattern</I> argument is <B>default</B> then it matches
+anything.
+If no <I>pattern</I> argument
+matches <I>string</I> and no default is given, then the <B>switch</B>
+command returns an empty string.
+<P>
+If the initial arguments to <B>switch</B> start with <B>-</B> then
+they are treated as options.  The following options are
+currently supported:
+<P>
+<DL>
+<DT><A NAME="M5"><B>-exact</B></A><DD>
+Use exact matching when comparing <I>string</I> to a pattern.  This
+is the default.
+<P><DT><A NAME="M6"><B>-glob</B></A><DD>
+When matching <I>string</I> to the patterns, use glob-style matching
+(i.e. the same as implemented by the <B><A HREF="../TclCmd/string.htm">string match</A></B> command).
+<P><DT><A NAME="M7"><B>-regexp</B></A><DD>
+When matching <I>string</I> to the patterns, use regular
+expression matching
+(as described in the <B><A HREF="../TclCmd/re_syntax.htm">re_syntax</A></B> reference page).
+<P><DT><A NAME="M8"><B>-&nbsp;-</B></A><DD>
+Marks the end of options.  The argument following this one will
+be treated as <I>string</I> even if it starts with a <B>-</B>.
+<P></DL>
+<P>
+Two syntaxes are provided for the <I>pattern</I> and <I>body</I> arguments.
+The first uses a separate argument for each of the patterns and commands;
+this form is convenient if substitutions are desired on some of the
+patterns or commands.
+The second form places all of the patterns and commands together into
+a single argument; the argument must have proper list structure, with
+the elements of the list being the patterns and commands.
+The second form makes it easy to construct multi-line switch commands,
+since the braces around the whole list make it unnecessary to include a
+backslash at the end of each line.
+Since the <I>pattern</I> arguments are in braces in the second form,
+no command or variable substitutions are performed on them;  this makes
+the behavior of the second form different than the first form in some
+cases.
+<P>
+If a <I>body</I> is specified as ``<B>-</B>'' it means that the <I>body</I>
+for the next pattern should also be used as the body for this
+pattern (if the next pattern also has a body of ``<B>-</B>''
+then the body after that is used, and so on).
+This feature makes it possible to share a single <I>body</I> among
+several patterns.
+<P>
+Beware of how you place comments in <B>switch</B> commands.  Comments
+should only be placed <B>inside</B> the execution body of one of the
+patterns, and not intermingled with the patterns.
+<H3><A NAME="M9">EXAMPLES</A></H3>
+The <B>switch</B> command can match against variables and not just
+literals, as shown here (the result is <I>2</I>):
+<PRE>set foo &quot;abc&quot;
+<B>switch</B> abc a - b {expr 1} $foo {expr 2} default {expr 3}</PRE>
+<P>
+Using glob matching and the fall-through body is an alternative to
+writing regular expressions with alternations, as can be seen here
+(this returns <I>1</I>):
+<PRE><B>switch</B> -glob aaab {
+   a*b     -
+   b       {expr 1}
+   a*      {expr 2}
+   default {expr 3}
+}</PRE>
+<P>
+Whenever nothing matches, the <B>default</B> clause (which must be
+last) is taken.  This example has a result of <I>3</I>:
+<PRE><B>switch</B> xyz {
+   a  -
+   b {
+      # Correct Comment Placement
+      expr 1
+   }
+   c {
+      expr 2
+   }
+   default {
+      expr 3
+   }
+}</PRE>
+<H3><A NAME="M10">SEE ALSO</A></H3>
+<B><A HREF="../TclCmd/for.htm">for</A></B>, <B><A HREF="../TclCmd/if.htm">if</A></B>, <B><A HREF="../TclCmd/regexp.htm">regexp</A></B>
+<H3><A NAME="M11">KEYWORDS</A></H3>
+<A href="../Keywords/S.htm#switch">switch</A>, <A href="../Keywords/M.htm#match">match</A>, <A href="../Keywords/R.htm#regular expression">regular expression</A>
+<HR><PRE>
+<A HREF="../copyright.htm">Copyright</A> &#169; 1993 The Regents of the University of California.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1994-1997 Sun Microsystems, Inc.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1995-1997 Roger E. Critchlow Jr.</PRE>
+</BODY></HTML>

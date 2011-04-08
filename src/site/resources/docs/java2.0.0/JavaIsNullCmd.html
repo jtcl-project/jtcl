@@ -1,0 +1,44 @@
+<HTML>
+<TITLE>
+The java::isnull Command
+</TITLE>
+
+<BODY>
+<HR>
+
+<H3>
+The java::isnull Command
+</H3>
+
+<HR>
+
+<DL>
+
+<H3>
+Usage:
+</H3>
+
+<DD><B>java::isnull</B> <I>javaObj</I>
+
+<P>
+
+The <B>java::isnull</B> command is used to tell if a Java
+reference has the null value. The <I>javaObj</I> argument specifies an
+object handle. If the object has the null value, <B>java::isnull</B>
+will return 1. If the object is a Java object then <B>java::isnull</B>
+will return 0. If the object is not a valid Java object but rather
+a standard Tcl string, <B>java::isnull</B> will return an error
+stating that the argument was not a Java object handle.
+
+<P>
+
+</DL>
+
+<PRE>
+<A HREF="../license.html">Copyright</A> &#169; 1997-1998 Sun Microsystems, Inc.
+</PRE>
+
+
+</BODY>
+</HTML>
+

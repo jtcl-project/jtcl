@@ -32,6 +32,10 @@ Getting started with JTcl
   
   * Start the JTcl interpreter:\
     \
-    <<jtcl>>  <filename>  <arg> <arg ...>
+    <<jtcl>>  <filename>  <arg> <arg ...>\
+    \
+    or to run as an interactive shell:\
+    \
+    <<jtcl>>
     
     []

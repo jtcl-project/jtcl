@@ -1,0 +1,48 @@
+<HTML>
+<TITLE>
+The java::prop Command
+</TITLE>
+
+<BODY>
+<HR>
+
+<H3>
+The java::prop Command
+</H3>
+
+<HR>
+
+<DL>
+
+<H3>
+Usage:
+</H3>
+
+<DD><B>java::prop</B> ?<B>-noconvert</B>? <I>javaObj</I> <I>property</I> ?<I>value property value ...</I>?
+
+<P>
+
+The <B>java::prop</B> command is used to manipulate Java Bean
+properties from Tcl. The <I>javaObj</I> argument specifies an object
+handle.  The <I>property</I> argument specifies a Java Bean property
+that has corresponding get and set methods.  If an additional
+<I>value</I> parameter exists, then the property will be set to
+<I>value</I>, otherwise the current value of the property is returned.
+Multiple properties may be set via additional parameters by
+alternating properties and values.
+
+<P>
+
+The <A HREF="JavaConversions.html">Conversions</a> section describes the effect
+of the optional <B>-noconvert</B> flag on the result. The <B>-noconvert</B>
+flag can only be used when getting the value of a property.
+
+</DL>
+
+<PRE>
+<A HREF="../license.html">Copyright</A> &#169; 1997-1998 Sun Microsystems, Inc.
+</PRE>
+
+
+</BODY>
+</HTML>

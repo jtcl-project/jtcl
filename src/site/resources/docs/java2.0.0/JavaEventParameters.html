@@ -1,0 +1,70 @@
+<HTML>
+<TITLE>
+Java Event Parameters
+</TITLE>
+
+<BODY>
+<HR>
+<H3>
+Java Event Parameters
+</H3>
+
+<HR>
+
+
+<DL>
+
+<H3>
+About:
+</H3>
+
+<DD>
+
+An event callback script can query the event parameters using the
+<B>java::event</B> command. Usually, there is only one event parameter
+-- the <I>event object</I>, which stores various information about the
+event as its properties. For example, when the <B>mouseClicked</B>
+event occurs inside an AWT Button, the <B>x</B> and <B>y</B> properties
+of the event object contains the location of the mouse cursor. The
+following script prints out the location of the mouse cursor:
+<P>
+
+</DL>
+
+
+<DL>
+
+<H3>
+Example:
+</H3>
+
+<DD>
+
+<code>
+<pre>
+package require java
+
+set f [java::new java.awt.Frame]
+$f setSize 100 100
+$f show
+
+java::bind $f mouseClicked {
+    puts "mouse click at ([java::event x],[java::event y])"
+}
+</pre>
+</code>
+
+<P>
+
+</DL>
+
+<DL>
+
+<PRE>
+<A HREF="../license.html">Copyright</A> &#169; 1997-1998 Sun Microsystems, Inc.
+</PRE>
+
+
+</BODY>
+</HTML>
+

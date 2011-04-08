@@ -1,0 +1,114 @@
+<HTML>
+<TITLE>
+The java::info Command
+</TITLE>
+
+<BODY>
+<HR>
+
+<H3>
+The java::info Command
+</H3>
+
+<HR>
+
+<DL>
+
+<H3>
+Usage:
+</H3>
+
+<DD><B>java::info</B> <I>option</I> ?<I>arg arg ...</I>?
+
+<P>
+
+
+The <B>java::info</B> command provides introspection for Java classes,
+objects, and Beans.  The valid options for this command are:
+<P>
+<DL>
+<P>
+
+<DT><B>class</B> <I>javaObj</I><DD>
+Returns the class name of the specified Java object.
+<P><DT><B>events</B> <I>objOrClass</I><DD>
+Returns a list of the fully-qualified names of all the event
+interfaces of the Java class or object. The events of a Java class are
+determined by the JavaBean design patterns. Usually, if a Java class
+has the methods <B>add</B><I>XXX</I><B>Listener</B> and
+<B>remove</B><I>XXX</I><B>Listener</B> and <I>XXX</I> is the name of an
+interface, then <I>XXX</I> is considered as an event interface of the
+Java class.
+
+<P>
+
+<DT><B>baseclass</B> <I>objOrClass</I><DD>
+Returns the base class name of the specified class or Java object.
+For example, the base class of a Java array object of type
+String[][][] is java.lang.String.  If the class or Java object is not
+an array, the base class is the same as the class.
+<P><DT><B>dimensions</B> <I>objOrClass</I><DD>
+Returns the number of dimensions of the specified array class or Java
+array object.  If the class or Java object is not an array, the number
+of dimensions is 0.
+
+<P>
+
+<DT><B>fields</B> ?<B>-type</B>? ?<B>-static</B>? <I>objOrClass</I><DD>
+Returns a list of fieldSignatures of accessible fields of the specified
+class or Java object (see <A HREF="JavaSignatures.html">Signatures</A> section).
+For shadowed superclass fields, a full fieldSignature is returned.
+For all other fields, the fieldSignature is simple.
+If the ?<B>-type</B>? flag is used, then
+each element of the result list is a pair containing the data type and
+fieldSignature.  If the <B>-static</B> flag is used, static fields
+will appear in the result list. Otherwise, only non-static fields
+will appear in the result list.
+
+<P>
+
+<DT><B>methods</B> ?<B>-type</B>? ?<B>-static</B>? <I>objOrClass</I><DD>
+Returns a list of accessible methods of the specified class or
+Java object. If <B>-type</B> is not used, each element in the list is
+the full signature of a method. If <B>-type</B> is used, each element
+in the list is in turn a list in the form {<I>type sig exceptions</I>},
+where <I>type</I> is the method's return type, <I>sig</I> is the
+method's full signature, and <I>exceptions</I> is a list of the
+fully-qualified names of all the checked exceptions that can be thrown
+by this method.  If the method does not throw exceptions,
+<I>exceptions</I> is the empty list. If the <B>-static</B> flag is used,
+only static methods will appear in the result list. Otherwise,
+non-static methods from the class and its superclasses will appear
+in the result list.
+
+<P>
+
+<DT><B>constructors</B> <I>objOrClass</I><DD>
+Returns a list of the full signatures of accessible constructors
+of the specified class or Java object.
+
+<P>
+
+<DT><B>properties</B> ?<B>-type</B>? <I>objOrClass</I><DD>
+Returns a list of the names of Java Bean properties of the specified
+class or Java object.  If the ?<B>-type</B>? flag is used, then each
+element of the result list is a pair containing the data type and name
+of the property.
+
+<P>
+
+<DT><B>superclass</B> <I>objOrClass</I><DD>
+Returns the name of the immediate superclass of the specified Java
+object or class.  If <I>objOrClass</I> is an instance of
+java.lang.Object, then the empty string is returned.
+<P></DL>
+
+</DL>
+
+<PRE>
+<A HREF="../license.html">Copyright</A> &#169; 1997-1998 Sun Microsystems, Inc.
+</PRE>
+
+
+</BODY>
+</HTML>

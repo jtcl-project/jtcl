@@ -1,0 +1,280 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML><HEAD><TITLE>Man page of ensemble</TITLE>
+</HEAD><BODY>
+<H1>ensemble</H1>
+Section: [incr&nbsp;Tcl] (n)<BR>Updated: 3.0<BR><A HREF="#index">Index</A>
+<A HREF="index.html">Return to Main Contents</A><HR>
+
+
+<BR>
+
+
+
+<PRE>
+<BR>
+<HR></PRE>
+
+
+
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+ensemble - create or modify a composite command
+<A NAME="lbAC">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+<B>itcl::ensemble </B><I>ensName</I> ?<I>command arg arg...</I>?
+<BR>
+
+or
+<BR>
+
+<B>ensemble </B><I>ensName</I> {
+<BR>
+
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;<B>part&nbsp;</B><I>partName&nbsp;args&nbsp;body</I>
+<BR>
+
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;<I>...</I>
+<BR>
+
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;<B>ensemble&nbsp;</B><I>partName</I>&nbsp;{
+<BR>
+
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>part&nbsp;</B><I>subPartName&nbsp;args&nbsp;body</I>
+<BR>
+
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>part&nbsp;</B><I>subPartName&nbsp;args&nbsp;body</I>
+<BR>
+
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;<I>...</I>
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;}
+<BR>
+
+}
+
+<PRE>
+<BR>
+<HR>
+
+</PRE>
+
+<BR>
+
+
+
+<P>
+<A NAME="lbAD">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<P>
+
+The <B>ensemble</B> command is used to create or modify a composite
+command.  See the section <B>WHAT IS AN ENSEMBLE?</B> below for a
+brief overview of ensembles.
+<P>
+
+If the <B>ensemble</B> command finds an existing ensemble called
+<I>ensName</I>, it updates that ensemble.  Otherwise, it creates an
+ensemble called <I>ensName</I>.  If the <I>ensName</I> is a simple name
+like &quot;foo&quot;, then an ensemble command named &quot;foo&quot; is added to the
+current namespace context.  If a command named &quot;foo&quot; already exists
+in that context, then it is deleted.  If the <I>ensName</I> contains
+namespace qualifiers like &quot;a::b::foo&quot;, then the namespace path is
+resolved, and the ensemble command is added that namespace context.
+Parent namespaces like &quot;a&quot; and &quot;b&quot; are created automatically, as needed.
+<P>
+
+If the <I>ensName</I> contains spaces like &quot;a::b::foo bar baz&quot;, then
+additional words like &quot;bar&quot; and &quot;baz&quot; are treated as sub-ensembles.
+Sub-ensembles are merely parts within an ensemble; they do not have
+a Tcl command associated with them.  An ensemble like &quot;foo&quot; can
+have a sub-ensemble called &quot;foo bar&quot;, which in turn can have a
+sub-ensemble called &quot;foo bar baz&quot;.  In this case, the sub-ensemble
+&quot;foo bar&quot; must be created before the sub-ensemble &quot;foo bar baz&quot;
+that resides within it.
+<P>
+
+If there are any arguments following <I>ensName</I>, then they are
+treated as commands, and they are executed to update the ensemble.
+The following commands are recognized in this context:  <B>part</B>
+and <B>ensemble</B>.
+<P>
+
+The <B>part</B> command defines a new part for the ensemble.
+Its syntax is identical to the usual <B>proc</B> command, but
+it defines a part within an ensemble, instead of a Tcl command.
+If a part called <I>partName</I> already exists within the ensemble,
+then the <B>part</B> command returns an error.
+<P>
+
+The <B>ensemble</B> command can be nested inside another <B>ensemble</B>
+command to define a sub-ensemble.
+<P>
+<A NAME="lbAE">&nbsp;</A>
+<H2>WHAT IS AN ENSEMBLE?</H2>
+
+The usual &quot;info&quot; command is a composite command--the command name
+<B>info</B> must be followed by a sub-command like <B>body</B> or <B>globals</B>.
+We will refer to a command like <B>info</B> as an <I>ensemble</I>, and to
+sub-commands like <B>body</B> or <B>globals</B> as its <I>parts</I>.
+<P>
+
+Ensembles can be nested.  For example, the <B>info</B> command has
+an ensemble <B>info namespace</B> within it.  This ensemble has parts
+like <B>info namespace all</B> and <B>info namespace children</B>.
+<P>
+
+With ensembles, composite commands can be created and extended
+in an automatic way.  Any package can find an existing ensemble
+and add new parts to it.  So extension writers can add their
+own parts, for example, to the <B>info</B> command.
+<P>
+
+The ensemble facility manages all of the part names and keeps
+track of unique abbreviations.  Normally, you can abbreviate
+<B>info complete</B> to <B>info comp</B>.  But if an extension adds the
+part <B>info complexity</B>, the minimum abbreviation for <B>info complete</B>
+becomes <B>info complet</B>.
+<P>
+
+The ensemble facility not only automates the construction of
+composite commands, but it automates the error handling as well.
+If you invoke an ensemble command without specifying a part name,
+you get an automatically generated error message that summarizes
+the usage information.  For example, when the <B>info</B> command
+is invoked without any arguments, it produces the following error
+message:
+
+<DL COMPACT><DT><DD>
+<PRE>
+
+wrong # args: should be one of...
+  info args procname
+  info body procname
+  info cmdcount
+  info commands ?pattern?
+  info complete command
+  info context
+  info default procname arg varname
+  info exists varName
+  info globals ?pattern?
+  info level ?number?
+  info library
+  info locals ?pattern?
+  info namespace option ?arg arg ...?
+  info patchlevel
+  info procs ?pattern?
+  info protection ?-command? ?-variable? name
+  info script
+  info tclversion
+  info vars ?pattern?
+  info which ?-command? ?-variable? ?-namespace? name
+
+</PRE>
+
+</DL>
+
+
+You can also customize the way an ensemble responds to errors.
+When an ensemble encounters an unspecified or ambiguous part
+name, it looks for a part called <B>@error</B>.  If it exists,
+then it is used to handle the error.  This part will receive all
+of the arguments on the command line starting with the offending
+part name.  It can find another way of resolving the command,
+or generate its own error message.
+<P>
+<A NAME="lbAF">&nbsp;</A>
+<H2>EXAMPLE</H2>
+
+We could use an ensemble to clean up the syntax of the various
+&quot;wait&quot; commands in Tcl/Tk.  Instead of using a series of
+strange commands like this:
+
+<DL COMPACT><DT><DD>
+<PRE>
+
+vwait x
+tkwait visibility .top
+tkwait window .
+
+</PRE>
+
+</DL>
+
+
+we could use commands with a uniform syntax, like this:
+
+<DL COMPACT><DT><DD>
+<PRE>
+
+wait variable x
+wait visibility .top
+wait window .
+
+</PRE>
+
+</DL>
+
+
+The Tcl package could define the following ensemble:
+
+<DL COMPACT><DT><DD>
+<PRE>
+
+itcl::ensemble wait part variable {name} {
+    uplevel vwait $name
+}
+
+</PRE>
+
+</DL>
+
+
+The Tk package could add some options to this ensemble, with a
+command like this:
+
+<DL COMPACT><DT><DD>
+<PRE>
+
+itcl::ensemble wait {
+    part visibility {name} {
+        tkwait visibility $name
+    }
+    part window {name} {
+        tkwait window $name
+    }
+}
+
+</PRE>
+
+</DL>
+
+
+Other extensions could add their own parts to the <B>wait</B> command
+too.
+<P>
+<A NAME="lbAG">&nbsp;</A>
+<H2>KEYWORDS</H2>
+
+ensemble, part, info
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAD">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAE">WHAT IS AN ENSEMBLE?</A><DD>
+<DT><A HREF="#lbAF">EXAMPLE</A><DD>
+<DT><A HREF="#lbAG">KEYWORDS</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="index.html">man2html</A>,
+using the manual pages.<BR>
+Time: 20:52:35 GMT, December 21, 2006
+</BODY>
+</HTML>

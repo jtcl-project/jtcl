@@ -1,0 +1,35 @@
+<HTML><HEAD><TITLE>Tcl Built-In Commands - concat manual page</TITLE></HEAD><BODY>
+<H3><A NAME="M2">NAME</A></H3>
+concat - Join lists together
+<H3><A NAME="M3">SYNOPSIS</A></H3>
+<B>concat</B><I> </I>?<I>arg arg ...</I>?<BR>
+<H3><A NAME="M4">DESCRIPTION</A></H3>
+This command joins each of its arguments together with spaces after
+trimming leading and trailing white-space from each of them.  If all the
+arguments are lists, this has the same effect as concatenating them
+into a single list.
+It permits any number of arguments;
+if no <I>arg</I>s are supplied, the result is an empty string.
+<H3><A NAME="M5">EXAMPLES</A></H3>
+Although <B>concat</B> will concatenate lists (so the command:
+<PRE><B>concat</B> a b {c d e} {f {g h}}</PRE>
+will return &quot;<B>a b c d e f {g h}</B>&quot; as its result), it will also
+concatenate things that are not lists, and hence the command:
+<PRE><B>concat</B> &quot; a b {c   &quot; d &quot;  e} f&quot;</PRE>
+will return &quot;<B>a b {c d e} f</B>&quot; as its result.
+<P>
+Note that the concatenation does not remove spaces from the middle of
+its arguments, so the command:
+<PRE><B>concat</B> &quot;a   b   c&quot; { d e f }</PRE>
+will return &quot;<B>a   b   c d e f</B>&quot; (i.e. with three spaces between
+the <B>a</B>, the <B>b</B> and the <B>c</B>).
+
+<H3><A NAME="M6">SEE ALSO</A></H3>
+<B><A HREF="../TclCmd/append.htm">append</A></B>, <B><A HREF="../TclCmd/eval.htm">eval</A></B>
+<H3><A NAME="M7">KEYWORDS</A></H3>
+<A href="../Keywords/C.htm#concatenate">concatenate</A>, <A href="../Keywords/J.htm#join">join</A>, <A href="../Keywords/L.htm#lists">lists</A>
+<HR><PRE>
+<A HREF="../copyright.htm">Copyright</A> &#169; 1993 The Regents of the University of California.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1994-1996 Sun Microsystems, Inc.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1995-1997 Roger E. Critchlow Jr.</PRE>
+</BODY></HTML>

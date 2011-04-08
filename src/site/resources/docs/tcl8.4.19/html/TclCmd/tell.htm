@@ -1,0 +1,37 @@
+<HTML><HEAD><TITLE>Tcl Built-In Commands - tell manual page</TITLE></HEAD><BODY>
+<H3><A NAME="M2">NAME</A></H3>
+tell - Return current access position for an open channel
+<H3><A NAME="M3">SYNOPSIS</A></H3>
+<B>tell </B><I>channelId</I><BR>
+<H3><A NAME="M4">DESCRIPTION</A></H3>
+Returns an integer string giving the current access position in
+<I>channelId</I>.  This value returned is a byte offset that can be passed to
+<B><A HREF="../TclCmd/seek.htm">seek</A></B> in order to set the channel to a particular position.  Note
+that this value is in terms of bytes, not characters like <B><A HREF="../TclCmd/read.htm">read</A></B>.
+The value returned is -1 for channels that do not support
+seeking.
+<P>
+<I>ChannelId</I> must be an identifier for an open channel such as a
+Tcl standard channel (<B>stdin</B>, <B>stdout</B>, or <B>stderr</B>),
+the return value from an invocation of <B><A HREF="../TclCmd/open.htm">open</A></B> or <B><A HREF="../TclCmd/socket.htm">socket</A></B>, or
+the result of a channel creation command provided by a Tcl extension.
+<H3><A NAME="M5">EXAMPLE</A></H3>
+Read a line from a file channel only if it starts with <B>foobar</B>:
+<PRE># Save the offset in case we need to undo the read...
+set offset [<B>tell</B> $chan]
+if {[read $chan 6] eq &quot;foobar&quot;} {
+    gets $chan line
+} else {
+    set line {}
+    # Undo the read...
+    seek $chan $offset
+}</PRE>
+<H3><A NAME="M6">SEE ALSO</A></H3>
+<B><A HREF="../TclCmd/file.htm">file</A></B>, <B><A HREF="../TclCmd/open.htm">open</A></B>, <B><A HREF="../TclCmd/close.htm">close</A></B>, <B><A HREF="../TclCmd/gets.htm">gets</A></B>, <B><A HREF="../TclCmd/seek.htm">seek</A></B>, <B><A HREF="../TclLib/StdChannels.htm">Tcl_StandardChannels</A></B>
+<H3><A NAME="M7">KEYWORDS</A></H3>
+<A href="../Keywords/A.htm#access position">access position</A>, <A href="../Keywords/C.htm#channel">channel</A>, <A href="../Keywords/S.htm#seeking">seeking</A>
+<HR><PRE>
+<A HREF="../copyright.htm">Copyright</A> &#169; 1993 The Regents of the University of California.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1994-1996 Sun Microsystems, Inc.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1995-1997 Roger E. Critchlow Jr.</PRE>
+</BODY></HTML>

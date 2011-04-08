@@ -4,12 +4,24 @@
  
  JTcl Documentation resources
  
-   * {{{jtcldifferences.html}JTcl differences}} from Tcl 8.4
+   * {{{jtcldifferences.html}JTcl differences}} from Tcl 8.4.  
    
-   * Tcl 8.4 {{{http://www.tcl.tk/man/tcl8.4/TclCmd/contents.htm}command reference}} (via www.tcl.tk)
+   * {{{./tcl8.4.19/html/contents.htm} Tcl 8.4}} command reference
+
+   * Packages included in the JTcl distribution
    
-   * <<java>> package {{{http://tcljava.sourceforge.net/docs/TclJava/contents.html}command reference}} (via tcljava.sf.net)
+      * {{{./tcl8.4.19/html/TclCmd/dict.htm} dict}} 8.5 \
+        <Note - this package is provided as a compatibility measure for Tcl 8.4 code using the backported 'dict' package.  The 'dict' command is available without requiring this package.>
    
-   * <<Incr Tcl>> package <coming soon>
+      * {{{./itcl3.3/index.html}incr Tcl}} 3.3
+   
+      * {{{./java2.0.0/contents.html}java}} 2.0.0
+   
+      * {{{./parser1.4/parse.html}parse}} 1.4
+   
+      * {{{./tjc1.0/index.html}TJC}} 1.0
+   
+      * {{{./tcllib1.13/toc.html}tcllib}} 1.13 \
+        <Note - the following modules are omitted: amazon-s3, coroutine, devtools, gpx, grammar_aycock, hook, imap4, namespacex, pki, pt, rest, virtchannel_base, virtchannel_core, virtchannel_transform >
    
    * {{{buildingjtcl.html}Building JTcl}}

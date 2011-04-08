@@ -1,0 +1,126 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML><HEAD><TITLE>Man page of is</TITLE>
+</HEAD><BODY>
+<H1>is</H1>
+Section: [incr&nbsp;Tcl] (n)<BR>Updated: 3.3<BR><A HREF="#index">Index</A>
+<A HREF="index.html">Return to Main Contents</A><HR>
+
+
+<BR>
+
+
+
+<PRE>
+<BR>
+<HR></PRE>
+
+
+
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+is - test argument to see if it is a class or an object
+<A NAME="lbAC">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+<B>itcl::is </B><I>option</I> ?<I>arg arg ...</I>?
+
+<PRE>
+<BR>
+<HR>
+
+</PRE>
+
+<BR>
+
+
+
+<P>
+<A NAME="lbAD">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<P>
+
+The <B>is</B> command is used to check if the argument given is
+a class or an object; depending on the option given. If the argument
+if a class or object, then 1 is returned. Otherwise, 0 is returned.
+The <B>is</B> command also recognizes the commands wrapped in the
+itcl <B>code command.
+<P>
+
+The </B><I>option</I> argument determines what action is carried out
+by the command.  The legal <I>options</I> (which may be abbreviated)
+are:
+<DL COMPACT>
+<DT><B>is class </B><I>command</I><DD>
+Returns 1 if command is a class, and returns 0 otherwise.
+<P>
+The fully qualified name of the class needs to be given as the <I>command</I>
+argument. So, if a class resides in a namespace, then the namespace needs to
+be specified as well. So, if a class <B>C resides in a namespace N, then 
+the command should be called like:
+
+<DL COMPACT><DT><DD>
+</B><PRE>
+
+<B>is N::C</B>
+    or
+<B>is ::N::C</B>
+
+</PRE>
+
+</DL>
+
+
+<DT><B>is</B> object ?<B>-class </B><I>className</I>? <I>command</I><DD>
+Returns 1 if <I>command</I> is an object, and returns 0 otherwise.
+<P>
+If the optional &quot;<B>-class</B>&quot; parameter is specified, then the
+<I>command</I> will be checked within the context of the class
+given. Note that <I>className</I> has to exist. If not, then an
+error will be given. So, if <I>className</I> is uncertain to be
+a class, then the programmer will need to check it's existance
+beforehand, or wrap it in a catch statement.
+<P>
+So, if <B>c</B> is an object in the class <B>C</B>, in namespace N then
+these are the possibilities (all return 1):
+
+<DL COMPACT><DT><DD>
+<PRE>
+
+set obj [N::C c]
+itcl::is object N::c
+itcl::is object c
+itcl::is object $obj
+itcl::is object [itcl::code c]
+
+</PRE>
+
+</DL>
+
+
+<P>
+</DL>
+<A NAME="lbAE">&nbsp;</A>
+<H2>KEYWORDS</H2>
+
+class, object
+<P>
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAD">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAE">KEYWORDS</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="index.html">man2html</A>,
+using the manual pages.<BR>
+Time: 20:52:35 GMT, December 21, 2006
+</BODY>
+</HTML>

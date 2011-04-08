@@ -1,0 +1,228 @@
+
+<html><head>
+<title>parse - Parse a Tcl script into commands, words, and tokens</title>
+<style type="text/css"><!--
+    HTML {
+	background: 	#FFFFFF;
+	color: 		black;
+    }
+    BODY {
+	background: 	#FFFFFF;
+	color:	 	black;
+    }
+    DIV.doctools {
+	margin-left:	10%;
+	margin-right:	10%;
+    }
+    DIV.doctools H1,DIV.doctools H2 {
+	margin-left:	-5%;
+    }
+    H1, H2, H3, H4 {
+	margin-top: 	1em;
+	font-family:	sans-serif;
+	font-size:	large;
+	color:		#005A9C;
+	background: 	transparent;
+	text-align:		left;
+    }
+    H1.title {
+	text-align: center;
+    }
+    UL,OL {
+	margin-right: 0em;
+	margin-top: 3pt;
+	margin-bottom: 3pt;
+    }
+    UL LI {
+	list-style: disc;
+    }
+    OL LI {
+	list-style: decimal;
+    }
+    DT {
+	padding-top: 	1ex;
+    }
+    UL.toc,UL.toc UL, UL.toc UL UL {
+	font:		normal 12pt/14pt sans-serif;
+	list-style:	none;
+    }
+    LI.section, LI.subsection {
+	list-style: 	none;
+	margin-left: 	0em;
+	text-indent:	0em;
+	padding: 	0em;
+    }
+    PRE {
+	display: 	block;
+	font-family:	monospace;
+	white-space:	pre;
+	margin:		0%;
+	padding-top:	0.5ex;
+	padding-bottom:	0.5ex;
+	padding-left:	1ex;
+	padding-right:	1ex;
+	width:		100%;
+    }
+    PRE.example {
+	color: 		black;
+	background: 	#f5dcb3;
+	border:		1px solid black;
+    }
+    UL.requirements LI, UL.syntax LI {
+	list-style: 	none;
+	margin-left: 	0em;
+	text-indent:	0em;
+	padding:	0em;
+    }
+    DIV.synopsis {
+	color: 		black;
+	background: 	#80ffff;
+	border:		1px solid black;
+	font-family:	serif;
+	margin-top: 	1em;
+	margin-bottom: 	1em;
+    }
+    UL.syntax {
+	margin-top: 	1em;
+	border-top:	1px solid black;
+    }
+    UL.requirements {
+	margin-bottom: 	1em;
+	border-bottom:	1px solid black;
+    }
+--></style>
+</head>
+<! -- Generated from file '/home/tpoindex/src/tcl/tclparser/doc/files/parse.html' by tcllib/doctools with format 'html'
+   -->
+<! -- CVS: $Id$ parse.n
+   -->
+<body><div class="doctools">
+<hr> [
+  <a href="../toc.html">Table Of Contents</a>
+| <a href="../index.html">Keyword Index</a>
+] <hr>
+<h1 class="title">parse(n) 1.4 doc &quot;Parse a Tcl script into commands, words, and tokens&quot;</h1>
+<div id="name" class="section"><h2><a name="name">Name</a></h2>
+<p>parse - System to control logging of events.</p>
+</div>
+<div id="toc" class="section"><h2><a name="toc">Table Of Contents</a></h2>
+<ul class="toc">
+<li class="section"><a href="#toc">Table Of Contents</a></li>
+<li class="section"><a href="#synopsis">Synopsis</a></li>
+<li class="section"><a href="#section1">Description</a></li>
+<li class="section"><a href="#section2">EXAMPLES</a></li>
+<li class="section"><a href="#keywords">Keywords</a></li>
+</ul>
+</div>
+<div id="synopsis" class="section"><h2><a name="synopsis">Synopsis</a></h2>
+<div class="synopsis">
+<ul class="requirements">
+<li>package require <b class="pkgname">Tcl 8</b></li>
+<li>package require <b class="pkgname">parser <span class="opt">?1.4?</span></b></li>
+</ul>
+<ul class="syntax">
+<li><a href="#1"><b class="cmd">parse</b> command <i class="arg">script</i> [arg first] [arg last]</a></li>
+<li><a href="#2"><b class="cmd">parse</b> expr <i class="arg">script</i> [arg first] [arg last]</a></li>
+<li><a href="#3"><b class="cmd">parse</b> varname <i class="arg">script</i> [arg first] [arg last]</a></li>
+<li><a href="#4"><b class="cmd">parse</b> subcommand <i class="arg">script</i> <i class="arg">first</i> <i class="arg">last</i></a></li>
+<li><a href="#5"><b class="cmd">parse</b> list <i class="arg">script</i> [arg first] [arg last]</a></li>
+<li><a href="#6"><b class="cmd">parse</b> getrange <i class="arg">string</i> <span class="opt">?index length?</span></a></li>
+<li><a href="#7"><b class="cmd">parse</b> getstring <i class="arg">string</i> [arg first] [arg last]</a></li>
+<li><a href="#8"><b class="cmd">parse</b> charindex <i class="arg">string</i> [arg first] [arg last]</a></li>
+<li><a href="#9"><b class="cmd">parse</b> charlength <i class="arg">string</i> [arg first] [arg last]</a></li>
+</ul>
+</div>
+</div>
+<div id="section1" class="section"><h2><a name="section1">Description</a></h2>
+<p>This command parses a Tcl script into <i class="term">commands, words</i> and <i class="term">tokens</i>.
+Each of the commands below takes a <i class="term">script</i> to parse and a range
+into the script: {<i class="arg">first</i> <i class="arg">last</i>}.  The command parses the script from
+the first index up to and including the <i class="term">last</i> index.  The return of
+each command is a list of tuples indicating the ranges of each
+sub-element.  Use the returned indices as arguments to <b class="cmd">parse getstring</b> to
+extract the parsed string from the script.</p>
+<p>The <b class="cmd">parse</b> command breaks up the script into sequentially smaller
+elements.  A <i class="term">script</i> contains one or more <i class="term">commands</i>.  A <i class="term">command</i> is a set
+of <i class="term">words</i> that is terminated by a semicolon, newline or end the of the
+script and has no unclosed quotes, braces, brackets or array element
+names.  A <i class="term">word</i> is a set of characters grouped together by whitespace,
+quotes, braces or brackets.  Each word is composed of one or more
+<i class="term">tokens</i>.  A <i class="term">token</i> is one of the following types: <i class="term">text</i>, <i class="term">variable</i>,
+<i class="term">backslash</i>, <i class="term">command</i>, <i class="term">expr</i>, or <i class="term">operator</i>.  The type of token
+specifies how to decompose the string further.  For example, a <i class="term">text</i>
+token is a literal set of characters that does not need to be broken
+into smaller pieces.  However, the <i class="term">variable</i> token needs to be broken
+into smaller pieces to separate the name of the variable from an array
+indices, if one is supplied.</p>
+<p>The <i class="term">first</i> and <i class="term">last</i> indices are treated the same way as the indices in
+the Tcl <b class="cmd">string</b> command.  An index of 0 refers to the first character
+of the string.  An index of end (or any abbreviation of it) refers to
+the last character of the string.  If first is less than zero then it
+is treated as if it were zero, and if last is greater than or equal to
+the length of the string then it is treated as if it were end.  If
+first is greater than last then an empty string is returned.</p>
+<dl class="definitions">
+<dt><a name="1"><b class="cmd">parse</b> command <i class="arg">script</i> [arg first] [arg last]</a></dt>
+<dd><p>Returns a list of indices that partitions the script into <i class="term">commands</i>.
+This routine returns a list of the following form: <i class="term">commentRange</i>
+<i class="term">commandRange</i> <i class="term">restRange</i> <i class="term">parseTree</i>. The first range refers to any
+leading comments before the command.  The second range refers to the
+command itself.  The third range contains the remainder of the
+original range that appears after the command range.  The <i class="term">parseTree</i> is
+a list representation of the parse tree where each node is a list in
+the form: <i class="term">type</i> <i class="term">range</i> <i class="term">subTree</i>.</p></dd>
+<dt><a name="2"><b class="cmd">parse</b> expr <i class="arg">script</i> [arg first] [arg last]</a></dt>
+<dd><p>Returns a list that partitions an <i class="term">expression</i> into
+subexpressions.  The first element of the list is the token type,
+<i class="term">subexpr</i>, followed by the range of the expressions text, and
+finally by a <i class="term">subTree</i> with the words and types of the parse
+tree.</p></dd>
+<dt><a name="3"><b class="cmd">parse</b> varname <i class="arg">script</i> [arg first] [arg last]</a></dt>
+<dd><p>Returns a list that partitions a <i class="term">variable</i> token into words.
+The first element of the list is the token type, <i class="term">variable</i>.  The
+second is the range of the variable's text, and the third is a subTree
+that lists the words and ranges of the variable's components.</p></dd>
+<dt><a name="4"><b class="cmd">parse</b> subcommand <i class="arg">script</i> <i class="arg">first</i> <i class="arg">last</i></a></dt>
+<dd><p>Returns a list of indices that partitions a subcommand token into
+words. The first element in the list is the beginning index of the
+subcommand token, and the second element in the list is the end index
+of the subcommand token. The pattern is repeated for each subcommand
+token in the script.  The first index must point to the character '['
+and the last index must point to the ']' character otherwise the
+command will return an empty string.  Each of the partitioned strings
+should be parsed further by using the parse token command.</p></dd>
+<dt><a name="5"><b class="cmd">parse</b> list <i class="arg">script</i> [arg first] [arg last]</a></dt>
+<dd><p>Parses a script as a <i class="term">list</i>, returning the range of each element.
+<i class="arg">script</i> must be a valid list, or an error will be generated.</p></dd>
+<dt><a name="6"><b class="cmd">parse</b> getrange <i class="arg">string</i> <span class="opt">?index length?</span></a></dt>
+<dd><p>Gets the range in bytes of <i class="arg">string</i>, optionally beginning at <span class="opt">?index?</span>
+of length <span class="opt">?length?</span> (both in characters).  Equivalent to <b class="cmd">string bytelength</b>.</p></dd>
+<dt><a name="7"><b class="cmd">parse</b> getstring <i class="arg">string</i> [arg first] [arg last]</a></dt>
+<dd><p>Get the section of <i class="arg">string</i> that corresponds to the specified
+range (in bytes).  Note that this command must be used instead of <b class="cmd">string range</b> 
+with values returned from the parse commands, because the values are
+in bytes, and <b class="cmd">string range</b> instead uses characters as its units.</p></dd>
+<dt><a name="8"><b class="cmd">parse</b> charindex <i class="arg">string</i> [arg first] [arg last]</a></dt>
+<dd><p>Converts byte oriented index values into character oriented index
+values, for the string in question.</p></dd>
+<dt><a name="9"><b class="cmd">parse</b> charlength <i class="arg">string</i> [arg first] [arg last]</a></dt>
+<dd><p>Converts the given byte length into a character count, for the string in question.</p></dd>
+</dl>
+</div>
+<div id="section2" class="section"><h2><a name="section2">EXAMPLES</a></h2>
+<pre class="example">
+set script {
+    while true {puts [getupdate]}
+}
+parse command $script {0 end}
+</pre>
+<p>Returns:</p>
+<p>{0 0} {5 30} {35 0} {{simple {5 5} {{text {5 5} {}}}} {simple {11 4} {{text {11 4} {}}}} {simple {16 18} {{text {17 16} {}}}}}</p>
+<p>Or in other words, a string with no comments, 30 bytes long, beginning
+at byte 5.  It is composed of a series of subwords, which include
+while, true, and {puts [getupdate]}.</p>
+</div>
+<div id="keywords" class="section"><h2><a name="keywords">Keywords</a></h2>
+<p><a href="../index.html#key1">parse</a>, <a href="../index.html#key0">parser</a></p>
+</div>
+</div></body></html>

@@ -1,0 +1,363 @@
+<HTML>
+<TITLE>
+Reference Counting
+</TITLE>
+
+<BODY>
+<HR>
+<H3>
+Reference Counting
+</H3>
+
+<HR>
+
+<DL>
+
+<H3>
+Jacl:
+</H3>
+
+<DD>
+
+In Jacl, a handle is considered active as long as one
+<B>TclObject</B> holds a reference. When a Tcl variable is
+set to the handle for a Java object, the reference count of
+the <B>TclObject</B> that holds the Java object is incremented.
+When this variable is unset, the reference count is decremented.
+
+<code>
+<pre>
+# Ref count incremented to 1
+set obj [java::new Object]
+
+# Ref count incremented to 2
+set copy $obj
+
+# Ref count decremented to 1
+unset copy
+
+# Ref count decremented to 0, Java object freed
+unset obj
+</pre>
+</code>
+
+A Java object handle can also be freed when the internal
+representation for a <B>TclObject</B> that holds a Java
+handle is changed. A Java object handle is created with an
+internal representation of type
+<A HREF="../TclJavaLib/ReflectObject.htm">tcl.lang.ReflectObject</A>.
+
+<code>
+<pre>
+# Ref count incremented to 1, ReflectObject internal rep
+set obj [java::new Object]
+
+# Ref count stays 1, converted to TclList internal rep, Java object freed
+llength $obj
+</pre>
+</code>
+
+The attentive reader will deduce that there is actually
+another ref count managed by the <B>ReflectObject</B>,
+since in the first example the ref count of the <B>TclObject</B>
+was changed while in the second example it was not. This is
+in fact the case, although this implementation detail will
+likely not matter to most programmers. A <B>ReflectObject</B>
+has its own ref count to deal with the above case and to
+account for the fact that a single <B>ReflectObject</B>
+can be set as the internal representation for two
+different <B>TclObject</B> instances. The following
+example shows how this can happen.
+
+<code>
+<pre>
+# Ref count incremented to 1, ReflectObject internal rep
+set obj [java::new Object]
+
+# Copy just the string value of variable, ref count not changed
+set copy [format %s $obj]
+
+# Convert string to ReflectObject internal rep.
+# Ref count for both TclObjects is 1.
+java::isnull $copy
+
+# Ref count decremented to 0
+unset copy
+
+# Ref count decremented to 0, Java object freed
+unset obj
+</pre>
+</code>
+
+</DL>
+
+<DL>
+
+<H3>
+Tcl Blend:
+</H3>
+
+<DD>
+
+In Tcl Blend, a handle is considered active as long as one <B>TclObject</B>
+holds a reference. The complication is that a C <B>Tcl_Obj</B> can have its
+internal rep set to point to a <B>TclObject</B>. When this happens, the
+ref count for the <B>TclObject</B> is incremented by 1. The important thing
+to note here is that there are actually 2 ref counts, one in the
+C <B>Tcl_Obj</B>, and another in the <B>TclObject</B>.
+
+<code>
+<pre>
+# TclObject created with ref count of 0.
+# Tcl_Obj created to point at TclObject, increments TclObject.refCount to 1.
+# Variable obj set to new Tcl_Obj, increments Tcl_Obj.refCOunt to 1.
+set obj [java::new Object]
+
+# Tcl_Obj.refCount incremented to 2.
+# TclObject.refCount is not changed.
+set copy $obj
+
+# Tcl_Obj.refCount decremented to 1.
+# TclObject.refCount is not changed.
+unset copy
+
+# Tcl_Obj.refCount decremented to 0, Tcl_Obj freed
+# TclObject.refCount decremented to 0, Java object freed
+unset obj
+</pre>
+</code>
+
+While the Tcl Blend implementation of ref counting is
+significantly more complex that Jacl, the end user
+should not see any differences between the two
+implementations at the script or Java code level.
+
+<p>
+
+One implementation detail worth mentioning is how
+native Tcl values are passed to a Java method.
+Two special internal reps, <B>tcl.lang.CObject</B>
+and <B>tcl.lang.TclList</B>, are used to implement
+this feature. The following Tcl command implemented
+in Java provides a simple example.
+
+<code>
+<pre>
+cat JS.java
+import tcl.lang.*;
+public class JS implements Command {
+    public void cmdProc(Interp interp, TclObject[] objv)
+        throws TclException
+    {
+        TclObject obj = objv[1];
+        System.out.println("Java string is " + obj.toString());
+    }
+}
+
+# Create new command in the Tcl interp
+[java::getinterp] createCommand js [java::new JS]
+
+set tstr "a Tcl string"
+
+# Wrap existing Tcl_Obj in a TclObject with a CObject internal rep.
+js $tstr
+Java string is a Tcl string
+</pre>
+</code>
+
+<p>
+
+This next example shows how an existing Tcl list object can
+be passed into Java. The important thing to note in this
+example is that the Java code operates directly on the
+native list from C.
+
+<code>
+<pre>
+cat JL.java
+import tcl.lang.*;
+public class JL implements Command {
+    public void cmdProc(Interp interp, TclObject[] objv)
+        throws TclException
+    {
+        TclObject obj = objv[1];
+        interp.setResult( TclList.getLength(interp, obj) );
+    }
+}
+
+# Create new command in the Tcl interp
+[java::getinterp] createCommand jl [java::new JL]
+
+set tlist [list 1 2 3 4]
+
+# Wrap existing Tcl_Obj in a TclObject with a TclList internal rep.
+jl $tlist
+4
+</pre>
+</code>
+
+<p>
+
+It is critically important to note that when a 
+<B>Tcl_Obj</B> is wrapped in a <B>TclObject</B>, the
+reference count for the <B>Tcl_Obj</B> is not incremented.
+This is important because it must be possible for the
+Java garbage collector to cleanup a <B>TclObject</B>
+without having to invoke C code to decrement the
+ref count for a <B>Tcl_Obj</B>. The Java garbage
+collector is typically run in a separate native thread
+and it is not legal to operate on a <B>Tcl_Obj</B>
+from a thread other than the one it was created in.
+
+<p>
+
+The simple rule to remember when dealing with a
+<B>TclObject</B> in Java is that you must
+<B>preserve()</B> a reference you want to hold
+onto, and <B>release()</B> it when finished.
+The reference will keep Java from garbage collecting
+the <B>TclObject</B>, and incrementing the ref count
+will keep Tcl from releasing the <B>Tcl_Obj</B>.
+
+<code>
+<pre>
+cat Hold.java
+import tcl.lang.*;
+public class Hold implements Command {
+    TclObject held = null;
+    public void cmdProc(Interp interp, TclObject[] objv)
+        throws TclException
+    {
+        if (held != null) {
+            interp.setResult(held.toString());
+            held.release();
+            held = null;
+        } else {
+            held = objv[1];
+            held.preserve();
+        }
+    }
+}
+
+# Create new command in the Tcl interp
+[java::getinterp] createCommand hold [java::new Hold]
+
+set hstr "valuable data"
+
+# Wrap existing Tcl_Obj in a TclObject with a CObject internal rep.
+# Increment ref count of Tcl_Obj to 2 by calling preserve().
+hold $hstr
+
+# Decrement ref count of Tcl_Obj to 1
+unset hstr
+
+# Set interp result to string value of held object
+# and decrement the ref count of the Tcl_Obj to 0.
+hold
+valuable data
+</pre>
+</code>
+
+<p>
+
+The above examples show how one can pass a <B>Tcl_Obj</B> into a
+Java method. The next example demonstrates how a <B>Tcl_Obj</B>
+can be created in Java code and returned to Tcl.
+
+<code>
+<pre>
+cat RL.java
+import tcl.lang.*;
+public class RL implements Command {
+    public void cmdProc(Interp interp, TclObject[] objv)
+        throws TclException
+    {
+        TclObject alist = TclList.newInstance();
+        TclList.append(interp, alist, TclString.newInstance("ONE"));
+        TclList.append(interp, alist, TclString.newInstance("TWO"));
+        TclList.append(interp, alist, TclString.newInstance("THREE"));
+        interp.setResult(alist);
+    }
+}
+
+# Create new command in the Tcl interp
+[java::getinterp] createCommand rl [java::new RL]
+
+# Tcl_Obj allocated in Java set as the value of tlist.
+# Ref count incremented to 1 by this set command.
+set tlist [rl]
+</pre>
+</code>
+
+<p>
+
+The examples above demonstrate the most simple and
+straightforward uses of a <B>TclObject</B> that
+acts as a wrapper around a native <B>Tcl_Obj</B>.
+In real code, there are additional complexities
+that could lead to a memory leak of the
+native <B>Tcl_Obj</B>. This next example shows
+how that could happen and how Tcl Blend fixes
+the problem.
+
+<code>
+<pre>
+cat Leak.java
+import tcl.lang.*;
+public class Leak implements Command {
+    public void cmdProc(Interp interp, TclObject[] objv)
+        throws TclException
+    {
+        TclObject obj = objv[1];
+        double dval = TclDouble.get(interp, obj);
+        int len = TclList.getLength(interp, obj);
+        interp.setResult("Double -> " + dval + " llength -> " + len);
+    }
+}
+
+# Create new command in the Tcl interp
+[java::getinterp] createCommand leak [java::new Leak]
+
+set v 1.0
+
+leak $v
+Double -> 1.0 llength -> 1
+</pre>
+</code>
+
+At first glance, it looks as though all is well in the <B>leak</B>
+command above. What actually happens is that the <B>TclList.getLength()</B>
+call creates a new <B>Tcl_Obj</B> that would not be deallocated.
+This leak could happen because the <B>TclDouble.get()</B> call converts
+the passed in <B>TclObject</B> from a <B>tcl.lang.CObject</B> internal rep
+to a <B>tcl.lang.TclDouble</B> internal rep. When that happens, the
+<B>Tcl_Obj</B> stored in the <B>tcl.lang.CObject</B> is discarded.
+When the object is converted back to a list type via the
+<B>TclList.getLength()</B> call, there is no existing <B>Tcl_Obj</B>
+to operate on, so a new one is allocated with a ref count of 0.
+The <B>TclObject</B> with a newly allocated <B>Tcl_Obj</B> inside
+of it is not used again, which could lead to a memory leak.
+
+<p>
+
+Tcl Blend includes a feature that automatically deals with this sort
+of memory leak. When a Tcl command implemented in Java returns,
+Tcl Blend will check to make sure that a native <B>Tcl_Obj</B>
+allocated in the Java method is deallocated. Such a <B>Tcl_Obj</B>
+will only be deallocated if it has a ref count of 0, meaning
+its ref count was never incremented or decremented in the
+Java method. This feature will cleanup those <B>Tcl_Obj</B>
+pointers that would have been leaked, without effecting
+a <B>TclObject</B> that had its ref count changed by
+<B>preseve()</B> or <B>release()</B>.
+
+</DL>
+
+<PRE>
+<A HREF="../license.html">Copyright</A> &#169; 1997-1998 Sun Microsystems, Inc.
+</PRE>
+
+
+</BODY>
+</HTML>
+

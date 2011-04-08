@@ -1,0 +1,115 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML><HEAD><TITLE>Man page of delete</TITLE>
+</HEAD><BODY>
+<H1>delete</H1>
+Section: [incr&nbsp;Tcl] (n)<BR>Updated: 3.0<BR><A HREF="#index">Index</A>
+<A HREF="index.html">Return to Main Contents</A><HR>
+
+
+<BR>
+
+
+
+<PRE>
+<BR>
+<HR></PRE>
+
+
+
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+delete - delete things in the interpreter
+<A NAME="lbAC">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+<B>itcl::delete </B><I>option</I> ?<I>arg arg ...</I>?
+
+<PRE>
+<BR>
+<HR>
+
+</PRE>
+
+<BR>
+
+
+
+<P>
+<A NAME="lbAD">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<P>
+
+The <B>delete</B> command is used to delete things in the interpreter.
+It is implemented as an ensemble, so extensions can add their own
+options and extend the behavior of this command.  By default, the
+<B>delete</B> command handles the destruction of namespaces.
+<P>
+
+The <I>option</I> argument determines what action is carried out
+by the command.  The legal <I>options</I> (which may be abbreviated)
+are:
+<DL COMPACT>
+<DT><B>delete class </B><I>name</I> ?<I>name...</I>?<DD>
+Deletes one or more <B>[incr&nbsp;Tcl]</B> classes called <I>name</I>.
+This deletes all objects in the class, and all derived classes
+as well.
+<P>
+If an error is encountered while destructing an object, it will
+prevent the destruction of the class and any remaining objects.
+To destroy the entire class without regard for errors, use the
+&quot;<B>delete namespace</B>&quot; command.
+<DT><B>delete object </B><I>name</I> ?<I>name...</I>?<DD>
+Deletes one or more <B>[incr&nbsp;Tcl]</B> objects called <I>name</I>.
+An object is deleted by invoking all destructors in its class
+hierarchy, in order from most- to least-specific.  If all destructors
+are successful, data associated with the object is deleted and
+the <I>name</I> is removed as a command from the interpreter.
+<P>
+If the access command for an object resides in another namespace,
+then its qualified name can be used:
+
+<DL COMPACT><DT><DD>
+<PRE>
+
+itcl::delete object foo::bar::x
+
+</PRE>
+
+</DL>
+
+
+If an error is encountered while destructing an object, the
+<B>delete</B> command is aborted and the object remains alive.
+To destroy an object without regard for errors, use the
+&quot;<B>rename</B>&quot; command to destroy the object access command.
+<DT><B>delete namespace </B><I>name</I> ?<I>name...</I>?<DD>
+Deletes one or more namespaces called <I>name</I>.  This deletes
+all commands and variables in the namespace, and deletes all
+child namespaces as well.  When a namespace is deleted, it is
+automatically removed from the import lists of all other namespaces.
+<P>
+</DL>
+<A NAME="lbAE">&nbsp;</A>
+<H2>KEYWORDS</H2>
+
+namespace, proc, variable, ensemble
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAD">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAE">KEYWORDS</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="index.html">man2html</A>,
+using the manual pages.<BR>
+Time: 20:52:35 GMT, December 21, 2006
+</BODY>
+</HTML>

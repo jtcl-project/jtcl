@@ -5,15 +5,21 @@
  Building JTcl
  
    JTcl builds with {{{http://ant.apache.org/}Ant}} or {{{http://maven.apache.org/}Maven}}.  
-   Currently, Ant is required to build JTcl with the TJC stage 2 compiler.  Note that
-   building the TJC stage 2 compiler may take 5 - 20 minutes or more.
+
+   The TJC package, <Tcl to Java Compiler>, is written in Tcl (stage 1) and is compiled with itself
+   to produce Java code (stage 2).  Subsequently, building the TJC stage 2 compiler 
+   <<may take 5 - 20 minutes or longer>>.  When building with <ant>, the stage 2 compiler is built
+   when <<<ant package>>> is run.  When building with <maven>, the stage 2 compiler is built when
+   <<<mvn -DskipTests package>>> is run, and will only be rebuilt again if the TJC compiler source 
+   is changed, or the top-level files <<<tjc.jar>>> or <<<tjcsrc.jar>>> are missing.   The stage 2 files
+   <<<tjc.jar>>> and <<<tjcsrc.jar>>> are created locally and not included in the distribution.
    
 Building with Ant
    
 ------------------------
 ant clean
 ant compile
-ant package          (builds the TJC stage 2 compiler)
+ant package
 ------------------------
    
 Building with Maven
@@ -26,7 +32,7 @@ mvn -DskipTests package
    
 Creating a development environment
 
-   Install Java JDK 1.5, if not already installed.
+   Install Java JDK 1.5 or higher, if not already installed.
    The JTcl project uses the {{{http://mercurial.selenic.com/}Mercurial}} version control system. 
 
 ------------------------

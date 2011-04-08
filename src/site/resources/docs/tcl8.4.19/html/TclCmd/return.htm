@@ -1,0 +1,141 @@
+<HTML><HEAD><TITLE>Tcl Built-In Commands - return manual page</TITLE></HEAD><BODY>
+<DL>
+<DD><A HREF="return.htm#M2" NAME="L1162">NAME</A>
+<DL><DD>return - Return from a procedure</DL>
+<DD><A HREF="return.htm#M3" NAME="L1163">SYNOPSIS</A>
+<DL>
+<DD><B>return </B>?<B>-code </B><I>code</I>? ?<B>-errorinfo </B><I>info</I>? ?<B>-errorcode</B><I> code</I>? ?<I>string</I>?
+</DL>
+<DD><A HREF="return.htm#M4" NAME="L1164">DESCRIPTION</A>
+<DD><A HREF="return.htm#M5" NAME="L1165">EXCEPTIONAL RETURN CODES</A>
+<DL>
+<DD><A HREF="return.htm#M6" NAME="L1166"><B>ok (or 0)</B></A>
+<DD><A HREF="return.htm#M7" NAME="L1167"><B>error (1)</B></A>
+<DD><A HREF="return.htm#M8" NAME="L1168"><B>return (2)</B></A>
+<DD><A HREF="return.htm#M9" NAME="L1169"><B>break (3)</B></A>
+<DD><A HREF="return.htm#M10" NAME="L1170"><B>continue (4)</B></A>
+<DD><A HREF="return.htm#M11" NAME="L1171"><I>value</I></A>
+</DL>
+<DD><A HREF="return.htm#M12" NAME="L1172">EXAMPLES</A>
+<DD><A HREF="return.htm#M13" NAME="L1173">SEE ALSO</A>
+<DD><A HREF="return.htm#M14" NAME="L1174">KEYWORDS</A>
+</DL><HR>
+<H3><A NAME="M2">NAME</A></H3>
+return - Return from a procedure
+<H3><A NAME="M3">SYNOPSIS</A></H3>
+<B>return </B>?<B>-code </B><I>code</I>? ?<B>-errorinfo </B><I>info</I>? ?<B>-errorcode</B><I> code</I>? ?<I>string</I>?<BR>
+<H3><A NAME="M4">DESCRIPTION</A></H3>
+Return immediately from the current procedure
+(or top-level command or <B><A HREF="../TclCmd/source.htm">source</A></B> command),
+with <I>string</I> as the return value.  If <I>string</I> is not specified then
+an empty string will be returned as result.
+<H3><A NAME="M5">EXCEPTIONAL RETURN CODES</A></H3>
+In addition to the result of a procedure, the return
+code of a procedure may also be set by <B>return</B>
+through use of the <B>-code</B> option.
+In the usual case where the <B>-code</B> option isn't
+specified the procedure will return normally.
+However, the <B>-code</B> option may be used to generate an
+exceptional return from the procedure.
+<I>Code</I> may have any of the following values:
+<P>
+<DL>
+<DT><A NAME="M6"><B>ok (or 0)</B></A><DD>
+Normal return:  same as if the option is omitted.  The return code
+of the procedure is 0 (<B>TCL_OK</B>).
+<P><DT><A NAME="M7"><B>error (1)</B></A><DD>
+Error return: the return code of the procedure is 1 (<B>TCL_ERROR</B>).
+The procedure command behaves in its calling context as if it
+were the command <B>error </B><I>result</I>.  See below for additional
+options.
+<P><DT><A NAME="M8"><B>return (2)</B></A><DD>
+The return code of the procedure is 2 (<B>TCL_RETURN</B>).  The
+procedure command behaves in its calling context as if it
+were the command <B>return</B> (with no arguments).
+<P><DT><A NAME="M9"><B>break (3)</B></A><DD>
+The return code of the procedure is 3 (<B>TCL_BREAK</B>).  The
+procedure command behaves in its calling context as if it
+were the command <B>break</B>.
+<P><DT><A NAME="M10"><B>continue (4)</B></A><DD>
+The return code of the procedure is 4 (<B>TCL_CONTINUE</B>).  The
+procedure command behaves in its calling context as if it
+were the command <B>continue</B>.
+<P><DT><A NAME="M11"><I>value</I></A><DD>
+<I>Value</I> must be an integer;  it will be returned as the
+return code for the current procedure.
+<P></DL>
+<P>
+The <B>-code</B> option is rarely used.
+It is provided so that procedures that implement
+new control structures can reflect exceptional conditions back to
+their callers.
+<P>
+Two additional options, <B>-errorinfo</B> and <B>-errorcode</B>,
+may be used to provide additional information during error
+returns.
+These options are ignored unless <I>code</I> is <B>error</B>.
+<P>
+The <B>-errorinfo</B> option specifies an initial stack
+trace for the <B>errorInfo</B> variable;  if it is not specified then
+the stack trace left in <B>errorInfo</B> will include the call to
+the procedure and higher levels on the stack but it will not include
+any information about the context of the error within the procedure.
+Typically the <I>info</I> value is supplied from the value left
+in <B>errorInfo</B> after a <B><A HREF="../TclCmd/catch.htm">catch</A></B> command trapped an error within
+the procedure.
+<P>
+If the <B>-errorcode</B> option is specified then <I>code</I> provides
+a value for the <B>errorCode</B> variable.
+If the option is not specified then <B>errorCode</B> will
+default to <B>NONE</B>.
+<H3><A NAME="M12">EXAMPLES</A></H3>
+First, a simple example of using <B>return</B> to return from a
+procedure, interrupting the procedure body.
+<PRE>proc printOneLine {} {
+   puts &quot;line 1&quot;    ;# This line will be printed.
+   <B>return</B>		
+   puts &quot;line 2&quot;    ;# This line will not be printed.
+}</PRE>
+<P>
+Next, an example of using <B>return</B> to set the value
+returned by the procedure.
+<PRE>proc returnX {} {<B>return</B> X}
+puts [returnX]    ;# prints &quot;X&quot;</PRE>
+<P>
+Next, a more complete example, using <B>return -code error</B>
+to report invalid arguments.
+<PRE>proc factorial {n} {
+   if {![string is integer $n] || ($n &lt; 0)} {
+      <B>return</B> -code error &#92;
+            &quot;expected non-negative integer,&#92;
+             but got &#92;&quot;$n&#92;&quot;&quot;
+   }
+   if {$n &lt; 2} {
+      <B>return</B> 1
+   }
+   set m [expr {$n - 1}]
+   set code [catch {factorial $m} factor]
+   if {$code != 0} {
+      <B>return</B> -code $code $factor
+   }
+   set product [expr {$n * $factor}]
+   if {$product &lt; 0} {
+      <B>return</B> -code error &#92;
+            &quot;overflow computing factorial of $n&quot;
+   }
+   <B>return</B> $product
+}</PRE>
+<P>
+Next, a procedure replacement for <B>break</B>.
+<PRE>proc myBreak {} {
+   <B>return</B> -code break
+}</PRE>
+<H3><A NAME="M13">SEE ALSO</A></H3>
+<B>break</B>, <B><A HREF="../TclCmd/catch.htm">catch</A></B>, <B>continue</B>, <B>error</B>, <B><A HREF="../TclCmd/proc.htm">proc</A></B>, <B><A HREF="../TclCmd/source.htm">source</A></B>, <B><A HREF="../TclCmd/tclvars.htm">tclvars</A></B>
+<H3><A NAME="M14">KEYWORDS</A></H3>
+<A href="../Keywords/B.htm#break">break</A>, <A href="../Keywords/C.htm#catch">catch</A>, <A href="../Keywords/C.htm#continue">continue</A>, <A href="../Keywords/E.htm#error">error</A>, <A href="../Keywords/P.htm#procedure">procedure</A>, <A href="../Keywords/R.htm#return">return</A>
+<HR><PRE>
+<A HREF="../copyright.htm">Copyright</A> &#169; 1993 The Regents of the University of California.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1994-1996 Sun Microsystems, Inc.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1995-1997 Roger E. Critchlow Jr.</PRE>
+</BODY></HTML>

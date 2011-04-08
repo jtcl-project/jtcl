@@ -1,0 +1,139 @@
+<HTML><HEAD><TITLE>Tcl Built-In Commands - regsub manual page</TITLE></HEAD><BODY>
+<DL>
+<DD><A HREF="regsub.htm#M2" NAME="L1119">NAME</A>
+<DL><DD>regsub - Perform substitutions based on regular expression pattern matching</DL>
+<DD><A HREF="regsub.htm#M3" NAME="L1120">SYNOPSIS</A>
+<DL>
+<DD><B>regsub </B>?<I>switches</I>? <I>exp string subSpec </I>?<I>varName</I>?
+</DL>
+<DD><A HREF="regsub.htm#M4" NAME="L1121">DESCRIPTION</A>
+<DL>
+<DD><A HREF="regsub.htm#M5" NAME="L1122"><B>-all</B></A>
+<DD><A HREF="regsub.htm#M6" NAME="L1123"><B>-expanded</B></A>
+<DD><A HREF="regsub.htm#M7" NAME="L1124"><B>-line</B></A>
+<DD><A HREF="regsub.htm#M8" NAME="L1125"><B>-linestop</B></A>
+<DD><A HREF="regsub.htm#M9" NAME="L1126"><B>-lineanchor</B></A>
+<DD><A HREF="regsub.htm#M10" NAME="L1127"><B>-nocase</B></A>
+<DD><A HREF="regsub.htm#M11" NAME="L1128"><B>-start</B> <I>index</I></A>
+<DD><A HREF="regsub.htm#M12" NAME="L1129"><B>-&nbsp;-</B></A>
+</DL>
+<DD><A HREF="regsub.htm#M13" NAME="L1130">EXAMPLES</A>
+<DD><A HREF="regsub.htm#M14" NAME="L1131">SEE ALSO</A>
+<DD><A HREF="regsub.htm#M15" NAME="L1132">KEYWORDS</A>
+</DL><HR>
+<H3><A NAME="M2">NAME</A></H3>
+regsub - Perform substitutions based on regular expression pattern matching
+<H3><A NAME="M3">SYNOPSIS</A></H3>
+<B>regsub </B>?<I>switches</I>? <I>exp string subSpec </I>?<I>varName</I>?<BR>
+<H3><A NAME="M4">DESCRIPTION</A></H3>
+This command matches the regular expression <I>exp</I> against
+<I>string</I>,
+and either copies <I>string</I> to the variable whose name is
+given by <I>varName</I> or returns <I>string</I> if <I>varName</I> is not
+present.
+(Regular expression matching is described in the <B><A HREF="../TclCmd/re_syntax.htm">re_syntax</A></B>
+reference page.)
+If there is a match, then while copying <I>string</I> to <I>varName</I>
+(or to the result of this command if <I>varName</I> is not present)
+the portion of <I>string</I> that
+matched <I>exp</I> is replaced with <I>subSpec</I>.
+If <I>subSpec</I> contains a ``&amp;'' or ``&#92;0'', then it is replaced
+in the substitution with the portion of <I>string</I> that
+matched <I>exp</I>.
+If <I>subSpec</I> contains a ``&#92;<I>n</I>'', where <I>n</I> is a digit
+between 1 and 9, then it is replaced in the substitution with
+the portion of <I>string</I> that matched the <I>n</I>-th
+parenthesized subexpression of <I>exp</I>.
+Additional backslashes may be used in <I>subSpec</I> to prevent special
+interpretation of ``&amp;'' or ``&#92;0'' or ``&#92;<I>n</I>'' or
+backslash.
+The use of backslashes in <I>subSpec</I> tends to interact badly
+with the Tcl parser's use of backslashes, so it's generally
+safest to enclose <I>subSpec</I> in braces if it includes
+backslashes.
+<P>
+If the initial arguments to <B>regsub</B> start with <B>-</B> then
+they are treated as switches.  The following switches are
+currently supported:
+<P>
+<DL>
+<DT><A NAME="M5"><B>-all</B></A><DD>
+All ranges in <I>string</I> that match <I>exp</I> are found and
+substitution is performed for each of these ranges.
+Without this switch only the first
+matching range is found and substituted.
+If <B>-all</B> is specified, then ``&amp;'' and ``&#92;<I>n</I>''
+sequences are handled for each substitution using the information
+from the corresponding match.
+<P><DT><A NAME="M6"><B>-expanded</B></A><DD>
+Enables use of the expanded regular expression syntax where
+whitespace and comments are ignored.  This is the same as specifying
+the <B>(?x)</B> embedded option (see the <B><A HREF="../TclCmd/re_syntax.htm">re_syntax</A></B> manual page).
+<P><DT><A NAME="M7"><B>-line</B></A><DD>
+Enables newline-sensitive matching.  By default, newline is a
+completely ordinary character with no special meaning.  With this
+flag, `[^' bracket expressions and `.' never match newline, `^'
+matches an empty string after any newline in addition to its normal
+function, and `$' matches an empty string before any newline in
+addition to its normal function.  This flag is equivalent to
+specifying both <B>-linestop</B> and <B>-lineanchor</B>, or the
+<B>(?n)</B> embedded option (see the <B><A HREF="../TclCmd/re_syntax.htm">re_syntax</A></B> manual page).
+<P><DT><A NAME="M8"><B>-linestop</B></A><DD>
+Changes the behavior of `[^' bracket expressions and `.' so that they
+stop at newlines.  This is the same as specifying the <B>(?p)</B>
+embedded option (see the <B><A HREF="../TclCmd/re_syntax.htm">re_syntax</A></B> manual page).
+<P><DT><A NAME="M9"><B>-lineanchor</B></A><DD>
+Changes the behavior of `^' and `$' (the ``anchors'') so they match the
+beginning and end of a line respectively.  This is the same as
+specifying the <B>(?w)</B> embedded option (see the <B><A HREF="../TclCmd/re_syntax.htm">re_syntax</A></B>
+manual page).
+<P><DT><A NAME="M10"><B>-nocase</B></A><DD>
+Upper-case characters in <I>string</I> will be converted to lower-case
+before matching against <I>exp</I>;  however, substitutions specified
+by <I>subSpec</I> use the original unconverted form of <I>string</I>.
+<P><DT><A NAME="M11"><B>-start</B> <I>index</I></A><DD>
+Specifies a character index offset into the string to start
+matching the regular expression at.  When using this switch, `^'
+will not match the beginning of the line, and &#92;A will still
+match the start of the string at <I>index</I>.
+<I>index</I> will be constrained to the bounds of the input string.
+<P><DT><A NAME="M12"><B>-&nbsp;-</B></A><DD>
+Marks the end of switches.  The argument following this one will
+be treated as <I>exp</I> even if it starts with a <B>-</B>.
+<P></DL>
+<P>
+If <I>varName</I> is supplied, the command returns a count of the
+number of matching ranges that were found and replaced, otherwise the
+string after replacement is returned.
+See the manual entry for <B><A HREF="../TclCmd/regexp.htm">regexp</A></B> for details on the interpretation
+of regular expressions.
+<H3><A NAME="M13">EXAMPLES</A></H3>
+Replace (in the string in variable <I>string</I>) every instance of
+<B>foo</B> which is a word by itself with <B>bar</B>:
+<PRE><B>regsub</B> -all {&#92;&lt;foo&#92;&gt;} $string bar string</PRE>
+<P>
+Insert double-quotes around the first instance of the word
+<B>interesting</B>, however it is capitalised.
+<PRE><B>regsub</B> -nocase {&#92;&lt;interesting&#92;&gt;} $string {&quot;&amp;&quot;} string</PRE>
+<P>
+Convert all non-ASCII and Tcl-significant characters into &#92;u escape
+sequences by using <B>regsub</B> and <B><A HREF="../TclCmd/subst.htm">subst</A></B> in combination:
+<PRE># This RE is just a character class for everything &quot;bad&quot;
+set RE {[][{}&#92;$&#92;s&#92;u0100-&#92;uffff]}
+
+# We will substitute with a fragment of Tcl script in brackets
+set substitution {[format &#92;&#92;&#92;&#92;u%04x [scan &quot;&#92;&#92;&amp;&quot; %c]]}
+
+# Now we apply the substitution to get a subst-string that
+# will perform the computational parts of the conversion.
+set quoted [subst [<B>regsub</B> -all $RE $string $substitution]]</PRE>
+<H3><A NAME="M14">SEE ALSO</A></H3>
+<B><A HREF="../TclCmd/regexp.htm">regexp</A></B>, <B><A HREF="../TclCmd/re_syntax.htm">re_syntax</A></B>, <B><A HREF="../TclCmd/subst.htm">subst</A></B>
+<H3><A NAME="M15">KEYWORDS</A></H3>
+<A href="../Keywords/M.htm#match">match</A>, <A href="../Keywords/P.htm#pattern">pattern</A>, <A href="../Keywords/R.htm#regular expression">regular expression</A>, <A href="../Keywords/S.htm#substitute">substitute</A>
+<HR><PRE>
+<A HREF="../copyright.htm">Copyright</A> &#169; 1993 The Regents of the University of California.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1994-1996 Sun Microsystems, Inc.
+<A HREF="../copyright.htm">Copyright</A> &#169; 2000 Scriptics Corporation.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1995-1997 Roger E. Critchlow Jr.</PRE>
+</BODY></HTML>

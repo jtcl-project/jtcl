@@ -1,0 +1,81 @@
+<HTML><HEAD><TITLE>Tcl Built-In Commands - bgerror manual page</TITLE></HEAD><BODY>
+<H3><A NAME="M2">NAME</A></H3>
+bgerror - Command invoked to process background errors
+<H3><A NAME="M3">SYNOPSIS</A></H3>
+<B>bgerror </B><I>message</I><BR>
+<H3><A NAME="M4">DESCRIPTION</A></H3>
+The <B>bgerror</B> command doesn't exist as built-in part of Tcl.  Instead,
+individual applications or users can define a <B>bgerror</B>
+command (e.g. as a Tcl procedure) if they wish to handle background
+errors.
+<P>
+A background error is one that occurs in an event handler or some
+other command that didn't originate with the application.
+For example, if an error occurs while executing a command specified
+with the <B><A HREF="../TclCmd/after.htm">after</A></B> command, then it is a background error.
+For a non-background error, the error can simply be returned up
+through nested Tcl command evaluations until it reaches the top-level
+code in the application; then the application can report the error
+in whatever way it wishes.  When a background error occurs, the
+unwinding ends in the Tcl library and there is no obvious way for Tcl
+to report the error.
+<P>
+When Tcl detects a background error, it saves information about the
+error and invokes the <B>bgerror</B> command later as an idle event
+handler. Before invoking <B>bgerror</B>, Tcl restores the
+<B>errorInfo</B> and <B>errorCode</B> variables to their values at the
+time the error occurred, then it invokes <B>bgerror</B> with the error
+message as its only argument.  Tcl assumes that the application has
+implemented the <B>bgerror</B> command, and that the command will
+report the error in a way that makes sense for the application.  Tcl
+will ignore any result returned by the <B>bgerror</B> command as long
+as no error is generated.
+<P>
+If another Tcl error occurs within the <B>bgerror</B> command (for
+example, because no <B>bgerror</B> command has been defined) then Tcl
+reports the error itself by writing a message to stderr.
+<P>
+If several background errors accumulate before <B>bgerror</B> is
+invoked to process them, <B>bgerror</B> will be invoked once for each
+error, in the order they occurred.  However, if <B>bgerror</B> returns
+with a break exception, then any remaining errors are skipped without
+calling <B>bgerror</B>.
+<P>
+Tcl has no default implementation for <B>bgerror</B>. However, in
+applications using Tk there is a default <B>bgerror</B> procedure which
+posts a dialog box containing the error message and offers the user a
+chance to see a stack trace showing where the error occurred.  In
+addition to allowing the user to view the stack trace, the dialog
+provides an additional application configurable button which may be
+used, for example, to save the stack trace to a file.  By default,
+this is the behavior associated with that button.  This behavior can
+be redefined by setting the option database values
+<B>*ErrorDialog.function.text</B>, to specify the caption for the
+function button, and <B>*ErrorDialog.function.command</B>, to specify
+the command to be run.  The text of the stack trace is appended to the
+command when it is evaluated.  If either of these options is set to
+the empty string, then the additional button will not be displayed in
+the dialog.
+<P>
+If you are writing code that will be used by others as part of a
+package or other kind of library, consider avoiding <B>bgerror</B>.
+The reason for this is that the application programmer may also want
+to define a <B>bgerror</B>, or use other code that does and thus will
+have trouble integrating your code.
+<H3><A NAME="M5">EXAMPLE</A></H3>
+This <B>bgerror</B> procedure appends errors to a file, with a timestamp.
+<PRE>proc bgerror {message} {
+    set timestamp [clock format [clock seconds]]
+    set fl [open mylog.txt {WRONLY CREAT APPEND}]
+    puts $fl &quot;$timestamp: bgerror in $::argv '$message'&quot;
+    close $fl
+}</PRE>
+<H3><A NAME="M6">SEE ALSO</A></H3>
+<B><A HREF="../TclCmd/after.htm">after</A></B>, <B><A HREF="../TclCmd/tclvars.htm">tclvars</A></B>
+<H3><A NAME="M7">KEYWORDS</A></H3>
+<A href="../Keywords/B.htm#background error">background error</A>, <A href="../Keywords/R.htm#reporting">reporting</A>
+<HR><PRE>
+<A HREF="../copyright.htm">Copyright</A> &#169; 1990-1994 The Regents of the University of California.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1994-1996 Sun Microsystems, Inc.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1995-1997 Roger E. Critchlow Jr.</PRE>
+</BODY></HTML>

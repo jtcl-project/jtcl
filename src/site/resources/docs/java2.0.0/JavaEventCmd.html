@@ -1,0 +1,84 @@
+<HTML>
+<TITLE>
+The java::event Command
+</TITLE>
+
+<BODY>
+<HR>
+
+<H3>
+The java::event Command
+</H3>
+
+<HR>
+
+<DL>
+
+<H3>
+Usage:
+</H3>
+<B>java::event </B>?<B>-index </B><I>num</I>? ?<I>propertyName</I>?<BR>
+
+<P>
+
+When a callback script is invoked due to the firing of a Java event,
+some <I>event parameters</I> may be passed to the script to give
+detailed description of the event. The <B>java::event</B> command is
+used to query the values of these parameters. The <B>-index</B> option
+specifies which event parameter to quety: <I>num</I> is equal to
+<B>0</B> for the first parameter, <B>1</B> for the second parameter, and
+so on. If the <B>-index</B> option is omitted, the first event
+paramater is queried by default. In most cases, there is exactly one
+event parameter passed to the callback script and the <B>-index</B>
+may thus be safely omitted.
+
+<P>
+
+If <I>propertyName</I> is not given, <B>java::event</B> returns the
+value of the specified event paramater. If the specified event
+parameter is a Java object, then its object handle is returned. If
+<I>propertyName</I> is given, and the specified event parameter is a
+Java object, <B>java::event</B> returns the value of the given property
+of the event parameter. The second form is used mainly for
+convenience. For example, the following two statements are equivalent:
+
+<P>
+
+<code>
+<pre>
+java::bind $b keyTyped {
+    puts [java::prop [java::event] keyCode]
+}
+
+java::bind $b keyTyped {
+    puts [java::event keyCode]
+}
+</pre>
+</code>
+
+<P>
+
+Event handling may be nested if the Tcl event loop is re-entered
+during the execution of a callback script (e.g, when a callback script
+executes the <B>update</B> command.) In that case, <B>java::event</B>
+always returns the paramaters of the inner-most event whose callback
+script is currently being executed.
+
+<P>
+
+If the <I>eventName</I> and <I>script</I> arguments are both omitted,
+the <B>java::bind</B> command returns a Tcl list of the the full names
+of all the events of <I>javaObj</I> that are currently associated with
+callback scripts.
+
+<P>
+
+</DL>
+
+<PRE>
+<A HREF="../license.html">Copyright</A> &#169; 1997-1998 Sun Microsystems, Inc.
+</PRE>
+
+
+</BODY>
+</HTML>

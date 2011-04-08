@@ -1,0 +1,112 @@
+<HTML>
+<TITLE>
+The java::field Command
+</TITLE>
+
+<BODY>
+<HR>
+
+<H3>
+The java::field Command
+</H3>
+
+<HR>
+
+<DL>
+
+<H3>
+Usage:
+</H3>
+
+<DD><B>java::field</B> ?<B>-noconvert</B>? <I>objOrClass field</I> ?<I>value field value ...</I>?
+
+<P>
+
+The <B>java::field</B> command is used to manipulate accessible fields from
+Tcl. The <I>objOrClass</I> argument specifies either a fully qualified
+name of the declaring class of the field to access, or an object
+handle. The <I>field</I> argument specifies which field to
+manipulate.  If an additional <I>value</I> parameter exists,
+then the field will be set to <I>value</I>, otherwise
+the current value of the field is returned.  Multiple fields may be
+set via additional parameters by alternating field signatures and
+values. To access a shadowed field in a superclass, a full field
+signature consisting of the field name followed by the superclass
+name must be provided as the <I>field</I> argument.
+
+<P>
+
+</DL>
+
+<DL>
+
+<H3>
+Examples:
+</H3>
+
+<DD>
+
+The <B>java::field</B> command can be used to get the value of
+a static class variable. In this example, we query the
+static variable <B>java.lang.Integer.MAX_VALUE</B>, which
+has the value 2147483647.
+
+<P>
+
+<code>
+<pre>
+% java::field Integer MAX_VALUE
+2147483647
+
+</pre>
+</code>
+
+<P>
+
+The <B>java::field</B> command can be used to set the value of
+an instance field. In this example, it is assumed that
+the class APublic has a public <B>java.lang.String</B> field
+named foo. The value is queried after being set.
+
+<P>
+
+<code>
+<pre>
+% set obj [java::new APublic]
+% java::field $obj foo bar
+% java::field $obj foo
+bar
+</pre>
+</code>
+
+<P>
+
+The <B>java::field</B> command also supports getting the compiler
+simulated <B>class</B> field for a Class. This is the preferred method
+of getting a handle to a <code>java.lang.Class</code>
+object given a class name.
+
+<P>
+
+<code>
+<pre>
+% set cl [java::field java.util.Hashtable class]
+% java::info class $cl
+java.lang.Class
+
+</pre>
+</code>
+
+<P>
+
+
+</DL>
+
+<PRE>
+<A HREF="../license.html">Copyright</A> &#169; 1997-1998 Sun Microsystems, Inc.
+</PRE>
+
+
+</BODY>
+</HTML>
+

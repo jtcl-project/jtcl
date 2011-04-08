@@ -1,0 +1,64 @@
+<HTML><HEAD><TITLE>Tcl Built-In Commands - pkg::create manual page</TITLE></HEAD><BODY>
+<DL>
+<DD><A HREF="packagens.htm#M2" NAME="L946">NAME</A>
+<DL><DD>pkg::create - Construct an appropriate <B>package ifneeded</B>
+command for a given package specification</DL>
+<DD><A HREF="packagens.htm#M3" NAME="L947">SYNOPSIS</A>
+<DL>
+<DD><B>::pkg::create </B><I>-name packageName</I> <I>-version packageVersion</I> ?<I>-load filespec</I>? ... ?<I>-source filespec</I>? ...
+</DL>
+<DD><A HREF="packagens.htm#M4" NAME="L948">DESCRIPTION</A>
+<DD><A HREF="packagens.htm#M5" NAME="L949">OPTIONS</A>
+<DL>
+<DD><A HREF="packagens.htm#M6" NAME="L950"><B>-name</B> <I>packageName</I></A>
+<DD><A HREF="packagens.htm#M7" NAME="L951"><B>-version</B> <I>packageVersion</I></A>
+<DD><A HREF="packagens.htm#M8" NAME="L952"><B>-load</B> <I>filespec</I></A>
+<DD><A HREF="packagens.htm#M9" NAME="L953"><B>-source</B> <I>filespec</I></A>
+</DL>
+<DD><A HREF="packagens.htm#M10" NAME="L954">SEE ALSO</A>
+<DD><A HREF="packagens.htm#M11" NAME="L955">KEYWORDS</A>
+</DL><HR>
+<H3><A NAME="M2">NAME</A></H3>
+pkg::create - Construct an appropriate <B>package ifneeded</B>
+command for a given package specification
+<H3><A NAME="M3">SYNOPSIS</A></H3>
+<B>::pkg::create </B><I>-name packageName</I> <I>-version packageVersion</I> ?<I>-load filespec</I>? ... ?<I>-source filespec</I>? ...<BR>
+<H3><A NAME="M4">DESCRIPTION</A></H3>
+<B>::pkg::create</B> is a utility procedure that is part of the standard Tcl
+library.  It is used to create an appropriate <B>package ifneeded</B>
+command for a given package specification.  It can be used to construct a
+<B>pkgIndex.tcl</B> file for use with the <B><A HREF="../TclCmd/package.htm">package</A></B> mechanism.
+
+<H3><A NAME="M5">OPTIONS</A></H3>
+The parameters supported are:
+<P>
+<DL>
+<DT><A NAME="M6"><B>-name</B> <I>packageName</I></A><DD>
+This parameter specifies the name of the package.  It is required.
+<P><DT><A NAME="M7"><B>-version</B> <I>packageVersion</I></A><DD>
+This parameter specifies the version of the package.  It is required.
+<P><DT><A NAME="M8"><B>-load</B> <I>filespec</I></A><DD>
+This parameter specifies a binary library that must be loaded with the
+<B><A HREF="../TclCmd/load.htm">load</A></B> command.  <I>filespec</I> is a list with two elements.  The
+first element is the name of the file to load.  The second, optional
+element is a list of commands supplied by loading that file.  If the
+list of procedures is empty or omitted, <B>::pkg::create</B> will
+set up the library for direct loading (see <B>pkg_mkIndex</B>).  Any
+number of <B>-load</B> parameters may be specified.
+<P><DT><A NAME="M9"><B>-source</B> <I>filespec</I></A><DD>
+This parameter is similar to the <B>-load</B> parameter, except that it
+specifies a Tcl library that must be loaded with the
+<B><A HREF="../TclCmd/source.htm">source</A></B> command.  Any number of <B>-source</B> parameters may be
+specified.
+<P></DL>
+<P>
+At least one <B>-load</B> or <B>-source</B> parameter must be given.
+
+<H3><A NAME="M10">SEE ALSO</A></H3>
+<B><A HREF="../TclCmd/package.htm">package</A></B>
+<H3><A NAME="M11">KEYWORDS</A></H3>
+<A href="../Keywords/A.htm#auto-load">auto-load</A>, <A href="../Keywords/I.htm#index">index</A>, <A href="../Keywords/P.htm#package">package</A>, <A href="../Keywords/V.htm#version">version</A>
+<HR><PRE>
+<A HREF="../copyright.htm">Copyright</A> &#169; 1998-2000 by Scriptics Corporation.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1995-1997 Roger E. Critchlow Jr.</PRE>
+</BODY></HTML>

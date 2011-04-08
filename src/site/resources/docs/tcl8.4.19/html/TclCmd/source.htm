@@ -1,0 +1,51 @@
+<HTML><HEAD><TITLE>Built-In Commands - source manual page</TITLE></HEAD><BODY>
+<H3><A NAME="M2">NAME</A></H3>
+source - Evaluate a file or resource as a Tcl script
+<H3><A NAME="M3">SYNOPSIS</A></H3>
+<B>source </B><I>fileName</I><BR>
+<B>source</B> <B>-rsrc </B><I>resourceName </I>?<I>fileName</I>?<BR>
+<B>source</B> <B>-rsrcid </B><I>resourceId </I>?<I>fileName</I>?<BR>
+<H3><A NAME="M4">DESCRIPTION</A></H3>
+This command takes the contents of the specified file or resource
+and passes it to the Tcl interpreter as a text script.  The return
+value from <B>source</B> is the return value of the last command
+executed in the script.  If an error occurs in evaluating the contents
+of the script then the <B>source</B> command will return that error.
+If a <B><A HREF="../TclCmd/return.htm">return</A></B> command is invoked from within the script then the
+remainder of the file will be skipped and the <B>source</B> command
+will return normally with the result from the <B><A HREF="../TclCmd/return.htm">return</A></B> command.
+<P>
+The end-of-file character for files is '&#92;32' (^Z) for all platforms.
+The source command will read files up to this character.  This
+restriction does not exist for the <B><A HREF="../TclCmd/read.htm">read</A></B> or <B><A HREF="../TclCmd/gets.htm">gets</A></B> commands,
+allowing for files containing code and data segments (scripted documents).
+If you require a ``^Z'' in code for string comparison, you can use
+``&#92;032'' or ``&#92;u001a'', which will be safely substituted by the Tcl
+interpreter into ``^Z''.
+<P>
+The <I>-rsrc</I> and <I>-rsrcid</I> forms of this command are only
+available on Macintosh computers.  These versions of the command
+allow you to source a script from a <B>TEXT</B> resource.  You may specify
+what <B>TEXT</B> resource to source by either name or id.  By default Tcl
+searches all open resource files, which include the current
+application and any loaded C extensions.  Alternatively, you may
+specify the <I>fileName</I> where the <B>TEXT</B> resource can be found.
+<H3><A NAME="M5">EXAMPLE</A></H3>
+Run the script in the file <B>foo.tcl</B> and then the script in the
+file <B>bar.tcl</B>:
+<PRE><B>source</B> foo.tcl
+<B>source</B> bar.tcl</PRE>
+Alternatively:
+<PRE>foreach scriptFile {foo.tcl bar.tcl} {
+   <B>source</B> $scriptFile
+}</PRE>
+<H3><A NAME="M6">SEE ALSO</A></H3>
+<B><A HREF="../TclCmd/file.htm">file</A></B>, <B><A HREF="../TclCmd/cd.htm">cd</A></B>, <B><A HREF="../TclCmd/info.htm">info</A></B>
+<H3><A NAME="M7">KEYWORDS</A></H3>
+<A href="../Keywords/F.htm#file">file</A>, <A href="../Keywords/S.htm#script">script</A>
+<HR><PRE>
+<A HREF="../copyright.htm">Copyright</A> &#169; 1993 The Regents of the University of California.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1994-1996 Sun Microsystems, Inc.
+<A HREF="../copyright.htm">Copyright</A> &#169; 2000 Scriptics Corporation.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1995-1997 Roger E. Critchlow Jr.</PRE>
+</BODY></HTML>

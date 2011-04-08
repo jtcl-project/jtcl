@@ -1,0 +1,52 @@
+<HTML>
+<TITLE>
+The java::unlock Command
+</TITLE>
+
+<BODY>
+<HR>
+
+<H3>
+The java::unlock Command
+</H3>
+
+<HR>
+
+<DL>
+
+<H3>
+Usage:
+</H3>
+
+<DD><B>java::unlock</B> <I>javaObj</I>
+
+<P>
+
+The <B>java::unlock</B> command removes a lock placed on
+<I>javaObj</I> by the <B>java::lock</B> command.
+Multiple locks are allowed on <I>javaObj</I>.
+The <B>java::unlock</B> removes one lock each
+time it is called.
+If the internal rep of the Tcl variable referenced by <I>javaObj</I>
+is zero after the lock is removed, the Java object could
+be garbage collected. If <I>javaObj</I> does not have an existing lock,
+a Tcl error is generated.
+
+<P>
+
+If the <B>java::unlock</B> command is called with the string "all"
+as the argument, each object that had been locked with the 
+<B>java::lock</B> command will be unlocked.
+
+<P>
+
+</DL>
+
+<PRE>
+<A HREF="../license.html">Copyright</A> &#169; 1997-1998 Sun Microsystems, Inc.
+</PRE>
+
+
+</BODY>
+</HTML>
+
