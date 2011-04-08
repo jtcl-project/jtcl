@@ -13,8 +13,8 @@ rem
 
 if "%OS%" == "Windows_NT" setlocal
 
-set jtclver=2.0.0-b1
-set jtclmain=tcl.lang.Shell
+set jtclver=${project.version}
+set jtclmain=tcl.pkg.tjc.TJCShell
 
 set dir=%~dp0
 

@@ -10,8 +10,8 @@
 # TCLLIBPATH - space separated list of Tcl libraries directories
 #
 
-jtclver=2.0.0-b1
-jtclmain=tcl.lang.Shell
+jtclver=${project.version}
+jtclmain=tcl.pkg.tjc.TJCShell
 
 iscygwin=false
 ismsys=false

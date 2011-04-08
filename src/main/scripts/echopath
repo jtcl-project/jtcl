@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# msys converts unix-style pathnames to windows-style pathnames when calling
+# windows programs. this allows 'jtcl' to convert the installation 
+# directory into a window pathname
+
+cmd /q/c call echo $*

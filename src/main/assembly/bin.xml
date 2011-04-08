@@ -42,11 +42,27 @@
     <file>
       <source>src/main/scripts/jtcl.bat</source>
       <filtered>true</filtered>
+      <fileMode>0644</fileMode>
+    </file>
+    <file>
+      <source>src/main/scripts/tjc.bat</source>
+      <filtered>true</filtered>
+      <fileMode>0644</fileMode>
     </file>
     <file>
       <source>src/main/scripts/jtcl</source>
       <filtered>true</filtered>
-      <fileMode>0744</fileMode>
+      <fileMode>0755</fileMode>
+    </file>
+    <file>
+      <source>src/main/scripts/tjc</source>
+      <filtered>true</filtered>
+      <fileMode>0755</fileMode>
+    </file>
+    <file>
+      <source>src/main/scripts/echopath</source>
+      <filtered>true</filtered>
+      <fileMode>0755</fileMode>
     </file>
   </files>
   <dependencySets>
