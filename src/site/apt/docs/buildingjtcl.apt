@@ -9,10 +9,12 @@
    The TJC package, <Tcl to Java Compiler>, is written in Tcl (stage 1) and is compiled with itself
    to produce Java code (stage 2).  Subsequently, building the TJC stage 2 compiler 
    <<may take 5 - 20 minutes or longer>>.  When building with <ant>, the stage 2 compiler is built
-   when <<<ant package>>> is run.  When building with <maven>, the stage 2 compiler is built when
+   when <<<ant package>>> is run.  When building with <Maven>, the stage 2 compiler is built when
    <<<mvn -DskipTests package>>> is run, and will only be rebuilt again if the TJC compiler source 
    is changed, or the top-level files <<<tjc.jar>>> or <<<tjcsrc.jar>>> are missing.   The stage 2 files
    <<<tjc.jar>>> and <<<tjcsrc.jar>>> are created locally and not included in the distribution.
+
+   The website is built with Maven.
    
 Building with Ant
    
@@ -27,6 +29,7 @@ Building with Maven
 ------------------------
 mvn clean
 mvn -DskipTests package
+mvn site
 ------------------------
    
    
