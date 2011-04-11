@@ -1,6 +1,6 @@
 @echo off
 
-rem jtcl [ script  [ arg ... ] ]
+rem tjc [ script  [ arg ... ] ]
 rem 
 rem optional environment variables:
 rem

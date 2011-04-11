@@ -13,10 +13,20 @@ INSTALLING JTCL
 JTcl requires a Java JVM 1.5 or higher (Java 1.6 is recommended).  You may 
 have to install Java if you don't already have it installed.  
 
-JTcl is distributed as a ZIP archive.  Download the latest jtcl-{version}.zip 
-file from the JTcl website, and unzip into a directory of your choice.  
+Download JTcl distribution from: 
+
+    http://kenai.com/projects/jtcl/downloads
+
+JTcl is distributed as a ZIP archive.  Download the latest 
+jtcl-{version}-bin.zip file from the JTcl website, and unzip into a directory 
+of your choice.  
+
 Unix/Linux/Mac OSX shell script (`jtcl') and Windows batch file (`jtcl.bat') 
-are included.   
+are included.   Unix/Linux/OSX users may want to make a symbolic link
+in /usr/local/bin (or any other directory on your PATH of your choice):
+
+    sudo ln -s `pwd`/jtcl /usr/local/bin
+
 
 
 SOURCE CODE
@@ -31,7 +41,14 @@ Clone the JTcl repository: hg clone https://hg.kenai.com/hg/jtcl~jtcl-main
 
 DOCUMENTATION
 
-Please refer to the JTcl web site.
+Local documentation, which consists a copy of the the JTcl web site, can be 
+downloaded from:
+
+    http://kenai.com/projects/jtcl/downloads 
+
+Documenation is distributed as a ZIP archive, Download the latest 
+jtcl-{version}-doc.zip file from the JTcl website, and unzip into a directory 
+of your choice.
 
 
 MAILING LIST and BUG REPORTING

@@ -124,7 +124,7 @@
   <target name="test-tjc-status" >
     <condition property="tjc.absent">
         <not>
-        <available file="${maven.build.dir}/tjc.jar"> 
+        <available file="${maven.build.dir}/../tjc.jar"> 
         </available>
         </not>
       </condition>
@@ -135,14 +135,14 @@
   <!-- ====================================================================== -->
 
   <target  depends="compile,test-tjc-status" if="tjc.absent"  description="Generate TJC Java files" name="tjcgen">
-    <java fork="yes" classname="tcl.pkg.tjc.TJCShell" dir="${maven.build.dir}">
+    <java fork="yes" classname="tcl.pkg.tjc.TJCShell" dir="${maven.build.dir}/..">
       <classpath>
         <pathelement location="${maven.build.resourceDir.0}"/>
         <pathelement location="${maven.build.outputDir}"/>
       </classpath>
-      <arg value="../src/main/resources/tcl/pkg/tjc/library/tjc.tjc"/>
+      <arg value="./src/main/resources/tcl/pkg/tjc/library/tjc.tjc"/>
     </java>
-    <unjar src="${maven.build.dir}/tjc.jar"
+    <unjar src="${maven.build.dir}/../tjc.jar"
          dest="${maven.build.outputDir}">
     </unjar>
   </target>
@@ -242,7 +242,7 @@
   <!-- ====================================================================== -->
 
   <target name="package" depends="compile,test,tjcgen" description="Package the application">
-    <jar jarfile="${maven.build.dir}/${maven.build.finalName}.jar" 
+    <jar jarfile="${maven.build.dir}/../${maven.build.finalName}.jar" 
          compress="true" 
          index="false" 
          basedir="${maven.build.outputDir}" 

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# jtcl [ script  [ arg ... ] ]
+# tjc [ script  [ arg ... ] ]
 # 
 # optional environment variables:
 #

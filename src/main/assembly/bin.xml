@@ -75,8 +75,10 @@
       <unpack>false</unpack>
     </dependencySet>
   </dependencySets>
+<!--
                   <filterset begintoken="%" endtoken="%">
                    <filter token="VERSION" value="${project.version}"/>
                    </filterset>
+-->
 
 </assembly>
