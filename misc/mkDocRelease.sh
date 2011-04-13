@@ -13,7 +13,13 @@ if [ ! -d  ../target/site ] ; then
     exit
 fi
 
-cd ../target/site
+dir=/tmp/jtcl-$$.d
+mkdir -p $dir/jtcl-$version/doc
+
+cp -r ../target/site/* $dir/jtcl-$version/doc
+cd $dir
 zip -r ../jtcl-${version}-doc.zip *
 cd ..
 ls -alt `pwd`/jtcl-${version}-doc.zip
+
+rm -rf $dir
