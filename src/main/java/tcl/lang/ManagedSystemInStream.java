@@ -72,6 +72,7 @@ public class ManagedSystemInStream extends InputStream implements Runnable {
 				stdin = new FileInputStream(FileDescriptor.in);
 				System.setIn(this);
 				Thread readThread = new Thread(null, this, "ManagedSystemInStream reader thread");
+				readThread.setDaemon(true);
 				readThread.start();
 			}
 		}
