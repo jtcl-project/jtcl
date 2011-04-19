@@ -189,6 +189,7 @@ public class Fcopy {
 			};
 			backgroundCopy = new Thread(r);
 			getChannelOwnership(backgroundCopy.getId());
+			backgroundCopy.setDaemon(true);
 			backgroundCopy.start();
 			return 0;
 		}

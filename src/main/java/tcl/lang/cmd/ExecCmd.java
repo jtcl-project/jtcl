@@ -124,6 +124,7 @@ public class ExecCmd implements Command {
 			interp.setResult(rv);
 			/* Run waitForExitAndCleanup() in a separate thread */
 			Thread t = new Thread(pipeline);
+			t.setDaemon(true);
 			t.start();
 			pipeline.throwAnyExceptions();
 			return;

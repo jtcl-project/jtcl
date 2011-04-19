@@ -111,6 +111,7 @@ public class SocketChannel extends AbstractSocketChannel {
 					connectSocket(addr, port, localAddress, localPort);
 				}
 			});
+			asyncConnectThread.setDaemon(true);
 			asyncConnectThread.start();
 		} else {
 			connectSocket(addr, port, localAddress, localPort);

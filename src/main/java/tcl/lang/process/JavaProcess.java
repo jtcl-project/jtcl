@@ -141,6 +141,7 @@ public class JavaProcess extends TclProcess {
 		}
 		if (stdinStream != null) {
 			Thread coupler = new Coupler(stdinStream, process.getOutputStream(), true, true);
+			coupler.setDaemon(true);
 			coupler.start();
 		} else if (stdinRedirect!=null && stdinRedirect.getType() == Redirect.Type.STREAM) {
 			stdinRedirect.setOutputStream(process.getOutputStream());
@@ -208,6 +209,7 @@ public class JavaProcess extends TclProcess {
 			// able to write
 			stdoutCoupler = new Coupler(process.getInputStream(), stdoutStream,
 					closeOutput, stdoutRedirect.type == Redirect.Type.INHERIT);
+			stdoutCoupler.setDaemon(true);
 			stdoutCoupler.start();
 		} else if (stdoutRedirect!=null && stdoutRedirect.getType() == Redirect.Type.STREAM) {
 			stdoutRedirect.setInputStream(process.getInputStream());
@@ -301,6 +303,7 @@ public class JavaProcess extends TclProcess {
 		if (stderrStream != null) {
 			stderrCoupler = new Coupler(process.getErrorStream(), stderrStream,
 					closeOutput, true);
+			stderrCoupler.setDaemon(true);
 			stderrCoupler.start();
 		} else if (stderrRedirect!=null && stderrRedirect.getType() == Redirect.Type.STREAM) {
 			stderrRedirect.setInputStream(process.getErrorStream());

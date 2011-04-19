@@ -97,6 +97,7 @@ class InputBuffer extends FilterInputStream {
 		setBlockingMode(blockingMode);
 		refiller = new Refiller();
 		resizeBuffer();
+		refiller.setDaemon(true);
 		refiller.start();
 	}
 

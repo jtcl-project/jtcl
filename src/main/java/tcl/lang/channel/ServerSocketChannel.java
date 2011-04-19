@@ -97,6 +97,7 @@ public class ServerSocketChannel extends AbstractSocketChannel {
 		acceptThread = new AcceptThread(sock, this);
 
 		setChanName(TclIO.getNextDescriptor(interp, "sock"));
+		acceptThread.setDaemon(true);
 		acceptThread.start();
 	}
 
