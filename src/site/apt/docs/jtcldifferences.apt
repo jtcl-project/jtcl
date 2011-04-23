@@ -115,5 +115,6 @@ JTcl Differences from Tcl 8.4
 
   []
 
-  * <<info nameofexecutable>> attempts to return a java command line that will invokes the main class, for example,
-    </usr/lib/jvm/java-6-sun-1.6.0.20/jre/bin/java -classpath target/classes tcl.lang.Shell>
+  * <<info nameofexecutable>> creates a temporary script file to invoke the Java executable with 
+    the current classpath and the name of the JTcl main class.  The temporary script file is deleted
+    on exit.

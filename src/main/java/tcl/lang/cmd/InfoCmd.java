@@ -15,6 +15,8 @@
 package tcl.lang.cmd;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Iterator;
@@ -831,10 +833,9 @@ public class InfoCmd implements Command {
 	/**
 	 * Called to implement the "info nameofexecutable" command that returns the
 	 * name of the binary file running this application. This implementation attempts
-	 * to locate the Java VM executable, and returns a list in the interpreters result object
-	 * that contains a full java command line to execute this application.  Since this returns a list,
-	 * to properly make [exec [info nameofexecutable]] work requires 
-	 * [eval exec [info nameofexecutable]]
+	 * to locate the Java VM executable, creates a new temporary file as a shell/bat script
+	 * to invoke the JVM executable with the current classpath and shell, 
+	 * and returns the temporary file name.
 	 * 
 	 * @param interp Interpreter in which to evaluate command
 	 * @param objv arguments 'info nameofexecutable'
@@ -846,40 +847,96 @@ public class InfoCmd implements Command {
 		if (objv.length != 2) {
 			throw new TclNumArgsException(interp, 2, objv, null);
 		}
-
-		// The JDK provides direct no means to learn the name of the executable
-		// that launched the application.  We'll try to find the java vm
-
-		String javaHome = System.getProperty("java.home");
-		String nameOfExecutable = null;
-
-		if (javaHome != null) {
-			// test java.home/bin/java
-			File javaPath = new File(new File(new File(javaHome),"bin"),"java");
-			if (javaPath.exists()) {
-				nameOfExecutable = javaPath.getPath();
+		
+ 		String nameOfExecutable = interp.getNameOfExecutable();
+ 		boolean createExecFile = false;
+ 		File execFile = null;
+ 		
+ 		if (nameOfExecutable == null) {
+ 			// executable file name not set
+ 			createExecFile = true; 
+ 		} else {
+ 			// check if temporary executable file still exists
+ 			execFile = new File(nameOfExecutable);
+ 			if (! execFile.exists()) {
+ 				createExecFile = true;
+ 			}
+ 		}
+ 		
+ 		if (createExecFile) {
+			// create a new temp file to execute JTcl interpreter
+	    	boolean isWindows = Util.isWindows();
+	    	String eol = isWindows ? "\r\n" : "\n";
+	    	String suffix = isWindows ? ".bat" : ".sh";
+	    	try {
+	    		execFile = File.createTempFile("jtcl", suffix);
+	    		nameOfExecutable = execFile.getCanonicalPath();
+			} catch (IOException e) {
+				throw new TclException(interp, "Could not create temp file for [info nameofexecutable]");
 			}
-		}
-
-		if (nameOfExecutable != null) {
-			// add the classpath
-			TclObject result = TclList.newInstance();
-			TclList.append(interp, result, TclString.newInstance(nameOfExecutable));
-
-			String classpath = System.getProperty("java.class.path");
-			if (classpath!=null) {
-				TclList.append(interp, result, TclString.newInstance("-classpath"));
-				TclList.append(interp, result, TclString.newInstance(classpath));
-			}
-
-			// add the top level class
-			Throwable t = new Throwable();
-			StackTraceElement[] es = t.getStackTrace();
-			TclList.append(interp, result, TclString.newInstance(es[es.length-1].getClassName()));
 			
-			interp.setResult(result);
+			// The JDK provides direct no means to learn the name of the executable
+			// that launched the application.  We'll try to find the java vm, but use
+			// 'java' as a default.
+	
+			String javaExecutable = "java";
+			String javaHome = System.getProperty("java.home");
+			if (javaHome != null) {
+				// test java.home/bin/java
+				String execSuffix = isWindows ? ".exe" : "";
+				File javaPath = new File(new File(new File(javaHome), "bin"), "java" + execSuffix);
+				if (javaPath.exists()) {
+					javaExecutable = javaPath.getPath();
+				} else {
+					// IBM's JDK on AIX uses strange locations for the executables (from Apache Maven 'bin/mvn')
+					// test java.home/jre/sh/java
+					javaPath = new File(new File(new File(new File(javaHome), "jre"), "sh"), "java");
+					if (javaPath.exists()) {
+						javaExecutable = javaPath.getPath();
+					}
+				}
+			}
+			
+			String execLine = isWindows ? "@echo off" + eol : "#!" + eol + "exec ";
+			execLine += "\"" + javaExecutable + "\"";
+			String classpath = System.getProperty("java.class.path");
+			if (classpath != null) {
+				execLine += " -classpath \"" + classpath + "\" " ;
+			}
+	
+			// add the top level class
+			execLine += interp.getShellClassName();	
+			
+			// add shell parameters
+			execLine += (isWindows ? " %*" : " ${1+\"$@\"}") + eol;
+			
+			// write the file and set delete on exit
+	    	FileWriter out = null;
+	    	try {
+	    		out = new FileWriter(execFile);
+	    		out.write(execLine);
+	    		out.close();
+	    	} catch (Exception e) {
+	    		throw new TclException(interp, "Could not write temp file [info nameofexecutable]");
+	    	}
+	    	execFile.deleteOnExit();
+	    	
+	    	// set as executable
+	    	if (! isWindows) {
+	    		try {
+	    			Process process = Runtime.getRuntime().exec("chmod +x " + execFile.getPath());
+	    			process.waitFor();
+	    			process.destroy();
+	    		} catch (Exception e) {
+	    			throw new TclException(interp, "Couldn't set executable file as executable [name of executable]");
+	    		}
+	    	}
+	    	
+	    	// cache this temp file name in Interp
+	    	interp.setNameOfExecutable(nameOfExecutable);
 		}
-
+		
+		interp.setResult(nameOfExecutable);
 		return;
 	}
 

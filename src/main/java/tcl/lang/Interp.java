@@ -424,6 +424,17 @@ public class Interp extends EventuallyFreed {
 	 * instance directly.
 	 */
 	static public ManagedSystemInStream systemIn = new ManagedSystemInStream();
+	
+	/**
+	 * Temporary file name created for [info nameofexecutable].  Typically set by [info nameofexecutable]
+	 */
+	private String nameOfExecutable = null;
+
+	/**
+	 * Name of the shell class name, used to create [info nameofexecutable].
+	 * The constructor sets this values as the name of the main class.
+	 */
+	private String shellClassName;
 
 	/**
 	 * Side effects: Various parts of the interpreter are initialized; built-in commands are created; global variables
@@ -570,6 +581,12 @@ public class Interp extends EventuallyFreed {
 		slaveTable = new HashMap();
 		targetTable = new HashMap();
 		aliasTable = new HashMap();
+		
+		// find the name of constructing class to use as the shell class name
+		// can be overridden by setShellClassName()
+		Throwable t = new Throwable();
+		StackTraceElement[] es = t.getStackTrace();
+		shellClassName = es[es.length-1].getClassName();
 
 		// init parser variables
 		Parser.init(this);
@@ -4213,4 +4230,41 @@ public class Interp extends EventuallyFreed {
 		return buffer.toString();
 	}
 
+	/**
+	 * Get the name of the executable file to invoke JTcl.  Typically set on the first
+	 * call to [info nameofexecutable]
+	 * @return
+	 */
+	public String getNameOfExecutable() {
+		return nameOfExecutable;
+	}
+
+	/**
+	 * Set the name of the executable file to invoke JTcl.  Typically set on the first
+	 * call to [info nameofexecutable]
+	 * @return
+	 */
+	public void setNameOfExecutable(String name) {
+		nameOfExecutable = name;
+	}
+
+	/**
+	 * Get the name of the shell class name to invoke JTcl.  Set by default as
+	 * the constructer of Interp.  If shellClassName was set as null, return
+	 * the name of "tcl.lang.NoInteractiveShell"
+	 * @return
+	 */
+	public String getShellClassName() {
+		return shellClassName == null ? "tcl.lang.NonInteractiveShell" : shellClassName;
+	}
+	
+	/**
+	 * Set the name of the shell class name to invoke JTcl.  Can be null, which causes
+	 * "tcl.lang.NoInteractiveShell" to be returned by getshellClassName()
+	 * @return
+	 */
+	public void setShellClassName(String name) {
+		shellClassName = name;
+	}
+	
 }
