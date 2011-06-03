@@ -330,7 +330,7 @@ public class TclList implements InternalRep {
 		TclList tlist = (TclList) tobj.getInternalRep();
 		return tlist.alist.size();
 	}
-
+	
 	/**
 	 * Returns a TclObject array of the elements in a list object. If tobj is
 	 * not a list object, an attempt will be made to convert it to a list.
@@ -349,12 +349,12 @@ public class TclList implements InternalRep {
 	 *                if tobj is not a valid list.
 	 */
 	public static TclObject[] getElements(Interp interp, TclObject tobj)
-			throws TclException {
+	throws TclException {
 		if (!tobj.isListType()) {
 			setListFromAny(interp, tobj);
 		}
 		TclList tlist = (TclList) tobj.getInternalRep();
-
+		
 		int size = tlist.alist.size();
 		TclObject objArray[] = new TclObject[size];
 		for (int i = 0; i < size; i++) {
@@ -363,6 +363,32 @@ public class TclList implements InternalRep {
 		return objArray;
 	}
 
+	/**
+	 * Returns an ArrayList of TclObject  elements in a list object. If tobj is
+	 * not a list object, an attempt will be made to convert it to a list.
+	 * <p>
+	 * 
+	 * Note that the actual internal ArrayList of a TclList object is returned,
+	 * so be careful when changing the list.
+	 * 
+	 * @param interp
+	 *            the current interpreter.
+	 * @param tobj
+	 *            the list to sort.
+	 * @return an ArrayList of elements in a list object.
+	 * @exception TclException
+	 *                if tobj is not a valid list.
+	 */
+	public static ArrayList getElementsList(Interp interp, TclObject tobj)
+			throws TclException {
+		if (!tobj.isListType()) {
+			setListFromAny(interp, tobj);
+		}
+		TclList tlist = (TclList) tobj.getInternalRep();
+
+		return tlist.alist;
+	}
+	
 	/**
 	 * TclListObjSetElement --
 	 * 
@@ -389,8 +415,123 @@ public class TclList implements InternalRep {
 	 *           
 	 * @throws TclException
 	 */
-
+	
 	public static void setElement(Interp interp, TclObject list, int index,
+			TclObject value) throws TclException {
+		
+		TclList listRep; 	// Internal representation of the list being modified.
+		TclObject[] elems; 	// Pointers to elements of the list.
+		int elemCount;
+		
+		// Ensure that the list parameter designates an unshared list.
+		
+		if (list.isShared()) {
+			throw new TclRuntimeError(
+			"TclListObjSetElement called with shared object");
+		}
+		
+		if (!list.isListType()) {
+			if (list.toString().length() == 0) {
+				interp.setResult(TclString
+						.newInstance("list index out of range"));
+				throw new TclException(0);
+			}
+			
+			try {
+				setListFromAny(interp, list);
+			} catch (TclException e) {
+				throw e;
+			}
+		}
+		
+		/*
+		 * !!!!!!!!!!!!!!! unchecked!
+		 */
+		listRep = (TclList) list.getInternalRep();
+		elems = (TclObject[]) listRep.alist.toArray(new TclObject[listRep.alist
+		                                                          .size()]);
+		elemCount = listRep.alist.size();
+		
+		// Ensure that the index is in bounds.
+		
+		if (index < 0 || index >= elemCount) {
+			if (interp != null) {
+				interp.setResult(TclString
+						.newInstance("list index out of range"));
+			}
+			throw new TclRuntimeError("list index out of range");
+		}
+		
+		// If the internal rep is shared, replace it with an unshared copy.
+		
+		if (list.getRefCount() > 1) {
+			TclList oldListRep = listRep;
+			TclObject[] oldElems = elems;
+			
+			listRep = new TclList(elemCount);
+			
+			if (listRep == null) {
+				throw new TclRuntimeError("Not enough memory to allocate list");
+			}
+			
+			elems = (TclObject[]) listRep.alist.toArray();
+			
+			for (int i = 0; i < elemCount; i++) {
+				elems[i] = oldElems[i];
+				elems[i].preserve();
+			}
+			
+			listRep.duplicate();
+			list.setInternalRep(listRep);
+			oldListRep.dispose();
+		}
+		
+		/*
+		 * NOTE: A reference to the new list element will be added in the replace() method.
+		 */
+		
+		// Remove a reference from the old list element.
+		
+		elems[index].refCount--;
+		
+		// Stash the new object in the list.
+		
+		elems[index] = value;
+		TclList.replace(interp, list, 0, TclList.getLength(interp, list),
+				elems, 0, elems.length - 1);
+		
+	}
+
+	/**
+	 * TclListObjSetElement --
+	 * 
+	 * Set a single element of a list to a specified value in place (LsetCmd) 
+	 * 
+	 * 
+	 * Side effects: Tcl_Panic if listPtr designates a shared object. Otherwise,
+	 * attempts to convert it to a list with a non-shared internal rep.
+	 * Decrements the ref count of the object at the specified index within the
+	 * list, replaces with the object designated by valuePtr, and increments the
+	 * ref count of the replacement object.
+	 * 
+	 * It is the caller's responsibility to invalidate the string representation
+	 * of the object.  This method also avoids extra toArray() of the internal
+	 * ArrayList.
+	 * 
+	 * @param interp
+	 *            Tcl interpreter; used for error reporting if not null
+	 * @param list
+	 *            List object in which element should be stored
+	 * @param index
+	 *            Index of element to store
+	 * @param valuePtr
+	 *            Tcl object to store in the designated list element
+	 * 
+	 *           
+	 * @throws TclException
+	 */
+
+	public static void lsetElement(Interp interp, TclObject list, int index,
 			TclObject value) throws TclException {
 
 		TclList listRep; 	// Internal representation of the list being modified.
@@ -422,9 +563,8 @@ public class TclList implements InternalRep {
 		 * !!!!!!!!!!!!!!! unchecked!
 		 */
 		listRep = (TclList) list.getInternalRep();
-		elems = (TclObject[]) listRep.alist.toArray(new TclObject[listRep.alist
-				.size()]);
-		elemCount = listRep.alist.size();
+		ArrayList elemList = listRep.alist;
+		elemCount = elemList.size();
 
 		// Ensure that the index is in bounds.
 
@@ -440,7 +580,6 @@ public class TclList implements InternalRep {
 
 		if (list.getRefCount() > 1) {
 			TclList oldListRep = listRep;
-			TclObject[] oldElems = elems;
 
 			listRep = new TclList(elemCount);
 
@@ -448,31 +587,20 @@ public class TclList implements InternalRep {
 				throw new TclRuntimeError("Not enough memory to allocate list");
 			}
 
-			elems = (TclObject[]) listRep.alist.toArray();
-
-			for (int i = 0; i < elemCount; i++) {
-				elems[i] = oldElems[i];
-				elems[i].preserve();
-			}
-
 			listRep.duplicate();
 			list.setInternalRep(listRep);
 			oldListRep.dispose();
+			elemList = listRep.alist;
 		}
-
-		/*
-		 * NOTE: A reference to the new list element will be added in the replace() method.
-		 */
 
 		// Remove a reference from the old list element.
 
-		elems[index].refCount--;
+		((TclObject)elemList.get(index)).refCount--;
 
 		// Stash the new object in the list.
 
-		elems[index] = value;
-		TclList.replace(interp, list, 0, TclList.getLength(interp, list),
-				elems, 0, elems.length - 1);
+		elemList.set(index, value);
+		value.preserve();
 
 	}
 

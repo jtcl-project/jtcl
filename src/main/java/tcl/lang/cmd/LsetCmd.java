@@ -159,7 +159,7 @@ public class LsetCmd implements Command {
 		int duplicated; 		// Flag == 1 if the obj has been duplicated, 0 otherwise 
 		TclObject retValue; 	// The list to be returned 
 		int elemCount; 			// Length of one sublist being changed 
-		TclObject[] elems; 		// The elements of a sublist 
+		ArrayList elems; 		// The elements of a sublist 
 		TclObject subList; 		// The current sublist 
 		int result = 0; 		// Status return from library calls 
 		int index = 0; 			// Index of the element to replace in the current sublist
@@ -188,8 +188,8 @@ public class LsetCmd implements Command {
 		for (int i = 0;; ++i) {
 			// Take the sublist apart.
 			try {
-				elems = TclList.getElements(interp, list);
-				elemCount = elems.length;
+				elems = TclList.getElementsList(interp, list);
+				elemCount = elems.size();
 			} catch (TclException e) {
 				// If we can't get elements of list, we break the loop and then
 				// prepare for return from method.
@@ -214,7 +214,7 @@ public class LsetCmd implements Command {
 
 			// Extract the appropriate sublist, and make sure that it is
 			// unshared.
-			subList = elems[index];
+			subList = (TclObject) elems.get(index);
 			if (subList.isShared()) {
 				subList = subList.duplicate();
 				try {
@@ -241,7 +241,7 @@ public class LsetCmd implements Command {
 
 		if (result == TCL.OK) {
 			try {
-				TclList.setElement(interp, list, index, value);
+				TclList.lsetElement(interp, list, index, value);
 
 				// Spoil all the string reps
 
@@ -250,6 +250,7 @@ public class LsetCmd implements Command {
 					TclObject tobj = (TclObject) chainList.get(i);
 					tobj.invalidateStringRep();
 				}
+				list.invalidateStringRep();
 
 				// Return the new list if everything worked.
 
@@ -339,7 +340,7 @@ public class LsetCmd implements Command {
 		int result = 0; 		// Status return from library calls 
 		TclObject subList; 		// The current sublist 
 		int elemCount; 			// Count of elements in the current sublist 
-		TclObject[] elems; 		// Elements of current sublist 
+		ArrayList elems; 		// Elements of current sublist 
 		ArrayList chainList = new ArrayList();		// check track of sub-lists, in order to invalidate string reps
 
 		// Determine whether the index arg designates a list or a single index.
@@ -414,8 +415,8 @@ public class LsetCmd implements Command {
 
 			// Take the sublist apart.
 			try {
-				elems = TclList.getElements(interp, list);
-				elemCount = elems.length;
+				elems = TclList.getElementsList(interp, list);
+				elemCount = elems.size();
 			} catch (TclException e) {
 				// If we can't get elements of list, we break the loop and then
 				// prepare for return from method.
@@ -450,7 +451,7 @@ public class LsetCmd implements Command {
 
 			// Extract the appropriate sublist, and make sure that it is
 			// unshared.
-			subList = elems[index];
+			subList = (TclObject) elems.get(index);
 			if (subList.isShared()) {
 				subList = subList.duplicate();
 				try {
@@ -475,7 +476,7 @@ public class LsetCmd implements Command {
 		// Store the new element into the correct slot in the innermost sublist.
 		if (result == TCL.OK) {
 			try {
-				TclList.setElement(interp, list, index, value);
+				TclList.lsetElement(interp, list, index, value);
 
 				// Spoil all the string reps
 				
@@ -484,6 +485,7 @@ public class LsetCmd implements Command {
 					TclObject tobj = (TclObject) chainList.get(i);
 					tobj.invalidateStringRep();
 				}
+				list.invalidateStringRep();
 
 				// Return the new list if everything worked.
 
