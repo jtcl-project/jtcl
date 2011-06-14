@@ -4,6 +4,8 @@ import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A class for managing the System.in. Avoids blocking the current thread on the
@@ -33,6 +35,16 @@ public class ManagedSystemInStream extends InputStream implements Runnable {
 		IOException exception = null;
 		boolean validData = false;
 		boolean requestData = false;
+		
+		/**
+		 * Reset back to starting values.
+		 */
+		private void clear() {
+			buf = null;
+			offset = len = actualLength = 0;
+			exception = null;
+			validData = requestData = false;
+		}
 	}
 
 	/**
@@ -40,21 +52,36 @@ public class ManagedSystemInStream extends InputStream implements Runnable {
 	 * thread
 	 */
 	private static ReadRequest readRequest = new ReadRequest();
-
+	
 	/**
-	 * Set to true with this ManagedSystemInStream is closed.
+	 * The thread used for reading stdin
 	 */
-	private volatile boolean streamClosed = false;
-
+	private volatile static Thread readThread;
+	
 	/**
 	 * Unbuffered FileInputStream that is attached to real stdin
 	 */
-	private static FileInputStream stdin = null;
-
+	private volatile static FileInputStream stdin = null;
+	
+	/**
+	 * Original System.in
+	 */
+	private static InputStream originalIn = System.in;
+	
+	/**
+	 * Set to true with this ManagedSystemInStream is closed.
+	 */
+	private volatile boolean streamClosed;
+	
 	/**
 	 * Set to true when an end-of-file is seen on System.in in this instance
 	 */
-	private boolean eofSeen = false;
+	private boolean eofSeen;
+	
+	/**
+	 * Latch to coordinate dispose action
+	 */
+	private CountDownLatch disposeLatch;
 
 	/**
 	 * Create a new ManagedSystemInStream. If this is the first
@@ -69,15 +96,37 @@ public class ManagedSystemInStream extends InputStream implements Runnable {
 			// install this stream as System.in if a ManagedSystemInStream has
 			// not yet been installed on System.in, and start the readThread
 			if (stdin == null) {
+				readRequest.clear();
+				streamClosed = false;
+				eofSeen = false;
+				disposeLatch = new CountDownLatch(1);
 				stdin = new FileInputStream(FileDescriptor.in);
 				System.setIn(this);
-				Thread readThread = new Thread(null, this, "ManagedSystemInStream reader thread");
+				readThread = new Thread(null, this, "ManagedSystemInStream reader thread");
 				readThread.setDaemon(true);
 				readThread.start();
 			}
 		}
 	}
 
+	/**
+	 * Signal readThread to stop, restore original stdin
+	 */
+	public void dispose() {
+		streamClosed = true;
+		if (readThread != null) {
+			try {
+				// interrupt the readThread, and wait for the disposeLatch to complete
+				readThread.interrupt();
+				disposeLatch.await(10, TimeUnit.SECONDS);
+			} catch (Exception e) {
+				// ignore, not much we can do here
+			}
+		}
+		// set System.in back to originalIn, in case it is needed for any other usage.
+		System.setIn(originalIn);
+	}
+	
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -203,16 +252,18 @@ public class ManagedSystemInStream extends InputStream implements Runnable {
 		boolean doRead;
 
 		while (true) {
-			if (Thread.interrupted())
+			if (Thread.interrupted()) {
 				break;
+			}
 			synchronized (readRequest) {
 				doRead = readRequest.requestData && !readRequest.validData;
-				if (!doRead)
+				if (!doRead) {
 					try {
 						readRequest.wait();
 					} catch (InterruptedException e) {
 						break;
 					}
+				}
 			}
 			if (doRead) {
 				// drop out of synchronized block, because we don't want to
@@ -232,5 +283,10 @@ public class ManagedSystemInStream extends InputStream implements Runnable {
 				}
 			}
 		}
+		
+		// reset starting values, in case another Interp is created.
+		stdin = null;
+		readThread = null;
+		disposeLatch.countDown();
 	}
 }

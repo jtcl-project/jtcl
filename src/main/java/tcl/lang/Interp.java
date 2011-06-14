@@ -831,6 +831,9 @@ public class Interp extends EventuallyFreed {
 			classLoader = null;
 		}
 
+		// stop the ManagedSystemInStream thread
+		systemIn.dispose();
+		
 		resetResult();
 	}
 
