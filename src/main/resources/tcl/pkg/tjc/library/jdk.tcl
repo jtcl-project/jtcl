@@ -249,7 +249,7 @@ proc jdk_tool_javac { filenames } {
           set javac [list javac -classpath [file normalize $::env(CLASSPATH)]]
     }
 
-    set javac_flags -g
+    set javac_flags "-g -target 1.5"
 
     if {![file exists $TJC_build]} {
         file mkdir $TJC_build
@@ -316,7 +316,7 @@ proc jdk_tool_javac { filenames } {
             puts "JAVAC exec: $javac $javac_flags -d $TJC_build $javac_filenames"
         }
 
-        if {[catch {eval exec $javac {$javac_flags -d $TJC_build} $javac_filenames} err]} {
+	if {[catch {eval exec $javac $javac_flags {-d $TJC_build} $javac_filenames} err]} {
             puts stderr $err
             if {![string match *deprecation* $err]} {
                 set caught 1
