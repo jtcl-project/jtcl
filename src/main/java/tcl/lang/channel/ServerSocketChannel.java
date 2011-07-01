@@ -98,6 +98,7 @@ public class ServerSocketChannel extends AbstractSocketChannel {
 
 		setChanName(TclIO.getNextDescriptor(interp, "sock"));
 		acceptThread.setDaemon(true);
+		acceptThread.setName("ServerSocketChannel: " + getChanName() + " " + localAddr + ":" + port);
 		acceptThread.start();
 	}
 

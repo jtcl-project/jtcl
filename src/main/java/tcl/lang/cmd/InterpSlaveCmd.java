@@ -695,7 +695,7 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 			interp.unsetVar("env", TCL.GLOBAL_ONLY);
 		} catch (TclException e) {
 		}
-		;
+		
 
 		// Remove unsafe parts of tcl_platform
 
@@ -703,12 +703,12 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 			interp.unsetVar("tcl_platform", "os", TCL.GLOBAL_ONLY);
 		} catch (TclException e) {
 		}
-		;
+		
 		try {
 			interp.unsetVar("tcl_platform", "osVersion", TCL.GLOBAL_ONLY);
 		} catch (TclException e) {
 		}
-		;
+		
 		try {
 			interp.unsetVar("tcl_platform", "machine", TCL.GLOBAL_ONLY);
 		} catch (TclException e) {
@@ -718,7 +718,7 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 			interp.unsetVar("tcl_platform", "user", TCL.GLOBAL_ONLY);
 		} catch (TclException e) {
 		}
-		;
+		
 
 		// Unset path informations variables
 		// (the only one remaining is [info nameofexecutable])
@@ -727,17 +727,17 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 			interp.unsetVar("tclDefaultLibrary", TCL.GLOBAL_ONLY);
 		} catch (TclException e) {
 		}
-		;
+		
 		try {
 			interp.unsetVar("tcl_library", TCL.GLOBAL_ONLY);
 		} catch (TclException e) {
 		}
-		;
+		
 		try {
 			interp.unsetVar("tcl_pkgPath", TCL.GLOBAL_ONLY);
 		} catch (TclException e) {
 		}
-		;
+		
 
 		// Remove the standard channels from the interpreter; safe interpreters
 		// do not ordinarily have access to stdin, stdout and stderr.
@@ -748,15 +748,15 @@ public class InterpSlaveCmd implements CommandWithDispose, AssocData {
 		// these channels even if it is being made safe after being used for
 		// some time..
 
-		chan = TclIO.getStdChannel(StdChannel.STDIN);
+		chan = interp.getTclIO().getStdChannel(interp, StdChannel.STDIN);
 		if (chan != null) {
 			TclIO.unregisterChannel(interp, chan);
 		}
-		chan = TclIO.getStdChannel(StdChannel.STDOUT);
+		chan = interp.getTclIO().getStdChannel(interp, StdChannel.STDOUT);
 		if (chan != null) {
 			TclIO.unregisterChannel(interp, chan);
 		}
-		chan = TclIO.getStdChannel(StdChannel.STDERR);
+		chan = interp.getTclIO().getStdChannel(interp, StdChannel.STDERR);
 		if (chan != null) {
 			TclIO.unregisterChannel(interp, chan);
 		}

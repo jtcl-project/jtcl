@@ -49,8 +49,8 @@ public class ConsoleThread extends Thread {
 		interp = i;
 		sbuf = new StringBuffer(100);
 
-		out = TclIO.getStdChannel(StdChannel.STDOUT);
-		err = TclIO.getStdChannel(StdChannel.STDERR);
+		out = interp.getTclIO().getStdChannel(interp, StdChannel.STDOUT);
+		err = interp.getTclIO().getStdChannel(interp, StdChannel.STDERR);
 	}
 
 	/**
@@ -371,4 +371,4 @@ public class ConsoleThread extends Thread {
 			ex.printStackTrace(System.err);
 		}
 	}
-} // end of class ConsoleThread
+} 
