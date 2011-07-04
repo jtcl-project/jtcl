@@ -2,6 +2,28 @@
  JTcl News
  ----
 
+July 11, 2011
+
+  JTcl 2.0.0 has been released. New or fixed in this release:
+
+  * <<<info nameofexecutable>>> now creates and returns a temporary shell/bat script that invokes JTcl.
+
+  * <<<lset>>> performance issues fixed.
+
+  * ManagedSystemInStream thread is stopped when Interp is disposed.
+
+  * All user background threads are now Java daemon threads, so that they will be stopped on main thread exit.
+
+  * TJC enforces Java version 1.5 when compiling Tcl procs using javac.
+
+
+
+
+ Please report bugs and other unexpected behaviors at the JTcl project
+ site's {{{http://kenai.com/bugzilla/buglist.cgi?product=jtcl}Bug tracking system}}.
+
+ <The JTcl Team>
+
 April 13, 2011
 
   JTcl 2.0.0-b1 has been released. New or fixed in this release:

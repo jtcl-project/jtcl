@@ -1,7 +1,7 @@
 Adding/updating Tcllib:
 
 1. grab latest dist from sf.net/projects/tcllib
-   using tcllib1.12 as example, adjust as needed
+   using tcllib1.13 as example, adjust as needed
 
 2. unpack
    tar zxf tcllib-1.13.tar.gz

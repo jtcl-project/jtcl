@@ -2,6 +2,11 @@
 
 # creates jtcl documentationdistribution after building with "mvn -DskipTests clean package site"
 
+if [ $# -ne 1 ] ; then
+    echo usage: `basename $0` version
+    exit
+fi
+
 version=$1
 
 if [ ! -f  ../target/jtcl-$version.jar ] ; then

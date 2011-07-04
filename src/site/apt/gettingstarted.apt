@@ -4,7 +4,7 @@
 
 Getting started with JTcl
 
-  * Install Java 1.5 or higher.  If you don't already have Java installed, 
+  * Install Java 1.5 or higher (latest Java version preferred.)  If you don't already have Java installed, 
     download and install the appropriate Java package (Linux, Solaris, Windows) from 
     {{{http://www.oracle.com/technetwork/java/javase/downloads/index.html}Oracle.com}}.
     Apple Macintosh OSX 10.6 and below have Java 1.5 installed.  Many Linux 
