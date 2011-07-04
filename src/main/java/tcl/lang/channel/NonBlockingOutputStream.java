@@ -67,7 +67,6 @@ class NonBlockingOutputStream extends FilterOutputStream implements Runnable {
 		 */
 		bkgndWriter = new Thread(this);
 		bkgndWriter.setDaemon(true);
-		bkgndWriter.setName("NonBlockingOutputStream: " + channel.getChanName());
 		bkgndWriter.start();
 	}
 

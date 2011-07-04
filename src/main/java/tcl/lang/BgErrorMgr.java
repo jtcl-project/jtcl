@@ -266,7 +266,7 @@ class BgErrorMgr implements AssocData {
 				switch (e.getCompletionCode()) {
 				case TCL.ERROR:
 					try {
-						Channel chan = interp.getTclIO().getStdChannel(interp, StdChannel.STDERR);
+						Channel chan = TclIO.getStdChannel(StdChannel.STDERR);
 						if (interp
 								.getResult()
 								.toString()

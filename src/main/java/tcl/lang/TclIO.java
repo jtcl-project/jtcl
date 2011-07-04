@@ -128,9 +128,9 @@ public class TclIO {
 	 * registered channels for the individual interp.
 	 */
 
-	private StdChannel stdinChan = null;
-	private StdChannel stdoutChan = null;
-	private StdChannel stderrChan = null;
+	private static StdChannel stdinChan = null;
+	private static StdChannel stdoutChan = null;
+	private static StdChannel stderrChan = null;
 
 	/**
 	 * Return a registered Channel object, given its name.
@@ -357,13 +357,13 @@ public class TclIO {
 		if (interp.interpChanTable == null) {
 			interp.interpChanTable = new HashMap<String, Channel>();
 
-			chan = new StdChannel(interp, StdChannel.STDIN);
+			chan = getStdChannel(StdChannel.STDIN);
 			registerChannel(interp, chan);
 
-			chan = new StdChannel(interp, StdChannel.STDOUT);
+			chan = getStdChannel(StdChannel.STDOUT);
 			registerChannel(interp, chan);
 
-			chan = new StdChannel(interp, StdChannel.STDERR);
+			chan = getStdChannel(StdChannel.STDERR);
 			registerChannel(interp, chan);
 		}
 
@@ -375,25 +375,25 @@ public class TclIO {
 	 *            one of StdChannel.STDIN, StdChannel.STDOUT, StdChannel.STDERR
 	 * @return the requested standard channel, creating it if required
 	 */
-	public Channel getStdChannel(Interp interp, int type) {
+	public static Channel getStdChannel(int type) {
 		Channel chan = null;
 
 		switch (type) {
 		case StdChannel.STDIN:
 			if (stdinChan == null) {
-				stdinChan = new StdChannel(interp, StdChannel.STDIN);
+				stdinChan = new StdChannel(StdChannel.STDIN);
 			}
 			chan = stdinChan;
 			break;
 		case StdChannel.STDOUT:
 			if (stdoutChan == null) {
-				stdoutChan = new StdChannel(interp, StdChannel.STDOUT);
+				stdoutChan = new StdChannel(StdChannel.STDOUT);
 			}
 			chan = stdoutChan;
 			break;
 		case StdChannel.STDERR:
 			if (stderrChan == null) {
-				stderrChan = new StdChannel(interp, StdChannel.STDERR);
+				stderrChan = new StdChannel(StdChannel.STDERR);
 			}
 			chan = stderrChan;
 			break;

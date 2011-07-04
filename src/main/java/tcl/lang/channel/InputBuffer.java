@@ -98,7 +98,6 @@ class InputBuffer extends FilterInputStream {
 		refiller = new Refiller();
 		resizeBuffer();
 		refiller.setDaemon(true);
-		refiller.setName("InputBuffer Refiller: " + channel.getChanName());
 		refiller.start();
 	}
 

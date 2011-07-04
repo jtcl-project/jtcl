@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -423,9 +421,9 @@ public class Interp extends EventuallyFreed {
 	/**
 	 * Using System.in directly creates non-interruptible block during System.in.read(). This instance prevents the
 	 * read() block. The first instance created will replace System.in with itself, so code doesn't have to use this
-	 * instance directly.  This is only used if the Interp is constructed with StdIOInit.MANAGED.
+	 * instance directly.
 	 */
-	private ManagedSystemInStream managedSystemIn;
+	static public ManagedSystemInStream systemIn = new ManagedSystemInStream();
 	
 	/**
 	 * Temporary file name created for [info nameofexecutable].  Typically set by [info nameofexecutable]
@@ -438,82 +436,13 @@ public class Interp extends EventuallyFreed {
 	 */
 	private String shellClassName;
 
-    /**
-     * Types of Standard I/O initialization for the Interp.
-     * <br><b>MANAGED</b> use ManagedSystemInStream for non-blocking input, output and err streams are from System.out, System.err.
-     * <br><b>SYSTEM</b> use streams from System.in, System.out, System.err.
-     * <br><b>NULL</b> use dummy streams whose reads produced EOF, and writes are void
-     *
-     */
-    public enum StdIOInit {MANAGED, SYSTEM, NULL}
-
-    /**
-     * instance of NullInputStream
-     */
-    private static InputStream nullInputStream = new NullInputStream();
-
-    /**
-     * instance of NullPrinttream
-     */
-    private static PrintStream nullPrintStream = new NullPrintStream(new NullOutputStream());
-
-    /**
-     * Interp's system in
-     */
-    private InputStream systemIn;
-    
-    /**
-     * Interp's system out
-     */
-    private OutputStream systemOut;
-    
-    /**
-     * Interp's system err
-     */
-    private OutputStream systemErr;
-    
-    /**
-     * Interp's TclIO instance
-     */
-    private TclIO tclIo = new TclIO();
-	
-	/**
-	 * Side effects: Various parts of the interpreter are initialized; built-in commands are created; global variables
-	 * are initialized, etc. Stdio is initialized as MANAGED, so that non-blocking input is available.
-	 * 
-	 */
-
-    public Interp() {
-        this(StdIOInit.MANAGED);
-    }
-
 	/**
 	 * Side effects: Various parts of the interpreter are initialized; built-in commands are created; global variables
 	 * are initialized, etc.
-	 *
+	 * 
 	 */
-    public Interp(StdIOInit ioInit) {
-    	
-		// initialize stdio
-		switch (ioInit) {
-		case MANAGED:
-			managedSystemIn = new ManagedSystemInStream();
-			systemIn = managedSystemIn;
-			systemOut = System.out;
-			systemErr = System.err;
-			break;
-		case SYSTEM:
-			systemIn = System.in;
-			systemOut = System.out;
-			systemErr = System.err;
-			break;
-		case NULL:
-			systemIn = nullInputStream;
-			systemOut = nullPrintStream;
-			systemErr = nullPrintStream;
-			break;
-		}
 
+	public Interp() {
 
 		// freeProc = null;
 		errorLine = 0;
@@ -903,9 +832,7 @@ public class Interp extends EventuallyFreed {
 		}
 
 		// stop the ManagedSystemInStream thread
-		if (managedSystemIn != null) {
-			managedSystemIn.dispose();
-		}
+		systemIn.dispose();
 		
 		resetResult();
 	}
@@ -4341,90 +4268,6 @@ public class Interp extends EventuallyFreed {
 	 */
 	public void setShellClassName(String name) {
 		shellClassName = name;
-	}
-	
-	/**
-	 * @return Interp's systemIn
-	 */
-	public InputStream getSystemIn() {
-		return systemIn;
-	}
-	
-	/**
-	 * @return Interp's systemout
-	 */
-	public OutputStream getSystemOut() {
-		return systemOut;
-	}
-	
-	/**
-	 * @return Interp's systemErr
-	 */
-	public OutputStream getSystemErr() {
-		return systemErr;
-	}
-	
-	/**
-	 * @return Interp's TclIO instance
-	 */
-	public TclIO getTclIO() {
-		return tclIo;
-	}
-	
-	/**
-	 * NullInputStream Always returns -1 on read to signal end-of-file.
-	 */
-	private static class NullInputStream extends InputStream {
-		@Override
-		public int read() throws IOException {
-			return -1;
-		}
-
-		@Override
-		public int read(byte[] b) throws IOException {
-			return -1;
-		}
-
-		@Override
-		public int read(byte[] b, int off, int len) throws IOException {
-			return -1;
-		}
-
-		@Override
-		public void reset() throws IOException {
-		}
-
-		@Override
-		public long skip(long n) throws IOException {
-			return 0;
-		}
-	}
-
-	/**
-	 * Always swallow any writes.
-	 */
-	private static class NullOutputStream extends OutputStream {
-		@Override
-		public void write(int b) throws IOException {
-		}
-
-		@Override
-		public void write(byte[] b) throws IOException {
-		}
-
-		@Override
-		public void write(byte[] b, int off, int len) throws IOException {
-		}
-	}
-
-	/**
-	 * Always swallow any writes.
-	 */
-	private static class NullPrintStream extends PrintStream {
-
-		public NullPrintStream(OutputStream out) {
-			super(out);
-		}
 	}
 	
 }

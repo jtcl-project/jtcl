@@ -18,7 +18,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
-import tcl.lang.Interp;
 import tcl.lang.ManagedSystemInStream;
 import tcl.lang.TclIO;
 import tcl.lang.TclRuntimeError;
@@ -51,17 +50,66 @@ public class StdChannel extends Channel {
 	/**
 	 * Standard Input Stream to read from
 	 */
-	private InputStream in;
+	static InputStream _in = new ManagedSystemInStream();
 	/**
 	 * Standard output stream to read from
 	 */
-	private OutputStream out;
+	static OutputStream _out = System.out;
 	/**
 	 * Standard error stream to read from
 	 */
-	private OutputStream err;
+	static OutputStream _err = System.err;
 	
 
+	/**
+	 * Reassign the standard input stream to a new stream. This will change the
+	 * underlying stream for all interpreters. This use is deprecated;
+	 * applications should unregister the stdin Channel and open a new Channel
+	 * to replace stdin.
+	 * 
+	 * @param in
+	 *            InputStream to replace standard input with
+	 */
+	@Deprecated
+	public static void setIn(InputStream in) {
+		_in = in;
+	}
+
+	/**
+	 * Reassign the standard output stream to a new stream. This will change the
+	 * underlying stream for all interpreters. This use is deprecated;
+	 * applications should unregister the stdout Channel and open a new Channel
+	 * to replace it.
+	 * 
+	 * @param in
+	 *            OutputStream to replace standard input with
+	 */
+	@Deprecated
+	public static void setOut(PrintStream out) {
+		_out = out;
+	}
+
+	/**
+	 * Reassign the standard error stream to a new stream. This will change the
+	 * underlying stream for all interpreters. This use is deprecated;
+	 * applications should unregister the stderr Channel and open a new Channel
+	 * to replace it.
+	 * 
+	 * @param in
+	 *            OutputStream to replace standard input with
+	 */
+	@Deprecated
+	public static void setErr(PrintStream err) {
+		_err = err;
+	}
+
+	/**
+	 * Constructor that does nothing. Open() must be called before any of the
+	 * subsequent read, write, etc calls can be made.
+	 */
+
+	StdChannel() {
+	}
 
 	/**
 	 * Constructor that will automatically call open.
@@ -70,10 +118,7 @@ public class StdChannel extends Channel {
 	 *            name of the stdio channel; "stdin", "stderr" or "stdout"
 	 */
 
-	StdChannel(Interp interp, String stdName) {
-		in = interp.getSystemIn();
-		out = interp.getSystemOut();
-		err = interp.getSystemErr();
+	StdChannel(String stdName) {
 		if (stdName.equals("stdin")) {
 			open(STDIN);
 		} else if (stdName.equals("stdout")) {
@@ -85,10 +130,7 @@ public class StdChannel extends Channel {
 		}
 	}
 
-	public StdChannel(Interp interp, int type) {
-		in = interp.getSystemIn();
-		out = interp.getSystemOut();
-		err = interp.getSystemErr();
+	public StdChannel(int type) {
 		open(type);
 	}
 
@@ -154,7 +196,7 @@ public class StdChannel extends Channel {
 	@Override
 	protected InputStream getInputStream() throws IOException {
 		if (stdType == STDIN)
-			return in;
+			return _in;
 		else
 			throw new RuntimeException("Should never be called");
 	}
@@ -163,9 +205,9 @@ public class StdChannel extends Channel {
 	protected OutputStream getOutputStream() throws IOException {
 		switch (stdType) {
 		case STDOUT:
-			return out;
+			return _out;
 		case STDERR:
-			return err;
+			return _err;
 		}
 		throw new RuntimeException("should never be called");
 	}
