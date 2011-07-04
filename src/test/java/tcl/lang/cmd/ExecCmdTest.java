@@ -17,13 +17,6 @@ public class ExecCmdTest extends TclCmdTest {
 				//"exec-1.3",
 				//"exec-6.3",
 				
-				// exec-9.1, 9.2, 9.5, 13.3, 14.4 fail due to error message differences
-				"exec-9.1",
-				"exec-9.2",
-				"exec-9.5",
-				"exec-13.3",
-				"exec-14.4",
-				
 				// exec-11.5 and exec-17.1 fail because JVM doesn't allow background processes to survive the JVM
 				// if they read from STDIN or write to STDOUT/STDERR.  There's no direct access
 				// in the JVM to filedescriptors 0, 1, 2; we're only given InputStream() and OutputStream()
