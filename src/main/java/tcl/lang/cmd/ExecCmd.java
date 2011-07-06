@@ -125,6 +125,7 @@ public class ExecCmd implements Command {
 			/* Run waitForExitAndCleanup() in a separate thread */
 			Thread t = new Thread(pipeline);
 			t.setDaemon(true);
+			t.setName("ExecCmd background pipeline (" + interp.toString() + ")");
 			t.start();
 			pipeline.throwAnyExceptions();
 			return;

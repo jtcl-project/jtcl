@@ -190,6 +190,7 @@ public class Fcopy {
 			backgroundCopy = new Thread(r);
 			getChannelOwnership(backgroundCopy.getId());
 			backgroundCopy.setDaemon(true);
+			backgroundCopy.setName("Fcopy (" + interp.toString() + "): " + source.getChanName() + " -> " + destination.getChanName());
 			backgroundCopy.start();
 			return 0;
 		}
