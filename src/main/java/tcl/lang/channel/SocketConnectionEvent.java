@@ -41,8 +41,8 @@ public class SocketConnectionEvent extends TclEvent {
 	 * @param serverSock The Java ServerSocket that created sock
 	 */
 	public SocketConnectionEvent(Interp interp, TclObject callbackObj, Socket sock, ServerSocket serverSock) {
-		cbInterp = interp;
-		callbackCmd = callbackObj;
+		this.cbInterp = interp;
+		this.callbackCmd = callbackObj;
 		this.sock = sock;
 		this.serverSock = serverSock;
 	}
@@ -73,19 +73,18 @@ public class SocketConnectionEvent extends TclEvent {
 			}
 			TclIO.registerChannel(cbInterp, chan);
 			
-			TclObject cblist = TclList.newInstance();
-			try {
-				TclList.append(cbInterp, cblist, callbackCmd);
-				TclList.append(cbInterp, cblist, TclString.newInstance(chan.getChanName()));
-				TclList.append(cbInterp, cblist, TclString.newInstance(sock.getInetAddress().getHostAddress()));
-				TclList.append(cbInterp, cblist, TclInteger.newInstance(sock.getPort()));
-			} catch (TclException e1) {
-				cbInterp.backgroundError();
-				return 1;
-			}
+			StringBuffer cblist = new StringBuffer();
+			cblist.append(callbackCmd.toString());
+			cblist.append(" ");
+			cblist.append(chan.getChanName());
+			cblist.append(" ");
+			cblist.append("" + sock.getInetAddress().getHostAddress());
+			cblist.append(" ");
+			cblist.append("" + sock.getPort());
+
 			// Process the event
 			try {
-				cbInterp.eval(cblist, TCL.EVAL_GLOBAL);
+				cbInterp.eval(cblist.toString(), TCL.EVAL_GLOBAL);
 			} catch (TclException e2) {
 				cbInterp.addErrorInfo("\n  during server socket callback \n");
 				cbInterp.backgroundError();
