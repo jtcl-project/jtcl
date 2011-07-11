@@ -6,17 +6,19 @@ July 14, 2011
 
   JTcl 2.0.0 has been released. New or fixed in this release:
 
-  * <<<info nameofexecutable>>> now creates and returns a temporary shell/bat script that invokes JTcl.
+  * <<info nameofexecutable>> now creates and returns a temporary shell/bat script that invokes JTcl.
 
-  * <<<lset>>> performance issues fixed.
+  * <<lset>> performance issues fixed.
 
-  * <<<socket -server command>>> now executes <command> as a string.
+  * <<socket -server command>> now executes <command> as a script.
 
   * ManagedSystemInStream thread is stopped when Interp is disposed.
 
   * All user background threads are now Java daemon threads, so that they will be stopped on main thread exit.
 
   * TJC enforces Java version 1.5 when compiling Tcl procs using javac.
+
+  * Javadoc for JTcl interpreter is now generated and included in website and doc zip file.
 
 
 
@@ -32,7 +34,7 @@ April 13, 2011
 
   * <<dict>> and <<apply>> commands have been backported from Tcl 8.5.  A compatibilty package <dict> is included.
 
-  * <<<array unset>>> on an undefined variable will not cause an error.
+  * <<array unset>> on an undefined variable will not cause an error.
 
   * <user> element added to <tcl_platform> array.
 
