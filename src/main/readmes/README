@@ -28,6 +28,13 @@ in /usr/local/bin (or any other directory on your PATH of your choice):
     sudo ln -s `pwd`/jtcl /usr/local/bin
 
 
+LICENSE
+
+JTcl is licensed under BSD-style licenses by various copyright holders.  See 
+the license.* files in the binary distribution files, or review at:
+
+    http://jtcl.kenai.com/licenses.html
+
 
 SOURCE CODE
 
@@ -37,6 +44,13 @@ from the Mercurial site:  http://mercurial.selenic.com/
 
 Browse JTcl source code:   http://kenai.com/projects/jtcl/sources
 Clone the JTcl repository: hg clone https://hg.kenai.com/hg/jtcl~jtcl-main 
+
+Sources to released versions can also be downloaded from:
+
+    http://kenai.com/projects/jtcl/downloads 
+
+Download the jtcl-{version}-src.zip file and unzip into a directory 
+of your choice.
 
 
 DOCUMENTATION
@@ -48,7 +62,7 @@ downloaded from:
 
 Documenation is distributed as a ZIP archive, Download the latest 
 jtcl-{version}-doc.zip file from the JTcl website, and unzip into a directory 
-of your choice.
+of your choice. 
 
 
 MAILING LIST and BUG REPORTING

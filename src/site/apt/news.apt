@@ -2,13 +2,15 @@
  JTcl News
  ----
 
-July 11, 2011
+July 14, 2011
 
   JTcl 2.0.0 has been released. New or fixed in this release:
 
   * <<<info nameofexecutable>>> now creates and returns a temporary shell/bat script that invokes JTcl.
 
   * <<<lset>>> performance issues fixed.
+
+  * <<<socket -server command>>> now executes <command> as a string.
 
   * ManagedSystemInStream thread is stopped when Interp is disposed.
 
