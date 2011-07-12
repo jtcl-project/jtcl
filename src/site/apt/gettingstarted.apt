@@ -9,7 +9,7 @@ Getting started with JTcl
     {{{http://www.oracle.com/technetwork/java/javase/downloads/index.html}Oracle.com}}.
     Apple Macintosh OSX 10.6 and below have Java 1.5 installed.  Many Linux 
     distributions have a Java package that can be installed via the
-    local package manager.   Install either the Java JRE or JDK package.
+    system package manager.   Install either the Java JRE or JDK package.
     
     []
     
@@ -18,9 +18,9 @@ Getting started with JTcl
     \
     Example:\
     \
-    download jtcl-<(version)>.zip using your web browser\
+    download jtcl-<(version)>-bin.zip using your web browser\
     \
-    <<unzip jtcl->><(version)><<.zip>>\
+    <<unzip jtcl->><(version)><<-bin.zip>>\
     <<cd jtcl->><(version)>\
     \
     Optional for Linux/Unix systems:  make a symbolic link in /usr/local/bin (or any other directory
@@ -30,7 +30,7 @@ Getting started with JTcl
     
     []
   
-  * Start the JTcl interpreter:\
+  * Start the JTcl interpreter with a Tcl program file:\
     \
     <<jtcl>>  <filename>  <arg> <arg ...>\
     \
@@ -39,3 +39,19 @@ Getting started with JTcl
     <<jtcl>>
     
     []
+
+  * Optional environment variables, set any of these before running <jtcl> or <jtcl.bat>: 
+
+    *  <<JAVA_HOME>> - specifies the location of the Java installation.  If not set, the <java> executable 
+       is assumed to be found on the <<PATH>>. 
+
+    *  <<CLASSPATH>> - additional Java jar files or class directories to be included.  Classpath components
+       should be colon separated for Unix/Linux/Mac OSX or semi-colon separated for Windows. 
+
+    *  <<JAVA_OPTS>> - arguments to be passed to the JVM, for example <"-server -Xmx512m">. 
+
+    *  <<TCLLIBPATH>> - additional directories containing Tcl libraries.  The specified directories will
+       be added to the JTcl interpreter <<auto_path>> variable.  Directory components should
+       be space separated for both Unix/Linux/Mac OSX and Windows. 
+
+
