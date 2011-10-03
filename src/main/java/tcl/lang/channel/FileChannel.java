@@ -66,6 +66,7 @@ public class FileChannel extends SeekableChannel {
 
 		mode = modeFlags;
 		File fileObj = FileUtil.getNewFileObj(interp, fileName);
+		boolean appendModeCreate = ((modeFlags & TclIO.APPEND)!=0) && ! fileObj.exists();
 
 		// Raise error if file exists and both CREAT and EXCL are set
 
@@ -82,11 +83,11 @@ public class FileChannel extends SeekableChannel {
 		}
 
 		if ((modeFlags & TclIO.RDWR) != 0) {
-			// Opens file (r+), error if file does not exist.
-
-			checkFileExists(interp, fileObj);
-			checkReadWritePerm(interp, fileObj, 0);
-
+			// Opens file (r+), error if file does not exist unless opening in append mode
+			if (! appendModeCreate) {
+				checkFileExists(interp, fileObj);
+				checkReadWritePerm(interp, fileObj, 0);
+			}
 			if (fileObj.isDirectory()) {
 				throw new TclException(interp, "couldn't open \"" + fileName + "\": illegal operation on a directory");
 			}
@@ -106,11 +107,11 @@ public class FileChannel extends SeekableChannel {
 			file = new RandomAccessFile(fileObj, "r");
 
 		} else if ((modeFlags & TclIO.WRONLY) != 0) {
-			// Opens file (a), error if dosent exist.
-
-			checkFileExists(interp, fileObj);
-			checkReadWritePerm(interp, fileObj, 1);
-
+			// Opens file, error if doesn't exist, unless opening in append mode
+			if (! appendModeCreate) {
+				checkFileExists(interp, fileObj);
+				checkReadWritePerm(interp, fileObj, 1);
+			}
 			if (fileObj.isDirectory()) {
 				throw new TclException(interp, "couldn't open \"" + fileName + "\": illegal operation on a directory");
 			}
@@ -121,7 +122,7 @@ public class FileChannel extends SeekableChannel {
 			// open the file. Throw an error indicating this
 			// limitation.
 
-			if (!fileObj.canRead()) {
+			if (!appendModeCreate && !fileObj.canRead()) {
 				throw new TclException(interp, "Java IO limitation: Cannot open a file "
 						+ "that has only write permissions set.");
 			}
