@@ -47,11 +47,9 @@ import tcl.lang.WrappedCommand;
  */
 
 public class InfoCmd implements Command {
-	static final private String validCmds[] = { "args", "body", "cmdcount",
-			"commands", "complete", "default", "exists", "functions",
-			"globals", "hostname", "level", "library", "loaded", "locals",
-			"nameofexecutable", "patchlevel", "procs", "script",
-			"sharedlibextension", "tclversion", "vars" };
+	static final private String validCmds[] = { "args", "body", "cmdcount", "commands", "complete", "default",
+			"exists", "functions", "globals", "hostname", "level", "library", "loaded", "locals", "nameofexecutable",
+			"patchlevel", "procs", "script", "sharedlibextension", "tclversion", "vars" };
 
 	static final int OPT_ARGS = 0;
 	static final int OPT_BODY = 1;
@@ -78,8 +76,8 @@ public class InfoCmd implements Command {
 	/**
 	 * Tcl_InfoObjCmd -> InfoCmd.cmdProc
 	 * 
-	 * This procedure is invoked to process the "info" Tcl command. See the user
-	 * documentation for details on what it does.
+	 * This procedure is invoked to process the "info" Tcl command. See the user documentation for details on what it
+	 * does.
 	 * 
 	 * @param interp
 	 *            the current interpreter.
@@ -92,8 +90,7 @@ public class InfoCmd implements Command {
 		int index;
 
 		if (objv.length < 2) {
-			throw new TclNumArgsException(interp, 1, objv,
-					"option ?arg arg ...?");
+			throw new TclNumArgsException(interp, 1, objv, "option ?arg arg ...?");
 		}
 		index = TclIndex.get(interp, objv[1], validCmds, "option", 0);
 
@@ -165,25 +162,18 @@ public class InfoCmd implements Command {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * InfoArgsCmd --
-	 * 
-	 * Called to implement the "info args" command that returns the argument
-	 * list for a procedure. Handles the following syntax:
+	/**
+	 * Called to implement the "info args" command that returns the argument list for a procedure. Handles the following
+	 * syntax:
 	 * 
 	 * info args procName
 	 * 
-	 * Results: Returns if successful, raises TclException otherwise.
-	 * 
-	 * Side effects: Returns a result in the interpreter's result object.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 * @param objv
+	 * @throws TclException
 	 */
 
-	private static void InfoArgsCmd(Interp interp, TclObject[] objv)
-			throws TclException {
+	private static void InfoArgsCmd(Interp interp, TclObject[] objv) throws TclException {
 		String name;
 		Procedure proc;
 		TclObject listObj;
@@ -208,25 +198,17 @@ public class InfoCmd implements Command {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * InfoBodyCmd --
-	 * 
-	 * Called to implement the "info body" command that returns the body for a
-	 * procedure. Handles the following syntax:
+	/**
+	 * Called to implement the "info body" command that returns the body for a procedure. Handles the following syntax:
 	 * 
 	 * info body procName
 	 * 
-	 * Results: Returns if successful, raises TclException otherwise.
-	 * 
-	 * Side effects: Returns a result in the interpreter's result object.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 * @param objv
+	 * @throws TclException
 	 */
 
-	private static void InfoBodyCmd(Interp interp, TclObject[] objv)
-			throws TclException {
+	private static void InfoBodyCmd(Interp interp, TclObject[] objv) throws TclException {
 		String name;
 		Procedure proc;
 		TclObject body, result;
@@ -244,25 +226,18 @@ public class InfoCmd implements Command {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * InfoCmdCountCmd --
-	 * 
-	 * Called to implement the "info cmdcount" command that returns the number
-	 * of commands that have been executed. Handles the following syntax:
+	/**
+	 * Called to implement the "info cmdcount" command that returns the number of commands that have been executed.
+	 * Handles the following syntax:
 	 * 
 	 * info cmdcount
 	 * 
-	 * Results: Returns if successful, raises TclException otherwise.
-	 * 
-	 * Side effects: Returns a result in the interpreter's result object.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 * @param objv
+	 * @throws TclException
 	 */
 
-	private static void InfoCmdCountCmd(Interp interp, TclObject[] objv)
-			throws TclException {
+	private static void InfoCmdCountCmd(Interp interp, TclObject[] objv) throws TclException {
 		if (objv.length != 2) {
 			throw new TclNumArgsException(interp, 2, objv, null);
 		}
@@ -270,28 +245,20 @@ public class InfoCmd implements Command {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * InfoCommandsCmd --
-	 * 
-	 * Called to implement the "info commands" command that returns the list of
-	 * commands in the interpreter that match an optional pattern. The pattern,
-	 * if any, consists of an optional sequence of namespace names separated by
-	 * "::" qualifiers, which is followed by a glob-style pattern that restricts
-	 * which commands are returned. Handles the following syntax:
+	/**
+	 * Called to implement the "info commands" command that returns the list of commands in the interpreter that match
+	 * an optional pattern. The pattern, if any, consists of an optional sequence of namespace names separated by "::"
+	 * qualifiers, which is followed by a glob-style pattern that restricts which commands are returned. Handles the
+	 * following syntax:
 	 * 
 	 * info commands ?pattern?
 	 * 
-	 * Results: Returns if successful, raises TclException otherwise.
-	 * 
-	 * Side effects: Returns a result in the interpreter's result object.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 * @param objv
+	 * @throws TclException
 	 */
 
-	private static void InfoCommandsCmd(Interp interp, TclObject[] objv)
-			throws TclException {
+	private static void InfoCommandsCmd(Interp interp, TclObject[] objv) throws TclException {
 		String cmdName, pattern, simplePattern;
 		Namespace ns;
 		Namespace globalNs = Namespace.getGlobalNamespace(interp);
@@ -336,17 +303,14 @@ public class InfoCmd implements Command {
 		list = TclList.newInstance();
 
 		if (ns != null) {
-			for (Iterator iter = ns.cmdTable.entrySet().iterator(); iter
-					.hasNext();) {
+			for (Iterator iter = ns.cmdTable.entrySet().iterator(); iter.hasNext();) {
 				Map.Entry entry = (Map.Entry) iter.next();
 				cmdName = (String) entry.getKey();
 
-				if ((simplePattern == null)
-						|| Util.stringMatch(cmdName, simplePattern)) {
+				if ((simplePattern == null) || Util.stringMatch(cmdName, simplePattern)) {
 					if (specificNsInPattern) {
 						cmd = (WrappedCommand) entry.getValue();
-						elemObj = TclString.newInstance(interp
-								.getCommandFullName(cmd));
+						elemObj = TclString.newInstance(interp.getCommandFullName(cmd));
 					} else {
 						elemObj = TclString.newInstance(cmdName);
 					}
@@ -361,15 +325,12 @@ public class InfoCmd implements Command {
 			// the effective namespace.
 
 			if ((ns != globalNs) && !specificNsInPattern) {
-				for (Iterator iter = globalNs.cmdTable.entrySet().iterator(); iter
-						.hasNext();) {
+				for (Iterator iter = globalNs.cmdTable.entrySet().iterator(); iter.hasNext();) {
 					Map.Entry entry = (Map.Entry) iter.next();
 					cmdName = (String) entry.getKey();
-					if ((simplePattern == null)
-							|| Util.stringMatch(cmdName, simplePattern)) {
+					if ((simplePattern == null) || Util.stringMatch(cmdName, simplePattern)) {
 						if (ns.cmdTable.get(cmdName) == null) {
-							TclList.append(interp, list, TclString
-									.newInstance(cmdName));
+							TclList.append(interp, list, TclString.newInstance(cmdName));
 						}
 					}
 				}
@@ -380,25 +341,18 @@ public class InfoCmd implements Command {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * InfoCompleteCmd --
-	 * 
-	 * Called to implement the "info complete" command that determines whether a
-	 * string is a complete Tcl command. Handles the following syntax:
+	/**
+	 * Called to implement the "info complete" command that determines whether a string is a complete Tcl command.
+	 * Handles the following syntax:
 	 * 
 	 * info complete command
 	 * 
-	 * Results: Returns if successful, raises TclException otherwise.
-	 * 
-	 * Side effects: Returns a result in the interpreter's result object.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 * @param objv
+	 * @throws TclException
 	 */
 
-	private static void InfoCompleteCmd(Interp interp, TclObject[] objv)
-			throws TclException {
+	private static void InfoCompleteCmd(Interp interp, TclObject[] objv) throws TclException {
 		if (objv.length != 3) {
 			throw new TclNumArgsException(interp, 2, objv, "command");
 		}
@@ -407,40 +361,31 @@ public class InfoCmd implements Command {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * InfoDefaultCmd --
-	 * 
-	 * Called to implement the "info default" command that returns the default
-	 * value for a procedure argument. Handles the following syntax:
+	/**
+	 * Called to implement the "info default" command that returns the default value for a procedure argument. Handles
+	 * the following syntax:
 	 * 
 	 * info default procName arg varName
 	 * 
-	 * Results: Returns if successful, raises TclException otherwise.
-	 * 
-	 * Side effects: Returns a result in the interpreter's result object.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 * @param objv
+	 * @throws TclException
 	 */
 
-	private static void InfoDefaultCmd(Interp interp, TclObject[] objv)
-			throws TclException {
+	private static void InfoDefaultCmd(Interp interp, TclObject[] objv) throws TclException {
 		String procName, argName, varName;
 		Procedure proc;
 		TclObject valueObj;
 
 		if (objv.length != 5) {
-			throw new TclNumArgsException(interp, 2, objv,
-					"procname arg varname");
+			throw new TclNumArgsException(interp, 2, objv, "procname arg varname");
 		}
 
 		procName = objv[2].toString();
 		argName = objv[3].toString();
 		proc = Procedure.findProc(interp, procName);
 		if (proc == null) {
-			throw new TclException(interp, "\"" + procName
-					+ "\" isn't a procedure");
+			throw new TclException(interp, "\"" + procName + "\" isn't a procedure");
 		}
 
 		for (int i = 0; i < proc.argList.length; i++) {
@@ -455,36 +400,26 @@ public class InfoCmd implements Command {
 						interp.setResult(0);
 					}
 				} catch (TclException excp) {
-					throw new TclException(interp,
-							"couldn't store default value in variable \""
-									+ varName + "\"");
+					throw new TclException(interp, "couldn't store default value in variable \"" + varName + "\"");
 				}
 				return;
 			}
 		}
-		throw new TclException(interp, "procedure \"" + procName
-				+ "\" doesn't have an argument \"" + argName + "\"");
+		throw new TclException(interp, "procedure \"" + procName + "\" doesn't have an argument \"" + argName + "\"");
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * InfoExistsCmd --
-	 * 
-	 * Called to implement the "info exists" command that determines whether a
-	 * variable exists. Handles the following syntax:
+	/**
+	 * Called to implement the "info exists" command that determines whether a variable exists. Handles the following
+	 * syntax:
 	 * 
 	 * info exists varName
 	 * 
-	 * Results: Returns if successful, raises TclException otherwise.
-	 * 
-	 * Side effects: Returns a result in the interpreter's result object.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 * @param objv
+	 * @throws TclException
 	 */
 
-	private static void InfoExistsCmd(Interp interp, TclObject[] objv)
-			throws TclException {
+	private static void InfoExistsCmd(Interp interp, TclObject[] objv) throws TclException {
 		String varName;
 		Var var = null;
 
@@ -493,8 +428,7 @@ public class InfoCmd implements Command {
 		}
 
 		varName = objv[2].toString();
-		Var[] result = Var.lookupVar(interp, varName, null, 0, "access", false,
-				false);
+		Var[] result = Var.lookupVar(interp, varName, null, 0, "access", false, false);
 		if (result != null) {
 			var = result[0];
 		}
@@ -508,26 +442,18 @@ public class InfoCmd implements Command {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * InfoFunctionsCmd --
-	 * 
-	 * Called to implement the "info functions" command that returns the list of
-	 * math functions currently defined matching an optional pattern. Handles
-	 * the following syntax:
+	/**
+	 * Called to implement the "info functions" command that returns the list of math functions currently defined
+	 * matching an optional pattern. Handles the following syntax:
 	 * 
 	 * info functions ?pattern?*
 	 * 
-	 * Results: Returns if successful, raises TclException otherwise.
-	 * 
-	 * Side effects: Returns a result in the interpreter's result object.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 * @param objv
+	 * @throws TclException
 	 */
 
-	private void InfoFunctionsCmd(Interp interp, TclObject[] objv)
-			throws TclException {
+	private void InfoFunctionsCmd(Interp interp, TclObject[] objv) throws TclException {
 		String varName, pattern;
 		Expression mathFns = new Expression();
 		Var var;
@@ -562,26 +488,18 @@ public class InfoCmd implements Command {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * InfoGlobalsCmd --
-	 * 
-	 * Called to implement the "info globals" command that returns the list of
-	 * global variables matching an optional pattern. Handles the following
-	 * syntax:
+	/**
+	 * Called to implement the "info globals" command that returns the list of global variables matching an optional
+	 * pattern. Handles the following syntax:
 	 * 
 	 * info globals ?pattern?*
 	 * 
-	 * Results: Returns if successful, raises TclException otherwise.
-	 * 
-	 * Side effects: Returns a result in the interpreter's result object.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 * @param objv
+	 * @throws TclException
 	 */
 
-	private static void InfoGlobalsCmd(Interp interp, TclObject[] objv)
-			throws TclException {
+	private static void InfoGlobalsCmd(Interp interp, TclObject[] objv) throws TclException {
 		String varName, pattern;
 		Namespace globalNs = Namespace.getGlobalNamespace(interp);
 		Var var;
@@ -600,8 +518,7 @@ public class InfoCmd implements Command {
 
 		list = TclList.newInstance();
 
-		for (Iterator iter = globalNs.varTable.entrySet().iterator(); iter
-				.hasNext();) {
+		for (Iterator iter = globalNs.varTable.entrySet().iterator(); iter.hasNext();) {
 			Map.Entry entry = (Map.Entry) iter.next();
 			varName = (String) entry.getKey();
 			var = (Var) entry.getValue();
@@ -617,25 +534,17 @@ public class InfoCmd implements Command {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * InfoHostnameCmd --
-	 * 
-	 * Called to implement the "info hostname" command that returns the host
-	 * name. Handles the following syntax:
+	/**
+	 * Called to implement the "info hostname" command that returns the host name. Handles the following syntax:
 	 * 
 	 * info hostname
 	 * 
-	 * Results: Returns if successful, raises TclException otherwise.
-	 * 
-	 * Side effects: Returns a result in the interpreter's result object.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 * @param objv
+	 * @throws TclException
 	 */
 
-	private static void InfoHostnameCmd(Interp interp, TclObject[] objv)
-			throws TclException {
+	private static void InfoHostnameCmd(Interp interp, TclObject[] objv) throws TclException {
 		String name = null;
 
 		if (objv.length != 2) {
@@ -656,25 +565,18 @@ public class InfoCmd implements Command {
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * InfoLevelCmd --
-	 * 
-	 * Called to implement the "info level" command that returns information
-	 * about the call stack. Handles the following syntax:
+	/**
+	 * Called to implement the "info level" command that returns information about the call stack. Handles the following
+	 * syntax:
 	 * 
 	 * info level ?number?
 	 * 
-	 * Results: Returns if successful, raises TclException otherwise.
-	 * 
-	 * Side effects: Returns a result in the interpreter's result object.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 * @param objv
+	 * @throws TclException
 	 */
 
-	private static void InfoLevelCmd(Interp interp, TclObject[] objv)
-			throws TclException {
+	private static void InfoLevelCmd(Interp interp, TclObject[] objv) throws TclException {
 		int level;
 		CallFrame frame;
 		TclObject list;
@@ -691,8 +593,7 @@ public class InfoCmd implements Command {
 
 			if (level <= 0) {
 				if (interp.varFrame == null) {
-					throw new TclException(interp, "bad level \""
-							+ objv[2].toString() + "\"");
+					throw new TclException(interp, "bad level \"" + objv[2].toString() + "\"");
 				}
 
 				level += interp.varFrame.level;
@@ -704,14 +605,12 @@ public class InfoCmd implements Command {
 				}
 			}
 			if ((frame == null) || frame.objv == null) {
-				throw new TclException(interp, "bad level \""
-						+ objv[2].toString() + "\"");
+				throw new TclException(interp, "bad level \"" + objv[2].toString() + "\"");
 			}
 
 			list = TclList.newInstance();
 			for (int i = 0; i < frame.objv.length; i++) {
-				TclList.append(interp, list, TclString
-						.newInstance(frame.objv[i]));
+				TclList.append(interp, list, TclString.newInstance(frame.objv[i]));
 			}
 			interp.setResult(list);
 			return;
@@ -720,25 +619,18 @@ public class InfoCmd implements Command {
 		throw new TclNumArgsException(interp, 2, objv, "?number?");
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * InfoLibraryCmd --
-	 * 
-	 * Called to implement the "info library" command that returns the library
-	 * directory for the Tcl installation. Handles the following syntax:
+	/**
+	 * Called to implement the "info library" command that returns the library directory for the Tcl installation.
+	 * Handles the following syntax:
 	 * 
 	 * info library
 	 * 
-	 * Results: Returns if successful, raises TclException otherwise.
-	 * 
-	 * Side effects: Returns a result in the interpreter's result object.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 * @param objv
+	 * @throws TclException
 	 */
 
-	private static void InfoLibraryCmd(Interp interp, TclObject[] objv)
-			throws TclException {
+	private static void InfoLibraryCmd(Interp interp, TclObject[] objv) throws TclException {
 		if (objv.length != 2) {
 			throw new TclNumArgsException(interp, 2, objv, null);
 		}
@@ -747,64 +639,48 @@ public class InfoCmd implements Command {
 			return;
 		} catch (TclException e) {
 			// If the variable has not been defined
-			throw new TclException(interp,
-					"no library has been specified for Tcl");
+			throw new TclException(interp, "no library has been specified for Tcl");
 		}
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * InfoLoadedCmd --
-	 * 
-	 * Called to implement the "info loaded" command that returns the packages
-	 * that have been loaded into an interpreter. Handles the following syntax:
+	/**
+	 * Called to implement the "info loaded" command that returns the packages that have been loaded into an
+	 * interpreter. Handles the following syntax:
 	 * 
 	 * info loaded ?interp?
 	 * 
-	 * Results: Returns if successful, raises TclException otherwise.
-	 * 
-	 * Side effects: Returns a result in the interpreter's result object.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 * @param objv
+	 * @throws TclException
 	 */
 
-	private static void InfoLoadedCmd(Interp interp, TclObject[] objv)
-			throws TclException {
+	private static void InfoLoadedCmd(Interp interp, TclObject[] objv) throws TclException {
 		if (objv.length != 2 && objv.length != 3) {
 			throw new TclNumArgsException(interp, 2, objv, "?interp?");
 		}
-        if (objv.length == 3) {
-            Interp slaveInterp = InterpCmd.getInterp(interp, objv[2]);
-            if (slaveInterp==null) {
-                throw new TclException(interp,"could not find interpreter \""+
-                                              objv[2].toString() + "\"");
-            }
-        }
-        // Since the 'load' command is not supported, always
-        // return a null list for 'info loaded'
-        interp.setResult(TclString.newInstance(""));
+		if (objv.length == 3) {
+			Interp slaveInterp = InterpCmd.getInterp(interp, objv[2]);
+			if (slaveInterp == null) {
+				throw new TclException(interp, "could not find interpreter \"" + objv[2].toString() + "\"");
+			}
+		}
+		// Since the 'load' command is not supported, always
+		// return a null list for 'info loaded'
+		interp.setResult(TclString.newInstance(""));
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * InfoLocalsCmd --
-	 * 
-	 * Called to implement the "info locals" command to return a list of local
-	 * variables that match an optional pattern. Handles the following syntax:
+	/**
+	 * Called to implement the "info locals" command to return a list of local variables that match an optional pattern.
+	 * Handles the following syntax:
 	 * 
 	 * info locals ?pattern?
 	 * 
-	 * Results: Returns if successful, raises TclException otherwise.
-	 * 
-	 * Side effects: Returns a result in the interpreter's result object.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 * @param objv
+	 * @throws TclException
 	 */
 
-	private static void InfoLocalsCmd(Interp interp, TclObject[] objv)
-			throws TclException {
+	private static void InfoLocalsCmd(Interp interp, TclObject[] objv) throws TclException {
 		String pattern;
 		TclObject list;
 
@@ -831,54 +707,56 @@ public class InfoCmd implements Command {
 	}
 
 	/**
-	 * Called to implement the "info nameofexecutable" command that returns the
-	 * name of the binary file running this application. This implementation attempts
-	 * to locate the Java VM executable, creates a new temporary file as a shell/bat script
-	 * to invoke the JVM executable with the current classpath and shell, 
-	 * and returns the temporary file name.
+	 * Called to implement the "info nameofexecutable" command that returns the name of the binary file running this
+	 * application. This implementation attempts to locate the Java VM executable, creates a new temporary file as a
+	 * shell/bat script to invoke the JVM executable with the current classpath and shell, and returns the temporary
+	 * file name.
 	 * 
-	 * @param interp Interpreter in which to evaluate command
-	 * @param objv arguments 'info nameofexecutable'
-	 * @throws TclException on any error
+	 * @param interp
+	 *            Interpreter in which to evaluate command
+	 * @param objv
+	 *            arguments 'info nameofexecutable'
+	 * @throws TclException
+	 *             on any error
 	 */
-	private static void InfoNameOfExecutableCmd(Interp interp, TclObject[] objv)
-			throws TclException {
+
+	private static void InfoNameOfExecutableCmd(Interp interp, TclObject[] objv) throws TclException {
 
 		if (objv.length != 2) {
 			throw new TclNumArgsException(interp, 2, objv, null);
 		}
-		
- 		String nameOfExecutable = interp.getNameOfExecutable();
- 		boolean createExecFile = false;
- 		File execFile = null;
- 		
- 		if (nameOfExecutable == null) {
- 			// executable file name not set
- 			createExecFile = true; 
- 		} else {
- 			// check if temporary executable file still exists
- 			execFile = new File(nameOfExecutable);
- 			if (! execFile.exists()) {
- 				createExecFile = true;
- 			}
- 		}
- 		
- 		if (createExecFile) {
+
+		String nameOfExecutable = interp.getNameOfExecutable();
+		boolean createExecFile = false;
+		File execFile = null;
+
+		if (nameOfExecutable == null) {
+			// executable file name not set
+			createExecFile = true;
+		} else {
+			// check if temporary executable file still exists
+			execFile = new File(nameOfExecutable);
+			if (!execFile.exists()) {
+				createExecFile = true;
+			}
+		}
+
+		if (createExecFile) {
 			// create a new temp file to execute JTcl interpreter
-	    	boolean isWindows = Util.isWindows();
-	    	String eol = isWindows ? "\r\n" : "\n";
-	    	String suffix = isWindows ? ".bat" : ".sh";
-	    	try {
-	    		execFile = File.createTempFile("jtcl", suffix);
-	    		nameOfExecutable = execFile.getCanonicalPath();
+			boolean isWindows = Util.isWindows();
+			String eol = isWindows ? "\r\n" : "\n";
+			String suffix = isWindows ? ".bat" : ".sh";
+			try {
+				execFile = File.createTempFile("jtcl", suffix);
+				nameOfExecutable = execFile.getCanonicalPath();
 			} catch (IOException e) {
 				throw new TclException(interp, "Could not create temp file for [info nameofexecutable]");
 			}
-			
+
 			// The JDK provides direct no means to learn the name of the executable
-			// that launched the application.  We'll try to find the java vm, but use
+			// that launched the application. We'll try to find the java vm, but use
 			// 'java' as a default.
-	
+
 			String javaExecutable = "java";
 			String javaHome = System.getProperty("java.home");
 			if (javaHome != null) {
@@ -896,70 +774,62 @@ public class InfoCmd implements Command {
 					}
 				}
 			}
-			
+
 			String execLine = isWindows ? "@echo off" + eol : "#!" + eol + "exec ";
 			execLine += "\"" + javaExecutable + "\"";
 			String classpath = System.getProperty("java.class.path");
 			if (classpath != null) {
-				execLine += " -classpath \"" + classpath + "\" " ;
+				execLine += " -classpath \"" + classpath + "\" ";
 			}
-	
+
 			// add the top level class
-			execLine += interp.getShellClassName();	
-			
+			execLine += interp.getShellClassName();
+
 			// add shell parameters
 			execLine += (isWindows ? " %*" : " ${1+\"$@\"}") + eol;
-			
+
 			// write the file and set delete on exit
-	    	FileWriter out = null;
-	    	try {
-	    		out = new FileWriter(execFile);
-	    		out.write(execLine);
-	    		out.close();
-	    	} catch (Exception e) {
-	    		throw new TclException(interp, "Could not write temp file [info nameofexecutable]");
-	    	}
-	    	execFile.deleteOnExit();
-	    	
-	    	// set as executable
-	    	if (! isWindows) {
-	    		try {
-	    			Process process = Runtime.getRuntime().exec("chmod +x " + execFile.getPath());
-	    			process.waitFor();
-	    			process.destroy();
-	    		} catch (Exception e) {
-	    			throw new TclException(interp, "Couldn't set executable file as executable [name of executable]");
-	    		}
-	    	}
-	    	
-	    	// cache this temp file name in Interp
-	    	interp.setNameOfExecutable(nameOfExecutable);
+			FileWriter out = null;
+			try {
+				out = new FileWriter(execFile);
+				out.write(execLine);
+				out.close();
+			} catch (Exception e) {
+				throw new TclException(interp, "Could not write temp file [info nameofexecutable]");
+			}
+			execFile.deleteOnExit();
+
+			// set as executable
+			if (!isWindows) {
+				try {
+					Process process = Runtime.getRuntime().exec("chmod +x " + execFile.getPath());
+					process.waitFor();
+					process.destroy();
+				} catch (Exception e) {
+					throw new TclException(interp, "Couldn't set executable file as executable [name of executable]");
+				}
+			}
+
+			// cache this temp file name in Interp
+			interp.setNameOfExecutable(nameOfExecutable);
 		}
-		
+
 		interp.setResult(nameOfExecutable);
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * InfoPatchLevelCmd --
-	 * 
-	 * Called to implement the "info patchlevel" command that returns the
-	 * default value for an argument to a procedure. Handles the following
-	 * syntax:
+	/**
+	 * Called to implement the "info patchlevel" command that returns the default value for an argument to a procedure.
+	 * Handles the following syntax:
 	 * 
 	 * info patchlevel
 	 * 
-	 * Results: Returns if successful, raises TclException otherwise.
-	 * 
-	 * Side effects: Returns a result in the interpreter's result object.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 * @param objv
+	 * @throws TclException
 	 */
 
-	private static void InfoPatchLevelCmd(Interp interp, TclObject[] objv)
-			throws TclException {
+	private static void InfoPatchLevelCmd(Interp interp, TclObject[] objv) throws TclException {
 		if (objv.length != 2) {
 			throw new TclNumArgsException(interp, 2, objv, null);
 		}
@@ -969,18 +839,17 @@ public class InfoCmd implements Command {
 	}
 
 	/**
-	 * Called to implement the "info procs" command that returns the procedures
-	 * in the current namespace that match an optional pattern. Handles the
-	 * following syntax:
+	 * Called to implement the "info procs" command that returns the procedures in the current namespace that match an
+	 * optional pattern. Handles the following syntax:
 	 * 
 	 * info procs ?pattern?
 	 * 
-	 * Results: Returns if successful, raises TclException otherwise.
-	 * 
-	 * Side effects: Returns a result in the interpreter's result object.
+	 * @param interp
+	 * @param objv
+	 * @throws TclException
 	 */
-	private static void InfoProcsCmd(Interp interp, TclObject[] objv)
-			throws TclException {
+
+	private static void InfoProcsCmd(Interp interp, TclObject[] objv) throws TclException {
 		String cmdName, pattern;
 		Namespace namespace = Namespace.getCurrentNamespace(interp);
 		WrappedCommand cmd, realCmd;
@@ -994,10 +863,10 @@ public class InfoCmd implements Command {
 			/* Is the pattern qualified with a namespace? */
 			int nsEnd = pattern.lastIndexOf("::");
 			if (nsEnd >= 0) {
-				namespaceName = pattern.substring(0, nsEnd+2);
+				namespaceName = pattern.substring(0, nsEnd + 2);
 				namespace = Namespace.findNamespace(interp, namespaceName, null, 0);
-				pattern = pattern.substring(nsEnd+2);
-			} 
+				pattern = pattern.substring(nsEnd + 2);
+			}
 		} else {
 			throw new TclNumArgsException(interp, 2, objv, "?pattern?");
 		}
@@ -1006,24 +875,28 @@ public class InfoCmd implements Command {
 		// of all procs that match the pattern.
 
 		list = TclList.newInstance();
-		for (Iterator<Entry<String,WrappedCommand>> iter = namespace.cmdTable.entrySet().iterator(); iter
-				.hasNext();) {
-			Map.Entry<String, WrappedCommand> entry =  iter.next();
-			cmdName =  entry.getKey();
-			cmd =  entry.getValue();
-
-			// If the command isn't itself a proc, it still might be an
-			// imported command that points to a "real" proc in a different
-			// namespace.
-
-			realCmd = Namespace.getOriginalCommand(cmd);
-
-			if (Procedure.isProc(cmd)
-					|| ((realCmd != null) && Procedure.isProc(realCmd))) {
-				if ((pattern == null) || Util.stringMatch(cmdName, pattern)) {
-					TclList
-							.append(interp, list, TclString
-									.newInstance((namespaceName == null ? "" : namespace.toString()+"::") + cmdName));
+		if (namespace != null) {
+			for (Iterator<Entry<String, WrappedCommand>> iter = namespace.cmdTable.entrySet().iterator(); iter.hasNext();) {
+				Map.Entry<String, WrappedCommand> entry = iter.next();
+				cmdName = entry.getKey();
+				cmd = entry.getValue();
+	
+				// If the command isn't itself a proc, it still might be an
+				// imported command that points to a "real" proc in a different
+				// namespace.
+	
+				realCmd = Namespace.getOriginalCommand(cmd);
+	
+				if (Procedure.isProc(cmd) || ((realCmd != null) && Procedure.isProc(realCmd))) {
+					if ((pattern == null) || Util.stringMatch(cmdName, pattern)) {
+						String result = (namespaceName == null ? "" : namespace.toString() + "::") + cmdName;
+						if (result.startsWith("::::")) {
+							// global namespace may have added it's own :: namespace separator,
+							// if so, strip off beginning ::
+							result = result.substring(2);
+						}
+						TclList.append(interp, list, TclString.newInstance(result));
+					}
 				}
 			}
 		}
@@ -1032,29 +905,22 @@ public class InfoCmd implements Command {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * InfoScriptCmd --
-	 * 
-	 * Called to implement the "info script" command that returns the script
-	 * file that is currently being evaluated. Handles the following syntax:
+	/**
+	 * Called to implement the "info script" command that returns the script file that is currently being evaluated.
+	 * Handles the following syntax:
 	 * 
 	 * info script ?filename?
 	 * 
-	 * Results: Returns if successful, raises TclException otherwise.
-	 * 
-	 * Side effects: Returns a result in the interpreter's result object.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 * @param objv
+	 * @throws TclException
 	 */
 
-	private static void InfoScriptCmd(Interp interp, TclObject[] objv)
-			throws TclException {
+	private static void InfoScriptCmd(Interp interp, TclObject[] objv) throws TclException {
 
-        if (objv.length == 3) {
-            interp.scriptFile = objv[2].toString();
-        } else if (objv.length != 2) {
+		if (objv.length == 3) {
+			interp.scriptFile = objv[2].toString();
+		} else if (objv.length != 2) {
 			throw new TclNumArgsException(interp, 2, objv, "?filename?");
 		}
 
@@ -1062,26 +928,18 @@ public class InfoCmd implements Command {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * InfoSharedlibCmd --
-	 * 
-	 * Called to implement the "info sharedlibextension" command that returns
-	 * the file extension used for shared libraries. Handles the following
-	 * syntax:
+	/**
+	 * Called to implement the "info sharedlibextension" command that returns the file extension used for shared
+	 * libraries. Handles the following syntax:
 	 * 
 	 * info sharedlibextension
 	 * 
-	 * Results: Returns if successful, raises TclException otherwise.
-	 * 
-	 * Side effects: Returns a result in the interpreter's result object.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 * @param objv
+	 * @throws TclException
 	 */
 
-	private static void InfoSharedlibCmd(Interp interp, TclObject[] objv)
-			throws TclException {
+	private static void InfoSharedlibCmd(Interp interp, TclObject[] objv) throws TclException {
 		if (objv.length != 2) {
 			throw new TclNumArgsException(interp, 2, objv, null);
 		}
@@ -1089,25 +947,18 @@ public class InfoCmd implements Command {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * InfoTclVersionCmd --
-	 * 
-	 * Called to implement the "info tclversion" command that returns the
-	 * version number for this Tcl library. Handles the following syntax:
+	/**
+	 * Called to implement the "info tclversion" command that returns the version number for this Tcl library. Handles
+	 * the following syntax:
 	 * 
 	 * info tclversion
 	 * 
-	 * Results: Returns if successful, raises TclException otherwise.
-	 * 
-	 * Side effects: Returns a result in the interpreter's result object.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 * @param objv
+	 * @throws TclException
 	 */
 
-	private static void InfoTclVersionCmd(Interp interp, TclObject[] objv)
-			throws TclException {
+	private static void InfoTclVersionCmd(Interp interp, TclObject[] objv) throws TclException {
 		if (objv.length != 2) {
 			throw new TclNumArgsException(interp, 2, objv, null);
 		}
@@ -1116,28 +967,20 @@ public class InfoCmd implements Command {
 		return;
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * InfoVarsCmd --
-	 * 
-	 * Called to implement the "info vars" command that returns the list of
-	 * variables in the interpreter that match an optional pattern. The pattern,
-	 * if any, consists of an optional sequence of namespace names separated by
-	 * "::" qualifiers, which is followed by a glob-style pattern that restricts
-	 * which variables are returned. Handles the following syntax:
+	/**
+	 * Called to implement the "info vars" command that returns the list of variables in the interpreter that match an
+	 * optional pattern. The pattern, if any, consists of an optional sequence of namespace names separated by "::"
+	 * qualifiers, which is followed by a glob-style pattern that restricts which variables are returned. Handles the
+	 * following syntax:
 	 * 
 	 * info vars ?pattern?
 	 * 
-	 * Results: Returns if successful, raises TclException otherwise.
-	 * 
-	 * Side effects: Returns a result in the interpreter's result object.
-	 * 
-	 * ----------------------------------------------------------------------
+	 * @param interp
+	 * @param objv
+	 * @throws TclException
 	 */
 
-	private static void InfoVarsCmd(Interp interp, TclObject[] objv)
-			throws TclException {
+	private static void InfoVarsCmd(Interp interp, TclObject[] objv) throws TclException {
 		String varName, pattern, simplePattern;
 		Var var;
 		Namespace ns;
@@ -1183,25 +1026,21 @@ public class InfoCmd implements Command {
 
 		list = TclList.newInstance();
 
-		if ((interp.varFrame == null) || !interp.varFrame.isProcCallFrame
-				|| specificNsInPattern) {
+		if ((interp.varFrame == null) || !interp.varFrame.isProcCallFrame || specificNsInPattern) {
 			// There is no frame pointer, the frame pointer was pushed only
 			// to activate a namespace, or we are in a procedure call frame
 			// but a specific namespace was specified. Create a list containing
 			// only the variables in the effective namespace's variable table.
 
-			for (Iterator iter = ns.varTable.entrySet().iterator(); iter
-					.hasNext();) {
+			for (Iterator iter = ns.varTable.entrySet().iterator(); iter.hasNext();) {
 				Map.Entry entry = (Map.Entry) iter.next();
 				varName = (String) entry.getKey();
 				var = (Var) entry.getValue();
 
 				if (!var.isVarUndefined() || var.isVarNamespace()) {
-					if ((simplePattern == null)
-							|| Util.stringMatch(varName, simplePattern)) {
+					if ((simplePattern == null) || Util.stringMatch(varName, simplePattern)) {
 						if (specificNsInPattern) {
-							elemObj = TclString.newInstance(Var
-									.getVariableFullName(interp, var));
+							elemObj = TclString.newInstance(Var.getVariableFullName(interp, var));
 						} else {
 							elemObj = TclString.newInstance(varName);
 						}
@@ -1218,20 +1057,17 @@ public class InfoCmd implements Command {
 			// namespace.
 
 			if ((ns != globalNs) && !specificNsInPattern) {
-				for (Iterator iter = globalNs.varTable.entrySet().iterator(); iter
-						.hasNext();) {
+				for (Iterator iter = globalNs.varTable.entrySet().iterator(); iter.hasNext();) {
 					Map.Entry entry = (Map.Entry) iter.next();
 					varName = (String) entry.getKey();
 					var = (Var) entry.getValue();
 
 					if (!var.isVarUndefined() || var.isVarNamespace()) {
-						if ((simplePattern == null)
-								|| Util.stringMatch(varName, simplePattern)) {
+						if ((simplePattern == null) || Util.stringMatch(varName, simplePattern)) {
 
 							// Skip vars defined in current namespace
 							if (ns.varTable.get(varName) == null) {
-								TclList.append(interp, list, TclString
-										.newInstance(varName));
+								TclList.append(interp, list, TclString.newInstance(varName));
 							}
 						}
 					}
