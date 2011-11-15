@@ -24,6 +24,8 @@
       * {{{./tcllib1.13/toc.html}tcllib}} 1.13 \
         <Note - the following modules are omitted: amazon-s3, coroutine, devtools, gpx, grammar_aycock, hook, imap4, namespacex, pki, pt, rest, virtchannel_base, virtchannel_core, virtchannel_transform >
    
+      * {{{./jtcllib/index.html}jtcllib}} 1.0 
+   
    * {{{buildingjtcl.html}Building JTcl}}
 
    * {{{../apidocs/index.html}Javadoc}} for the JTcl interpreter

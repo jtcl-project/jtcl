@@ -1,0 +1,699 @@
+
+Hyde 
+~~~~
+
+  Hyde allows Java code to be easily integrated with JTcll.
+  Three levels of integration are offered:
+
+    * simple Java methods that define Tcl procedures.
+
+    * JTcl extensions in Java, with full access to JTcl library features.
+
+    * arbitrary Java classes.
+
+
+  Hyde compiles Java code <on-the-fly> - there is no need for a separate
+  compilation step for Java code.  Hyde requires access to a Java compiler
+  during development (<janinocp> by default), but not necessarily for deployment.
+
+  Hyde saves compiled Java bytecodes in simple Tcl source files.
+  This allows for faster execution after
+  initial compilation, and allows applications to be bundled when a Java
+  compiler may not be available.  Runtime properties direct whether Java
+  code should be run from cache or compiled - the default is to compile
+  Java code when cached bytecode doesn't exists, or when the Tcl source file's
+  timestamp is greater than the cached bytecode file's timestamp (basically,
+  a <make/ant> function.)  The bytecode cache file is simply a Tcl source file
+  in ASCII format.  The bytecode cache file is sourced at startup using a
+  Tcl safe slave interpreter.
+
+  Hyde requires use of a Java compiler.  Hyde supports the following Java compilers.
+  Note that Janino is included with JTcl, and is recommended:
+
+    * Janino Compiler version 2.4.5+  Mostly Java version 1.4 compatible.
+
+    * Java JDK version 1.4.2+
+
+    * Jikes version 1.15+  Java version 1.4 compatible.
+
+    * GCJ version 3.0+
+
+    * Pizza Compiler version 1.1+  Java version 1.4 compatible.
+
+
+
+* Usage
+
+
+  Include the <<hyde>> package in Tcl source files:
+
++------------------------------------------------------------------------+
+    package require hyde
++------------------------------------------------------------------------+
+
+
+* Hyde Commands
+
+  Three Tcl procedures are available, each compiling Java source code, each
+  in a different manner.
+
+    * <<::hyde::jproc>> simple Java methods
+
+    * <<::hyde::jcommand>> JTcl command extensions, accessing the JTcl interpreter
+
+    * <<::hyde::jclass>> arbitrary Java classes
+
+    []
+
+  Two hyde commands configure and clean up compiler artifacts.
+
+    * <<::hyde::configure>> configure hyde behavior
+
+    * <<::hyde::rmcompiledir>> removes and cleans up the compiler temporary directory
+
+    []
+
+  Two hyde commands provide utilty procedures to set objects from a list or an array.
+
+    * <<::hyde::setFromList>> sets an object from a list
+
+    * <<::hyde::setFromArray>> sets an object from an array
+
+    []
+
+* Hyde Configuration
+
+  Hyde's behavior can be controlled through use the <::hyde::configure> command.
+
+  ::hyde::configure -option-name <value>
+
+** Configuration Options
+
+    * -runtime <value>
+
+    values: <compile> (default), <forcecompile>  <runfromcache>
+
+    Specifies how Hyde should deal with Java source code.  The default is to
+    conditionaly compile Java source when cached bytecodes are not available
+    or when the Tcl source file containing the Java code is newer than the
+    bytecode cache file.  
+
+       * <compile> causes java source to be compiled if not already cached or
+         is out of date.
+
+       * <forcecompile> causes Java source to be compiled each time the program is run.  
+
+       * <runfromcache> specifies that Java code
+         should only be executed from pre-compiled cache.  This is especially
+         useful when shipping applications to environments where a Java compiler
+         may not be available.  
+
+
+        When runtime is <compile> or <forcecompile> and the <writecache> property is set,
+        compiled bytecodes are written to cache after compilation.
+
+    * -cachefile <filename>
+
+    values: <filename>  (default: hydecache.tcl)
+    Specifies the file in which cached bytecode should be used, and which
+    compiled code is saved.   This file read during package initialization
+    so that any previously compiled hyde commands are available.
+
+    * -compiler <compiler>
+
+    values: <janinocp>, <janino>,  <pizza>, <javac>,  <jikes>,  <gcj>
+
+    Specifies which internal compiler method should be used to compile Java
+    source code:
+
+
+        * <janino> is the default for standalone JTcl, using the Janino compiler <in process>
+
+        * <janinocp> using the Janino compiler with additional class resolution via the webapp classpath.
+
+        * <pizza> using the Pizza Compiler <in process>
+
+        * <javac> specifies the Sun's Java SDK compiler, via exec.
+
+        * <jikes> specifies the IBM Jikes compiler, via exec.
+
+        * <gcj>   specifies the GNU Compiler Collection (GCC) gcj compiler,
+     via exec. 
+
+
+        The <javac> <jikes> or <gcj>  command(s) must be available on
+        your execution PATH.  The Janino and Pizza compilers are used
+        <in process> and do not require exec'ing a separate program.
+
+
+    * -compiledir <directory-path>
+
+    values: <directory-path>
+    Set the directory in which Java code is compiled.  Default is an unique 
+    temp directory, using the value from the Java system property java.io.tmpdir as
+    its parent.
+
+
+    * -writecache <value>
+
+    values: 0,  1 (default)
+    Turn on/off writinng to the hydecache.tcl cache file (or filename as defined by the
+    <cachefile> option).
+
+
+    * -debug <value>
+
+    values: 0 (default),  1
+    Turn on/off internal puts statements to trace hyde's processing.
+
+    []
+
+  Example:
+
++---------------------------------------------------------------+
+  package require hyde
+  ::hyde::configure -debug 1
+  ::hyde::configure -cachefile mypkg/bytecodes.tcl
+  ::hyde::configure -runtime runfromcache
++---------------------------------------------------------------+
+
+  ::hyde::configure when executed with only an <option> (no value) will return
+  the current value of that option.  Executing with no arguments returns a list of
+  all <option value> pairs
+
+
+
+* ::hyde::jproc
+
+  ::hyde::jproc  <returntype>  <procname>  <typed-arg-list>  -package <package-name>
+    -import <class-list>  -extends <class>  -implements <class-list>
+    -auxmethods <code>  -throws <exception-list>  -body <body>
+    <body>
+
+
+  ::hyde::jproc compiles and loads a static method callable as a Tcl procedure.
+  Hyde creates a Java class named <procnameCmd> and a static method
+  named <procname>  A Tcl proc is defined to call the static method using
+  the <java::call> command.  The Tcl proc should be called with the same
+  number of arguments as specified in <typed-arg-list>
+
+  The class is declared in the <hyde> Java package to avoid name collision,
+  unless the optional <package> <package-name> option is specified.
+  For easiest integration with Tcl, the method should return <void> <int>
+  <long> <float> <double> <char> <boolean> or <String>  Returning other
+  Java objects requires use of the <java> package and java object commands to
+  manipulate the return value.
+
+** Arguments
+
+    * returntype
+
+    a Java type that specifies the return type of the method.
+    If the method does not return a value, <void> should
+    specified as returntype.  Required.
+
+    * procname
+
+    the name of the resulting Tcl procedure.  The procname
+    may include a namespace qualifier.  Required.
+
+    * typed-arg-list
+
+    a Tcl list of Java types and argument names.  The list
+    should contain Java types followed by an arugment name, e.g.
+    <int x int y String str}>  Required.
+
+    * -package package-name
+
+    specifies a package declaration for
+    the class.  The default is the <hyde> package.  The
+    package-name may be a null string, in which no package
+    declaration will be included.  Optional.
+
+    * -import class-list
+
+    specifies a Tcl list of packages that are
+    required by the Java code.  Each import class-list item
+    may import all classes from a pacakge, e.g.
+    <import {java.sql.* java.util.Date}>  Optional.
+
+    * -extends class
+
+    specifies a Java base class to extend.  The base
+    class should also be imported with the <import> option.  Optional.
+
+    * -implements class-list
+
+    specifies Java classes to implement.
+    The classes should also be imported with the <import> option.  Optional.
+
+    * -auxmethods code
+
+    specifies extra Java code to be inserted in
+    the class.  This allows additional methods and class variables to
+    be inserted in the class.   Optional.
+
+    * -throws exception-list
+
+    specifies a Tcl list of exception
+    classes that may be thrown by the Java code.   Optional.
+
+    * -body body
+
+    <-body> is an optional noise word option to specify
+    the body.  Otherwise, the body must appear as the last argument.
+
+    * body
+
+    Java code to be used as the Tcl proc.  The Java code
+    must return the same type as specified as returntype.  Required.
+
+    []
+
+
+* ::hyde::jcommand
+
+  ::hyde::jcommand  procname  -import <class-list>  -dispose <code>
+   -auxmethods <code>  -body <body>
+   body
+
+  ::hyde::jcommand compiles and loads a Java class as a Tcl Extension.   Hyde
+  creates a Java class named <procnameCmd> and a public method
+  <cmdProc> implementing Command, throwing TclException.
+
+  The body should be Java code to implement the Tcl command.  Method arguments
+  (Interp interp, TclObject[] argv) are automatically defined.  Hyde
+  also imports tcl.lang.*.  Additional classes may be imported.
+  If extra methods and/or class variables need to be compiled, use the
+  optional <auxmethods code> argument.  The Tcl command may also
+  specify cleanup code when the command is deleted by using the
+  <dispose code> agrument.
+
+  The class is declared in the <hyde> package namespace.
+  The procname is bound to the resulting class as a Tcl Extension.
+
+  For information on the JTcl API, see the {{{../../apidocs/index.html}JTcl API Javadoc}}
+
+** Arguments
+
+    * procname 
+
+    the name of the resulting Tcl procedure.  The procname
+    may include a namespace qualifier. Required.
+
+    * -import class-list
+
+    specifies a Tcl list of packages that are
+    required by the Java code.  Each import class-list item
+    may import all classes from a pacakge, e.g.
+    <import {java.sql.* java.util.Date}>   Optional.
+
+    * -dispose code
+
+    specifies extra Java code to be inserted in
+    the class. <code> should define a <void disposeCmd()> method body
+    to execute when the command is deleted by the interpreter,
+    either when the interpreter is exiting, or when a command
+    is deleted by <rename cmd {}>   Optional.
+
+    * -auxmethods code
+
+    specifies extra Java code to be inserted in
+    the class. <code>
+    This allows additional methods and class variables to
+    be inserted in the command class.    Optional.
+
+    * -body body
+
+    <-body> is an optional noise word option to specify
+    the body.  Otherwise, the body must appear as the last argument.
+
+    * body
+
+    Java code to be used as the Tcl command.  The Java code
+    should call <interp.setResult()> with a valid return value.
+    Specifically, the <body> code is inserted as the <cmdProc>
+    implementation.  Required.
+
+    []
+
+
+* ::hyde::jclass
+
+  ::hyde::jclass classname -package <package-name>  -access <type>
+    -import <class-list>  -extends <class> -implements <class-list>
+    -properties <property-type-list>  -hashequals <property-list> 
+    -tostring <property-list>  -include <java-file>  -body <body>
+   body
+
+  ::hyde::jclass compiles and loads arbitrary Java class.  Java code compiled is
+  automatically defined in the 'hyde' package, or may be overridden with
+  the -package option.  Access to the compiled object can be made through
+  use of the <java::new> and <java::call> commands from the JTcl <java>
+  package (as well as any of the other java::* commands.)
+
+  Programmers should avoid class names ending in <Cmd>  ::hyde::jproc and ::hyde::jcommand
+  generate class names by appending <Cmd> to their procnames.
+
+  The Java code can be defined by either by a <body> definition or by
+  including a file with the <include> option.
+
+** Arguments
+
+    * classname
+
+    the name of the resulting Java class.  Required.
+
+    * -package package-name
+
+    specifies a package declaration for
+    the class.  The default is the <hyde> package.  The
+    package-name may be a null string, in which no package
+    declaration will be included.  Optional.
+
+    * -access type
+
+    one of <public> <protected> or <private>
+    Default is package level access scope.  Optional.
+
+    * -extends class
+
+    specifies another Java class to extend.  <class> should
+    be in the local package or included in the <import> option.
+
+    * -implements class-list
+
+    specifies a list of interfaces to extend.  Any listed <class-list> should
+    be in the local package or included in the <import> option.
+
+    * -import class-list
+
+    specifies a Tcl list of packages that are
+    required by the Java code.  Each import class-list item
+    may import all classes from a pacakge, e.g.
+    <import {java.sql.* java.util.Date}>  Any class name used
+    in <extends> <implements> <import> or as a field,
+    local variable, or argument should be included in the
+    <import class-list> unless those class names are fully
+    qualified.  Optional.
+
+    * -properties property-type-list
+
+    specifies a list of class fields
+    to define, along with getter and setter methods for each.
+    Each element of the property-type-list must be a sub-list of
+    two or three elements: <type  fieldname  optional-init-value>
+    <type> must be a valid Java primitive type, or an object,
+    <fieldname> is a valid Java identifier,
+    <optional-init-value> is an optional initializer.
+    All property fields are declared as <private> and
+    getter/setter methods are defined, following Java
+    bean camel-case conventions and as underscore separated method names.   Optional.
+
+
+    Example:
+
+    <-properties \{  \{int id\}  \{String name\}  \}>
+
+    defines the following methods:
+
+--------------------------------------------------
+    public void setId (int id)
+    public void set_id (int id)
+    public int getId ()
+    public int get_id ()
+    public void setName (String name)
+    public void set_name (String name)
+    public String getName ()
+    public String get_name ()
+--------------------------------------------------
+
+    * -tostring property-list
+    
+    specifies a list of properties
+    that are also defined in the <properties> argument to
+    be used in defining  <toString()> 
+    <toStringList()> <toList(interp,varname)> and 
+    <toArray(interp,arrayname)> methods.
+    <toString()> returns a String presentation of the object properties and
+    their values; <toStringList()> returns a String in Tcl list format of
+    <property-name  value> pairs; <toList> requires an Interp and 
+    varname arguments, and sets the varname as a Tcl list of <property-name  value>
+    pairs, with any Java object returned as an object; <toArray> requires
+    an Interp and arrayname arguments, and sets the arrayname as a Tcl array,
+    with property name as key, any Java object set as an object.
+    If the <property-list> argument is <*> then all property fields will
+    be used for the tostring methods.  Optional.
+    
+    * -hashequals property-list
+    
+    specifies a list of properties
+    that are also defined in the <properties> argument to
+    be used in defining <hashCode()> and <equals()> methods.
+    If the <property-list> value is <*> then all property fields will
+    be used for hashCode and equals methods.  Optional.
+
+    * -include java-file
+      
+    specifies a file containing Java source
+    to include as the class definition.
+    The class or interface defined in the <java-file>
+    mustmatch the <classname> argument, and the <package>
+    argument must be specified and match the pacakge name
+    of the file.   No other argument are allowed when using the
+    <include> argument.  Optional.
+
+    * -body body
+
+    <-body> is an optional noise word option to specify
+    the body.  Otherwise, the body must appear as the last argument.
+
+    * body
+
+    Java code to be used as the class or interface.  The class
+    name must be the same as the defined classname.  Required.
+
+    []
+
+
+* ::hyde::configure
+
+  ::hyde::configure -option <value>
+
+  Refer to the above section <Hyde Configuration> for usage details.
+
+
+* ::hyde::rmcompiledir
+
+  ::hyde::rmcompiledir
+
+  Removes the compile temporary directory.  Hyde write compiled files
+  to a temporary directory so that subsequent hyde commands can find
+  compiled classes.  This command removes the compilation .class files
+  and directory.  You can safely remove the compile directory after all
+  hyde procedures,  commands, and classes have been defined.  Be careful
+  not to execute this command if you have set the configuration <compiledir>
+  to a valuable directory.
+
+* ::hyde::setFromList
+
+  ::hyde::setFromList object propertyValueList
+
+  Iterates over the <propertyValueList> which must be a flat list of
+  property-names and values,  invoking the object's <set_$property>
+  method for each property and value.  Useful for java objects 
+  created with the ::hyde::jclass command with -properties argument.
+
+
+* ::hyde::setFromArray
+
+  ::hyde::setFromArray object arrayName
+
+  Similar to ::hyde::setFromList, but the <arrayName> argument should be
+  the name of an array that contains the object's property names as
+  keys.
+
+
+
+* Notes
+
+  Classes that you <import> will need to be available on your CLASSPATH,
+  available on env(TCL_CLASSPATH), or specified with the java::import command.
+
+  Java classes defined with <::hyde::jclass> are automatically placed in the
+  <hyde> Java package namespace.  This allows Java code defined with <::hyde::jproc>
+  or <::hyde::jcommand> to import from the <hyde> package.  The <hyde> directory
+  (or directory derived from hyde.cachefile) is added to the CLASSPATH during
+  compilation.
+
+  Hyde exports its interfaces, so it is possible in your
+  code to import those procs.  Afterwards, the ::hyde:: namespace qualifier is
+  not needed:
+
++-------------------------------------------------+
+      package require hyde
+      namespace import hyde::*
+      jproc int Foo {foo bar} { .... }
++-------------------------------------------------+
+
+  If you import classes with the same class names from other packages, you may
+  need to fully qualify your classes to avoid conflict.
+
+
+  The <Pizza> compiler is not included in the Hyde distribution.  If you would like
+  to use it, download the <pizza-1.1.jar> file from the
+  {{{http://sourceforge.net/projects/pizzacompiler}Pizza project}},
+  and place it in the hyde/pizza directory.
+
+
+* Samples
+
+  Samples are in the ./samples/hyde-1.5/samples directory.  The actual hyde package 
+  files for _aejaks_ are include in the aejaks.war file.
+
+
+* Limitations
+
+  Nested classes coded in <::hyde::jclass> and <hyde::jcommand> are problematic, as
+  multiple class files are generated by the compiler, and the bytecode
+  cache loader in Hyde is fairly simplistic.  Currently, you shouldn't
+  code inner classes, as inner classes will not be loaded into the JVM, causing
+  missing class errors.
+
+  The Janino compiler (default) is mostly Java 1.4 compatible.  See 
+  {{{http://janino.net}Janino.net}}
+  for more information about Janino.  Janino is included in the JTcl distribution and is
+  also used by JTcl's TJC (Tcl-to-Java) compiler.
+
+
+* Examples
+
+
+
+  <<Fibonacci calculator using>> <::hyde::jproc>
+
++----------------------------------------------------------+
+  package require hyde
+
+  ::hyde::jproc int fibHyde {int n} {
+      if (n <= 0) {return 0;}
+      if (n == 1) {return 1;}
+     return (fibHyde(n-1) + fibHyde(n-2));
+  }
+
+  puts "Fibonacci sequence to 20:"
+  for {set i 1} {$i <= 20} {incr i} {
+      puts [fibHyde $i]
+  }
++----------------------------------------------------------+
+
+
+
+  <<String rotate command using>> <::hyde::jcommand> <<e.g., rot13 encoding)>>
+
++----------------------------------------------------------+
+  package require hyde
+
+  ::hyde::jcommand rotate -body {
+
+        // check arguments, must have at least a string, optional rotate-count
+        if (argv.length < 2 || argv.length > 3) {
+             throw new TclNumArgsException(interp, 1, argv, "string ?rotate-count?");
+        }
+        String str = argv[1].toString();
+
+        // optional 'rotate-count' argument, default is 13
+        int count = 13;
+        if (argv.length == 3) {
+              int x = TclInteger.get(interp, argv[2]);
+              if (x >= 0 && x <= 26) {
+                    count = x;
+              } else {
+                    throw new TclException(interp, "invalid rotate-count value, must be in the range 0 to 26");
+              }
+        }
+
+        StringBuffer result = new StringBuffer(str.length());
+
+        String lower = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz";
+        String upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+        for (int i = 0; i < str.length(); i++) {
+              char c = str.charAt(i);
+              int idx;
+              if ((idx = lower.indexOf(c)) >= 0) {
+          	    result.append(lower.charAt(idx + count));
+              } else if ((idx = upper.indexOf(c)) >= 0) {
+          	    result.append(upper.charAt(idx + count));
+              } else {
+          	    result.append(c);
+              }
+        }
+        interp.setResult(result.toString());
+  }
+
+
+  # rot13 too easy to break, super secret rot1/rot25 encoding!!
+  set message "JTcl is Cool!"
+  set secret  [rotate $message 1]
+  puts "Pssst! pass it on: $secret"
+  puts "decode the secret: [rotate $secret 25]"
+
++----------------------------------------------------------+
+
+
+
+  <<Simple bean object using>> <hyde::jclass> <<additional isValid() method:>>
+
++----------------------------------------------------------+
+  package require hyde
+
+  ::hyde::jclass Employee -import java.util.Date -properties {
+        {int id -1}
+        {String name}
+        {Date hireDate}
+  } -tostring * -hashequals * -body {
+        public boolean isValid() {
+              if (id == -1 || name == null || hireDate == null) {
+                    return false;
+              } else {
+                    return true;
+              }
+        }
+  }
+
+
+  set emp1 [java::new hyde.Employee]
+  $emp1 setId 86
+  $emp1 setName "Maxwell Smart"
+  $emp1 set_hireDate [java::new java.util.Date]
+  puts "employee [$emp1 get_id] isValid? [$emp1 isValid]"
+
+  foreach {prop value} [$emp1 toStringList] {
+       puts "$prop: $value"
+  }
+
+  $emp1 toList [java::getinterp] empList
+  puts $empList
+
+  $emp1 toArray [java::getinterp] empArr
+  puts "hire date is: [$empArr(hireDate) toString]"
+
+
+  ::hyde::jclass Bar -hashequals * -tostring * -properties { {int id} {String name} }
+  set bar1 [java::new hyde.Bar]
+  set bar2 [java::new hyde.Bar]
+  set bar3 [java::new hyde.Bar]
+  $bar1 setId 1
+  $bar1 setName Tod
+  $bar1 toList [java::getinterp] bar1List
+  puts $bar1List
+  ::hyde::setFromList $bar2 $bar1List
+  puts [$bar1 equals $bar2]
+  array set myArray $bar1List
+  ::hyde::setFromArray $bar3 myArray
+  puts [$bar1 equals $bar3]
+
+
++----------------------------------------------------------+
+

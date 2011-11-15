@@ -89,6 +89,11 @@ namespace eval tcl {
     source $dir/pkgIndex.tcl
     unset dir
 
+    # jtcl - source jtcllib main pkgIndex.tcl
+    set dir resource:/tcl/pkg/jtcllib/library
+    source $dir/pkgIndex.tcl
+    unset dir
+
     # jtcl - note that 'dict' package is provided via DictCmd & TclDict
     package provide dict 8.5
 }
