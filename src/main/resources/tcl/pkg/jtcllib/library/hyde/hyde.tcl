@@ -599,7 +599,7 @@ proc hyde::compileWith_janino {name codeStr {keepClass 0}} {
 	foreach path [split $env(CLASSPATH)  $env(path.separator)] {
             set last [file tail $path]
 	    set tail [string tolower $last]
-	    if {[string match jtcl*.jar $tail} {
+	    if {[string match jtcl*.jar $tail]} {
 		set dir [file dirname $path]
 		lappend env(TCL_CLASSPATH) [file join $dir $last]
 		append classPath $env(path.separator) [file join $dir $last]
@@ -703,7 +703,7 @@ proc hyde::compileWith_janinocp {name codeStr {keepClass 0}} {
         foreach path [split $env(CLASSPATH)  $env(path.separator)] {
     	set last [file tail $path]
     	set tail [string tolower $last]
-    	if {[string match jtcl*.jar $tail} {
+    	if {[string match jtcl*.jar $tail]} {
     	    set dir [file dirname $path]
     	    lappend env(TCL_CLASSPATH) [file join $dir $last]
     	    append classPath $env(path.separator) [file join $dir $last]
@@ -1540,83 +1540,83 @@ if {$argv eq "-compilejaninocp-"} {
     hyde::configure -cachefile janinocp_cache.tcl
 
     hyde::jclass JaninoCP -package hydeinternal -import {
-    org.codehaus.janino.*
-    org.codehaus.janino.util.*
-    org.codehaus.janino.util.enumerator.*
-    org.codehaus.janino.util.resource.*
-    java.io.*
-} -body {
+        org.codehaus.janino.*
+        org.codehaus.janino.util.*
+        org.codehaus.janino.util.enumerator.*
+        org.codehaus.janino.util.resource.*
+        java.io.*
+    } -body {
 
-    private IClassLoader icloader = null;
-    private String lastError;
-
-    public JaninoCP(ClassLoader cpClassLoader) {
-
-        String classPath = System.getProperty("java.class.path");
-        icloader = createJavacLikePathIClassLoader(
-            cpClassLoader,
-            null, // optionalBootClassPath
-            null, // optionalExtDirs
-            PathResourceFinder.parsePath(classPath)
-        );
-    }
-
-    public ClassFile[] compile(String javasrc) {
-        lastError = "";
-        try {
-            StringReader sreader = new StringReader(javasrc);
-            Scanner scanner = new Scanner(null, sreader);
-            Parser parser = new Parser(scanner);
-            Java.CompilationUnit cunit = parser.parseCompilationUnit();
-            UnitCompiler ucompiler = new UnitCompiler(cunit, icloader);
-            EnumeratorSet defaultDebug = DebuggingInformation.DEFAULT_DEBUGGING_INFORMATION;
-            ClassFile[] cfiles = ucompiler.compileUnit(defaultDebug);
-            return cfiles;
-        } catch (Exception e) {
-            lastError = e.getMessage();
-            return null;
+        private IClassLoader icloader = null;
+        private String lastError;
+    
+        public JaninoCP(ClassLoader cpClassLoader) {
+    
+            String classPath = System.getProperty("java.class.path");
+            icloader = createJavacLikePathIClassLoader(
+                cpClassLoader,
+                null, // optionalBootClassPath
+                null, // optionalExtDirs
+                PathResourceFinder.parsePath(classPath)
+            );
+        }
+    
+        public ClassFile[] compile(String javasrc) {
+            lastError = "";
+            try {
+                StringReader sreader = new StringReader(javasrc);
+                Scanner scanner = new Scanner(null, sreader);
+                Parser parser = new Parser(scanner);
+                Java.CompilationUnit cunit = parser.parseCompilationUnit();
+                UnitCompiler ucompiler = new UnitCompiler(cunit, icloader);
+                EnumeratorSet defaultDebug = DebuggingInformation.DEFAULT_DEBUGGING_INFORMATION;
+                ClassFile[] cfiles = ucompiler.compileUnit(defaultDebug);
+                return cfiles;
+            } catch (Exception e) {
+                lastError = e.getMessage();
+                return null;
+            }
+        }
+    
+        public String getError() {
+            if (lastError == null) {
+                return "compile() has not yet been run.";
+            }
+            return lastError;
+        }
+    
+    
+        private IClassLoader createJavacLikePathIClassLoader(
+                    ClassLoader cpClassLoader,
+                    final File[] optionalBootClassPath,
+                    final File[] optionalExtDirs,
+                    final File[] classPath) {
+    
+            IClassLoader icl = null;
+    
+            ResourceFinder bootClassPathResourceFinder = new PathResourceFinder(
+                optionalBootClassPath == null ?
+                PathResourceFinder.parsePath(System.getProperty("sun.boot.class.path")):
+                optionalBootClassPath
+            );
+            ResourceFinder extensionDirectoriesResourceFinder = new JarDirectoriesResourceFinder(
+                optionalExtDirs == null ?
+                PathResourceFinder.parsePath(System.getProperty("java.ext.dirs")):
+                optionalExtDirs
+            );
+            ResourceFinder classPathResourceFinder = new PathResourceFinder(classPath);
+    
+            if (cpClassLoader != null) {
+                icl = new ClassLoaderIClassLoader(cpClassLoader);
+            }
+            icl = new ResourceFinderIClassLoader(bootClassPathResourceFinder, icl);
+            icl = new ResourceFinderIClassLoader(extensionDirectoriesResourceFinder, icl);
+            icl = new ResourceFinderIClassLoader(classPathResourceFinder, icl);
+    
+    	    return icl;
+    
         }
     }
-
-    public String getError() {
-        if (lastError == null) {
-            return "compile() has not yet been run.";
-        }
-        return lastError;
-    }
-
-
-    private IClassLoader createJavacLikePathIClassLoader(
-                ClassLoader cpClassLoader,
-                final File[] optionalBootClassPath,
-                final File[] optionalExtDirs,
-                final File[] classPath) {
-
-        IClassLoader icl = null;
-
-        ResourceFinder bootClassPathResourceFinder = new PathResourceFinder(
-            optionalBootClassPath == null ?
-            PathResourceFinder.parsePath(System.getProperty("sun.boot.class.path")):
-            optionalBootClassPath
-        );
-        ResourceFinder extensionDirectoriesResourceFinder = new JarDirectoriesResourceFinder(
-            optionalExtDirs == null ?
-            PathResourceFinder.parsePath(System.getProperty("java.ext.dirs")):
-            optionalExtDirs
-        );
-        ResourceFinder classPathResourceFinder = new PathResourceFinder(classPath);
-
-        if (cpClassLoader != null) {
-            icl = new ClassLoaderIClassLoader(cpClassLoader);
-        }
-        icl = new ResourceFinderIClassLoader(bootClassPathResourceFinder, icl);
-        icl = new ResourceFinderIClassLoader(extensionDirectoriesResourceFinder, icl);
-        icl = new ResourceFinderIClassLoader(classPathResourceFinder, icl);
-
-	return icl;
-
-    }
-}
     # end of hyde::jclass
 
     if {! [ info exists ::hyde::cacheCode(hydeinternal/JaninoCP)  ]} {
