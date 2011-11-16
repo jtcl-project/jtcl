@@ -43,7 +43,7 @@ while [ -h "$pgm" ]; do
     fi
 done
 
-dir=`dirname $pgm`
+dir=`dirname "$pgm"`
 
 # set classpath, or add to existing
 if [ -z "$CLASSPATH" ] ; then
@@ -53,7 +53,7 @@ if [ -z "$CLASSPATH" ] ; then
     fi
 else
     if $ismsys ; then
-        jtcldir=`$dir/echopath $dir`
+        jtcldir=`$dir/echopath "$dir"`
         CLASSPATH="$jtcldir/jtcl-$jtclver.jar;$CLASSPATH"
     elif $iscygwin ; then
         CLASSPATH=`cygpath -pu "$CLASSPATH"`
