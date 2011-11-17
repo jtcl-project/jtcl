@@ -752,7 +752,7 @@ proc hyde::compileWith_janinocp {name codeStr {keepClass 0}} {
 	set tclobj [java::call $tcl.TclByteArray {newInstance byte[]} $rawByteCode]
 
 	# ...and now make it into a Tcl variable
-	[java::getinterp] setVar byteCode $tclobj 0
+	[java::getinterp] {setVar java.lang.String tcl.lang.TclObject int} byteCode $tclobj 0
 
 	if {[string first "\$" $class_name] == -1} {
 	    set inner($class_name) $byteCode
@@ -1524,12 +1524,11 @@ if {$argv eq "-compilejaninocp-"} {
 
     # find that janino jar, same location as tcljava.jar or jacl.jar
     foreach path [split $env(CLASSPATH)  $env(path.separator)] {
-	set tail [string tolower [file tail $path]]
-	if {[string equal $tail tcljava.jar] || \
-	    [string equal $tail jacl.jar] } {
+	set tail [file tail $path]
+	if {[string match jtcl*.jar [string tolower $tail]]} {
 	    set dir [file dirname $path]
-	    lappend env(TCL_CLASSPATH) [file join $dir janino.jar]
-	    append env(CLASSPATH) $env(path.separator) [file join $dir janino.jar] $env(path.separator)
+	    lappend env(TCL_CLASSPATH) [file join $dir $tail]
+	    append env(CLASSPATH) $env(path.separator) [file join $dir $tail] $env(path.separator)
 	    break
 	}
     }
