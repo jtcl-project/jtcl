@@ -546,11 +546,6 @@ Hyde
   and place it in the hyde/pizza directory.
 
 
-* Samples
-
-  Samples are in the ./samples/hyde-1.5/samples directory.  The actual hyde package 
-  files for _aejaks_ are include in the aejaks.war file.
-
 
 * Limitations
 
