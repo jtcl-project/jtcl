@@ -537,6 +537,11 @@ public class Notifier implements EventDeleter {
 
 			if (serviceEvent(flags) != 0) {
 				result = 1;
+				// file event handling thread can keep putting events in the queue, thus
+				// starving idle event handling.  service idle event here, if any,
+				if ((flags & TCL.IDLE_EVENTS) != 0) {
+					serviceIdle();
+				}
 				break;
 			}
 
