@@ -2,6 +2,28 @@
  JTcl News
  ----
 
+December 15, 2011
+
+  JTcl 2.1.0 has be released.  New or fixed in this release:
+
+  * <New!> JTcllib - JTcl specific library of modules using the <java> package.  The first (and so far, only) 
+    module is {{{./docs/jtcllib/index.html}hyde}}.  User submissions are encouraged.
+
+  * Bug fixes:
+
+    * <<info command ::foo>> returned too many leading namespace separators.
+
+    * An exception was thrown when opening a non-existent file in mode "a" or "a+".
+
+
+
+
+ Please report bugs and other unexpected behaviors at the JTcl project
+ site's {{{http://kenai.com/bugzilla/buglist.cgi?product=jtcl}Bug tracking system}}.
+
+ <The JTcl Team>
+
+
 July 14, 2011
 
   JTcl 2.0.0 has been released. New or fixed in this release:

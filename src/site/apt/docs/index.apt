@@ -29,3 +29,7 @@
    * {{{buildingjtcl.html}Building JTcl}}
 
    * {{{../apidocs/index.html}Javadoc}} for the JTcl interpreter
+
+=========
+
+   * {{{./jtcl-swank-paper.pdf}JTcl and Swank: What's new with Tcl and Tk on the JVM}} <[PDF]> Presented at the Eighteenth Annual Tcl/Tk Conference (2011).
