@@ -66,8 +66,6 @@ public class TclString implements InternalRep {
 	/**
 	 * Returns a dupilcate of the current object.
 	 * 
-	 * @param obj
-	 *            the TclObject that contains this internalRep.
 	 */
 
 	public InternalRep duplicate() {
@@ -88,7 +86,7 @@ public class TclString implements InternalRep {
 	/**
 	 * Return the internal StringBuffer. Used by TclInputStream as a shortcut.
 	 * 
-	 * @param sbuf
+	 * @return sbuf, the internal StringBuffer.
 	 */
 	public StringBuffer getSbuf() {
 		return sbuf;

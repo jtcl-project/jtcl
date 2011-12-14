@@ -409,7 +409,7 @@ public class TclList implements InternalRep {
 	 *            List object in which element should be stored
 	 * @param index
 	 *            Index of element to store
-	 * @param valuePtr
+	 * @param value
 	 *            Tcl object to store in the designated list element
 	 * 
 	 *           
@@ -524,7 +524,7 @@ public class TclList implements InternalRep {
 	 *            List object in which element should be stored
 	 * @param index
 	 *            Index of element to store
-	 * @param valuePtr
+	 * @param value
 	 *            Tcl object to store in the designated list element
 	 * 
 	 *           

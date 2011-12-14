@@ -67,7 +67,7 @@ public class TclInteger implements InternalRep {
 	 * Creates a new instance of a TclObject with a TclInteger internal
 	 * representation.
 	 * 
-	 * @param b
+	 * @param i
 	 *            initial value of the integer object.
 	 * @return the TclObject with the given integer value.
 	 */
@@ -218,8 +218,6 @@ public class TclInteger implements InternalRep {
 	/**
 	 * Changes the integer value of the object.
 	 * 
-	 * @param interp
-	 *            current interpreter.
 	 * @param tobj
 	 *            the object to operate on.
 	 * @param i

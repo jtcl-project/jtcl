@@ -795,7 +795,7 @@ public class TJC {
 	 * @param part1 array name, or scalar name
 	 * @param part2 array index
 	 * @param incrAmount amount to increment
-	 * @return
+	 * @return tclobj
 	 * @throws TclException
 	 */
 	public static final TclObject incrVar(Interp interp, String part1,

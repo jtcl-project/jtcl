@@ -44,11 +44,11 @@ public class SearchId {
 	 * an enumeration, a unique string that ArrayVar creates, and an index value
 	 * used for future SearchId objects.
 	 * 
-	 * @param e
+	 * @param iter
 	 *            initial Enumeration
 	 * @param s
 	 *            String as the unique identifier for the searchId
-	 * @param e
+	 * @param i
 	 *            index value for this object
 	 */
 	public SearchId(Iterator iter, String s, int i) {

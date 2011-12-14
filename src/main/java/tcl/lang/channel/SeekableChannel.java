@@ -141,7 +141,7 @@ public abstract class SeekableChannel extends Channel {
 	}
 
 	/**
-	 * @returns the current file position.
+	 * @return the current file position.
 	 */
 	@Override
 	public long tell() throws IOException {

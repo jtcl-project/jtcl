@@ -137,7 +137,6 @@ public class Expression {
 	 *            the context in which to evaluate the expression.
 	 * @param string
 	 *            expression to evaluate.
-	 * @return the value of the expression.
 	 * @exception TclException
 	 *                for malformed expressions.
 	 */

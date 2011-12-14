@@ -40,8 +40,6 @@ public class TclIndex implements InternalRep {
 	/**
 	 * Returns a dupilcate of the current object.
 	 * 
-	 * @param obj
-	 *            the TclObject that contains this internalRep.
 	 */
 	public InternalRep duplicate() {
 		return new TclIndex(index, table);
@@ -75,9 +73,9 @@ public class TclIndex implements InternalRep {
 	 *            the interperter or null
 	 * @param tobj
 	 *            the object to operate on.
-	 * @paran table the list of commands
-	 * @paran msg used as part of any error messages
-	 * @paran flags may be TCL.EXACT.
+	 * @param table the list of commands
+	 * @param msg used as part of any error messages
+	 * @param flags may be TCL.EXACT.
 	 */
 
 	public static int get(Interp interp, TclObject tobj, String[] table,

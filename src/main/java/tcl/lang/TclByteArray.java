@@ -84,8 +84,6 @@ public class TclByteArray implements InternalRep {
 	/**
 	 * Returns a duplicate of the current object.
 	 * 
-	 * @param obj
-	 *            the TclObject that contains this internalRep.
 	 */
 	public InternalRep duplicate() {
 		return new TclByteArray(bytes, 0, used);
@@ -187,7 +185,7 @@ public class TclByteArray implements InternalRep {
 	 * @param length
 	 *            new length of the array
 	 * 
-	 * @returns the byte array
+	 * @return the byte array
 	 */
 
 	public static byte[] setLength(Interp interp, TclObject tobj, int length) {

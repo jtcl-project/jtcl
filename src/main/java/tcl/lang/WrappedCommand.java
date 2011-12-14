@@ -145,8 +145,6 @@ public class WrappedCommand {
 	/**
 	 * Set a command trace on this command
 	 * 
-	 * @param command
-	 *            fully qualified command name
 	 * @param trace
 	 *            trace to add to command
 	 * @throws TclException
@@ -167,8 +165,6 @@ public class WrappedCommand {
 	 * 
 	 * @param interp
 	 *            interpreter for error messages
-	 * @param command
-	 *            fully qualified name of command
 	 * @return List, in the form of [trace command info]
 	 * @throws TclException
 	 */
@@ -223,7 +219,7 @@ public class WrappedCommand {
 	 * 
 	 * @param type
 	 *            either CommandTrace.DELETE or CommandTrace.RENAME
-	 * @param fully
+	 * @param newName
 	 *            qualified new name of command, if this is a RENAME
 	 */
 	void callCommandTraces(int type, String newName) {
@@ -268,8 +264,6 @@ public class WrappedCommand {
 	/**
 	 * Set an execution trace on this command
 	 * 
-	 * @param command
-	 *            fully qualified command name
 	 * @param trace
 	 *            trace to add to command
 	 * @throws TclException
@@ -368,8 +362,6 @@ public class WrappedCommand {
 	 * 
 	 * @param interp
 	 *            interpreter for error messages
-	 * @param command
-	 *            fully qualified name of command
 	 * @return List, in the form of [trace execution info]
 	 * @throws TclException
 	 */

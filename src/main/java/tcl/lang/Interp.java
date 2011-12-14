@@ -1436,7 +1436,7 @@ public class Interp extends EventuallyFreed {
 	 * Side effects: None.
 	 * 
 	 * 
-	 * @param nameObj
+	 * @param name
 	 *            Name of variable; may end with "(index)" to signify an array reference.
 	 * @param trace
 	 *            Object associated with trace.
@@ -2864,8 +2864,10 @@ public class Interp extends EventuallyFreed {
 	 * @param s
 	 * @param i
 	 * @param len
-	 * @return
+	 * @return an instance of BackSlashResult that contains the character that should be substituted in place of 
+	 * 		the backslash sequence that starts at src.index, and an index to the next character after the backslash sequence.
 	 */
+	
 	public static BackSlashResult backslash(String s, int i, int len) {
 		CharPointer script = new CharPointer(s.substring(0, len));
 		script.index = i;
@@ -3499,7 +3501,7 @@ public class Interp extends EventuallyFreed {
 	 *            Argument objects; objv[0] points to the name of the command to invoke.
 	 * @param flags
 	 *            Combination of flags controlling the call: INVOKE_HIDDEN,_INVOKE_NO_UNKNOWN, or INVOKE_NO_TRACEBACK.
-	 * @return
+	 * @return result
 	 * @throws TclException
 	 */
 	public int invokeGlobal(TclObject[] objv, int flags) throws TclException {
@@ -3722,7 +3724,7 @@ public class Interp extends EventuallyFreed {
 	 * 
 	 * @param name
 	 *            Look for a scheme with scheme.
-	 * @return
+	 * @return the object implementing the name resolution procedures.
 	 */
 	public Resolver getInterpResolver(String name) {
 		ResolverScheme res;
@@ -3753,7 +3755,7 @@ public class Interp extends EventuallyFreed {
 	 * 
 	 * @param name
 	 *            Name of the scheme to be removed.
-	 * @return
+	 * @return true if the name was recognized and the resolution scheme was deleted. Returns false otherwise.
 	 */
 	public boolean removeInterpResolver(String name) {
 		ResolverScheme res;
@@ -4236,7 +4238,7 @@ public class Interp extends EventuallyFreed {
 	/**
 	 * Get the name of the executable file to invoke JTcl.  Typically set on the first
 	 * call to [info nameofexecutable]
-	 * @return
+	 * @return name of executable
 	 */
 	public String getNameOfExecutable() {
 		return nameOfExecutable;
@@ -4245,7 +4247,6 @@ public class Interp extends EventuallyFreed {
 	/**
 	 * Set the name of the executable file to invoke JTcl.  Typically set on the first
 	 * call to [info nameofexecutable]
-	 * @return
 	 */
 	public void setNameOfExecutable(String name) {
 		nameOfExecutable = name;
@@ -4255,7 +4256,7 @@ public class Interp extends EventuallyFreed {
 	 * Get the name of the shell class name to invoke JTcl.  Set by default as
 	 * the constructer of Interp.  If shellClassName was set as null, return
 	 * the name of "tcl.lang.NoInteractiveShell"
-	 * @return
+	 * @return shell class name
 	 */
 	public String getShellClassName() {
 		return shellClassName == null ? "tcl.lang.NonInteractiveShell" : shellClassName;
@@ -4264,7 +4265,6 @@ public class Interp extends EventuallyFreed {
 	/**
 	 * Set the name of the shell class name to invoke JTcl.  Can be null, which causes
 	 * "tcl.lang.NoInteractiveShell" to be returned by getshellClassName()
-	 * @return
 	 */
 	public void setShellClassName(String name) {
 		shellClassName = name;

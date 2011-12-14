@@ -1482,7 +1482,7 @@ public class Util {
 	 *            The string to trim
 	 * @param pattern
 	 *            The pattern string used to trim.
-	 * @return
+	 * @return string 
 	 */
 	public static String TrimLeft(String str, String pattern) {
 		int i, j;
@@ -1590,7 +1590,7 @@ public class Util {
 	 *            The current interpreter.
 	 * @param string
 	 *            The string representation of the boolean.
-	 * @return
+	 * @return boolean value of string
 	 * @throws TclException
 	 *             For malformed boolean values.
 	 */

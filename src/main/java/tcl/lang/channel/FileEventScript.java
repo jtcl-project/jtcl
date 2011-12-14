@@ -32,7 +32,7 @@ public class FileEventScript implements AssocData {
 	 * 
 	 * @param interp
 	 *            Interpreter  for the fileevent
-	 * @param channelName
+	 * @param channel
 	 *            name of channel that the fileEvent is registered on
 	 * @param type
 	 *            either FileEvent.READABLE or FileEvent.WRITEABLE
@@ -77,7 +77,7 @@ public class FileEventScript implements AssocData {
 	 * 
 	 * @param interp
 	 *            Interpreter to search for the fileevent
-	 * @param channelName
+	 * @param channel
 	 *            name of channel that the fileEvent is registered on
 	 * @param type
 	 *            either FileEvent.READABLE or FileEvent.WRITEABLE
@@ -97,7 +97,7 @@ public class FileEventScript implements AssocData {
 	 * Remove a FileEventScript, and hence all FileEvents, if it exists
 	 * @param interp
 	 *            Interpreter to search for the fileevent
-	 * @param channelName
+	 * @param channel
 	 *            name of channel that the fileEvent is registered on
 	 * @param type
 	 *            either FileEvent.READABLE or FileEvent.WRITEABLE

@@ -83,13 +83,13 @@ public class ExecutionTrace {
 	/**
 	 * Call the callback function for this ExecutionTrace if it matches type.
 	 * 
+	 * @param interp
 	 * @param type
 	 *            type of trace being executedeither ENTER, LEAVE, ENTERSTEP, or
 	 *            LEAVESTEP
-	 * @param oldname
-	 *            old name of command being renamed or deleted
-	 * @param newname
-	 *            new name of command being renamed; ignored for DELETE type
+	 * @param commandString
+	 * @param resultCode
+	 * @param result
 	 */
 	public void trace(Interp interp, int type, String commandString, int resultCode, TclObject result)
 			throws TclException {

@@ -289,8 +289,6 @@ public class Regex {
 	 *            input string
 	 * @param offset
 	 *            offset of the input string where matching starts
-	 * @param flags
-	 *            Regex.TCL_REG_* flags of pattern object that compiles regexp
 	 * @throws PatternSyntaxException
 	 *             when there is an error during regexp compilation
 	 */

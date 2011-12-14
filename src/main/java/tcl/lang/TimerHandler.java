@@ -47,8 +47,8 @@ abstract public class TimerHandler {
 	 * notifier. After milliseconds have elapsed, the processTimerEvent() method
 	 * will be invoked exactly once inside the primary thread of the notifier.
 	 * 
-	 * @paran n The notifier to fire the event
-	 * @paran milliseconds number of milliseconds to wait before invoking processTimerEvent()
+	 * @param n The notifier to fire the event
+	 * @param milliseconds number of milliseconds to wait before invoking processTimerEvent()
 	 */
 	public TimerHandler(Notifier n, 
 			long milliseconds) 

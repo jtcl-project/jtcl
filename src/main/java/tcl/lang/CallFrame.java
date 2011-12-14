@@ -99,7 +99,7 @@ public class CallFrame {
 	/**
 	 * Creates a CallFrame for the global variables.
 	 * 
-	 * @param interp
+	 * @param i
 	 *            current interpreter.
 	 */
 

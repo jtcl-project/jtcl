@@ -516,7 +516,7 @@ public class TclClassLoader extends ClassLoader {
 	 *            Name of the class, possibly null
 	 * @param classData
 	 *            Binary data of the class structure.
-	 * @return
+	 * @return A Class object or null if it could not be defined.
 	 */
 	public Class defineClass(String className, byte[] classData) {
 		Class result = null; // The Class object defined by classData.

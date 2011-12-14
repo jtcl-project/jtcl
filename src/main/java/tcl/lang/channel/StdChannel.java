@@ -81,7 +81,7 @@ public class StdChannel extends Channel {
 	 * applications should unregister the stdout Channel and open a new Channel
 	 * to replace it.
 	 * 
-	 * @param in
+	 * @param out
 	 *            OutputStream to replace standard input with
 	 */
 	@Deprecated
@@ -95,7 +95,7 @@ public class StdChannel extends Channel {
 	 * applications should unregister the stderr Channel and open a new Channel
 	 * to replace it.
 	 * 
-	 * @param in
+	 * @param err
 	 *            OutputStream to replace standard input with
 	 */
 	@Deprecated

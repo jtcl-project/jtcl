@@ -33,7 +33,7 @@ public class EvalCmd implements Command {
 	 * 
 	 * @param interp
 	 *            the current interpreter.
-	 * @param argv
+	 * @param objv
 	 *            command arguments.
 	 * @exception TclException
 	 *                if script causes error.

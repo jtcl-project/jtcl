@@ -340,7 +340,6 @@ public class Var {
 	 * is empty then simply return 1. Else return 1 plus the SearchId.index
 	 * value of the last Object in the vector.
 	 * 
-	 * @param None
 	 * @return The int value for unique SearchId string.
 	 */
 
@@ -439,7 +438,7 @@ public class Var {
 	 *            Only the TCL.GLOBAL_ONLY bit matters.
 	 * @param msg
 	 *            Verb to use in error messages, e.g. "read" or "set".
-	 * @param create
+	 * @param createPart2
 	 *            OR'ed combination of CRT_PART1 and CRT_PART2. Tells which
 	 *            entries to create if they don't already exist.
 	 * @return a two element array. a[0] is the variable indicated by part1 and
@@ -1984,7 +1983,7 @@ public class Var {
 	 *            collection of bits, including any  of TCL.TRACE_READS,
 	 *            TCL.TRACE_WRITES,  TCL.TRACE_UNSETS, TCL.GLOBAL_ONLY, // and
 	 *            TCL.NAMESPACE_ONLY.
-	 * @param trace
+	 * @param proc
 	 *            the trace to comand to add.
 	 */
 
@@ -2631,8 +2630,6 @@ public class Var {
 	 * This procedure is called to free up all of the searches associated with
 	 * an array variable.
 	 * 
-	 * @param interp
-	 *            Interpreter containing array.
 	 * @param arrayVar
 	 *            the array variable to delete searches from.
 	 */

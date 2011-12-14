@@ -81,7 +81,7 @@ public class InfoCmd implements Command {
 	 * 
 	 * @param interp
 	 *            the current interpreter.
-	 * @param argv
+	 * @param objv
 	 *            command arguments.
 	 * @exception TclException
 	 *                if wrong # of args or invalid argument(s).

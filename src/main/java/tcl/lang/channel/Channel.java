@@ -637,7 +637,7 @@ public abstract class Channel {
 	}
 
 	/**
-	 * @returns the current file position. If tell is not supported on the given
+	 * @return the current file position. If tell is not supported on the given
 	 *          channel then -1 will be returned. Subclasses should use the
 	 *          SeekableChannel class to provide tell() capability.
 	 */
@@ -890,7 +890,7 @@ public abstract class Channel {
 	/**
 	 * Set blocking mode.
 	 * 
-	 * @param blocking
+	 * @param inBlocking
 	 *            True for blocking mode, false for non-blocking mode.
 	 * 
 	 */
@@ -915,7 +915,7 @@ public abstract class Channel {
 	/**
 	 * Set buffering mode
 	 * 
-	 * @param buffering
+	 * @param inBuffering
 	 *            One of TclIO.BUFF_FULL, TclIO.BUFF_LINE, or TclIO.BUFF_NONE
 	 */
 	public void setBuffering(int inBuffering) {
@@ -1003,7 +1003,7 @@ public abstract class Channel {
 	 * 
 	 * @param interp
 	 *            current interpreter
-	 * @returns true if input if the last read on this channel was incomplete
+	 * @return true if input if the last read on this channel was incomplete
 	 *          because input was blocked
 	 * @throws TclException
 	 *             if this channel is not opened for reading
@@ -1090,7 +1090,7 @@ public abstract class Channel {
 	}
 
 	/**
-	 * @returns input eof character, or 0 if none defined
+	 * @return input eof character, or 0 if none defined
 	 */
 	public char getInputEofChar() {
 		return inputEofChar;

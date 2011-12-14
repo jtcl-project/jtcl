@@ -792,7 +792,7 @@ public class Namespace {
 	 * Side effects: Appends the export pattern onto the namespace's export
 	 * list. Optionally reset the namespace's export pattern list.
 	 * 
-	 * @param interpreter
+	 * @param interp
 	 *            current interpreter
 	 * @param namespace
 	 *            export commands from this namespace, or null for the current
@@ -1757,7 +1757,7 @@ public class Namespace {
 	 *            Ignored if TCL.GLOBAL_ONLY flag set. Otherwise, points to
 	 *            namespace in which to resolve name. If null, look up name in
 	 *            the current namespace.
-	 * @param flag
+	 * @param flags
 	 *            An OR'd combination of flags: TCL.GLOBAL_ONLY (look up name
 	 *            only in global namespace), TCL.NAMESPACE_ONLY (look up only in
 	 *            contextNs, or the current namespace if contextNs is null), and
