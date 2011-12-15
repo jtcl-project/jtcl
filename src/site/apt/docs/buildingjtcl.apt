@@ -14,7 +14,7 @@
    is changed, or the top-level files <<<tjc.jar>>> or <<<tjcsrc.jar>>> are missing.   The stage 2 files
    <<<tjc.jar>>> and <<<tjcsrc.jar>>> are created locally and not included in the distribution.
 
-   The website is built with Maven.
+   The full JTcl release and website are built with Maven.
    
 Building with Ant
    
@@ -26,17 +26,29 @@ ant package
    
 Building with Maven
    
+  Build the JTcl release, output files in the <target> directory:
+
 ------------------------
-mvn clean
-mvn -DskipTests package
-mvn site
+mvn -DskipTests clean javadoc:javadoc site package 
+------------------------
+
+  Compile and build .jar file only:
+   
+------------------------
+mvn -DskipTests clean compile jar:jar
 ------------------------
    
+  Compile and run test suite. <Note - Java 1.6 is required for full test coverage>:
+   
+------------------------
+mvn clean test
+------------------------
    
 Creating a development environment
 
    Install Java JDK 1.5 or higher, if not already installed.
    The JTcl project uses the {{{http://mercurial.selenic.com/}Mercurial}} version control system. 
+
 
 ------------------------
 hg clone https://hg.kenai.com/hg/jtcl~jtcl-main 

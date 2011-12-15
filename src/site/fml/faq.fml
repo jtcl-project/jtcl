@@ -11,8 +11,8 @@
           <i><a href="http://wiki.tcl.tk/23201">Jacl Modernization Project</a></i>.
         </p>
       </answer>
-	</faq>
-	<faq id="TclBlend">
+    </faq>
+    <faq id="TclBlend">
       <question>How do I build the TclBlend extension?</question>
       <answer>
         <p>
@@ -22,7 +22,7 @@
         </p>
       </answer>
     </faq>
-	<faq id="Tcl85">
+    <faq id="Tcl85">
       <question>Tcl 8.5 and 8.6 are available, why is JTcl only supporting Tcl 8.4?</question>
       <answer>
         <p>
@@ -31,6 +31,15 @@
           of development by a much larger team, and contains a large number of additions and changes
           from Tcl 8.4.  The JTcl Project plans to implement some Tcl 8.5 commands to enable more
           modern Tcl code (e.g., apply, chan, dict, lassign, etc.)
+        </p>
+      </answer>
+    </faq>
+    <faq id="Tcl_extensions">
+      <question>How do I load a Tcl extension? I have a prebuilt xxx.dll, can I use it in JTcl?</question>
+      <answer>
+        <p>
+          JTcl cannot load C-based Tcl extentions.  C-based extensions call functions of the C-based Tcl
+          intepreter, which are not available in JTcl.  JTcl can utilize extensions coded in Java. 
         </p>
       </answer>
     </faq>
