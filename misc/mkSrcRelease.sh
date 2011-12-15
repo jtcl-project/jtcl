@@ -1,5 +1,9 @@
 #!/bin/bash
 
+echo "deprecated - used 'release_build.sh' instead"
+echo "^C to abort (or return to continue)"
+read junk
+
 # creates jtcl src zip file
 
 if [ $# -ne 1 ] ; then

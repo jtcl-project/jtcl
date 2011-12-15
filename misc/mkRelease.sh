@@ -1,7 +1,10 @@
 #!/bin/bash
 
+echo "deprecated - used 'release_build.sh' instead"
+echo "^C to abort (or return to continue)"
+read junk
+
 # creates jtcl binary distribution after building with "ant compile; ant package"
-# NOTE- this script is deprecated in favor of "mvn -DskipTests clean package site"
 
 version=$1
 

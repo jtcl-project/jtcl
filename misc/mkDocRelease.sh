@@ -1,6 +1,12 @@
 #!/bin/bash
 
-# creates jtcl documentationdistribution after building with "mvn -DskipTests clean package site"
+echo "deprecated - used 'release_build.sh' instead"
+echo "^C to abort (or return to continue)"
+read junk
+
+
+# creates jtcl documentation distribution after 
+# building with "mvn -DskipTests clean package javadoc:javadoc site"
 
 if [ $# -ne 1 ] ; then
     echo usage: `basename $0` version

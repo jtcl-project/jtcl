@@ -1,11 +1,26 @@
 <assembly>
   <id>bin</id>
   <formats>
-    <format>dir</format>
     <format>zip</format>
   </formats>
   <includeBaseDirectory>true</includeBaseDirectory>
   <fileSets>
+    <fileSet>
+      <!-- this entry tries to ensure that the top level directory unpacks with mode 755  -->
+      <outputDirectory>/</outputDirectory>
+      <fileMode>0755</fileMode>
+      <directoryMode>0755</directoryMode>
+      <includes>
+          <include>./</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <directory>src/main/licenses</directory>
+      <outputDirectory></outputDirectory>
+      <includes>
+        <include>**/*</include>
+      </includes>
+    </fileSet>
     <fileSet>
       <directory>src/main/config</directory>
       <outputDirectory>config/</outputDirectory>
@@ -15,13 +30,6 @@
       <excludes>
         <exclude>CVS</exclude>
       </excludes>
-    </fileSet>
-    <fileSet>
-      <directory>src/main/licenses</directory>
-      <outputDirectory></outputDirectory>
-      <includes>
-        <include>**/*</include>
-      </includes>
     </fileSet>
     <fileSet>
       <directory>src/main/readmes</directory>

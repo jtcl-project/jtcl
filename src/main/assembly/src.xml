@@ -1,0 +1,30 @@
+<assembly>
+  <id>src</id>
+  <formats>
+    <format>zip</format>
+  </formats>
+  <includeBaseDirectory>true</includeBaseDirectory>
+  <fileSets>
+    <fileSet>
+      <!-- this entry tries to ensure that the top level directory unpacks with mode 755  -->
+      <outputDirectory>/</outputDirectory>
+      <fileMode>755</fileMode>
+      <directoryMode>755</directoryMode>
+      <includes>
+          <include>./</include>
+      </includes>
+    </fileSet> 
+    <fileSet>
+      <directory></directory>
+      <directoryMode>0755</directoryMode>
+      <outputDirectory></outputDirectory>
+      <excludes>
+          <exclude>.hg*</exclude>
+          <exclude>.settings/**</exclude>
+          <exclude>target/**</exclude>
+          <exclude>tjc*.jar</exclude>
+      </excludes>
+    </fileSet>
+  </fileSets>
+</assembly>
+
