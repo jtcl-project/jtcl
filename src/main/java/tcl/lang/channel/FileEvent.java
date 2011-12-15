@@ -7,6 +7,7 @@ import tcl.lang.Notifier;
 import tcl.lang.TCL;
 import tcl.lang.TclEvent;
 import tcl.lang.TclException;
+import tcl.lang.TimerHandler;
 
 /**
  * This class is the handles the transient event that executes a 'fileevent'
@@ -17,6 +18,12 @@ import tcl.lang.TclException;
  * 
  */
 public class FileEvent extends TclEvent {
+	
+	/**
+	 * When input is not available, wait this long to requeue.
+	 */
+	private final static long FILE_EVENT_DELAY_MS = 30;
+	
 	/**
 	 * Indicates a READ file event
 	 */
@@ -87,6 +94,13 @@ public class FileEvent extends TclEvent {
 	private void requeue() {
 		queueFileEvent(this.interp, this.channel, this.type);
 	}
+	
+	/**
+	 * Put a duplicate FileEvent onto the queue after FILE_EVENT_DELAY_MS millis.
+	 */
+	private void requeueLater() {
+		new FileEventTimer(FILE_EVENT_DELAY_MS, this.interp, this.channel, this.type);
+	}
 
 	/**
 	 * Permanently remove the FileEventScript for this FileEvent from the
@@ -114,7 +128,7 @@ public class FileEvent extends TclEvent {
 		if (type == READABLE && !channel.isReadable()) {
 			try {
 				channel.fillInputBuffer();
-				requeue();
+				requeueLater();
 			} catch (IOException e) {
 				new TclException(interp, e.getMessage());
 				interp.backgroundError();
@@ -123,7 +137,7 @@ public class FileEvent extends TclEvent {
 			return 1;
 		}
 		if (type == WRITABLE && !channel.isWritable()) {
-			requeue();
+			requeueLater();
 			return 1;
 		}
 
@@ -164,4 +178,28 @@ public class FileEvent extends TclEvent {
 		return rv;
 	}
 
+	/**
+	 * Create a TimerHandler to requeue a FileEvent
+	 * @author tpoindex
+	 *
+	 */
+	class FileEventTimer extends TimerHandler {
+
+		private Interp interp;
+		private Channel channel;
+		private int type;
+		
+		public FileEventTimer(long milliseconds, Interp interp, Channel channel, int type) {
+			super(interp.getNotifier(), milliseconds);
+			this.interp = interp;
+			this.channel = channel;
+			this.type = type;
+		}
+
+		@Override
+		public void processTimerEvent() {
+			queueFileEvent(this.interp, this.channel, this.type);
+		}
+		
+	}
 }
