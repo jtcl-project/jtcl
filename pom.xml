@@ -102,10 +102,13 @@
                                                         <goal>single</goal>
                                                 </goals>
                                                 <configuration>
+                                                        <archiverConfig>
+								<defaultDirectoryMode>0755</defaultDirectoryMode>
+                                                        </archiverConfig>
                                                         <descriptors>
-                                                                <descriptor>src/main/assembly/bin.xml</descriptor>
                                                                 <descriptor>src/main/assembly/doc.xml</descriptor>
                                                                 <descriptor>src/main/assembly/src.xml</descriptor>
+                                                                <descriptor>src/main/assembly/bin.xml</descriptor>
                                                         </descriptors>
                                                 </configuration>
                                         </execution>

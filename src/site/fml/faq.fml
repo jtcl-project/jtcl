@@ -38,7 +38,7 @@
       <question>How do I load a Tcl extension? I have a prebuilt xxx.dll, can I use it in JTcl?</question>
       <answer>
         <p>
-          JTcl cannot load C-based Tcl extentions.  C-based extensions call functions of the C-based Tcl
+          JTcl cannot load C-based Tcl extensions.  C-based extensions call functions of the C-based Tcl
           intepreter, which are not available in JTcl.  JTcl can utilize extensions coded in Java. 
         </p>
       </answer>
