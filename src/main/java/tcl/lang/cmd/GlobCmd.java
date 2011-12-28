@@ -91,6 +91,7 @@ public class GlobCmd implements Command {
 		File topDirectory = null;
 		String prefix = "";
 		int firstNonSwitchArgumentIndex = 1;
+		String joined = "";
 
 		if (argv.length == 1) {
 			throw new TclNumArgsException(interp, 1, argv, "?switches? name ?name ...?");
@@ -254,7 +255,10 @@ public class GlobCmd implements Command {
 			 */
 			if (join) {
 				/* join all the arguments together */
-				String joined = FileUtil.joinPath(interp, argv, firstNonSwitchArgumentIndex, argv.length);
+				joined = FileUtil.joinPath(interp, argv, firstNonSwitchArgumentIndex, argv.length);
+				if (argv[firstNonSwitchArgumentIndex].toString().length() == 0) {
+					joined = "/" + joined;
+				}
 				/*
 				 * expand out any brace expressions like src/{*.c}{*.h} into a
 				 * list of patterns: src/*.c and src/*.h
@@ -277,6 +281,9 @@ public class GlobCmd implements Command {
 			String[] patterns = new String[patternList.size()];
 			for (int i = 0; i < patternList.size(); i++) {
 				patterns[i] = patternList.get(i).toString();
+				if (patterns[i].length() == 0) {
+					patterns[i] = ".";
+				}
 				if (topDirectory == null) {
 					/* do any tilde conversion on the pattern */
 					boolean isDir = patterns[i].endsWith(File.separator);
@@ -313,12 +320,16 @@ public class GlobCmd implements Command {
 				StringBuffer ret = new StringBuffer();
 
 				ret.append("no files matched glob pattern");
-				ret.append((argv.length - firstNonSwitchArgumentIndex == 1) ? " \"" : "s \"");
+				ret.append((join || (argv.length - firstNonSwitchArgumentIndex == 1)) ? " \"" : "s \"");
 
-				for (int i = firstNonSwitchArgumentIndex; i < argv.length; i++) {
-					ret.append(sep + argv[i].toString());
-					if (i == firstNonSwitchArgumentIndex) {
-						sep = " ";
+				if (join) {
+					ret.append(joined);
+				} else {
+					for (int i = firstNonSwitchArgumentIndex; i < argv.length; i++) {
+						ret.append(sep + argv[i].toString());
+						if (i == firstNonSwitchArgumentIndex) {
+							sep = " ";
+						}
 					}
 				}
 				ret.append("\"");
