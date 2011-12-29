@@ -28,11 +28,7 @@ public class Shell {
 	 */
 	public static boolean forceNonInteractive = false;
 	
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * main --
-	 * 
+	/**
 	 * Main program for tclsh and most other Tcl-based applications.
 	 * 
 	 * Results: None.
@@ -41,12 +37,9 @@ public class Shell {
 	 * interpreting commands; almost anything could happen, depending on the
 	 * script being interpreted.
 	 * 
-	 * ----------------------------------------------------------------------
 	 */
 
-	public static void main(String args[]) // Array of command-line argument
-											// strings.
-	{
+	public static void main(String args[]) {
 		String fileName = null;
 
 		// Create the interpreter. This will also create the built-in
@@ -159,5 +152,4 @@ public class Shell {
 			}
 		}
 	}
-} // end class Shell
-
+} 

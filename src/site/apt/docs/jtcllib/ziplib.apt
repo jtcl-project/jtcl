@@ -1,0 +1,153 @@
+
+Ziplib
+~~~~
+
+  Ziplib reads and writes ZIP and JAR files.  ZIP files are stream
+  based.   None of the procedures in this package close the <zipin>
+  or <zipout> objects, so the programmer should close after processing.
+
+  See also:  http://docs.oracle.com/javase/1.5.0/docs/api/java/util/zip/package-summary.html
+
+
+Usage
+
+
+  Include the <<ziplib>> package in Tcl source files:
+
++------------------------------------------------------------------------+
+    package require ziplib
++------------------------------------------------------------------------+
+
+
+Ziplib Commands
+
+
+
+* ::ziplib::openInputZip
+
+  ::ziplib::openInputZip <fileName>
+
+  Open the <fileName> for reading and return a 
+  java.util.zip.ZipInputStream object.  A Tcl 
+  error is thrown if the file is not found, or if the file is not a valid
+  ZIP or JAR file.  Note that the object returned by ::ziplib::openInputZip
+  should be closed after processing the zip stream 
+
+
+* ::ziplib::openOutputZip
+
+  ::ziplib::openOutputZip <fileName>
+
+  Open the <fileName> for writing and return a 
+  java.util.zip.ZipOutputStream object.  A Tcl 
+  error is thrown if the file could not be opened.
+
+
+* ::ziplib::copyZip
+
+  ::ziplib::openOutputZip <zipin> <zipout> <?excludeReList?>
+
+  Copy a ZIP file to another file.  <zipin> must be an object returned
+  by ::ziplib::openInputZip; <zipout> must be an object returned by
+  ::ziplib::openOutputZip.  <excludeReList> is an optional Tcl list of
+  regular expressions.  If any regular expression matches a 
+  ZIP entry, that entry is not copied to the output zip.
+
+
+* ::ziplib::unzipToDir 
+
+  ::ziplib::unzipToDir <zipin> <dir>
+
+  Unzip a ZIP archive to a directory.  <zipin> must be an object returned
+  by ::ziplib::openInputZip.  <dir> is the name of a directory to which
+  files are written.  If <dir> does not exists, it will be created.
+
+
+* ::ziplib::zipFromDir 
+
+  ::ziplib::zipFromDir <zipout> <dir> <?zipTopLevel?>
+
+  Recursively writes the contents of a directory into a zip file.
+  <zipout> must be an object returned by
+  ::ziplib::openOutputZip.  <dir> is the name of a directory, which
+  must exist.  <zipTopLevel> is an optional directory that specifies
+  the top level directory entry of the zip file. 
+
+
+* ::ziplib::mkZipFile 
+
+  ::ziplib:: mkZipFile <zipout> <fileName>
+
+  Make a new file entry in the zip file.  <zipout> must be an object returned by
+  ::ziplib::openOutputZip.  <fileName> is the name of the new file entry.
+  The <zipout> may be use to write file data after performing this procedure.
+
+
+* ::ziplib::mkZipDir 
+
+  ::ziplib::mkZipDir <zipout> <dirName>
+
+  Make a new directory entry in the zip file.  <zipout> must be an object returned by
+  ::ziplib::openOutputZip.  <dirName> is the name of the new directory entry.
+
+
+* ::ziplib::copyStream
+
+  ::ziplib::copyStream <in> <out>
+
+  Copies the bytes from an input stream to an output stream.  <in> is
+  a Java object that supports the <<read>> method.  <out> is a Java
+  object that support the <<write>> method.  <in> is typically
+  FileInputStream or ZipInputStream objects, <out> is typically
+  FileOutputStream or ZipOutStream objects.
+
+
+* ::ziplib::getClassLocation
+
+  ::ziplib::getClassLocation <class>
+
+  Returns the location of a class, typically used to find which JAR
+  file or directory from which a class was loaded.  If the location
+  is a JAR or directory, that pathname of the location is return, 
+  otherwise, the location is prefixed with "url:" denoting the class
+  was loaded by a URL class loader.
+
+
+Examples
+
+    Copy a zip file to a new fil
+
++----------------------------------------------------------+
+    package require ziplib
+
+    set zipin  [::ziplib::openInputZip some.zip]
+    set zipout [::ziplib::openOutputZip new.zip]
+    ::ziplib::copyZip $zipin $zipout
+    $zipin close
+    $zipout close
++----------------------------------------------------------+
+
+
+    Print all of the file and directory entries from a zip file
+
++----------------------------------------------------------+
+    package require ziplib
+
+    set zipin  [::ziplib::openInputZip some.zip]
+    while {! [java::isnull [set entry [$zipin getNextEntry]]]} {
+        puts [$entry getName]
+    }
+    $zipin close
++----------------------------------------------------------+
+
+
+    Find the JAR file that contains the JTcl Interp class
+
++----------------------------------------------------------+
+    package require ziplib
+
+    puts [::ziplib::getClassLocation [java::getinterp]]
++----------------------------------------------------------+
+
+
+
