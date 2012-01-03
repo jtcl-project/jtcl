@@ -4,7 +4,8 @@ Ziplib
 
   Ziplib reads and writes ZIP and JAR files.  ZIP files are stream
   based.   None of the procedures in this package close the <zipin>
-  or <zipout> objects, so the programmer should close after processing.
+  or <zipout> objects, so the programmer should close the
+  zip stream after processing.
 
   See also:  http://docs.oracle.com/javase/1.5.0/docs/api/java/util/zip/package-summary.html
 
@@ -31,7 +32,7 @@ Ziplib Commands
   java.util.zip.ZipInputStream object.  A Tcl 
   error is thrown if the file is not found, or if the file is not a valid
   ZIP or JAR file.  Note that the object returned by ::ziplib::openInputZip
-  should be closed after processing the zip stream 
+  should be closed after processing the zip stream. 
 
 
 * ::ziplib::openOutputZip
@@ -41,6 +42,8 @@ Ziplib Commands
   Open the <fileName> for writing and return a 
   java.util.zip.ZipOutputStream object.  A Tcl 
   error is thrown if the file could not be opened.
+  Note that the object returned by ::ziplib::openOutputZip
+  should be closed after processing the zip stream.
 
 
 * ::ziplib::copyZip
@@ -109,13 +112,13 @@ Ziplib Commands
   Returns the location of a class, typically used to find which JAR
   file or directory from which a class was loaded.  If the location
   is a JAR or directory, that pathname of the location is return, 
-  otherwise, the location is prefixed with "url:" denoting the class
-  was loaded by a URL class loader.
+  otherwise, the location is prefixed with a URI resource type (e.g., "xxx:")
+  denoting the class was loaded from other than a file or JAR.
 
 
 Examples
 
-    Copy a zip file to a new fil
+    Copy a zip file to a new file
 
 +----------------------------------------------------------+
     package require ziplib

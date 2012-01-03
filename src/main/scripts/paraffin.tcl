@@ -1,7 +1,6 @@
 # paraffin - build a JTcl application jar file
 
-#package require ziplib
-source /home/tpoindex/workspace-tom/jtcl/src/main/resources/tcl/pkg/jtcllib/library/ziplib/ziplib.tcl
+package require ziplib
 
 set appDir tcl/app
 
