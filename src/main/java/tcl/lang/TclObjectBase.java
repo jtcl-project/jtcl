@@ -54,6 +54,8 @@ abstract class TclObjectBase {
 	// Setting this to true will make key methods larger.
 
 	static final boolean validate = false;
+	
+	protected final static String DEALLOCATED_MSG = "TclObject has been deallocated";
 
 	/**
 	 * The ivalue field is used for a TclObject that contains
@@ -494,7 +496,7 @@ abstract class TclObjectBase {
 	 */
 	protected final void disposeObject() {
 		if (internalRep == null) {
-			throw DEALLOCATED;
+			throw new TclRuntimeError(DEALLOCATED_MSG);
 		}
 		internalRep.dispose();
 
@@ -513,12 +515,8 @@ abstract class TclObjectBase {
 	 * Raise a TclRuntimeError in the case where a TclObject was already
 	 * disposed of because the last ref was released.
 	 */
-
-	protected final static RuntimeException DEALLOCATED = new TclRuntimeError(
-			"TclObject has been deallocated");
-
 	protected final void disposedError() {
-		throw DEALLOCATED;
+		throw new TclRuntimeError(DEALLOCATED_MSG);
 	}
 
 	/**

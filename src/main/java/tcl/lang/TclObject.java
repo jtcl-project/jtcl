@@ -75,7 +75,7 @@ public final class TclObject extends TclObjectBase {
 	 */
 	public final void preserve() {
 		if (refCount < 0) {
-			throw DEALLOCATED;
+			throw new TclRuntimeError(DEALLOCATED_MSG);
 		}
 		refCount++;
 	}
