@@ -1,0 +1,318 @@
+# This file contains a collection of tests for the procedures in the
+# file tclCmdIL.c.  Sourcing this file into Tcl runs the tests and
+# generates output for errors.  No output means no errors were found.
+#
+# Copyright (c) 1997 Sun Microsystems, Inc.
+# Copyright (c) 1998-1999 by Scriptics Corporation.
+#
+# See the file "license.terms" for information on usage and redistribution
+# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+
+if {[lsearch [namespace children] ::tcltest] == -1} {
+    package require tcltest
+    namespace import -force ::tcltest::*
+}
+
+
+
+# Compiled version
+test lassign-6.1 {lassign command syntax} -body {
+    proc testLassign {} {
+	lassign
+    }
+    testLassign
+} -returnCodes 1 -cleanup {
+    rename testLassign {}
+} -result {wrong # args: should be "lassign list varName ?varName ...?"}
+test lassign-6.2 {lassign command syntax} -body {
+    proc testLassign {} {
+	lassign x
+    }
+    testLassign
+} -returnCodes 1 -cleanup {
+    rename testLassign {}
+} -result {wrong # args: should be "lassign list varName ?varName ...?"}
+test lassign-6.3 {lassign command} -body {
+    proc testLassign {} {
+	set x FAIL
+	list [lassign a x] $x
+    }
+    testLassign
+} -result {{} a} -cleanup {
+    rename testLassign {}
+}
+test lassign-6.4 {lassign command} -body {
+    proc testLassign {} {
+	set x FAIL
+	set y FAIL
+	list [lassign a x y] $x $y
+    }
+    testLassign
+} -result {{} a {}} -cleanup {
+    rename testLassign {}
+}
+test lassign-6.5 {lassign command} -body {
+    proc testLassign {} {
+	set x FAIL
+	set y FAIL
+	list [lassign {a b} x y] $x $y
+    }
+    testLassign
+} -result {{} a b} -cleanup {
+    rename testLassign {}
+}
+test lassign-6.6 {lassign command} -body {
+    proc testLassign {} {
+	set x FAIL
+	set y FAIL
+	list [lassign {a b c} x y] $x $y
+    }
+    testLassign
+} -result {c a b} -cleanup {
+    rename testLassign {}
+}
+test lassign-6.7 {lassign command} -body {
+    proc testLassign {} {
+	set x FAIL
+	set y FAIL
+	list [lassign {a b c d} x y] $x $y
+    }
+    testLassign
+} -result {{c d} a b} -cleanup {
+    rename testLassign {}
+}
+test lassign-6.8 {lassign command - list format error} -body {
+    proc testLassign {} {
+	set x FAIL
+	set y FAIL
+	list [catch {lassign {a {b}c d} x y} msg] $msg $x $y
+    }
+    testLassign
+} -result {1 {list element in braces followed by "c" instead of space} FAIL FAIL} -cleanup {
+    rename testLassign {}
+}
+test lassign-6.9 {lassign command - assignment to arrays} -body {
+    proc testLassign {} {
+	list [lassign {a b} x(x)] $x(x)
+    }
+    testLassign
+} -result {b a} -cleanup {
+    rename testLassign {}
+}
+test lassign-6.10 {lassign command - variable update error} -body {
+    proc testLassign {} {
+	set x(x) {}
+	lassign a x
+    }
+    testLassign
+} -returnCodes 1 -result {can't set "x": variable is array} -cleanup {
+    rename testLassign {}
+}
+test lassign-6.11 {lassign command - variable update error} -body {
+    proc testLassign {} {
+	set x(x) {}
+	set y FAIL
+	list [catch {lassign a y x} msg] $msg $y
+    }
+    testLassign
+} -result {1 {can't set "x": variable is array} a} -cleanup {
+    rename testLassign {}
+}
+test lassign-6.12 {lassign command - memory leak testing} -setup {
+    unset -nocomplain x y
+    set x(x) {}
+    set y FAIL
+    proc getbytes {} {
+        set lines [split [memory info] "\n"]
+        lindex [lindex $lines 3] 3
+    }
+    proc stress {} {
+	global x y
+	lassign {} y y y y y y y y y y y y y y y y y y y y y y y y y y y y y y
+	catch {lassign {} y y y y y y y y y y y y y y y y y y y y y y y y y x}
+	catch {lassign {} x}
+    }
+} -constraints memory -body {
+    set end [getbytes]
+    for {set i 0} {$i < 5} {incr i} {
+	stress
+	set tmp $end
+	set end [getbytes]
+    }
+    expr {$end - $tmp}
+} -result 0 -cleanup {
+    unset -nocomplain x y i tmp end
+    rename getbytes {}
+    rename stress {}
+}
+# Force non-compiled version
+test lassign-6.13 {lassign command syntax} -body {
+    proc testLassign {} {
+	set lassign lassign
+	$lassign
+    }
+    testLassign
+} -returnCodes 1 -cleanup {
+    rename testLassign {}
+} -result {wrong # args: should be "lassign list varName ?varName ...?"}
+test lassign-6.14 {lassign command syntax} -body {
+    proc testLassign {} {
+	set lassign lassign
+	$lassign x
+    }
+    testLassign
+} -returnCodes 1 -cleanup {
+    rename testLassign {}
+} -result {wrong # args: should be "lassign list varName ?varName ...?"}
+test lassign-6.15 {lassign command} -body {
+    proc testLassign {} {
+	set lassign lassign
+	set x FAIL
+	list [$lassign a x] $x
+    }
+    testLassign
+} -result {{} a} -cleanup {
+    rename testLassign {}
+}
+test lassign-6.16 {lassign command} -body {
+    proc testLassign {} {
+	set lassign lassign
+	set x FAIL
+	set y FAIL
+	list [$lassign a x y] $x $y
+    }
+    testLassign
+} -result {{} a {}} -cleanup {
+    rename testLassign {}
+}
+test lassign-6.17 {lassign command} -body {
+    proc testLassign {} {
+	set lassign lassign
+	set x FAIL
+	set y FAIL
+	list [$lassign {a b} x y] $x $y
+    }
+    testLassign
+} -result {{} a b} -cleanup {
+    rename testLassign {}
+}
+test lassign-6.18 {lassign command} -body {
+    proc testLassign {} {
+	set lassign lassign
+	set x FAIL
+	set y FAIL
+	list [$lassign {a b c} x y] $x $y
+    }
+    testLassign
+} -result {c a b} -cleanup {
+    rename testLassign {}
+}
+test lassign-6.19 {lassign command} -body {
+    proc testLassign {} {
+	set lassign lassign
+	set x FAIL
+	set y FAIL
+	list [$lassign {a b c d} x y] $x $y
+    }
+    testLassign
+} -result {{c d} a b} -cleanup {
+    rename testLassign {}
+}
+test lassign-6.20 {lassign command - list format error} -body {
+    proc testLassign {} {
+	set lassign lassign
+	set x FAIL
+	set y FAIL
+	list [catch {$lassign {a {b}c d} x y} msg] $msg $x $y
+    }
+    testLassign
+} -result {1 {list element in braces followed by "c" instead of space} FAIL FAIL} -cleanup {
+    rename testLassign {}
+}
+test lassign-6.21 {lassign command - assignment to arrays} -body {
+    proc testLassign {} {
+	set lassign lassign
+	list [$lassign {a b} x(x)] $x(x)
+    }
+    testLassign
+} -result {b a} -cleanup {
+    rename testLassign {}
+}
+test lassign-6.22 {lassign command - variable update error} -body {
+    proc testLassign {} {
+	set lassign lassign
+	set x(x) {}
+	$lassign a x
+    }
+    testLassign
+} -returnCodes 1 -result {can't set "x": variable is array} -cleanup {
+    rename testLassign {}
+}
+test lassign-6.23 {lassign command - variable update error} -body {
+    proc testLassign {} {
+	set lassign lassign
+	set x(x) {}
+	set y FAIL
+	list [catch {$lassign a y x} msg] $msg $y
+    }
+    testLassign
+} -result {1 {can't set "x": variable is array} a} -cleanup {
+    rename testLassign {}
+}
+test lassign-6.24 {lassign command - memory leak testing} -setup {
+    set x(x) {}
+    set y FAIL
+    proc getbytes {} {
+        set lines [split [memory info] "\n"]
+        lindex [lindex $lines 3] 3
+    }
+    proc stress {} {
+	global x y
+	set lassign lassign
+	$lassign {} y y y y y y y y y y y y y y y y y y y y y y y y y y y y y y
+	catch {$lassign {} y y y y y y y y y y y y y y y y y y y y y y y y y x}
+	catch {$lassign {} x}
+    }
+} -constraints memory -body {
+    set end [getbytes]
+    for {set i 0} {$i < 5} {incr i} {
+	stress
+	set tmp $end
+	set end [getbytes]
+    }
+    expr {$end - $tmp}
+} -result 0 -cleanup {
+    unset -nocomplain x y i tmp end
+    rename getbytes {}
+    rename stress {}
+}
+# Assorted shimmering problems
+test lassign-6.25 {lassign command - shimmering protection} -body {
+    proc testLassign {} {
+	set x {a b c}
+	list [lassign $x $x y] $x [set $x] $y
+    }
+    testLassign
+} -result {c {a b c} a b} -cleanup {
+    rename testLassign {}
+}
+test lassign-6.26 {lassign command - shimmering protection} -body {
+    proc testLassign {} {
+	set x {a b c}
+	set lassign lassign
+	list [$lassign $x $x y] $x [set $x] $y
+    }
+    testLassign
+} -result {c {a b c} a b} -cleanup {
+    rename testLassign {}
+}
+
+
+# cleanup
+::tcltest::cleanupTests
+return
+
+# Local Variables:
+# mode: tcl
+# End:
