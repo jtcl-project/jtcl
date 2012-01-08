@@ -919,6 +919,7 @@ public class Interp extends EventuallyFreed {
 		Extension.loadOnDemand(this, "linsert", "tcl.lang.cmd.LinsertCmd");
 		Extension.loadOnDemand(this, "llength", "tcl.lang.cmd.LlengthCmd");
 		Extension.loadOnDemand(this, "lrange", "tcl.lang.cmd.LrangeCmd");
+		Extension.loadOnDemand(this, "lrepeat", "tcl.lang.cmd.LrepeatCmd");
 		Extension.loadOnDemand(this, "lreplace", "tcl.lang.cmd.LreplaceCmd");
 		Extension.loadOnDemand(this, "lreverse", "tcl.lang.cmd.LreverseCmd");
 		Extension.loadOnDemand(this, "lsearch", "tcl.lang.cmd.LsearchCmd");
