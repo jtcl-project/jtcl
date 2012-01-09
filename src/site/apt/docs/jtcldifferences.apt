@@ -118,3 +118,19 @@ JTcl Differences from Tcl 8.4
   * <<info nameofexecutable>> creates a temporary script file to invoke the Java executable with 
     the current classpath and the name of the JTcl main class.  The temporary script file is deleted
     on exit.
+
+
+  []
+
+  JTcl also includes the following backported 8.5 commands:
+
+  * <<apply>>
+
+  * <<dict>>
+
+  * <<lassign>>
+
+  * <<lrepeat>>
+
+  * <<lreverse>>
+

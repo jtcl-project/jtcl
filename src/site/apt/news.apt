@@ -2,6 +2,29 @@
  JTcl News
  ----
 
+January 25, 2012
+
+  JTcl 2.2.0 has be released.  New or fixed in this release:
+
+  * <New!> Backported Tcl 8.5 commands <<lassign>>, <<lrepeat>>, and <<lreverse>> are now 
+    implemented.
+
+  * <New!> JTcllib - module <<ziplib>> to access and manipulate ZIP and JAR files.
+
+  * <New!> <<paraffin>> utility allows building self-contained JTcl applications in a
+    single JAR file.
+
+  * Bug fixes:
+
+    * <<glob "">> previously caused an exception, now treated as <<glob ".">>.
+
+
+ Please report bugs and other unexpected behaviors at the JTcl project
+ site's {{{http://kenai.com/bugzilla/buglist.cgi?product=jtcl}Bug tracking system}}.
+
+ <The JTcl Team>
+
+
 December 19, 2011
 
   JTcl 2.1.0 has be released.  New or fixed in this release:
