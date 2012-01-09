@@ -34,10 +34,8 @@ public class LreverseCmd implements Command {
 		
 		if (elems.length == 0) {
 			interp.setResult(argv[1]);
-			return;
 		} else {
 			TclObject result = TclList.newInstance();
-			//int i, j;
 			for (int i = 0, j = elems.length-1; i < elems.length; i++, j--) {
 				TclList.append(interp, result, elems[j]);
 			}
