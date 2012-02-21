@@ -26,6 +26,8 @@
    
       * {{{./jtcllib/index.html}jtcllib}} 1.1 
    
+      * {{{./paraffin.html}paraffin.tcl}} 1.0
+   
    * {{{buildingjtcl.html}Building JTcl}}
 
    * {{{../apidocs/index.html}Javadoc}} for the JTcl interpreter

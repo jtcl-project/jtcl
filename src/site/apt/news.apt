@@ -2,7 +2,7 @@
  JTcl News
  ----
 
-January 25, 2012
+February 27, 2012
 
   JTcl 2.2.0 has be released.  New or fixed in this release:
 
@@ -11,12 +11,14 @@ January 25, 2012
 
   * <New!> JTcllib - module <<ziplib>> to access and manipulate ZIP and JAR files.
 
-  * <New!> <<paraffin>> utility allows building self-contained JTcl applications in a
+  * <New!> <<paraffin.tcl>> utility allows building self-contained JTcl applications in a
     single JAR file.
 
   * Bug fixes:
 
     * <<glob "">> previously caused an exception, now treated as <<glob ".">>.
+
+    * An ArrayIndexOutOfBounds exception was fixed in MarkableInputStream.
 
 
  Please report bugs and other unexpected behaviors at the JTcl project

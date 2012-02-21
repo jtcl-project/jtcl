@@ -65,6 +65,11 @@
       <filtered>true</filtered>
       <fileMode>0755</fileMode>
     </file>
+    <file>
+      <source>src/main/scripts/paraffin.tcl</source>
+      <filtered>true</filtered>
+      <fileMode>0755</fileMode>
+    </file>
   </files>
 <!--
   <dependencySets>

@@ -1,0 +1,112 @@
+
+paraffin.tcl
+~~~~
+
+  <<paraffin.tcl>> is a command line utitlity to build a custom JAR file
+  which includes the JTcl interpreter, an application, and other
+  library JAR files.  paraffin.tcl is included in the JTcl distribution.
+
+Usage
+
+
++------------------------------------------------------------------------+
+    jtcl paraffin.tcl [ -i ]  app-name  source-directory  start-file  [ jar-directory ]
++------------------------------------------------------------------------+
+
+  where:
+
+    * -i \
+      is an optionsl flag to cause a <<tclIndex>> file to be built in the source-directory.
+
+    * app-name \
+      is the name of the resulting JAR file.
+
+    * source-directory \
+      is the directory containing application source files.
+
+    * start-file \
+      is the name of the file within the source-directory that should be executed upon startup.
+
+    * jarlib-directory \
+      is an optional directory containing additional JAR files to be included. 
+
+
+  The resulting JAR file can be executed by specifying the <<-jar>> option
+  to the <<java>> command:
+
++----------------------------------------------------------+
+    java -jar app-name.jar
++----------------------------------------------------------+
+
+Example
+
+  Consider an application that contains a main file, a file containing
+  some utility procedures, and a library of Tcl packages, 
+  with a directory structure as
+  
+
++----------------------------------------------------------+
+    ./myapp_dir
+       main.tcl
+       misc-procs.tcl
+       tclIndex
+       lib
+          package1
+              pkgIndex.tcl
+              package1.tcl
+          package2
+              pkgIndex.tcl
+              package2.tcl
++----------------------------------------------------------+
+ 
+
+  main.tcl contains the following code:
+
+
++----------------------------------------------------------+
+    # get our directory and append our packages to auto_path
+    set startup_dir [file dirname $::argv0]
+    lappend auto_path $startup_dir
+    lappend auto_path [file join $startup_dir lib package1]
+    lappend auto_path [file join $startup_dir lib package2]
+    
+    package require package1
+    package require package2
+
+    # now execute our startup code
+    ...etc...
++----------------------------------------------------------+
+
+
+  A stand-alone JAR file can be built and run using paraffin.tcl as:
+
++----------------------------------------------------------+
+    jtcl paraffin.tcl -i my-app myapp_dir main.tcl
+    java -jar my-app.jar
++----------------------------------------------------------+
+
+
+Notes
+
+    * The Tcl variable <<::argv0>> is set to the name of the startup script
+      witin the JAR file.  
+
+    * Your application should be able to run by cd'ing to the application directory
+      and running <<jtcl start-file>>. 
+
+    * Additional <<::auto_path>> directory names can be included as shown in
+      the example.
+
+    * Additional Java JAR libraries can be included.  Each JAR file found in
+      the optional <jar-directory> path will be included in the final appliation
+      JAR file.  Additional JAR files are typically used from your application
+      through use of the <<java>> package.  For example, your application may include
+      Java JDBC drivers, etc.
+
+    * Use the optional <<-i>> flag to rebuild the <<tclIndex>> file for the application
+      prior to packaging.
+
+    * paraffin.tcl will not overwrite an existing JAR file of the same name.
+
+     
+
