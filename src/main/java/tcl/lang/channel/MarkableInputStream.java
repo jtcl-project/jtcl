@@ -60,7 +60,7 @@ class MarkableInputStream extends FilterInputStream {
 		int additionalSpaceRequired = len - (buf.length - writePos);
 		if (additionalSpaceRequired > 0) {
 			/* Round up size by GrowSize */
-			int newSize = ((additionalSpaceRequired / GrowSize) + 1) * GrowSize;
+			int newSize = (((additionalSpaceRequired / GrowSize) + 1) * GrowSize) + buf.length;
 			byte[] newBuf = new byte[newSize];
 			System.arraycopy(buf, 0, newBuf, 0, writePos);
 			buf = newBuf;
