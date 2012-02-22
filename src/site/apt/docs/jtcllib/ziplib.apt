@@ -5,9 +5,18 @@ Ziplib
   Ziplib reads and writes ZIP and JAR files.  ZIP files are stream
   based.   None of the procedures in this package close the <zipin>
   or <zipout> objects, so the programmer should close the
-  zip stream after processing.
+  zip stream after processing.  Note that the objects returned by
+  <::ziplib::openInputZip> and <::ziplib::openOutputZip> are java
+  objects, not Tcl channels.
 
-  See also:  http://docs.oracle.com/javase/1.5.0/docs/api/java/util/zip/package-summary.html
+  See also:  
+
+    * {{{http://docs.oracle.com/javase/1.5.0/docs/api/java/util/zip/package-summary.html}java.util.zip javadocs}}
+
+    * {{{http://docs.oracle.com/javase/1.5.0/docs/api/java/io/InputStream.html}java.io.InputStream javadocs}}
+
+    * {{{http://docs.oracle.com/javase/1.5.0/docs/api/java/io/OutputStream.html}java.io.OutputStream javadocs}}
+
 
 
 Usage
@@ -29,7 +38,7 @@ Ziplib Commands
   ::ziplib::openInputZip <fileName>
 
   Open the <fileName> for reading and return a 
-  java.util.zip.ZipInputStream object.  A Tcl 
+  <<java.util.zip.ZipInputStream>> object.  A Tcl 
   error is thrown if the file is not found, or if the file is not a valid
   ZIP or JAR file.  Note that the object returned by ::ziplib::openInputZip
   should be closed after processing the zip stream. 
@@ -40,8 +49,9 @@ Ziplib Commands
   ::ziplib::openOutputZip <fileName>
 
   Open the <fileName> for writing and return a 
-  java.util.zip.ZipOutputStream object.  A Tcl 
-  error is thrown if the file could not be opened.
+  <<java.util.zip.ZipOutputStream>> object.  A Tcl 
+  error is thrown if the file could not be opened.  Any existing
+  file is overwritten.
   Note that the object returned by ::ziplib::openOutputZip
   should be closed after processing the zip stream.
 
@@ -99,8 +109,8 @@ Ziplib Commands
   ::ziplib::copyStream <in> <out>
 
   Copies the bytes from an input stream to an output stream.  <in> is
-  a Java object that supports the <<read>> method.  <out> is a Java
-  object that support the <<write>> method.  <in> is typically
+  a Java object that supports the <<java.io.InputStream read>> method.  <out> is a Java
+  object that support the <<java.io.OutStream write>> method.  <in> is typically
   FileInputStream or ZipInputStream objects, <out> is typically
   FileOutputStream or ZipOutStream objects.
 
@@ -137,8 +147,53 @@ Examples
     package require ziplib
 
     set zipin  [::ziplib::openInputZip some.zip]
-    while {! [java::isnull [set entry [$zipin getNextEntry]]]} {
+    while {! [java::isnull [set entry [$zipin getNextEntry]]] } {
         puts [$entry getName]
+    }
+    $zipin close
++----------------------------------------------------------+
+
+
+    Write zip file entries
+
++----------------------------------------------------------+
+    package require ziplib
+
+    set zipout  [::ziplib::openOutputZip some.zip]
+
+    set bytes [[java::new String "hello world from JTcl and ziplib\n"] getBytes]
+    ::ziplib::mkZipFile $zipout  hello-world.txt
+    $zipout write $bytes
+
+    set bytes [[java::new String "another file\n"] getBytes]
+    ::ziplib::mkZipDir $zipout  sub-dir
+    ::ziplib::mkZipFile $zipout  sub-dir/other-file.txt
+    $zipout write $bytes
+
+    $zipout close
++----------------------------------------------------------+
+
+
+    Read a zip file entry
+
++----------------------------------------------------------+
+    package require ziplib
+
+    set zipin  [::ziplib::openInputZip some.zip]
+    set buf [java::new {byte[]} 32768]
+    while { ! [java::isnull [set entry [$zipin getNextEntry]]] } {
+        # only print entries with a ".txt" suffix
+        if { [regexp {.txt$} [$entry getName]] }  {
+            puts "\ncontents of [$entry getName]"
+            puts "-----------------------"
+            while { [set bytesRead [$zipin read $buf]] > 0 } {
+                set str [java::new {String byte[] int int} $buf 0 $bytesRead]
+                puts -nonewline [$str toString]
+            }
+            puts "\n-----------------------"
+        } else {
+            puts "skipping entry: [$entry getName]"
+        }
     }
     $zipin close
 +----------------------------------------------------------+
