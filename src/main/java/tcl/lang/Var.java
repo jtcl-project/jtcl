@@ -411,11 +411,12 @@ public class Var {
 	// indicates an array element. For example, this
 	// method would return true for "foo(bar) and false
 	// for "foo".
+	// bug 4744 - must be x() at a minimum to look like array
 
 	public static final boolean isArrayVarname(String varName) {
 		final int lastInd = varName.length() - 1;
-		if (varName.charAt(lastInd) == ')') {
-			if (varName.indexOf('(') != -1) {
+		if (lastInd > 1 && varName.charAt(lastInd) == ')') {
+			if (varName.indexOf('(') > 0) {
 				return true;
 			}
 		}
