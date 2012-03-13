@@ -1643,24 +1643,18 @@ public class Parser {
 		return commandComplete(string, string.length());
 	}
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * TclParseBackslash -> backslash
-	 * 
+
+	/**
 	 * Figure out how to handle a backslash sequence. The script_index value
-	 * must be the index of the first \.
+	 * must be the index of the first 
 	 * 
-	 * Results: The return value is an instance of BackSlashResult that contains
+	 * @param script_array script to parse
+	 * @param script_index index of the first '\'
+	 * @return an instance of BackSlashResult that contains
 	 * the character that should be substituted in place of the backslash
 	 * sequence that starts at script_index, and an index to the next character
 	 * after the backslash sequence.
-	 * 
-	 * Side effects: None.
-	 * 
-	 * ----------------------------------------------------------------------
 	 */
-
 	static BackSlashResult backslash(char[] script_array, // script to parse
 			int script_index) // index of first backslash
 	{
@@ -1753,7 +1747,7 @@ public class Parser {
 				count++;
 				c = script_array[script_index];
 			} while ((count < numChars)
-					&& ((c == ' ') || (c == '\t') || Character.isWhitespace(c)));
+					&& ((c == ' ') || (c == '\t')));
 			return new BackSlashResult(' ', script_index, count);
 		}
 		case 0: {
