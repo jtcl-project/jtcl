@@ -1,0 +1,163 @@
+
+Fleet 
+~~~~
+
+  Fleet is a simple concurrent programming tool for JTcl.  This is a very 
+  early release of Fleet and is mostly intended for experimentation.
+
+
+
+* Usage
+
+
+  Load the <<fleet>> Java extension in Tcl source files:
+
++------------------------------------------------------------------------+
+    java::load tcl.pkg.fleet.FleetExt 
++------------------------------------------------------------------------+
+
+
+* fleet create
+
+  ::fleet create  -name <fleet-name> 
+
+  ::fleet create creates a new fleet and a new Tcl level command for manipulating fleets.
+
+** Arguments
+
+    * -name fleetName
+
+    The name given to the fleet and the name of the Tcl level command that will be created.
+    If this optional argument is not included the fleet will be named fleetN where N is
+    an integer starting at 0 and incrementing for each fleet created.
+
+* fleetName member
+
+  ::fleetName member  -name <fleet-name>
+
+  ::fleetName member creates a new member of the fleet.
+
+** Arguments
+
+    * -name memberName
+
+    The name given to the new member of the fleet 
+    If this optional argument is not included the member will be named memberN where N is
+    an integer starting at 0 and incrementing for each member created.
+
+  Example:
+
++---------------------------------------------------------------+
+  set fl [fleet create -name webfleet]
+  set m1 [$fl member -name web1]
++---------------------------------------------------------------+
+
+
+
+* fleetName tell
+
+  ::fleetName tell memberName msg -reply <replayCmd> -var <doneVar>
+
+  ::fleetName tell sends a message representing a script to be executed in the fleet member with name memberName.
+
+** Arguments
+
+    *  memberName
+
+    The name of the member to send the message to.
+
+    *  msg
+
+    A Tcl script that will be executed in by the member in its own interpreter and thread.
+
+    * -reply replyCmd
+
+    A command that will be executed in the Tcl interpreter that sent the message when the command has finished executing.
+
+    * -var varName
+
+    A variable that will be set in the Tcl interpreter that sent the message when the command has finished executing.
+
+ 
+    * Both -replay and -var are optional, but only one of them should be set.
+
+  Example:
+
++---------------------------------------------------------------+
+  set msg {set x [expr {sqrt(3.0)}]}
+  $fl tell $m1 $msg -replay doneCmd 
++---------------------------------------------------------------+
+
+* fleetName forget
+
+  ::fleetName forget memberName 
+
+  ::fleetName forget sends a message telling member to forget (remove from its queue) all messages that haven't yet been executed) 
+
+** Arguments
+
+    *  memberName
+
+    The name of the member to send the message to.
+
+* fleetName destroy
+
+  ::fleetName destroy ?memberName?
+
+  ::fleetName destroy destroys a member (if memberName is specified) or the entire fleet if no memberName argument is present.
+      The destroy message is placed on the members input queue and will not be acted upon until all messages already in the queue
+    are acted upon.  Use the forget command to clear the queue if you want the destroy action to happen as soon as the 
+    the current message (if any) is done being acted upon.
+    
+
+** Arguments
+
+    *  memberName
+
+    The name of the member to destroy.  If not specified the whole fleet is destroyed.
+
+
+* Example
+
++-------------------------------------------------+
+proc readyCmd {args} {
+   puts "done $args"
+}
+
+proc checkReadyVar {varName varElem mode} {
+   upvar #0 $varName var
+   puts $var($varElem)
+}
+
+package require java
+java::load tcl.pkg.fleet.FleetExt
+
+set script {
+    proc count {n} {
+        set x 0.0
+        for {set i 0} {$i <$n} {incr i} {
+           set x [expr {$x+rand()}]
+        }
+        return $x
+    }
+}
+set fl1 [fleet fleet]
+set m1 [$fl1 member]
+set m2 [$fl1 member]
+
+$fl1 tell $m1 $script -reply readyCmd
+$fl1 tell $m2 $script -reply readyCmd
+for {set i 0} {$i < 10} {incr i} {
+    puts $i
+    $fl1 tell $m1 "count 100000" -reply readyCmd
+}
+for {set i 0} {$i < 10} {incr i} {
+    puts $i
+    $fl1 tell $m2 "count 100000" -var readyVar($i)
+}
+trace add variable  readyVar write checkReadyVar
+#$fl1 destroy $m1
+#$fl1 destroy $m2
+vwait done
++-------------------------------------------------+
+
