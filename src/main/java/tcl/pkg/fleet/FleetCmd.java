@@ -30,6 +30,7 @@ public class FleetCmd implements Command {
             void eval(final Interp interp, final TclObject argv[], final FleetCmd mCmd) throws TclException {
                 ArgOptions argOptions = new ArgOptions(interp, argv, 2);
                 String name = argOptions.get("-name", "member" + mCmd.memberCount);
+                mCmd.memberCount++;
                 FleetMember fleetMember = new FleetMember(name);
                 fleetMembers.put(name,fleetMember);
                 interp.setResult(name);
