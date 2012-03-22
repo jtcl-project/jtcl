@@ -141,7 +141,7 @@ set script {
         return $x
     }
 }
-set fl1 [fleet fleet]
+set fl1 [fleet create]
 set m1 [$fl1 member]
 set m2 [$fl1 member]
 
