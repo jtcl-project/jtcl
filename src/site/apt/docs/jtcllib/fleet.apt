@@ -161,3 +161,102 @@ trace add variable  readyVar write checkReadyVar
 vwait done
 +-------------------------------------------------+
 
+* Example
+
++-------------------------------------------------+
+## Calculate pi using concurrent program
+## Compare to example in the Akka "getting started" documentation (http://akka.io)
+
+package require java
+java::load tcl.pkg.fleet.FleetExt
+
+proc initResults {status result} {
+   puts "$status $result"
+
+}
+
+proc accumValues {status value} {
+   global props
+   if {$status eq "FAIL"} {
+        puts $value
+   } else {
+       global acc
+       set acc [expr {$value+$acc}]
+       incr props(nCalcs) 
+       if {$props(nCalcs) == $props(nMessages)} {
+            puts "pi is $acc"
+       } else {
+           if {($props(nCalcs) % 100) == 0} {
+               puts update
+               sendMessages
+           }
+       }
+   }
+}
+
+proc sendMessages {} {
+    global fl1
+    global members
+    global props
+    for {set i 0} {$i < $props(nMembers)} {incr i} {
+        set count [$fl1 count -messages $members($i)]
+        if {$count < $props(lowWater)} {
+            set newCount [expr {$props(highWater)-$count}]
+            for {set j 0} {$j < $newCount} {incr j} {
+                if {$props(messageNum) >= $props(nMessages)} {
+                     return 1
+                }
+                sendMessage $fl1 $members($i) $props(messageNum)
+                incr props(messageNum)
+            }
+        }
+    }
+    after 50 sendMessages
+}
+
+proc sendMessage {fleet member messageNum} {
+    global props
+    #puts "tell $fleet $member $messageNum"
+    $fleet tell $member "calcPiFor $messageNum $props(nElems)"  -reply accumValues
+}
+
+array set props {
+    nMembers 2
+    nElems 10000
+    lowWater 50
+    highWater 100
+    nMessages 10000
+    nCalcs 0
+    messageNum 0
+}
+set script {
+    eval {
+        set argv0 ""
+        set argv [list]
+        package require hyde
+        ::hyde::jproc double calcPiFor {int start int nElem} {
+            double acc = 0.0;
+            int iStart = start*nElem;
+            int iEnd = (start+1)*nElem-1;
+            for (int i=iStart;i<=iEnd;i++) {
+                acc += 4.0 * (1 - (i % 2) * 2) / (2 * i + 1);
+            }
+            return acc;
+        }
+    }
+}
+
+
+set fl1 [fleet create]
+for {set i 0} {$i < $props(nMembers)} {incr i} {
+    set members($i) [$fl1 member]
+    $fl1 tell $members($i) $script -reply initResults
+}
+
+set acc 0.0
+sendMessages
+vwait done
+
++-------------------------------------------------+
+
+
