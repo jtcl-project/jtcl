@@ -63,14 +63,36 @@ public class FleetCmd implements Command {
             }
         },
         FORGET() {
-
             void eval(final Interp interp, final TclObject argv[], final FleetCmd mCmd) throws TclException {
-                if (argv.length != 2) {
-                    throw new TclNumArgsException(interp, 2, argv, "");
+                if (argv.length != 3) {
+                    throw new TclNumArgsException(interp, 2, argv, "memberName");
                 }
-
-                int size = mCmd.fleetMember.forget();
-                interp.setResult(size);
+                String memberName = argv[2].toString();
+                FleetMember member = mCmd.fleetMembers.get(memberName);
+                if (member == null) {
+                    throw new TclException(interp,"Can't find member \"" + memberName + "\" in fleet \"" + mCmd.fleetName+"\"");
+                } else {
+                    int size = member.forget();
+                    interp.setResult(size);
+                }
+            }
+        },
+        COUNT() {
+            void eval(final Interp interp, final TclObject argv[], final FleetCmd mCmd) throws TclException {
+                if (argv.length != 4) {
+                    throw new TclNumArgsException(interp, 2, argv, "-messages memberName");
+                }
+                ArgOptions argOptions = new ArgOptions(interp, argv, 2);
+                String memberName = argOptions.get("-messages", "");
+                if (!memberName.equals("")) {
+                    FleetMember member = mCmd.fleetMembers.get(memberName);
+                    if (member == null) {
+                        throw new TclException(interp,"Can't find member \"" + memberName + "\" in fleet \"" + mCmd.fleetName+"\"");
+                    } else {
+                        int size = member.messageCount();
+                        interp.setResult(size);
+                    }
+                }
             }
         },
         DESTROY() {
@@ -83,6 +105,8 @@ public class FleetCmd implements Command {
                     String memberName = argv[2].toString();
                     FleetMember member = mCmd.fleetMembers.get(memberName);
                     if (member == null) {
+                        throw new TclException(interp,"Can't find member \"" + memberName + "\" in fleet \"" + mCmd.fleetName+"\"");
+                    } else {
                         member.execCommand(null);
                         mCmd.fleetMembers.remove(memberName);
                     }

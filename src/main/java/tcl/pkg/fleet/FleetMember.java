@@ -83,6 +83,10 @@ public class FleetMember implements Runnable {
         queue.clear();
         return size;
     }
+    public int messageCount() {
+        int size = queue.size();
+        return size;
+    }
     public void run() {
         if (debug) {
             System.out.println("thread start");
