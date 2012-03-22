@@ -13,6 +13,7 @@ class Message extends TclEvent implements
     boolean status;
     TclObject result;
     String errorMsg = "";
+    String memberName="";
 
     Message(Interp interp, TclObject messageList,String readyCmd,
             String readyVar) {
@@ -25,10 +26,10 @@ class Message extends TclEvent implements
     // Invoked by FleetMember when a compile job is finished.
     // This implementation will queue an event in the original
     // thread that will define the Java class.
-    public void completed(final int status, final TclObject result) {
+    public void completed(final int status, final String memberName, final TclObject result) {
         // Add an event to the thread safe Tcl event queue that
         // will define the Java class.
-
+        this.memberName = memberName;
         if (debug) {
             System.out.println("TJCCompileJavaCmd CompiledClassReady.compiled()");
             System.out.println("geninfo was " + result.toString());
@@ -94,9 +95,11 @@ class Message extends TclEvent implements
                 // STATUS:
                 if (status) {
                     TclList.append(interp, tlist, TclString.newInstance("OK"));
+                    TclList.append(interp, tlist, TclString.newInstance(memberName));
                     TclList.append(interp, tlist, result);
                 } else {
                     TclList.append(interp, tlist, TclString.newInstance("FAIL"));
+                    TclList.append(interp, tlist, TclString.newInstance(memberName));
                     TclList.append(interp, tlist, result);
                 }
 
@@ -117,9 +120,11 @@ class Message extends TclEvent implements
                 // STATUS:
                 if (status) {
                     TclList.append(interp, tlist, TclString.newInstance("OK"));
+                    TclList.append(interp, tlist, TclString.newInstance(memberName));
                     TclList.append(interp, tlist, result);
                 } else {
                     TclList.append(interp, tlist, TclString.newInstance("FAIL"));
+                    TclList.append(interp, tlist, TclString.newInstance(memberName));
                     TclList.append(interp, tlist, result);
                 }
 
