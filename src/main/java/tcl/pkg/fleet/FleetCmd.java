@@ -9,7 +9,7 @@ public class FleetCmd implements Command {
 
     static private long fleetCount = 0;
     private long memberCount = 0;
-    FleetMember fleetMember = null;
+    Namespace ns;
     String fleetName;
     final static private HashMap<String,FleetMember> fleetMembers = new HashMap<String,FleetMember>();
     private enum SubCmds {
@@ -24,6 +24,8 @@ public class FleetCmd implements Command {
                 interp.createCommand(name, fleetCmd);
                 fleetCmd.fleetName = name;
                 interp.setResult(name);
+                Namespace ns = Namespace.createNamespace(interp, "::fleet::"+name, null);
+                fleetCmd.ns = ns;
             }
         },
         MEMBER() {
@@ -31,7 +33,7 @@ public class FleetCmd implements Command {
                 ArgOptions argOptions = new ArgOptions(interp, argv, 2);
                 String name = argOptions.get("-name", "member" + mCmd.memberCount);
                 mCmd.memberCount++;
-                FleetMember fleetMember = new FleetMember(name);
+                FleetMember fleetMember = new FleetMember(mCmd,name);
                 fleetMembers.put(name,fleetMember);
                 interp.setResult(name);
             }
@@ -111,6 +113,7 @@ public class FleetCmd implements Command {
                         mCmd.fleetMembers.remove(memberName);
                     }
                 } else {
+                    Namespace.deleteNamespace(mCmd.ns);
                     int result = interp.deleteCommand(mCmd.fleetName);
                     interp.setResult(result);
                 }

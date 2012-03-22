@@ -1,6 +1,5 @@
 
 /* Heavily modified from TJCThread code  by bjohnson */
-
 //
 // TJC Runtime Compiler main thread. This thread is accessed
 // by any active interp that wishes to compile a Tcl method
@@ -31,11 +30,12 @@ public class FleetMember implements Runnable {
     // it should never be accessed from the
     // caller thread.
     private Interp interp = null;
+    private final FleetCmd fleet;
     private final String name;
 
     public static interface MessageResult {
 
-        public void completed(final int status, final String memberName, final TclObject result);
+        public void completed(final int status, final FleetCmd fleet, final String memberName, final TclObject result);
     }
 
     private static class ExecEvent {
@@ -47,12 +47,13 @@ public class FleetMember implements Runnable {
         }
     }
 
-    FleetMember(final String name) {
+    FleetMember(final FleetCmd fleet, final String name) {
         this.name = name;
+        this.fleet = fleet;
         thread = new Thread(this);
         thread.setDaemon(true);
 
-        thread.setName(name+" service");
+        thread.setName(name + " service");
 
         if (debug) {
             System.out.println("thread create");
@@ -78,15 +79,18 @@ public class FleetMember implements Runnable {
             notify(); // wake up other thread
         }
     }
+
     public int forget() {
         int size = queue.size();
         queue.clear();
         return size;
     }
+
     public int messageCount() {
         int size = queue.size();
         return size;
     }
+
     public void run() {
         if (debug) {
             System.out.println("thread start");
@@ -159,16 +163,15 @@ public class FleetMember implements Runnable {
 
             // Invoke callback to report error
 
-            event.callback.completed(1,name, TclString.newInstance(msg.toString()));
+            event.callback.completed(1, fleet, name, TclString.newInstance(msg.toString()));
         } finally {
             try {
                 TclObject[] cmdArgs = TclList.getElements(interp, event.callback.messageList);
-                for (TclObject cmdArg:cmdArgs) {
+                for (TclObject cmdArg : cmdArgs) {
                     cmdArg.release();
                 }
-        //        event.callback.messageList.release();
+                //        event.callback.messageList.release();
             } catch (TclException tclE) {
-                
             }
 
         }
@@ -181,11 +184,11 @@ public class FleetMember implements Runnable {
 
         interp.eval(callback.messageList, TCL.EVAL_GLOBAL);
         // fixme need to worry about refcount etc of sending result as TclObject
-        
+
         TclObject result = interp.getResult();
         result.preserve();
         interp.resetResult();
-        callback.completed(0,name, result);
+        callback.completed(0, fleet, name, result);
     }
 
     // Invoked when FleetMember is garbage collected.
