@@ -168,10 +168,11 @@ vwait done
 ## Calculate pi using concurrent program
 ## Compare to example in the Akka "getting started" documentation (http://akka.io)
 
+package require hyde
 package require fleet
 
 proc sendMessage {fleet member messageNum} {
-    set nElems 1000
+    set nElems 10000
     $fleet tell $member "calcPiFor $messageNum $nElems"  -reply ::fleet::processReply
 }
 
@@ -181,32 +182,31 @@ proc accumulateResults {value} {
 }
 
 proc reportResults {} {
-    global acc
-    puts $acc
+    global acc done
+    puts "pi is $acc"
+    set done $acc
 }
 
 
-set script {
-    eval {
-        set argv0 ""
-        set argv [list]
-        package require hyde
-        ::hyde::jproc double calcPiFor {int start int nElem} {
-            double acc = 0.0;
-            int iStart = start*nElem;
-            int iEnd = (start+1)*nElem-1;
-            for (int i=iStart;i<=iEnd;i++) {
-                acc += 4.0 * (1 - (i % 2) * 2) / (2 * i + 1);
-            }
-            return acc;
+set procScript {
+    double calcPiFor {int start int nElem} {
+        double acc = 0.0;
+        int iStart = start*nElem;
+        int iEnd = (start+1)*nElem-1;
+        for (int i=iStart;i<=iEnd;i++) {
+            acc += 4.0 * (1 - (i % 2) * 2) / (2 * i + 1);
         }
+        return acc;
     }
 }
 
-set acc 0.0
-set fleet [::fleet::initFleet 2 $script]
+set initScript "package require java"
+set fleet [::fleet::initFleet 2 $initScript]
+eval ::fleet::jproc $fleet $procScript
 ::fleet::configure $fleet -messageProc sendMessage -calcProc accumulateResults -doneProc reportResults
-::fleet::configure $fleet nMessages 10000
+::fleet::configure $fleet -nMessages 10000 -highWater 500
+
+set acc 0.0
 ::fleet::sendMessages $fleet
 
 vwait done
