@@ -72,6 +72,30 @@ proc ::fleet::initFleet {nMembers {script {}} } {
    return $fleet
 }
 
+proc ::fleet::jproc {fleet args} {
+    eval ::hyde::jproc $args
+    set procName [lindex $args 1]
+    set procArgs [lindex $args 2]
+    set procArgs2 [list]
+    foreach "type arg" $procArgs {
+        lappend procArgs2 $arg
+    }
+    set procArgs3 ""
+    foreach "type arg" $procArgs {
+        append procArgs3 "\$$arg "
+    }
+    set bytes $::hyde::cacheCode(hyde/${procName}Cmd)
+    $fleet tell all "java::defineclass $bytes"
+    set jproc {
+        proc $procName \{$procArgs2\} {
+            return [java::call hyde.${procName}Cmd $procName $procArgs3]
+        }
+    }
+    set jproc [subst -nocommand $jproc]
+    puts $jproc
+    $fleet tell all $jproc
+}
+
 proc ::fleet::configure {fleet args} {
    upvar #0 ::fleet::${fleet}::pars pars
    foreach "name value" $args {
