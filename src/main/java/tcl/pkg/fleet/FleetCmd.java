@@ -50,18 +50,30 @@ public class FleetCmd implements Command {
                 String memberName = argv[2].toString();
 
                 TclObject[] cmdArgs = TclList.getElements(interp, argv[3]);
-                TclObject messageList = TclList.newInstance();
                 // fixme preserve or duplicate, what about release
-                for (TclObject cmdArg:cmdArgs) {
-                    cmdArg.preserve();
-                    TclList.append(interp, messageList, cmdArg);
+                if (memberName.equals("all")) {
+                    for (FleetMember member: mCmd.fleetMembers.values()) {
+                         TclObject messageList = TclList.newInstance();
+                         messageList.preserve();
+                         for (TclObject cmdArg:cmdArgs) {
+                             cmdArg.preserve();
+                             TclList.append(interp, messageList, cmdArg);
+                         }
+                         sendCommand(interp, member, messageList, replyCmd, doneVar);
+                     }
+                } else {
+                    TclObject messageList = TclList.newInstance();
+                    messageList.preserve();
+                    for (TclObject cmdArg:cmdArgs) {
+                        cmdArg.preserve();
+                        TclList.append(interp, messageList, cmdArg);
+                    }
+                    FleetMember member = mCmd.fleetMembers.get(memberName);
+                    if (member == null) {
+                        throw new TclException(interp,"Can't find member \"" + memberName + "\" in fleet \"" + mCmd.fleetName+"\"");
+                    }
+                    sendCommand(interp, member, messageList, replyCmd, doneVar);
                 }
-                messageList.preserve();
-                FleetMember member = mCmd.fleetMembers.get(memberName);
-                if (member == null) {
-                    throw new TclException(interp,"Can't find member \"" + memberName + "\" in fleet \"" + mCmd.fleetName+"\"");
-                }
-                sendCommand(interp, member, messageList, replyCmd, doneVar);
             }
         },
         FORGET() {
