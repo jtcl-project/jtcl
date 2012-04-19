@@ -14,7 +14,7 @@ public class FleetCmd implements Command {
     final static private HashMap<String,FleetMember> fleetMembers = new HashMap<String,FleetMember>();
     private enum SubCmds {
 
-        CREATE() {
+        create() {
 
             void eval(final Interp interp, final TclObject argv[], final FleetCmd mCmd) throws TclException {
                 ArgOptions argOptions = new ArgOptions(interp, argv, 2);
@@ -28,7 +28,7 @@ public class FleetCmd implements Command {
                 fleetCmd.ns = ns;
             }
         },
-        MEMBER() {
+        member() {
             void eval(final Interp interp, final TclObject argv[], final FleetCmd mCmd) throws TclException {
                 ArgOptions argOptions = new ArgOptions(interp, argv, 2);
                 String name = argOptions.get("-name", "member" + mCmd.memberCount);
@@ -38,7 +38,7 @@ public class FleetCmd implements Command {
                 interp.setResult(name);
             }
         },
-        TELL() {
+        tell() {
 
             void eval(final Interp interp, final TclObject argv[], final FleetCmd mCmd) throws TclException {
                 ArgOptions argOptions = new ArgOptions(interp, argv, 4);
@@ -76,7 +76,7 @@ public class FleetCmd implements Command {
                 }
             }
         },
-        FORGET() {
+        forget() {
             void eval(final Interp interp, final TclObject argv[], final FleetCmd mCmd) throws TclException {
                 if (argv.length != 3) {
                     throw new TclNumArgsException(interp, 2, argv, "memberName");
@@ -91,7 +91,7 @@ public class FleetCmd implements Command {
                 }
             }
         },
-        COUNT() {
+        count() {
             void eval(final Interp interp, final TclObject argv[], final FleetCmd mCmd) throws TclException {
                 if (argv.length != 4) {
                     throw new TclNumArgsException(interp, 2, argv, "-messages memberName");
@@ -109,7 +109,7 @@ public class FleetCmd implements Command {
                 }
             }
         },
-        DESTROY() {
+        destroy() {
 
             void eval(final Interp interp, final TclObject argv[], final FleetCmd mCmd) throws TclException {
                 if ((argv.length != 2) && (argv.length != 3)) {
@@ -137,18 +137,17 @@ public class FleetCmd implements Command {
     private static HashMap<String, SubCmds> aliasMap = new HashMap<String, SubCmds>();
 
     SubCmds getSubCmd(final Interp interp, final String name) throws TclException {
-        String uName = name.toUpperCase();
         SubCmds subCmd;
         try {
-            subCmd = SubCmds.valueOf(uName);
+            subCmd = SubCmds.valueOf(name);
         } catch (IllegalArgumentException iAE) {
             subCmd = aliasMap.get(name);
             if (subCmd == null) {
                 int count = 0;
                 ArrayList<String> sValues = new ArrayList<String>();
                 for (SubCmds testCmd : SubCmds.values()) {
-                    if (testCmd.name().startsWith(uName)) {
-                        sValues.add(testCmd.name().toLowerCase());
+                    if (testCmd.name().startsWith(name)) {
+                        sValues.add(testCmd.name());
                         subCmd = testCmd;
                         count++;
                     }
@@ -159,7 +158,7 @@ public class FleetCmd implements Command {
                     if (count == 0) {
                         sValues.clear();
                         for (SubCmds value : SubCmds.values()) {
-                            sValues.add(value.name().toLowerCase());
+                            sValues.add(value.name());
                         }
                     }
                     Collections.sort(sValues);
