@@ -51,7 +51,7 @@ public class FleetCmd implements Command {
 
                 TclObject[] cmdArgs = TclList.getElements(interp, argv[3]);
                 // fixme preserve or duplicate, what about release
-                if (memberName.equals("all")) {
+                if (memberName.equals("*")) {
                     for (FleetMember member: mCmd.fleetMembers.values()) {
                          TclObject messageList = TclList.newInstance();
                          messageList.preserve();
