@@ -6,7 +6,6 @@ Fleet
   early release of Fleet and is mostly intended for experimentation.
 
 
-
 * Usage
 
 
@@ -64,7 +63,8 @@ Fleet
 
     *  memberName
 
-    The name of the member to send the message to.
+    The name of the member to send the message to.  If memberName is "*" then the same message is sent to 
+    all members of the fleet.
 
     *  msg
 
@@ -98,7 +98,18 @@ Fleet
 
     *  memberName
 
-    The name of the member to send the message to.
+* fleetName count
+
+  ::fleetName count -messages memberName
+
+  ::fleetName count returns a count of items in the fleet.  What items are counted depend on the specified arguments.
+
+** Arguments
+
+    *  -messages memberName
+
+    Return a count of the number of messages in the specified members queue.  As the member might be continuously acting on, and removing
+    messages from the queue, this is only an estimate.
 
 * fleetName destroy
 
