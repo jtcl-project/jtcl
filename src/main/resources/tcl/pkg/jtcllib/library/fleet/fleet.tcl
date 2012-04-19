@@ -42,7 +42,6 @@ proc ::fleet::sendMessages {fleet} {
             }
         }
     }
-    after 50 [info level 0]
 }
 
 proc ::fleet::initFleet {nMembers {script {}} } {
