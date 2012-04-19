@@ -84,7 +84,7 @@ proc ::fleet::jproc {fleet args} {
         append procArgs3 "\$$arg "
     }
     set bytes $::hyde::cacheCode(hyde/${procName}Cmd)
-    $fleet tell all "java::defineclass $bytes"
+    $fleet tell * "java::defineclass $bytes"
     set jproc {
         proc $procName \{$procArgs2\} {
             return [java::call hyde.${procName}Cmd $procName $procArgs3]
@@ -92,7 +92,7 @@ proc ::fleet::jproc {fleet args} {
     }
     set jproc [subst -nocommand $jproc]
     puts $jproc
-    $fleet tell all $jproc
+    $fleet tell * $jproc
 }
 
 proc ::fleet::configure {fleet args} {
