@@ -15,6 +15,7 @@ class Message extends TclEvent implements
     String errorMsg = "";
     FleetCmd fleet=null;
     String memberName="";
+    int count=0;
 
     Message(Interp interp, TclObject messageList,String readyCmd,
             String readyVar) {
@@ -27,11 +28,12 @@ class Message extends TclEvent implements
     // Invoked by FleetMember when a compile job is finished.
     // This implementation will queue an event in the original
     // thread that will define the Java class.
-    public void completed(final int status, final FleetCmd fleet, final String memberName, final TclObject result) {
+    public void completed(final int status, final FleetCmd fleet, final FleetMember member, final TclObject result) {
         // Add an event to the thread safe Tcl event queue that
         // will define the Java class.
         this.fleet = fleet;
-        this.memberName = memberName;
+        this.memberName = member.getName();
+        this.count = member.messageCount();
         if (debug) {
             System.out.println("TJCCompileJavaCmd CompiledClassReady.compiled()");
             System.out.println("geninfo was " + result.toString());
@@ -92,49 +94,40 @@ class Message extends TclEvent implements
                 // CLASSNAMES: List of fully qualified Java class names
                 // MSG: text of error message if (STATUS == FAIL)
 
-                TclObject tlist = TclList.newInstance();
-
-                // STATUS:
+                TclObject tDict = TclDict.newInstance();
                 if (status) {
-                    TclList.append(interp, tlist, TclString.newInstance("OK"));
-                     TclList.append(interp, tlist, TclString.newInstance(fleet.fleetName));
-                   TclList.append(interp, tlist, TclString.newInstance(memberName));
-                    TclList.append(interp, tlist, result);
+                    TclDict.put(interp, tDict, TclString.newInstance("status"),TclString.newInstance("OK"));
                 } else {
-                    TclList.append(interp, tlist, TclString.newInstance("FAIL"));
-                    TclList.append(interp, tlist, TclString.newInstance(fleet.fleetName));
-                    TclList.append(interp, tlist, TclString.newInstance(memberName));
-                    TclList.append(interp, tlist, result);
+                    TclDict.put(interp, tDict, TclString.newInstance("status"),TclString.newInstance("FAIL"));                    
                 }
+
+                TclDict.put(interp, tDict, TclString.newInstance("fleet"),TclString.newInstance(fleet.fleetName));
+                TclDict.put(interp, tDict, TclString.newInstance("member"),TclString.newInstance(memberName));
+                TclDict.put(interp, tDict, TclString.newInstance("value"),TclString.newInstance(result));
 
                 // MSG:
 
                 if (debug) {
                     System.out.println("now to set readyVar: " + readyVar + " "
-                            + tlist);
+                            + tDict);
                 }
 
-                interp.setVar(readyVar, null, tlist, TCL.GLOBAL_ONLY);
+                interp.setVar(readyVar, null, tDict, TCL.GLOBAL_ONLY);
             } else if (readyCmd != null) {
-
                 TclObject tlist = TclList.newInstance();
-
                 TclList.append(interp, tlist, TclString.newInstance(readyCmd));
-
-                // STATUS:
+                TclObject tDict = TclDict.newInstance();
                 if (status) {
-                    TclList.append(interp, tlist, TclString.newInstance("OK"));
-                    TclList.append(interp, tlist, TclString.newInstance(fleet.fleetName));
-                    TclList.append(interp, tlist, TclString.newInstance(memberName));
-                    TclList.append(interp, tlist, result);
+                    TclDict.put(interp, tDict, TclString.newInstance("status"),TclString.newInstance("OK"));
                 } else {
-                    TclList.append(interp, tlist, TclString.newInstance("FAIL"));
-                    TclList.append(interp, tlist, TclString.newInstance(fleet.fleetName));
-                    TclList.append(interp, tlist, TclString.newInstance(memberName));
-                    TclList.append(interp, tlist, result);
+                    TclDict.put(interp, tDict, TclString.newInstance("status"),TclString.newInstance("FAIL"));                    
                 }
 
-
+                TclDict.put(interp, tDict, TclString.newInstance("fleet"),TclString.newInstance(fleet.fleetName));
+                TclDict.put(interp, tDict, TclString.newInstance("member"),TclString.newInstance(memberName));
+                TclDict.put(interp, tDict, TclString.newInstance("value"),TclString.newInstance(result));
+                TclDict.put(interp, tDict, TclString.newInstance("count"),TclInteger.newInstance(count));
+                TclList.append(interp,tlist,tDict);
                 // MSG:
                 if (debug) {
                     System.out.println("now to eval readyCmd: " + tlist+" interp " + interp);

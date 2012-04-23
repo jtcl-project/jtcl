@@ -35,7 +35,7 @@ public class FleetMember implements Runnable {
 
     public static interface MessageResult {
 
-        public void completed(final int status, final FleetCmd fleet, final String memberName, final TclObject result);
+        public void completed(final int status, final FleetCmd fleet, final FleetMember member, final TclObject result);
     }
 
     private static class ExecEvent {
@@ -89,6 +89,9 @@ public class FleetMember implements Runnable {
     public int messageCount() {
         int size = queue.size();
         return size;
+    }
+    public String getName() {
+        return name;
     }
 
     public void run() {
@@ -163,7 +166,7 @@ public class FleetMember implements Runnable {
 
             // Invoke callback to report error
 
-            event.callback.completed(1, fleet, name, TclString.newInstance(msg.toString()));
+            event.callback.completed(1, fleet, this, TclString.newInstance(msg.toString()));
         } finally {
             try {
                 TclObject[] cmdArgs = TclList.getElements(interp, event.callback.messageList);
@@ -188,7 +191,7 @@ public class FleetMember implements Runnable {
         TclObject result = interp.getResult();
         result.preserve();
         interp.resetResult();
-        callback.completed(0, fleet, name, result);
+        callback.completed(0, fleet, this, result);
     }
 
     // Invoked when FleetMember is garbage collected.
