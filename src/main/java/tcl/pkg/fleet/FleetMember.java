@@ -32,7 +32,8 @@ public class FleetMember implements Runnable {
     private Interp interp = null;
     private final FleetCmd fleet;
     private final String name;
-
+    private long processingTime=0;
+    private long waitingTime=0;
     public static interface MessageResult {
 
         public void completed(final int status, final FleetCmd fleet, final FleetMember member, final TclObject result);
@@ -103,10 +104,12 @@ public class FleetMember implements Runnable {
         // added to the queue.
         try {
             while (true) {
+                long startTime = System.nanoTime();
                 ExecEvent event = (ExecEvent) queue.take();
                 if (event.callback == null) {
                     break;
                 }
+                waitingTime = waitingTime + (System.nanoTime() - startTime);
                 processEvent(event);
             }
         } catch (InterruptedException ieE) {
@@ -180,17 +183,27 @@ public class FleetMember implements Runnable {
         }
     }
 
+    public double getProcessingTime() {
+        return processingTime/1.0e9;
+    }
+
+    public double getWaitingTime() {
+        return waitingTime/1.0e9;
+    }
+
     private void evalScript(Message callback) throws TclException {
         if (debug) {
             System.out.println("evalCmd ");
         }
+        long startTime = System.nanoTime();
 
         interp.eval(callback.messageList, TCL.EVAL_GLOBAL);
         // fixme need to worry about refcount etc of sending result as TclObject
 
-        TclObject result = interp.getResult();
+        TclObject result = interp.getResult().duplicate();
         result.preserve();
-        interp.resetResult();
+        processingTime = processingTime + (System.nanoTime() - startTime);
+        //interp.resetResult();
         callback.completed(0, fleet, this, result);
     }
 

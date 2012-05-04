@@ -109,6 +109,28 @@ public class FleetCmd implements Command {
                 }
             }
         },
+        stats() {
+            void eval(final Interp interp, final TclObject argv[], final FleetCmd mCmd) throws TclException {
+                if (argv.length != 4) {
+                    throw new TclNumArgsException(interp, 2, argv, "-member memberName");
+                }
+                ArgOptions argOptions = new ArgOptions(interp, argv, 2);
+                String memberName = argOptions.get("-member", "");
+                if (!memberName.equals("")) {
+                    FleetMember member = mCmd.fleetMembers.get(memberName);
+                    if (member == null) {
+                        throw new TclException(interp,"Can't find member \"" + memberName + "\" in fleet \"" + mCmd.fleetName+"\"");
+                    } else {
+                        TclObject tDict = TclDict.newInstance();
+                        double processingTime = member.getProcessingTime();
+                        double waitingTime = member.getWaitingTime();
+                        TclDict.put(interp, tDict, TclString.newInstance("processing"),TclDouble.newInstance(processingTime));
+                        TclDict.put(interp, tDict, TclString.newInstance("waiting"),TclDouble.newInstance(waitingTime));
+                        interp.setResult(tDict);
+                    }
+                }
+            }
+        },
         destroy() {
 
             void eval(final Interp interp, final TclObject argv[], final FleetCmd mCmd) throws TclException {

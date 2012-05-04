@@ -11,7 +11,7 @@ class Message extends TclEvent implements
     final String readyCmd;
     final String readyVar;
     boolean status;
-    TclObject result;
+    private TclObject result;
     String errorMsg = "";
     FleetCmd fleet=null;
     String memberName="";
@@ -39,8 +39,6 @@ class Message extends TclEvent implements
             System.out.println("geninfo was " + result.toString());
         }
 
-        // Check compile status:
-
         if (status == FleetMember.STATUS_OK) {
             this.status = true;
             this.result = result;
@@ -56,7 +54,6 @@ class Message extends TclEvent implements
                 System.out.println("errorMsg was \"" + this.errorMsg + "\"");
             }
         }
-
         interp.getNotifier().queueEvent(this, TCL.QUEUE_TAIL);
 
         // Don't wait for the event to be processed in the
@@ -103,7 +100,7 @@ class Message extends TclEvent implements
 
                 TclDict.put(interp, tDict, TclString.newInstance("fleet"),TclString.newInstance(fleet.fleetName));
                 TclDict.put(interp, tDict, TclString.newInstance("member"),TclString.newInstance(memberName));
-                TclDict.put(interp, tDict, TclString.newInstance("value"),TclString.newInstance(result));
+                TclDict.put(interp, tDict, TclString.newInstance("value"),result);
 
                 // MSG:
 
@@ -125,7 +122,7 @@ class Message extends TclEvent implements
 
                 TclDict.put(interp, tDict, TclString.newInstance("fleet"),TclString.newInstance(fleet.fleetName));
                 TclDict.put(interp, tDict, TclString.newInstance("member"),TclString.newInstance(memberName));
-                TclDict.put(interp, tDict, TclString.newInstance("value"),TclString.newInstance(result));
+                TclDict.put(interp, tDict, TclString.newInstance("value"),result);
                 TclDict.put(interp, tDict, TclString.newInstance("count"),TclInteger.newInstance(count));
                 TclList.append(interp,tlist,tDict);
                 // MSG:
