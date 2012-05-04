@@ -29,14 +29,16 @@ proc ::fleet::processReply {reply} {
            set count [dict get $reply count]
            if {$count < $pars(lowWater)} {
                set newCount [expr {$pars(highWater)-$count}]
-               sendMessagesToMember $fleet $memberName $newCount
+               sendMessages $fleet
            }
        }
    }
 }
 proc ::fleet::sendMessages {fleet} {
     upvar #0 ::fleet::${fleet}::pars pars
-    after cancel "sendMessages $fleet"
+    if {$pars(messageNum) >= $pars(nMessages)} {
+         return 1
+    }
     for {set i 0} {$i < $pars(nMembers)} {incr i} {
         set member $pars(members,$i)
         set count [$pars(fleet) count -messages $member]
@@ -45,7 +47,6 @@ proc ::fleet::sendMessages {fleet} {
             sendMessagesToMember $fleet $member $newCount
         }
     }
-    after 200 [info level 0]
 }
 
 proc ::fleet::sendMessagesToMember {fleet member newCount} {
