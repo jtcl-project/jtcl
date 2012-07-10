@@ -15,6 +15,7 @@ package tcl.lang;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Iterator;
 
 /**
@@ -37,8 +38,8 @@ public class TclDict implements InternalRep {
 	 * Create a new empty Tcl dict.
 	 */
 	private TclDict() {
-		map = new HashMap();
-		keymap = new HashMap();
+		map = new LinkedHashMap();
+		keymap = new LinkedHashMap();
 
 		if (TclObject.saveObjRecords) {
 			String key = "TclDict";
@@ -60,8 +61,8 @@ public class TclDict implements InternalRep {
 	 *            the number of slots pre-allocated in the map.
 	 */
 	private TclDict(int size) {
-		map = new HashMap(size);
-		keymap = new HashMap(size);
+		map = new LinkedHashMap(size);
+		keymap = new LinkedHashMap(size);
 
 		if (TclObject.saveObjRecords) {
 			String key = "TclDict";
