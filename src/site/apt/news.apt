@@ -2,6 +2,29 @@
  JTcl News
  ----
 
+July 12, 2012
+
+  JTcl 2.3.0 has be released.  New or fixed in this release:
+
+  * <New!> JTcllib - module <<fleet>> enables light-weight concurrent programming in JTcl.  See the 
+    manual page in the {{{./docs/jtcllib/index.html}jtcllib}} documentation.
+
+  * Bug fixes:
+
+    * An empty variable name ("") would cause IsArrayVarname to throw exception.
+
+    * After a backslash-newline sequence, only gobble up spaces and tabs (not newlines 
+      or any other whitespace) during eval.
+
+    * <<dict>> now preserves order of entries.
+
+
+ Please report bugs and other unexpected behaviors at the JTcl project
+ site's {{{http://kenai.com/bugzilla/buglist.cgi?product=jtcl}Bug tracking system}}.
+
+ <The JTcl Team>
+
+
 February 23, 2012
 
   JTcl 2.2.0 has be released.  New or fixed in this release:
