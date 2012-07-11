@@ -7,8 +7,6 @@ namespace eval ::fleet {}
 proc ::fleet::initResults {reply} {
    set status [dict get $reply status]
    set value [dict get $reply value]
-   puts "$status $value"
-
 }
 
 proc ::fleet::processReply {reply} {
@@ -26,9 +24,11 @@ proc ::fleet::processReply {reply} {
        if {$pars(nResults) == $pars(nMessages)} {
             $pars(doneProc)
        } else {
-           set count [dict get $reply count]
+           incr pars($memberName,nResults)
+           set count [expr {$pars($memberName,nSent)-$pars($memberName,nResults)}]
            if {$count < $pars(lowWater)} {
                set newCount [expr {$pars(highWater)-$count}]
+               #sendMessagesToMember $fleet $memberName $newCount
                sendMessages $fleet
            }
        }
@@ -41,9 +41,9 @@ proc ::fleet::sendMessages {fleet} {
     }
     for {set i 0} {$i < $pars(nMembers)} {incr i} {
         set member $pars(members,$i)
-        set count [$pars(fleet) count -messages $member]
-        set newCount [expr {$pars(highWater)-$count}]
+        set count [expr {$pars($member,nSent)-$pars($member,nResults)}]
         if {$count < $pars(lowWater)} {
+            set newCount [expr {$pars(highWater)-$count}]
             sendMessagesToMember $fleet $member $newCount
         }
     }
@@ -55,6 +55,7 @@ proc ::fleet::sendMessagesToMember {fleet member newCount} {
         if {$pars(messageNum) >= $pars(nMessages)} {
              return 1
         }
+        incr pars($member,nSent)
         $pars(messageProc) $pars(fleet) $member $pars(messageNum)
         incr pars(messageNum)
     }
@@ -79,7 +80,10 @@ proc ::fleet::initFleet {nMembers {script {}} } {
    set pars(fleet) $fleet
 
    for {set i 0} {$i < $pars(nMembers)} {incr i} {
-       set pars(members,$i) [$pars(fleet) member]
+       set member [$pars(fleet) member]
+       set pars(members,$i) $member
+       set pars($member,nSent) 0
+       set pars($member,nResults) 0
        if {$script ne {}} {
            $fleet tell $pars(members,$i) $script -reply ::fleet::initResults
        }
@@ -87,6 +91,16 @@ proc ::fleet::initFleet {nMembers {script {}} } {
    return $fleet
 }
 
+proc ::fleet::reset {fleet} {
+   upvar #0 ::fleet::${fleet}::pars pars
+   for {set i 0} {$i < $pars(nMembers)} {incr i} {
+       set member $pars(members,$i)
+       set pars($member,nSent) 0
+       set pars($member,nResults) 0
+   }
+   set pars(nResults) 0
+   set pars(messageNum) 0
+}
 proc ::fleet::jproc {fleet args} {
     eval ::hyde::jproc $args
     set procName [lindex $args 1]
@@ -107,7 +121,6 @@ proc ::fleet::jproc {fleet args} {
         }
     }
     set jproc [subst -nocommand $jproc]
-    puts $jproc
     $fleet tell * $jproc
 }
 
