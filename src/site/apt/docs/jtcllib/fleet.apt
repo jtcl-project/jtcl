@@ -12,7 +12,7 @@ Fleet
   Load the <<fleet>> Java extension in Tcl source files:
 
 +------------------------------------------------------------------------+
-    java::load tcl.pkg.fleet.FleetExt 
+    package require fleet
 +------------------------------------------------------------------------+
 
 
