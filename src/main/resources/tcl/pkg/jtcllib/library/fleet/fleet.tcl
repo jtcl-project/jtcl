@@ -101,27 +101,16 @@ proc ::fleet::reset {fleet} {
    set pars(nResults) 0
    set pars(messageNum) 0
 }
+
 proc ::fleet::jproc {fleet args} {
     eval ::hyde::jproc $args
     set procName [lindex $args 1]
-    set procArgs [lindex $args 2]
-    set procArgs2 [list]
-    foreach "type arg" $procArgs {
-        lappend procArgs2 $arg
-    }
-    set procArgs3 ""
-    foreach "type arg" $procArgs {
-        append procArgs3 "\$$arg "
-    }
+    set procArgs [info args $procName]
+    set procBody [info body $procName]
     set bytes $::hyde::cacheCode(hyde/${procName}Cmd)
+    $fleet tell * "package require java"
     $fleet tell * "java::defineclass $bytes"
-    set jproc {
-        proc $procName \{$procArgs2\} {
-            return [java::call hyde.${procName}Cmd $procName $procArgs3]
-        }
-    }
-    set jproc [subst -nocommand $jproc]
-    $fleet tell * $jproc
+    $fleet tell * [list proc $procName $procArgs $procBody]
 }
 
 proc ::fleet::configure {fleet args} {
