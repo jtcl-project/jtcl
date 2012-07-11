@@ -55,7 +55,7 @@ Fleet
 
 * fleetName tell
 
-  ::fleetName tell memberName msg -reply <replayCmd> -var <doneVar>
+  ::fleetName tell memberName msg -reply <replyCmd> -var <doneVar>
 
   ::fleetName tell sends a message representing a script to be executed in the fleet member with name memberName.
 
@@ -79,13 +79,13 @@ Fleet
     A variable that will be set in the Tcl interpreter that sent the message when the command has finished executing.
 
  
-    * Both -replay and -var are optional, but only one of them should be set.
+    * Both -reply and -var are optional, but only one of them should be set.
 
   Example:
 
 +---------------------------------------------------------------+
   set msg {set x [expr {sqrt(3.0)}]}
-  $fl tell $m1 $msg -replay doneCmd 
+  $fl tell $m1 $msg -reply doneCmd 
 +---------------------------------------------------------------+
 
 * fleetName forget
@@ -141,7 +141,7 @@ proc checkReadyVar {varName varElem mode} {
 }
 
 package require java
-java::load tcl.pkg.fleet.FleetExt
+package require fleet
 
 set script {
     proc count {n} {
