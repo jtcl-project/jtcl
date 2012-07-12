@@ -3,7 +3,13 @@ Fleet
 ~~~~
 
   Fleet is a simple concurrent programming tool for JTcl.  This is a very 
-  early release of Fleet and is mostly intended for experimentation.
+  early release of Fleet and is mostly intended for experimentation.  Fleet
+  consists of Java code that implements the "fleet" command and a set of Tcl
+  procedures in the "::fleet" namespace that are used to initialize a fleet
+  and manage message flow to the fleet members.  The low level fleet code can be used
+  in many ways. The procs in the ::fleet namespace provide one method to manage 
+  concurrent calculations.
+  
 
 
 * Usage
@@ -78,8 +84,32 @@ Fleet
 
     A variable that will be set in the Tcl interpreter that sent the message when the command has finished executing.
 
- 
     * Both -reply and -var are optional, but only one of them should be set.
+
+** Result
+
+    The argument to the procedure specified by a -reply argument, and the variable set with the -var argument,
+    are both Tcl dictionary values with the following key/value pairs:
+
+       * status
+
+       OK or FAIL depending on the return code of the procedure executed
+
+       * fleet
+
+       the name of the fleet that the command was executed in
+
+       * member
+
+       the name of the fleet member that executed the command
+
+       * value
+
+       the result of executing the command
+
+       * count
+
+       the number of items in the members execution key when this result was returned
 
   Example:
 
@@ -126,6 +156,122 @@ Fleet
     *  memberName
 
     The name of the member to destroy.  If not specified the whole fleet is destroyed.
+
+
+
+
+* ::fleet::initFleet
+
+  set fleet [::fleet::initFleet 2 initScript]
+
+  This procedure creates a fleet and an associated namespace with parameters set to default values and initializes the fleet members
+
+
+** Arguments
+
+    *  nMembers
+
+    The number of members to create for the fleet.
+
+    *  script
+
+    A script to run in each member of the fleet when the member is first created
+
+* ::fleet::configure
+
+  ::fleet::configure $fleet -messageProc sendMessage -calcProc accumulateResults -doneProc reportResults
+
+  This procedure creates a fleet and an associated namespace with parameters set to default values and initializes the fleet members
+
+
+** Arguments
+
+    * fleetName
+
+    The name of the fleet to configure
+
+    *  -messageProc
+
+    The procedure used to send messages to fleet members.  Defaults to "messageProc"
+
+    *  -calcProc
+
+    The procedure that processes the result value sent back from each member.  Defaults to "calcProc"
+
+    *  -doneProc
+
+    The procedure called when all messages have been processed.  Defaults to "reportProc"
+
+    * -nMembers
+
+    The number of members in fleet (normally set with initFleet command)
+
+    *  -lowWater
+
+    If number of items in a fleet members queue falls below this level send more messages.
+    Defaults to 50.
+
+    *  -highWater
+
+    When sending messages send a count that will bring the total in members queue up to the highWater value.
+    Defaults to 100.
+
+    *  -nMessages
+
+    The total number of messages that need to be send to complete the calculation currently be performed by fleet.
+    Defaults to 10000.
+
+    *  -nResults
+
+    The number of results that have been returned by the fleet members.  Initialized to 0
+
+    *  -messageNum
+
+    The number of messages that have been sent to the fleet members.  Initialized to 0
+
+
+* ::fleet::sendMessages
+
+  ::fleet::sendMessages $fleet
+
+  Start sending messages to the specified fleet.
+
+
+** Arguments
+
+    * fleetName
+
+    The name of the fleet to send messages to.
+
+* ::fleet::jproc
+
+   eval ::fleet::jproc $fleet $procScript
+
+  Send a script representing a Java method to be compiled (using Hyde)
+
+
+** Arguments
+
+    * fleetName
+
+    The name of the fleet generate the method in.
+
+    * script
+
+    The script to be compiled into a Java method.
+
+* ::fleet::reset
+
+   ::fleet::reset $fleet
+
+   Reset the message counts for the fleet and its members so a new calculation can be begun.
+
+
+** Arguments
+
+    * fleetName
+
+    The name of the fleet to reset.
 
 
 * Example
