@@ -101,6 +101,7 @@ class Message extends TclEvent implements
                 TclDict.put(interp, tDict, TclString.newInstance("fleet"),TclString.newInstance(fleet.fleetName));
                 TclDict.put(interp, tDict, TclString.newInstance("member"),TclString.newInstance(memberName));
                 TclDict.put(interp, tDict, TclString.newInstance("value"),result);
+                TclDict.put(interp, tDict, TclString.newInstance("count"),TclInteger.newInstance(count));
 
                 // MSG:
 
