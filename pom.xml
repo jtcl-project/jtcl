@@ -5,6 +5,10 @@
 	<artifactId>jtcl</artifactId>
 	<packaging>jar</packaging>
 	<version>2.3.0</version>
+	<properties>
+		<project.build.sourceEncoding>US-ASCII</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>US-ASCII</project.reporting.outputEncoding>
+	</properties>
 	<name>jtcl</name>
 	<url>http://maven.apache.org</url>
 	<dependencies>
@@ -20,6 +24,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
 				<configuration>
 					<source>1.5</source>
 					<target>1.5</target>
