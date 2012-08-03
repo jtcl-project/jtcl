@@ -48,6 +48,9 @@
                                                                 <argument>-classpath</argument>
                                                                 <classpath/>
                                                                 <argument>tcl.pkg.tjc.TJCShell</argument>
+						<!-- uncomment this argument for debugging the TJC generation and build
+                                                                <argument>-debug</argument>
+						-->
                                                                 <argument>./src/main/resources/tcl/pkg/tjc/library/tjc.tjc</argument>
                                                         </arguments>
                                                 </configuration>
