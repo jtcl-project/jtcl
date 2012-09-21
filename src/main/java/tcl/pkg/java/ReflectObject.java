@@ -532,7 +532,7 @@ public class ReflectObject implements InternalRep, CommandWithDispose {
 
 		ReflectObject roRep = findInReflectTable(interp, cl, obj);
 
-		if (roRep != null) {
+		if (roRep != null && roRep.isValid) {
 			// If it is already in the table just increment the use count and
 			// return it
 
@@ -931,6 +931,7 @@ public class ReflectObject implements InternalRep, CommandWithDispose {
 		}
 
 		isValid = false;
+		dispose();
 	}
 
 	/*

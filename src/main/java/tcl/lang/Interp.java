@@ -374,7 +374,8 @@ public class Interp extends EventuallyFreed {
 	// List of unsafe commands:
 
 	static final String[] unsafeCmds = { "encoding", "exit", "load", "cd", "fconfigure", "file", "glob", "open", "pwd",
-			"socket", "beep", "echo", "ls", "resource", "source", "exec", "source" };
+			"socket", "beep", "echo", "ls", "resource", "source", "exec", "jaclloadjava", "jaclloadtjc",
+			"auto_execok", "auto_import", "auto_load", "auto_load_index", "auto_qualify"};
 
 	// Flags controlling the call of invoke.
 
