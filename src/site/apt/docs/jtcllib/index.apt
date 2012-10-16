@@ -4,10 +4,10 @@
  
  jtcllib is a library modules specifically for JTcl using Java classes.
  
-   * {{{fleet.html}fleet 0.1}} Simple concurrent processing
+   * {{{./fleet.html}fleet 0.1}} Simple concurrent processing
 
-   * {{{hyde.html}hyde 1.6}} Compile and execute Java code from JTcl
+   * {{{./hyde.html}hyde 1.6}} Compile and execute Java code from JTcl
 
-   * {{{ziplib.html}ziplib 1.0}} Read and write ZIP and JAR files.
+   * {{{./ziplib.html}ziplib 1.0}} Read and write ZIP and JAR files.
 
    

@@ -23,12 +23,12 @@ JTcl - Tcl interpreter written in Java
   
 
  JTcl is licensed under terms of the BSD open source license.  See the 
- {{{licenses.html}License}} page for details.
+ {{{./licenses.html}License}} page for details.
 
 Major features of JTcl
 
  * Implement Tcl 8.4 commands, arguments, options and semantics.  The major 
-   {{{docs/jtcldifferences.html}exceptions}} are commands that are limited by Java 1.5 API restrictions, such as 
+   {{{./docs/jtcldifferences.html}exceptions}} are commands that are limited by Java 1.5 API restrictions, such as 
    <<file stat>>.
 
  * Tcl 8.4 compatible regular expression engine.  Most features and syntax
@@ -39,7 +39,7 @@ Major features of JTcl
    processing.
 
  * <<exec>> and <<open>> commands now support Tcl's pipeline and redirection syntax, with
-   {{{docs/jtcldifferences.html}some caveats}}.
+   {{{./docs/jtcldifferences.html}some caveats}}.
 
  * 64 bit wide integer support.
 

@@ -2,6 +2,28 @@
  JTcl News
  ----
 
+October 11, 2012
+
+  JTcl 2.4.0 has be released. 
+
+  * Bug fixes:
+
+    * Creating a safe interpreter (<<interp create -safe>>) now excludes <jaclloadjava>, <jaclloadtjc>
+      and assorted <auto_*> commands.
+
+    * Fixed leaking Java objects created using the <<java>> package, which could cause out of memory
+      exceptions in long-running programs.
+
+    * Compiling Tcl code to Java using TJC now uses the <-debug> compiler flag to include debugging information
+      in the generated class files.
+
+
+ Please report bugs and other unexpected behaviors at the JTcl project
+ site's {{{http://kenai.com/bugzilla/buglist.cgi?product=jtcl}Bug tracking system}}.
+
+ <The JTcl Team>
+
+
 July 12, 2012
 
   JTcl 2.3.0 has be released.  New or fixed in this release:
