@@ -184,19 +184,21 @@ public class Var {
 	}
 
 	/**
-	 * A Var object is one of the following three types.
-	 * 
-	 * <li>Scalar variable - tobj is the object stored in the var. <li>Array
-	 * variable - arraymap is the hashtable that stores all the elements.
-	 * <p>
-	 * <li>Upvar (Link) - linkto is the variable associated by this upvar. </ul>
+	 * tobj is the object stored in the var if it is scalar. 
+	 * always use getValue() and setValue()
 	 */
 
-	public TclObject tobj;
+	private TclObject tobj;
+	
 	/**
-	 * Key/value pairs in array, if this is an array
+	 * Key/value pairs in array, if this is an array variable.
+	 * Always use getArrayMap() 
 	 */
-	public HashMap<String, Var> arraymap;
+	private Map<String, Var> arraymap;
+	
+	/**
+	 * Reference to a linkto variable associated by this upvar
+	 */
 	Var linkto;
 
 	/**
@@ -231,7 +233,7 @@ public class Var {
 	 * needed.
 	 */
 
-	public HashMap table;
+	public Map table;
 
 	/**
 	 * The key under which this variable is stored in the hash table.
@@ -264,8 +266,8 @@ public class Var {
 	 */
 
 	public Var() {
-		tobj = null;
-		arraymap = null;
+		setValue(null);
+		deleteArrayMap();
 		linkto = null;
 		// name = null; // Like hashKey in Jacl
 		ns = null;
@@ -278,6 +280,43 @@ public class Var {
 		flags = (SCALAR | UNDEFINED | IN_HASHTABLE);
 	}
 
+	/**
+	 * Set the value of this Var (either as a scalar or as an array element)
+	 * 
+	 * @param tobj
+	 */
+	public void setValue(TclObject tobj) {
+		this.tobj = tobj;
+	}
+	
+	/**
+	 * @return the value of this Var (if it is a scalar or array element)
+	 */
+	public TclObject getValue() {
+		return tobj;
+	}
+	
+	/**
+	 * @return the Map<String, Var> that contains the values if thiis is an array element
+	 */
+	public Map<String, Var> getArrayMap() {
+		return arraymap;
+	}
+	
+	/**
+	 * Create a new array map in this Var
+	 */
+	public void createArrayMap() {
+		this.arraymap = new HashMap<String, Var>();
+	}
+	
+	/**
+	 * Remove the existing array map in this var
+	 */
+	public void deleteArrayMap() {
+		this.arraymap = null;
+	}
+	
 	/**
 	 * Used to create a String that describes this variable.
 	 */
@@ -766,7 +805,7 @@ public class Var {
 
 			var.setVarArray();
 			var.clearVarUndefined();
-			var.arraymap = new HashMap();
+			var.createArrayMap();
 		} else if (!var.isVarArray()) {
 			if ((flags & TCL.LEAVE_ERR_MSG) != 0) {
 				throw new TclVarException(interp, part1, part2, msg, needArray);
@@ -775,7 +814,7 @@ public class Var {
 		}
 
 		Var arrayVar = var;
-		HashMap arrayTable = var.arraymap;
+		Map<String, Var> arrayTable = var.getArrayMap();
 		if (createPart2) {
 			Var searchvar = (Var) arrayTable.get(part2);
 
@@ -897,7 +936,7 @@ public class Var {
 			}
 
 			if (var.isVarScalar() && !var.isVarUndefined()) {
-				return var.tobj;
+				return var.getValue();
 			}
 
 			if ((flags & TCL.LEAVE_ERR_MSG) != 0) {
@@ -1047,23 +1086,23 @@ public class Var {
 		// "copy on write".
 
 		try {
-			oldValue = var.tobj;
+			oldValue = var.getValue();
 
 			if ((flags & TCL.APPEND_VALUE) != 0) {
 				if (var.isVarUndefined() && (oldValue != null)) {
 					oldValue.release(); // discard old value
-					var.tobj = null;
+					var.setValue(null);
 					oldValue = null;
 				}
 				if ((flags & TCL.LIST_ELEMENT) != 0) { // append list element
 					if (oldValue == null) {
 						oldValue = TclList.newInstance();
-						var.tobj = oldValue;
+						var.setValue(oldValue);
 						oldValue.preserve(); // since var is referenced
 					} else if (oldValue.isShared()) { // append to copy
-						var.tobj = oldValue.duplicate();
+						var.setValue(oldValue.duplicate());
 						oldValue.release();
-						oldValue = var.tobj;
+						oldValue = var.getValue();
 						oldValue.preserve(); // since var is referenced
 					}
 					TclList.append(interp, oldValue, newValue);
@@ -1073,13 +1112,14 @@ public class Var {
 
 					bytes = newValue.toString();
 					if (oldValue == null) {
-						var.tobj = TclString.newInstance(bytes);
-						var.tobj.preserve();
+						TclObject tobj = TclString.newInstance(bytes);
+						var.setValue(tobj);
+						tobj.preserve();
 					} else {
 						if (oldValue.isShared()) { // append to copy
-							var.tobj = oldValue.duplicate();
+							var.setValue(oldValue.duplicate());
 							oldValue.release();
-							oldValue = var.tobj;
+							oldValue = var.getValue();
 							oldValue.preserve(); // since var is referenced
 						}
 						TclString.append(oldValue, bytes);
@@ -1103,10 +1143,10 @@ public class Var {
 					StringBuffer sb = new StringBuffer(64);
 					Util.convertElement(bytes, listFlags, sb);
 					oldValue = TclString.newInstance(sb.toString());
-					var.tobj = oldValue;
-					var.tobj.preserve();
+					var.setValue(oldValue);
+					var.getValue().preserve();
 				} else if (newValue != oldValue) {
-					var.tobj = newValue;
+					var.setValue(newValue);
 					newValue.preserve(); // var is another ref
 					if (oldValue != null) {
 						oldValue.release(); // discard old value
@@ -1142,7 +1182,7 @@ public class Var {
 			// array).
 
 			if (var.isVarScalar() && !var.isVarUndefined()) {
-				return var.tobj;
+				return var.getValue();
 			}
 
 			// A trace changed the value in some gross way. Return an empty
@@ -1247,10 +1287,10 @@ public class Var {
 			if (var.flags != (SCALAR | UNDEFINED | IN_HASHTABLE)) {
 				throw new TclRuntimeError("invalid Var flags state");
 			}
-			if (var.tobj != null) {
+			if (var.getValue() != null) {
 				throw new TclRuntimeError("expected null Var tobj value");
 			}
-			if (var.arraymap != null) {
+			if (var.getArrayMap() != null) {
 				throw new TclRuntimeError("expected null Var arraymap value");
 			}
 			if (var.linkto != null) {
@@ -1273,7 +1313,7 @@ public class Var {
 
 		// Assign TclObject value for scalar and incr ref count
 
-		var.tobj = newValue;
+		var.setValue(newValue);
 		newValue.preserve();
 
 		// Add var to the compiled local array.
@@ -1885,8 +1925,11 @@ public class Var {
 
 		dummyVar = new Var();
 		// FIXME: Var class really should implement clone to make a bit copy.
-		dummyVar.tobj = var.tobj;
-		dummyVar.arraymap = var.arraymap;
+		dummyVar.setValue(var.getValue());
+		if (var.getArrayMap()!=null) {
+			dummyVar.createArrayMap();
+			dummyVar.getArrayMap().putAll(var.getArrayMap());
+		}
 		dummyVar.linkto = var.linkto;
 		dummyVar.traces = var.traces;
 		dummyVar.flags = var.flags;
@@ -1897,8 +1940,8 @@ public class Var {
 
 		var.setVarUndefined();
 		var.setVarScalar();
-		var.tobj = null; // dummyVar points to any value object
-		var.arraymap = null;
+		var.setValue(null);  // dummyVar points to any value object
+		var.deleteArrayMap();
 		var.linkto = null;
 		var.traces = null;
 		var.sidVec = null;
@@ -1936,10 +1979,10 @@ public class Var {
 					(flags & (TCL.GLOBAL_ONLY | TCL.NAMESPACE_ONLY))
 							| TCL.TRACE_UNSETS);
 		}
-		if (dummyVar.isVarScalar() && (dummyVar.tobj != null)) {
-			obj = dummyVar.tobj;
+		if (dummyVar.isVarScalar() && (dummyVar.getValue() != null)) {
+			obj = dummyVar.getValue();
 			obj.release();
-			dummyVar.tobj = null;
+			dummyVar.setValue(null);
 		}
 
 		// If the variable was a namespace variable, decrement its reference
@@ -2773,11 +2816,11 @@ public class Var {
 
 		if ((var.flags & ARRAY) != 0) {
 			deleteArray(interp, var.hashKey, var, flags);
-			var.arraymap = null;
-		} else if (((var.flags & SCALAR) != 0) && (var.tobj != null)) {
-			TclObject obj = var.tobj;
+			var.deleteArrayMap();
+		} else if (((var.flags & SCALAR) != 0) && (var.getValue() != null)) {
+			TclObject obj = var.getValue();
 			obj.release();
-			var.tobj = null;
+			var.setValue(null);
 		}
 
 		var.hashKey = null;
@@ -2840,17 +2883,17 @@ public class Var {
 		TclObject obj;
 
 		deleteSearches(var);
-		HashMap table = var.arraymap;
+		Map<String, Var> table = var.getArrayMap();
 
 		for (Iterator iter = table.entrySet().iterator(); iter.hasNext();) {
 			Map.Entry entry = (Map.Entry) iter.next();
 			// String key = (String) entry.getKey();
 			el = (Var) entry.getValue();
 
-			if (el.isVarScalar() && (el.tobj != null)) {
-				obj = el.tobj;
+			if (el.isVarScalar() && (el.getValue() != null)) {
+				obj = el.getValue();;
 				obj.release();
-				el.tobj = null;
+				el.setValue(null);
 			}
 
 			String tmpkey = (String) el.hashKey;
@@ -2874,7 +2917,7 @@ public class Var {
 			}
 		}
 		table.clear();
-		var.arraymap = null;
+		var.deleteArrayMap();
 	}
 
 	/**

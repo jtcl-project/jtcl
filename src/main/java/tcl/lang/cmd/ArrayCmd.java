@@ -185,7 +185,7 @@ public class ArrayCmd implements Command {
 			 */
 			ArrayList<String> keysToReturn = new ArrayList<String>();
 
-			for (Iterator<String> iter = var.arraymap.keySet().iterator(); iter.hasNext();) {
+			for (Iterator<String> iter = var.getArrayMap().keySet().iterator(); iter.hasNext();) {
 				String key = iter.next();
 				if (pattern != null && !Util.stringMatch(key, pattern)) {
 					continue;
@@ -193,7 +193,7 @@ public class ArrayCmd implements Command {
 				keysToReturn.add(key);
 			}
 			for (String key : keysToReturn) {
-				Var var2 = var.arraymap.get(key);
+				Var var2 = var.getArrayMap().get(key);
 				if (var2 == null || var2.isVarUndefined())
 					continue;
 				String strValue;
@@ -231,7 +231,7 @@ public class ArrayCmd implements Command {
 				pattern = objv[3].toString();
 			}
 
-			HashMap table = var.arraymap;
+			Map<String, Var> table = var.getArrayMap();
 			TclObject tobj = TclList.newInstance();
 			String key;
 
@@ -330,7 +330,7 @@ public class ArrayCmd implements Command {
 			if (notArray) {
 				interp.setResult(0);
 			} else {
-				HashMap table = var.arraymap;
+				Map<String, Var> table = var.getArrayMap();
 				int size = 0;
 
 				for (Iterator iter = table.entrySet().iterator(); iter.hasNext();) {
@@ -377,7 +377,7 @@ public class ArrayCmd implements Command {
 
 			int i = var.getNextIndex();
 			String s = "s-" + i + "-" + objv[2].toString();
-			HashMap table = var.arraymap;
+			Map table = var.getArrayMap();
 			Iterator iter = table.entrySet().iterator();
 			var.sidVec.add(new SearchId(iter, s, i));
 			interp.setResult(s);
@@ -399,7 +399,7 @@ public class ArrayCmd implements Command {
 				interp.unsetVar(objv[2], 0);
 			} else {
 				pattern = objv[3].toString();
-				HashMap table = var.arraymap;
+				Map table = var.getArrayMap();
 
 				for (Iterator iter = table.entrySet().iterator(); iter.hasNext();) {
 					Map.Entry entry = (Map.Entry) iter.next();

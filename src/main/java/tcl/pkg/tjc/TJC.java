@@ -288,7 +288,7 @@ public class TJC {
 			if ((var == null) || ((var = Var.resolveScalar(var)) == null)) {
 				return Var.getVarCompiledLocalScalarInvalid(interp, varname);
 			} else {
-				return var.tobj;
+				return var.getValue();
 			}
 		}
 
@@ -395,7 +395,7 @@ public class TJC {
 			if (var == null || ((var = Var.resolveScalar(var)) == null)) {
 				return TJC.incrVar(interp, varname, null, incrAmount);
 			} else {
-				TclObject varValue = var.tobj;
+				TclObject varValue = var.getValue();
 
 				boolean createdNewObj = false;
 				if (varValue.isShared()) {
@@ -484,7 +484,7 @@ public class TJC {
 			// we need to duplicate it and invoke setVar()
 			// to implement "copy on write".
 
-			TclObject varValue = var.tobj;
+			TclObject varValue = var.getValue();
 			boolean createdNewObj = false;
 
 			if (varValue.isShared()) {
@@ -583,7 +583,7 @@ public class TJC {
 			// we need to create a new TclString object
 			// and drop refs to the previous TclObject value.
 
-			TclObject varValue = var.tobj;
+			TclObject varValue = var.getValue();
 			boolean createdNewObj = false;
 
 			if (varValue.isShared()) {
@@ -767,9 +767,9 @@ public class TJC {
 	// be
 	// null
 	{
-		TclObject oldValue = var.tobj;
+		TclObject oldValue = var.getValue();
 		if (oldValue != newValue) {
-			var.tobj = newValue;
+			var.setValue(newValue);
 			newValue.preserve();
 			if (oldValue != null) {
 				oldValue.release();
