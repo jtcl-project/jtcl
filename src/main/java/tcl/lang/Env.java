@@ -15,27 +15,25 @@
 package tcl.lang;
 
 import java.util.Enumeration;
+import java.util.Map.Entry;
 import java.util.Properties;
 
 /**
  * This class manages the environment array for Tcl interpreters.
  */
 
-class Env {
+class Env  {
+	
 
-	/*
-	 * ----------------------------------------------------------------------
-	 * 
-	 * initialize --
-	 * 
+	/***
 	 * This method is called to initialize an interpreter with it's initial
 	 * values for the env array.
 	 * 
 	 * Results: None.
 	 * 
 	 * Side effects: The env array in the interpreter is created and populated.
-	 * 
-	 * ----------------------------------------------------------------------
+     *
+     *  @param interp 
 	 */
 
 	static void initialize(Interp interp) {
@@ -81,6 +79,14 @@ class Env {
 				} catch (TclException e1) {
 					// Ignore errors.
 				}
+			}
+			
+			// populate with the actual environment.  Since Java 1.6 doesn't allow us 
+			// to modify the environment any changes won't really be propagated 
+			// to the env.  This could be implemented later with a tcl.lang.Resolver
+			// and some JNI code
+			for (Entry<String, String> env : System.getenv().entrySet()) {
+				interp.setVar("env", env.getKey(), env.getValue(), TCL.GLOBAL_ONLY);
 			}
 		} catch (SecurityException e2) {
 			// We are inside a browser and we can't access the list of
