@@ -101,7 +101,11 @@ public class ManagedSystemInStream extends InputStream implements Runnable {
 				eofSeen = false;
 				disposeLatch = new CountDownLatch(1);
 				stdin = new FileInputStream(FileDescriptor.in);
-				System.setIn(this);
+				try {
+					System.setIn(this);
+				} catch (SecurityException e) {
+					// do nothing, but if this doesn't work exec and redirection of shell's input probably won't work well either
+				}
 				readThread = new Thread(null, this, "ManagedSystemInStream reader thread");
 				readThread.setDaemon(true);
 				readThread.start();
@@ -124,7 +128,11 @@ public class ManagedSystemInStream extends InputStream implements Runnable {
 			}
 		}
 		// set System.in back to originalIn, in case it is needed for any other usage.
-		System.setIn(originalIn);
+		try {
+			System.setIn(originalIn);
+		} catch (SecurityException e) {
+			// do nothing
+		}
 	}
 	
 	/*
