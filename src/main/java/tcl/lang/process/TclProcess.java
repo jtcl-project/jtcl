@@ -4,13 +4,18 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import tcl.lang.Interp;
+import tcl.lang.TCL;
 import tcl.lang.TclException;
 import tcl.lang.TclIO;
 import tcl.lang.TclPosixException;
 import tcl.lang.TclRuntimeError;
+import tcl.lang.Var;
 
 /**
  * This abstract class represents a process that may be executed from Tcl.
@@ -86,6 +91,40 @@ public abstract class TclProcess {
 		return this.command;
 	}
 
+	/**
+	 * @return a Map containing the environment that the subprocess should
+	 * inherit.  System.getenv() is not sufficient because JTcl cannot update
+	 * it on env() array changes.
+	 */
+	protected Map<String, String> getCurrentEnv() {
+		Var [] retArray = null;
+		try {
+			retArray = Var.lookupVar(interp, "env", null, TCL.GLOBAL_ONLY, null, false, false);
+		} catch (TclException e) {
+			// throwException is false;  it's not being thrown
+		}
+		if (retArray==null || retArray[0]==null || ! retArray[0].isVarArray()) {
+			// revert to System.getenv()
+			try {
+				return System.getenv();
+			} catch (SecurityException e) {
+				// System access exception, just return empty map
+				return new HashMap<String,String>();
+			}
+		} else {
+			HashMap<String, String> env = new HashMap<String,String>();
+			Map<String, Var> arrayMap = retArray[0].getArrayMap();
+			for (Entry<String, Var> envVar : arrayMap.entrySet()) {
+				if (! envVar.getValue().isVarUndefined()) {
+					String value = envVar.getValue().getValue().toString();
+					if (value!=null) {
+						env.put(envVar.getKey(), value);
+					}
+				}
+			}
+			return env;
+		}
+	}
 	/**
 	 * Start the process executing, and register streams with any STREAM redirects
 	 * 

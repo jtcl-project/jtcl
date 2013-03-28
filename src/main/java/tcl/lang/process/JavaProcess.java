@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.util.Map;
 
 import tcl.lang.ManagedSystemInStream;
 import tcl.lang.TclByteArray;
@@ -88,9 +89,21 @@ public class JavaProcess extends TclProcess {
 		return process.exitValue();
 	}
 
+	/**
+	 * Use env array to initialize the environment for the process, since
+	 * JTcl does not update the process environment on changes to env()
+	 */
+	private void initializeEnv(ProcessBuilder processBuilder) {
+		Map<String, String> pbenv = processBuilder.environment();
+		pbenv.clear();
+		pbenv.putAll(getCurrentEnv());
+	}
+	
 	@Override
 	public void start() throws IOException {
 		processBuilder.command(command);
+		initializeEnv(processBuilder);
+		
 		if (stderrRedirect != null && stderrRedirect.type == Redirect.Type.MERGE_ERROR) {
 			processBuilder.redirectErrorStream(true);
 		}
