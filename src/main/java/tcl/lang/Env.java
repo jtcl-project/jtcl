@@ -14,7 +14,10 @@
 
 package tcl.lang;
 
+import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
@@ -98,6 +101,46 @@ class Env  {
 			System.out.println("Exception while initializing env array");
 			System.out.println(e3);
 			System.out.println("");
+		}
+	}
+	
+	/**
+	 * Replacement for System.getenv().  Returns JTcl's view of the environment,
+	 * as stored in the ::env() array.  
+	 * 
+	 * JTcl modifications to values in the env array are not visible to
+	 * System.getenv() due to Java API restrictions.
+	 * 
+	 * @param interp the current interpreter
+	 * @return an unmodifiable Map<String, String> view of JTcl's ::env array.
+	 */
+	public static Map<String, String> getenv(Interp interp) {
+		Var [] retArray = null;
+		try {
+			retArray = Var.lookupVar(interp, "env", null, TCL.GLOBAL_ONLY, null, false, false);
+		} catch (TclException e) {
+			// throwException is false;  it's not being thrown
+		}
+		if (retArray==null || retArray[0]==null || ! retArray[0].isVarArray()) {
+			// revert to System.getenv()
+			try {
+				return System.getenv();
+			} catch (SecurityException e) {
+				// System access exception, just return empty map
+				return Collections.unmodifiableMap(new HashMap<String,String>());
+			}
+		} else {
+			HashMap<String, String> env = new HashMap<String,String>();
+			Map<String, Var> arrayMap = retArray[0].getArrayMap();
+			for (Entry<String, Var> envVar : arrayMap.entrySet()) {
+				if (! envVar.getValue().isVarUndefined()) {
+					String value = envVar.getValue().getValue().toString();
+					if (value!=null) {
+						env.put(envVar.getKey(), value);
+					}
+				}
+			}
+			return Collections.unmodifiableMap(env);
 		}
 	}
 

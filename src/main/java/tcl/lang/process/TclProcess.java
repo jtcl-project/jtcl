@@ -92,38 +92,12 @@ public abstract class TclProcess {
 	}
 
 	/**
-	 * @return a Map containing the environment that the subprocess should
+	 * @return a unmodifiable Map containing the environment that the subprocess should
 	 * inherit.  System.getenv() is not sufficient because JTcl cannot update
 	 * it on env() array changes.
 	 */
-	protected Map<String, String> getCurrentEnv() {
-		Var [] retArray = null;
-		try {
-			retArray = Var.lookupVar(interp, "env", null, TCL.GLOBAL_ONLY, null, false, false);
-		} catch (TclException e) {
-			// throwException is false;  it's not being thrown
-		}
-		if (retArray==null || retArray[0]==null || ! retArray[0].isVarArray()) {
-			// revert to System.getenv()
-			try {
-				return System.getenv();
-			} catch (SecurityException e) {
-				// System access exception, just return empty map
-				return new HashMap<String,String>();
-			}
-		} else {
-			HashMap<String, String> env = new HashMap<String,String>();
-			Map<String, Var> arrayMap = retArray[0].getArrayMap();
-			for (Entry<String, Var> envVar : arrayMap.entrySet()) {
-				if (! envVar.getValue().isVarUndefined()) {
-					String value = envVar.getValue().getValue().toString();
-					if (value!=null) {
-						env.put(envVar.getKey(), value);
-					}
-				}
-			}
-			return env;
-		}
+	protected Map<String, String> getenv() {
+		return interp.getenv();
 	}
 	/**
 	 * Start the process executing, and register streams with any STREAM redirects

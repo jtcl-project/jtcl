@@ -1307,7 +1307,19 @@ public class Interp extends EventuallyFreed {
 	public final TclObject getVar(String name1, String name2, int flags) throws TclException {
 		return Var.getVar(this, name1, name2, (flags | TCL.LEAVE_ERR_MSG));
 	}
-
+	
+	/**
+	 * Replacement for System.getenv().  Returns JTcl's view of the environment,
+	 * as stored in the ::env() array.  
+	 * 
+	 * JTcl modifications to values in the env array are not visible to
+	 * System.getenv() due to Java API restrictions.
+	 * 
+	 * @return an unmodifiable Map<String, String> view of JTcl's ::env array. 
+	 */
+	public Map<String, String> getenv() {
+		return Env.getenv(this);
+	}
 	/**
 	 * Unset a variable. May trigget traces.
 	 * 

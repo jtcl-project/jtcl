@@ -96,7 +96,7 @@ public class JavaProcess extends TclProcess {
 	private void initializeEnv(ProcessBuilder processBuilder) {
 		Map<String, String> pbenv = processBuilder.environment();
 		pbenv.clear();
-		pbenv.putAll(getCurrentEnv());
+		pbenv.putAll(getenv());
 	}
 	
 	@Override
