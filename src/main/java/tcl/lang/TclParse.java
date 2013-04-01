@@ -16,54 +16,73 @@ package tcl.lang;
 
 class TclParse {
 
-	// The original command string passed to Parser.parseCommand.
+	/**
+	 *  The original command string passed to Parser.parseCommand.
+	 */
 
 	char[] string;
 
-	// Index into 'string' that is the character just after the last
-	// one in the command string.
+	/**
+	 * Index into 'string' that is the character just after the last
+	 * 	one in the command string.
+	 */
 
 	int endIndex;
 
-	// Index into 'string' that is the # that begins the first of
-	// one or more comments preceding the command.
-
+	/** Index into 'string' that is the # that begins the first of
+	 * one or more comments preceding the command.
+     */
 	int commentStart;
 
-	// Number of bytes in comments (up through newline character
-	// that terminates the last comment). If there were no
-	// comments, this field is 0.
+	/**
+	 * Number of bytes in comments (up through newline character
+	 * 	that terminates the last comment). If there were no
+	 * comments, this field is 0.
+	 */
 
 	int commentSize;
 
-	// Index into 'string' that is the first character in first
-	// word of command.
+	/**
+	 *  Index into 'string' that is the first character in first
+	 *  	// word of command.
+	 */
 
 	int commandStart;
 
+	/**
 	// Number of bytes in command, including first character of
 	// first word, up through the terminating newline, close
 	// bracket, or semicolon.
-
+     */
 	int commandSize;
 
-	// Total number of words in command. May be 0.
+	/**
+	 *  Total number of words in command. May be 0.
+	 */
 
 	int numWords;
 
-	// Stores the tokens that compose the command.
+	/**
+	 *  Stores the tokens that compose the command.
+	 */
 
 	TclToken[] tokenList;
 
-	// Total number of tokens in command.
+	/**
+	 *  Total number of tokens in command.
+	 */
 
 	int numTokens;
 
-	// Total number of tokens available at token.
+	/**
+	 *  Total number of tokens available at token.
+	 */
 
 	int tokensAvailable;
 
-	// One of the parsing error types defined in Parser class.
+	/**
+	 *  One of the parsing error types defined in Parser class.
+	 */
 
 	int errorType;
 

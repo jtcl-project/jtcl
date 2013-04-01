@@ -14,12 +14,31 @@
 
 package tcl.lang;
 
+/**
+ * Encapsulates the replacement for a backslash
+ * in the parser
+ *
+ */
 public class BackSlashResult {
+	/**
+	 * character to replace backslash sequence with
+	 */
 	public char c;
+	/**
+	 * script index that follows backslash sequence
+	 */
 	public int nextIndex;
 	public boolean isWordSep;
+	/**
+	 * Number of characters in the backslash sequence
+	 */
 	int count;
 
+	/**
+	 * @param c character ro replace the backslash sequence with
+	 * @param nextIndex index of char following bs sequence in script
+	 * @param count number of chars in backslash sequence
+	 */
 	BackSlashResult(char c, int nextIndex, int count) {
 		this.c = c;
 		this.nextIndex = nextIndex;

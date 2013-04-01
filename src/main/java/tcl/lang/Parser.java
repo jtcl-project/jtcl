@@ -125,20 +125,23 @@ public class Parser {
 					cur = script_array[++script_index];
 				}
 
-				if ((cur == '\\') && (script_array[script_index + 1] == '\n')) {
-
-					// Skip backslash-newline sequence: it should be treated
-					// just like white space.
-
-					if ((script_index + 2) == parse.endIndex) {
-						parse.incomplete = true;
+				if ((cur == '\\')) {
+					int eolCharCount = eolCharCount(script_array, script_index+1, parse.endIndex);
+						if (eolCharCount > 0) {
+	
+						// Skip backslash-newline sequence: it should be treated
+						// just like white space.
+	
+						if ((script_index + 1 + eolCharCount) == parse.endIndex) {
+							parse.incomplete = true;
+						}
+	
+						// this will add 2 to the offset and return to the top
+						// of the while(true) loop which will get the next cur
+	
+						script_index += eolCharCount+1;
+						continue;
 					}
-
-					// this will add 2 to the offset and return to the top
-					// of the while(true) loop which will get the next cur
-
-					script_index += 2;
-					continue;
 				}
 
 				// If we have found the start of a command goto the word parsing
@@ -161,8 +164,9 @@ public class Parser {
 						parse.commentSize = script_index - parse.commentStart;
 						break;
 					} else if (cur == '\\') {
-						if ((script_array[script_index + 1] == '\n')
-								&& ((script_index + 2) == parse.endIndex)) {
+						int eolCharCount = eolCharCount(script_array, script_index+1, parse.endIndex);
+						if (eolCharCount > 0 && 
+								 ((script_index + eolCharCount + 1) == parse.endIndex)) {
 							parse.incomplete = true;
 						}
 						bs = backslash(script_array, script_index);
@@ -198,12 +202,13 @@ public class Parser {
 					cur = script_array[script_index];
 					type = ((cur > TYPE_MAX) ? TYPE_NORMAL : typeTable[cur]);
 
+					int eolCharCount = 0;
 					if (type == TYPE_SPACE) {
 						script_index++;
 						continue;
 					} else if ((cur == '\\')
-							&& (script_array[script_index + 1] == '\n')) {
-						if ((script_index + 2) == parse.endIndex) {
+							&& (eolCharCount = eolCharCount(script_array, script_index+1, parse.endIndex)) > 0) {
+						if ((script_index + eolCharCount + 1) == parse.endIndex) {
 							parse.incomplete = true;
 						}
 						bs = backslash(script_array, script_index);
@@ -284,14 +289,15 @@ public class Parser {
 							script_index++;
 						} else if (script_array[script_index] == '\\') {
 							bs = backslash(script_array, script_index);
-							if (script_array[script_index + 1] == '\n') {
+							int eolCharCount = eolCharCount(script_array, script_index+1, parse.endIndex);
+							if (eolCharCount > 0) {
 								// A backslash-newline sequence requires special
 								// treatment: it must be collapsed, even inside
 								// braces, so we have to split the word into
 								// multiple tokens so that the backslash-newline
 								// can be represented explicitly.
 
-								if ((script_index + 2) == parse.endIndex) {
+								if ((script_index + eolCharCount + 1) == parse.endIndex) {
 									parse.incomplete = true;
 								}
 								token.size = script_index - token.script_index;
@@ -419,6 +425,20 @@ public class Parser {
 		return parse;
 	}
 	
+	/**
+	 * Detects an eol character sequence in script_array
+	 * 
+	 * @param script_array the char array containing the script
+	 * @param script_index index into script_array at which to start looking for an eol char sequence
+	 * @param end_index last character index + 1 in the script array
+	 * @return number of eol chars at script_index; if 0 there are no eol chars
+	 */
+	static int eolCharCount(char [] script_array, int script_index, int end_index) {
+		if (script_index < end_index && script_array[script_index]=='\n') return 1;
+		if (script_index < end_index+1 && script_array[script_index]=='\r'
+				&& script_array[script_index+1]=='\n') return 2;
+		return 0;
+	}
 	/**
 	 * Test whether a script can be parsed, without actually doing any execution
 	 * @param script script to parse
@@ -626,9 +646,9 @@ public class Parser {
 				if (debug) {
 					System.out.println("backslash");
 				}
-
-				if (script_array[script_index + 1] == '\n') {
-					if ((script_index + 2) == parse.endIndex) {
+				int eolCharCount = eolCharCount(script_array, script_index+1, parse.endIndex);
+				if (eolCharCount > 0) {
+					if ((script_index + eolCharCount + 1) == parse.endIndex) {
 						parse.incomplete = true;
 					}
 
@@ -640,8 +660,10 @@ public class Parser {
 						break;
 					}
 				}
-				token.type = TCL_TOKEN_BS;
+				
 				bs = backslash(script_array, script_index);
+				token.type = TCL_TOKEN_BS;
+
 				// token.size = bs.nextIndex - script_index;
 				token.size = bs.count;
 				if (token.size == 1) {
@@ -1668,6 +1690,7 @@ public class Parser {
 		// calculated in the caller.
 		numChars = script_array.length - script_index;
 
+		/* now script_index will point to the char right after backslash */
 		script_index++;
 		int endIndex = script_array.length - 1;
 
@@ -1731,11 +1754,9 @@ public class Parser {
 		}
 		case '\r':
 		case '\n': {
-			// FIXME: This CR switch branch should not be needed in the Jacl
-			// parser.
 			if (c == '\r') {
 				if ((script_index + 1) < endIndex) {
-					if (script_array[script_index + 1] == '\n') {
+					if (script_array[script_index + 1] == '\n') {					
 						script_index++;
 						count++;
 					}
