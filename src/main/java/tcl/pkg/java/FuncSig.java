@@ -20,7 +20,9 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map.Entry;
 
 import tcl.lang.InternalRep;
 import tcl.lang.Interp;
@@ -88,6 +90,7 @@ class FuncSig implements InternalRep {
 
 	static Hashtable instanceMethodTable = new Hashtable();
 	static Hashtable staticMethodTable = new Hashtable();
+	static Hashtable<Class<?>, HashMap<String, Method[]>> instanceMethodTableByName = new Hashtable<Class<?>, HashMap<String, Method[]>>();
 
 	/*
 	 * ----------------------------------------------------------------------
@@ -196,8 +199,7 @@ class FuncSig implements InternalRep {
 		TclObject class_or_method;
 
 		if (sigLength == 0) {
-			throw new TclException(interp, "bad signature \"" + signature
-					+ "\"");
+			throw new TclException(interp, "bad signature \"" + signature + "\"");
 		} else if (sigLength == 1) {
 			class_or_method = signature;
 		} else {
@@ -215,8 +217,7 @@ class FuncSig implements InternalRep {
 		}
 
 		if (isConstructor && Modifier.isAbstract(cls.getModifiers())) {
-			throw new TclException(interp, "Class \""
-					+ JavaInfoCmd.getNameFromClass(cls) + "\" is abstract");
+			throw new TclException(interp, "Class \"" + JavaInfoCmd.getNameFromClass(cls) + "\" is abstract");
 		}
 
 		if ((sigLength > 1) || (sigLength == 1 && count == 0)) {
@@ -233,8 +234,7 @@ class FuncSig implements InternalRep {
 			Class[] paramTypes = new Class[sigNumArgs];
 
 			for (int i = 0; i < sigNumArgs; i++) {
-				String clsName = TclList.index(interp, signature, i + 1)
-						.toString();
+				String clsName = TclList.index(interp, signature, i + 1).toString();
 				paramTypes[i] = JavaInvoke.getClassByName(interp, clsName);
 			}
 
@@ -243,24 +243,17 @@ class FuncSig implements InternalRep {
 					match = getAccessibleConstructor(cls, paramTypes);
 				} catch (NoSuchMethodException e) {
 					if (sigLength > 1) {
-						throw new TclException(interp,
-								"no accessible constructor \"" + signature
-										+ "\"");
+						throw new TclException(interp, "no accessible constructor \"" + signature + "\"");
 					} else {
-						throw new TclException(interp,
-								"can't find accessible constructor with "
-										+ count + " argument(s) for class \""
-										+ JavaInfoCmd.getNameFromClass(cls)
-										+ "\"");
+						throw new TclException(interp, "can't find accessible constructor with " + count
+								+ " argument(s) for class \"" + JavaInfoCmd.getNameFromClass(cls) + "\"");
 					}
 				}
 			} else {
-				match = lookupMethod(interp, cls, methodName, paramTypes,
-						signature, isStatic);
+				match = lookupMethod(interp, cls, methodName, paramTypes, signature, isStatic);
 			}
 		} else {
-			match = matchSignature(interp, cls, signature, methodName,
-					isConstructor, argv, startIdx, count, isStatic);
+			match = matchSignature(interp, cls, signature, methodName, isConstructor, argv, startIdx, count, isStatic);
 		}
 
 		FuncSig sig = new FuncSig(cls, PkgInvoker.getPkgInvoker(cls), match);
@@ -285,8 +278,10 @@ class FuncSig implements InternalRep {
 
 		if (isStatic)
 			methods = getAccessibleStaticMethods(cls);
-		else
-			methods = getAccessibleInstanceMethods(cls);
+		else {
+			// methods = getAccessibleInstanceMethods(cls);
+			methods = getAccessibleInstanceMethods(cls, methodName);
+		}
 
 		// FIXME : searching Java methods for method name match
 		// searching through ALL the methods is really slow
@@ -318,14 +313,11 @@ class FuncSig implements InternalRep {
 		}
 
 		if (paramTypes.length > 0 || !foundSameName) {
-			throw new TclException(interp, "no accessible"
-					+ (isStatic ? " static " : " ") + "method \"" + signature
+			throw new TclException(interp, "no accessible" + (isStatic ? " static " : " ") + "method \"" + signature
 					+ "\" in class " + JavaInfoCmd.getNameFromClass(cls));
 		} else {
-			throw new TclException(interp, "can't find accessible"
-					+ (isStatic ? " static " : " ") + "method \"" + signature
-					+ "\" with " + paramTypes.length
-					+ " argument(s) for class \""
+			throw new TclException(interp, "can't find accessible" + (isStatic ? " static " : " ") + "method \""
+					+ signature + "\" with " + paramTypes.length + " argument(s) for class \""
 					+ JavaInfoCmd.getNameFromClass(cls) + "\"");
 		}
 	}
@@ -358,8 +350,10 @@ class FuncSig implements InternalRep {
 		} else {
 			if (isStatic)
 				funcs = getAccessibleStaticMethods(cls);
-			else
-				funcs = getAccessibleInstanceMethods(cls);
+			else {
+				// funcs = getAccessibleInstanceMethods(cls);
+				funcs = getAccessibleInstanceMethods(cls, methodName);
+			}
 		}
 
 		for (i = 0; i < funcs.length; i++) {
@@ -421,8 +415,7 @@ class FuncSig implements InternalRep {
 
 				for (i = 0; i < argv_count; i++) {
 					Class c = argv_classes[i];
-					System.out.print(((c == null) ? "null" : JavaInfoCmd
-							.getNameFromClass(c)));
+					System.out.print(((c == null) ? "null" : JavaInfoCmd.getNameFromClass(c)));
 					System.out.print(" ");
 				}
 				System.out.println();
@@ -432,11 +425,9 @@ class FuncSig implements InternalRep {
 				for (i = 0; i < match_list.size(); i++) {
 
 					if (isConstructor) {
-						match_classes = ((Constructor) match_list.get(i))
-								.getParameterTypes();
+						match_classes = ((Constructor) match_list.get(i)).getParameterTypes();
 					} else {
-						match_classes = ((Method) match_list.get(i))
-								.getParameterTypes();
+						match_classes = ((Method) match_list.get(i)).getParameterTypes();
 					}
 
 					System.out.print("match " + i + " is ");
@@ -457,11 +448,9 @@ class FuncSig implements InternalRep {
 			for (i = 0; i < match_list.size(); i++) {
 
 				if (isConstructor) {
-					match_classes = ((Constructor) match_list.get(i))
-							.getParameterTypes();
+					match_classes = ((Constructor) match_list.get(i)).getParameterTypes();
 				} else {
-					match_classes = ((Method) match_list.get(i))
-							.getParameterTypes();
+					match_classes = ((Method) match_list.get(i)).getParameterTypes();
 				}
 
 				boolean exact = true;
@@ -490,11 +479,9 @@ class FuncSig implements InternalRep {
 			for (i = match_list.size() - 1; i >= 0; i--) {
 
 				if (isConstructor) {
-					match_classes = ((Constructor) match_list.get(i))
-							.getParameterTypes();
+					match_classes = ((Constructor) match_list.get(i)).getParameterTypes();
 				} else {
-					match_classes = ((Method) match_list.get(i))
-							.getParameterTypes();
+					match_classes = ((Method) match_list.get(i)).getParameterTypes();
 				}
 
 				// If any of the arguments are not assignable to the method
@@ -502,12 +489,10 @@ class FuncSig implements InternalRep {
 				// then remove this method from the list of matches.
 
 				for (j = 0; j < argv_count; j++) {
-					if (!JavaInvoke.isAssignable(match_classes[j],
-							argv_classes[j])) {
+					if (!JavaInvoke.isAssignable(match_classes[j], argv_classes[j])) {
 
 						if (debug) {
-							System.out.println("removing non assignable match "
-									+ i);
+							System.out.println("removing non assignable match " + i);
 						} // end if (debug)
 
 						match_list.remove(i);
@@ -527,11 +512,9 @@ class FuncSig implements InternalRep {
 				for (i = 0; i < match_list.size(); i++) {
 
 					if (isConstructor) {
-						match_classes = ((Constructor) match_list.get(i))
-								.getParameterTypes();
+						match_classes = ((Constructor) match_list.get(i)).getParameterTypes();
 					} else {
-						match_classes = ((Method) match_list.get(i))
-								.getParameterTypes();
+						match_classes = ((Method) match_list.get(i)).getParameterTypes();
 					}
 
 					System.out.print("match " + i + " is ");
@@ -618,8 +601,7 @@ class FuncSig implements InternalRep {
 					for (j = 0; j < i; j++) {
 						if (c == argv_classes_lookup[j][0]) {
 							if (debug) {
-								System.out
-										.println("using argv_classes_lookup shortcut");
+								System.out.println("using argv_classes_lookup shortcut");
 							} // end if (debug)
 							argv_classes_lookup[i] = argv_classes_lookup[j];
 							continue;
@@ -672,8 +654,7 @@ class FuncSig implements InternalRep {
 							if (classes[j] == null) {
 								System.out.print("null");
 							} else {
-								System.out.print(JavaInfoCmd
-										.getNameFromClass(classes[j]));
+								System.out.print(JavaInfoCmd.getNameFromClass(classes[j]));
 							}
 
 							System.out.print(' ');
@@ -713,11 +694,9 @@ class FuncSig implements InternalRep {
 					for (i = 0; i < match_list.size(); i++) {
 
 						if (isConstructor) {
-							match_classes = ((Constructor) match_list.get(i))
-									.getParameterTypes();
+							match_classes = ((Constructor) match_list.get(i)).getParameterTypes();
 						} else {
-							match_classes = ((Method) match_list.get(i))
-									.getParameterTypes();
+							match_classes = ((Method) match_list.get(i)).getParameterTypes();
 						}
 
 						Class match_to = match_classes[j];
@@ -767,9 +746,7 @@ class FuncSig implements InternalRep {
 
 								if (super_step <= min_super_step) {
 
-									if (!c.isInterface()
-											|| min_class == Object.class
-											|| min_class.isInterface()) {
+									if (!c.isInterface() || min_class == Object.class || min_class.isInterface()) {
 
 										if (debug) {
 											// System.out.println("redefing min");
@@ -806,14 +783,11 @@ class FuncSig implements InternalRep {
 						System.out.println("step arrays for argument " + j);
 
 						for (int loop = 0; loop < match_list.size(); loop++) {
-							System.out.println("(" + super_steps[loop] + ","
-									+ total_steps[loop] + ")");
+							System.out.println("(" + super_steps[loop] + "," + total_steps[loop] + ")");
 						}
 
-						System.out
-								.println("min_super_step = " + min_super_step);
-						System.out
-								.println("min_total_step = " + min_total_step);
+						System.out.println("min_super_step = " + min_super_step);
+						System.out.println("min_total_step = " + min_total_step);
 					} // end if (debug)
 
 					// from the step info we know the minumum so we can
@@ -857,11 +831,9 @@ class FuncSig implements InternalRep {
 					for (i = 0; i < match_list.size(); i++) {
 
 						if (isConstructor) {
-							match_classes = ((Constructor) match_list.get(i))
-									.getParameterTypes();
+							match_classes = ((Constructor) match_list.get(i)).getParameterTypes();
 						} else {
-							match_classes = ((Method) match_list.get(i))
-									.getParameterTypes();
+							match_classes = ((Method) match_list.get(i)).getParameterTypes();
 						}
 
 						System.out.print("match " + i + " is ");
@@ -920,15 +892,16 @@ class FuncSig implements InternalRep {
 					} else {
 						if (isStatic)
 							funcs = getAccessibleStaticMethods(cls);
-						else
-							funcs = getAccessibleInstanceMethods(cls);
+						else {
+							// funcs = getAccessibleInstanceMethods(cls);
+							funcs = getAccessibleInstanceMethods(cls, methodName);
+						}
 					}
 
 					for (i = 0; i < funcs.length; i++) {
 						Class[] paramTypes;
 						if (isConstructor) {
-							paramTypes = ((Constructor) funcs[i])
-									.getParameterTypes();
+							paramTypes = ((Constructor) funcs[i]).getParameterTypes();
 						} else {
 							Method method = (Method) funcs[i];
 							if (!methodName.equals(method.getName())) {
@@ -962,8 +935,7 @@ class FuncSig implements InternalRep {
 
 					if (isConstructor) {
 						Constructor con = ((Constructor) match_list.get(i));
-						TclList.append(interp, cur_siglist, TclString
-								.newInstance(con.getName()));
+						TclList.append(interp, cur_siglist, TclString.newInstance(con.getName()));
 
 						// System.out.println("appending constructor name " +
 						// con.getName());
@@ -971,8 +943,7 @@ class FuncSig implements InternalRep {
 						match_classes = con.getParameterTypes();
 					} else {
 						Method meth = ((Method) match_list.get(i));
-						TclList.append(interp, cur_siglist, TclString
-								.newInstance(meth.getName()));
+						TclList.append(interp, cur_siglist, TclString.newInstance(meth.getName()));
 
 						// System.out.println("appending method name " +
 						// meth.getName());
@@ -982,8 +953,7 @@ class FuncSig implements InternalRep {
 
 					for (j = 0; j < argv_count; j++) {
 						Class c = match_classes[j];
-						TclList.append(interp, cur_siglist, TclString
-								.newInstance(JavaInfoCmd.getNameFromClass(c)));
+						TclList.append(interp, cur_siglist, TclString.newInstance(JavaInfoCmd.getNameFromClass(c)));
 						// System.out.println("appending class name " +
 						// c.getName());
 					}
@@ -1004,21 +974,15 @@ class FuncSig implements InternalRep {
 		// error
 
 		if (isConstructor) {
-			throw new TclException(interp,
-					"can't find accessible constructor with " + argv_count
-							+ " argument(s) for class \""
-							+ JavaInfoCmd.getNameFromClass(cls) + "\"");
+			throw new TclException(interp, "can't find accessible constructor with " + argv_count
+					+ " argument(s) for class \"" + JavaInfoCmd.getNameFromClass(cls) + "\"");
 		} else {
 			if (!foundSameName) {
-				throw new TclException(interp, "no accessible"
-						+ (isStatic ? " static " : " ") + "method \""
-						+ signature + "\" in class "
-						+ JavaInfoCmd.getNameFromClass(cls));
+				throw new TclException(interp, "no accessible" + (isStatic ? " static " : " ") + "method \""
+						+ signature + "\" in class " + JavaInfoCmd.getNameFromClass(cls));
 			} else {
-				throw new TclException(interp, "can't find accessible"
-						+ (isStatic ? " static " : " ") + "method \""
-						+ signature + "\" with " + argv_count
-						+ " argument(s) for class \""
+				throw new TclException(interp, "can't find accessible" + (isStatic ? " static " : " ") + "method \""
+						+ signature + "\" with " + argv_count + " argument(s) for class \""
 						+ JavaInfoCmd.getNameFromClass(cls) + "\"");
 			}
 		}
@@ -1109,8 +1073,7 @@ class FuncSig implements InternalRep {
 		if (PkgInvoker.usesDefaultInvoker(cls)) {
 			return cls.getConstructor(parameterTypes);
 		} else {
-			Constructor constructor = cls
-					.getDeclaredConstructor(parameterTypes);
+			Constructor constructor = cls.getDeclaredConstructor(parameterTypes);
 			if (!PkgInvoker.isAccessible(constructor)) {
 				throw new NoSuchMethodException();
 			}
@@ -1137,6 +1100,12 @@ class FuncSig implements InternalRep {
 	 * 
 	 * ----------------------------------------------------------------------
 	 */
+	static Method[] getAccessibleInstanceMethods(Class cls, String name) {// The
+																			// class
+																			// to
+		getAccessibleInstanceMethods(cls);
+		return instanceMethodTableByName.get(cls).get(name);
+	}
 
 	static Method[] getAccessibleInstanceMethods(Class cls) // The class to
 	// query.
@@ -1158,8 +1127,7 @@ class FuncSig implements InternalRep {
 
 			Class interfaces[] = c.getInterfaces();
 			for (int i = 0; i < interfaces.length; i++) {
-				mergeInstanceMethods(interfaces[i], interfaces[i].getMethods(),
-						alist);
+				mergeInstanceMethods(interfaces[i], interfaces[i].getMethods(), alist);
 			}
 
 			if (c.isInterface()) {
@@ -1171,9 +1139,23 @@ class FuncSig implements InternalRep {
 
 		sortMethods(alist);
 		methods = new Method[alist.size()];
+		HashMap<String, ArrayList<Method>> map = new HashMap<String, ArrayList<Method>>();
+
 		for (int i = 0; i < methods.length; i++) {
 			methods[i] = (Method) alist.get(i);
+			String name = methods[i].getName();
+			ArrayList<Method> lst = map.get(name);
+			if (lst == null)
+				map.put(name, lst = new ArrayList<Method>());
+			lst.add(methods[i]);
 		}
+
+		HashMap<String, Method[]> mapT = new HashMap<String, Method[]>();
+		for (Entry<String, ArrayList<Method>> entry : map.entrySet()) {
+			mapT.put(entry.getKey(), entry.getValue().toArray(new Method[0]));
+		}
+		instanceMethodTableByName.put(cls, mapT);
+
 		instanceMethodTable.put(cls, methods);
 
 		return methods;
@@ -1215,8 +1197,7 @@ class FuncSig implements InternalRep {
 
 		for (int i = 0; i < methods.length; i++) {
 			Method m = methods[i];
-			if (Modifier.isStatic(m.getModifiers())
-					&& PkgInvoker.isAccessible(m)) {
+			if (Modifier.isStatic(m.getModifiers()) && PkgInvoker.isAccessible(m)) {
 				alist.add(m);
 			}
 		}
@@ -1248,8 +1229,7 @@ class FuncSig implements InternalRep {
 	 * ----------------------------------------------------------------------
 	 */
 
-	private static void mergeInstanceMethods(Class c, Method methods[],
-			ArrayList alist) {
+	private static void mergeInstanceMethods(Class c, Method methods[], ArrayList alist) {
 		for (int i = 0; i < methods.length; i++) {
 			boolean sameSigExists = false;
 			Method newMeth = methods[i];
@@ -1258,8 +1238,7 @@ class FuncSig implements InternalRep {
 				continue;
 
 			// Don't merge static methods or inaccessible methods
-			if (Modifier.isStatic(newMeth.getModifiers())
-					|| !PkgInvoker.isAccessible(newMeth)) {
+			if (Modifier.isStatic(newMeth.getModifiers()) || !PkgInvoker.isAccessible(newMeth)) {
 				continue;
 			}
 
@@ -1353,8 +1332,7 @@ class FuncSig implements InternalRep {
 			System.out.println("Pre sort dump");
 			for (int i = 0; i < alist.size(); i++) {
 				Method m = (Method) alist.get(i);
-				System.out.println("Method " + i + " is \t\""
-						+ getMethodDescription(m) + "\"");
+				System.out.println("Method " + i + " is \t\"" + getMethodDescription(m) + "\"");
 			}
 		}
 
@@ -1370,10 +1348,8 @@ class FuncSig implements InternalRep {
 				String jms = getMethodDescription(jm);
 
 				if (debug) {
-					System.out.println("checking \"" + cms + "\" from index "
-							+ c);
-					System.out.println("against  \"" + jms + "\" from index "
-							+ j);
+					System.out.println("checking \"" + cms + "\" from index " + c);
+					System.out.println("against  \"" + jms + "\" from index " + j);
 					System.out.println("compareTo() is " + cms.compareTo(jms));
 				}
 
@@ -1404,8 +1380,7 @@ class FuncSig implements InternalRep {
 			System.out.println("Post sort dump");
 			for (int i = 0; i < alist.size(); i++) {
 				Method m = (Method) alist.get(i);
-				System.out.println("Method " + i + " is \t\""
-						+ getMethodDescription(m) + "\"");
+				System.out.println("Method " + i + " is \t\"" + getMethodDescription(m) + "\"");
 			}
 		}
 
