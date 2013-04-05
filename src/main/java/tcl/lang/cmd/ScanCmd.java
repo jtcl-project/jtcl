@@ -543,6 +543,10 @@ public class ScanCmd implements Command {
 					StrtoulResult result = new StrtoulResult();
 					Util.strtoul(format, formatIndex - 1, 10, result);
 					int endIndex = result.index;
+					if (endIndex >= format.length()) {
+						// ran out of format characters before finding conversion character
+						throw new TclException(interp, "bad scan conversion character \"\"");
+					}
 					if (format.charAt(endIndex) != '$') {
 						/* notXpg */
 						gotSequential = true;
