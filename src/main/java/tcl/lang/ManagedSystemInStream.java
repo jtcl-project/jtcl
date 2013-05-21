@@ -142,7 +142,7 @@ public class ManagedSystemInStream extends InputStream implements Runnable {
 	 */
 	@Override
 	public int available() throws IOException {
-		return 0;
+		return originalIn.available();
 	}
 
 	/**
