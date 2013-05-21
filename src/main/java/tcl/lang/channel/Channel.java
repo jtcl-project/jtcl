@@ -297,9 +297,11 @@ public abstract class Channel {
 						cnt = finalReader.read(buf, 0, Math.min(buf.length, numBytes - total));
 					else {
 						/* resize array */
-						if (TclByteArray.getLength(interp, tobj) < total + bufsize) {
-							TclByteArray.setLength(interp, tobj, total + bufsize);
-						}
+						int curBufLen = TclByteArray.getLength(interp, tobj);
+	                        
+                        if (curBufLen < total + bufsize) {
+                            TclByteArray.setLength(interp, tobj, curBufLen + bufsize);
+                        }
 
 						/*
 						 * if we are reading unprocessed bytes, this is more
