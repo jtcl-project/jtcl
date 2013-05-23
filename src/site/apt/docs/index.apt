@@ -4,7 +4,7 @@
  
  JTcl Documentation resources
  
-   * {{{jtcldifferences.html}JTcl differences}} from Tcl 8.4.  
+   * {{{./jtcldifferences.html}JTcl differences}} from Tcl 8.4.  
    
    * {{{./tcl8.4.19/html/contents.htm} Tcl 8.4}} command reference
 
@@ -28,7 +28,7 @@
    
       * {{{./paraffin.html}paraffin.tcl}} 1.0
    
-   * {{{buildingjtcl.html}Building JTcl}}
+   * {{{./buildingjtcl.html}Building JTcl}}
 
    * {{{../apidocs/index.html}Javadoc}} for the JTcl interpreter
 
