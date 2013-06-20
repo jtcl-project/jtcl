@@ -2,7 +2,7 @@
 Hyde 
 ~~~~
 
-  Hyde allows Java code to be easily integrated with JTcll.
+  Hyde allows Java code to be easily integrated with JTcl.
   Three levels of integration are offered:
 
     * simple Java methods that define Tcl procedures.

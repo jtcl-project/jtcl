@@ -2,6 +2,32 @@
  JTcl News
  ----
 
+July 4, 2013
+
+  JTcl 2.5.0 has been released.  This is primarily a bug fix and performance release.
+
+  * Fixed issue with embedded Janino compiler that prevented on-the-fly compilation for <<TJC>> and 
+    <<hyde>> when using Java 7.
+
+  * Fixed runtime execption thrown when invalid <<format>> specifier was encountered.
+
+  * Fixed issue that setting env(VAR) was not actually passed to sub-process environment for <<exec>>.
+
+  * Fixed issue where line continuation with \r\n sequences were not parsed correctly during 
+    Interp.eval().
+
+  * Major performance enhancement when reading stdin, now read as many bytes as are available.
+
+  * Minor performance improvements when using the <<java>> package, better caching of previously
+    resolved classes.  Patch contributed by Fabrice Ilponse.
+
+
+ Please report bugs and other unexpected behaviors at the JTcl project
+ site's {{{http://kenai.com/bugzilla/buglist.cgi?product=jtcl}Bug tracking system}}.
+
+ <The JTcl Team>
+
+
 October 11, 2012
 
   JTcl 2.4.0 has be released. 
