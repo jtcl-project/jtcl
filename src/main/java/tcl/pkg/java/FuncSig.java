@@ -50,6 +50,8 @@ class FuncSig implements InternalRep {
 	//
 	// targetCls is not used for class signatures.
 
+	private static final Method[] ZERO_METHODS = new Method[0];
+
 	Class targetCls;
 
 	// The PkgInvoker used to access the constructor or method.
@@ -1100,11 +1102,14 @@ class FuncSig implements InternalRep {
 	 * 
 	 * ----------------------------------------------------------------------
 	 */
-	static Method[] getAccessibleInstanceMethods(Class cls, String name) {// The
-																			// class
-																			// to
+	static Method[] getAccessibleInstanceMethods(Class cls, String name) {
 		getAccessibleInstanceMethods(cls);
-		return instanceMethodTableByName.get(cls).get(name);
+		Method[] methods = instanceMethodTableByName.get(cls).get(name);
+		if (methods == null) {
+			methods = ZERO_METHODS;
+			instanceMethodTableByName.get(cls).put(name, methods);
+		}
+		return methods;
 	}
 
 	static Method[] getAccessibleInstanceMethods(Class cls) // The class to
