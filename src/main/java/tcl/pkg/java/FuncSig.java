@@ -1106,8 +1106,7 @@ class FuncSig implements InternalRep {
 		getAccessibleInstanceMethods(cls);
 		Method[] methods = instanceMethodTableByName.get(cls).get(name);
 		if (methods == null) {
-			methods = ZERO_METHODS;
-			instanceMethodTableByName.get(cls).put(name, methods);
+			return ZERO_METHODS;
 		}
 		return methods;
 	}
