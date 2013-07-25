@@ -2,6 +2,23 @@
  JTcl News
  ----
 
+July 30, 2013
+
+  JTcl 2.6.0 has been released.  This is primarily a bug fix release.
+
+  * Fixed a regression bug where trying to invoke an unknown method with the <<java>>
+    package caused an exception.
+
+  * Added <<JTcl>> as a dummy package, which provides the JTcl version when needed.
+
+
+ Please report bugs and other unexpected behaviors at the JTcl project
+ site's {{{http://kenai.com/bugzilla/buglist.cgi?product=jtcl}Bug tracking system}}.
+
+ <The JTcl Team>
+
+
+
 July 1, 2013
 
   JTcl 2.5.0 has been released.  This is primarily a bug fix and performance release.

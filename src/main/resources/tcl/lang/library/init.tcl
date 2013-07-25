@@ -96,6 +96,9 @@ namespace eval tcl {
 
     # jtcl - note that 'dict' package is provided via DictCmd & TclDict
     package provide dict 8.5
+
+    # jtcl - fake package that lists JTcl version
+    source resource:/tcl/lang/library/jtcl_version.tcl
 }
  
 # Windows specific end of initialization

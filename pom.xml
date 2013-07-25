@@ -4,7 +4,7 @@
 	<groupId>tcl.lang</groupId>
 	<artifactId>jtcl</artifactId>
 	<packaging>jar</packaging>
-	<version>2.5.0</version>
+	<version>2.6.0</version>
 	<properties>
 		<project.build.sourceEncoding>US-ASCII</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>US-ASCII</project.reporting.outputEncoding>
@@ -20,6 +20,22 @@
 		</dependency>
 	</dependencies>
 	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+				<includes>
+					<include>**/jtcl_version.tcl</include>
+				</includes>
+		  	</resource> 
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>false</filtering>
+				<excludes>
+					<exclude>**/jtcl_version.tcl</exclude>
+				</excludes>
+		  	</resource> 
+		</resources>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

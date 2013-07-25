@@ -24,7 +24,7 @@
   <property file="${user.home}/.m2/maven.properties"/>
   <property file="maven-build.properties"/>
 
-  <property name="maven.build.finalName" value="jtcl-2.5.0"/>
+  <property name="maven.build.finalName" value="jtcl-2.6.0"/>
   <property name="maven.build.dir" value="target"/>
   <property name="maven.build.outputDir" value="${maven.build.dir}/classes"/>
   <property name="maven.build.srcDir.0" value="src/main/java"/>
@@ -81,10 +81,19 @@
     <copy todir="${maven.build.outputDir}">
       <fileset dir="${maven.build.resourceDir.0}">
          <exclude name="**/pkg/tjc/library/*.tcl"/>
+         <exclude name="**/tcl/lang/library/jtcl_version.tcl"/>
       </fileset>
       <fileset dir="${maven.build.resourceDir.0}">
          <include name="**/pkg/tjc/library/tjc.tcl"/>
          <include name="**/pkg/tjc/library/tjcthread.tcl"/>
+      </fileset>
+    </copy>
+    <copy todir="${maven.build.outputDir}">
+      <filterset begintoken="$" endtoken="}">
+          <filter token="{project.version" value="${project.version}"/>
+      </filterset>
+      <fileset dir="${maven.build.resourceDir.0}">
+         <include name="**/tcl/lang/library/jtcl_version.tcl"/>
       </fileset>
     </copy>
   </target>
