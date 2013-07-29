@@ -94,13 +94,16 @@ class UnicodeEncoder extends Writer {
 	@Override
 	public void write(char[] cbuf, int off, int len) throws IOException {
 		setEncoding(); // encoding might have changed
+		
+
 		if (cse != null) {
-			byte[] bbuf = new byte[(int) (Math.ceil(len * cse.averageBytesPerChar()))];
+			/* need a minimum buffer size to handle at least one encoded character.  Liberally using 256 */
+			int encodedBufSize = Math.max(256, (int)Math.ceil(len*cse.averageBytesPerChar()));
+			byte[] bbuf = new byte[encodedBufSize];
 			ByteBuffer bb = ByteBuffer.wrap(bbuf);
 			CharBuffer cb = CharBuffer.wrap(cbuf, off, len);
 
 			CoderResult result = CoderResult.OVERFLOW;
-
 			while (result == CoderResult.OVERFLOW) {
 				result = cse.encode(cb, bb, false);
 				bb.flip();
