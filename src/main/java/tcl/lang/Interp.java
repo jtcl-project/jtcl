@@ -18,6 +18,7 @@ import java.util.Map;
 import tcl.lang.channel.Channel;
 import tcl.lang.channel.FileChannel;
 import tcl.lang.channel.ReadInputStreamChannel;
+import tcl.lang.cmd.EncodingCmd;
 import tcl.lang.cmd.InterpAliasCmd;
 import tcl.lang.cmd.InterpSlaveCmd;
 import tcl.lang.cmd.PackageCmd;
@@ -2504,17 +2505,31 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 * Loads a Tcl script from a file and evaluates it in the current interpreter.
+	 * Loads a Tcl script from a file using the system encoding
+	 *  and evaluates it in the current interpreter.
 	 * 
 	 * @param s
 	 *            Name of the file to evaluate
 	 * @throws TclException
 	 *             on any TCL error or on a file read error
-	 */
+	 */             
 	public void evalFile(String s) throws TclException {
+		evalFile(s, EncodingCmd.systemJavaEncoding);
+	}
+	/**
+	 * Loads a Tcl script from a file and evaluates it in the current interpreter.
+	 * 
+	 * @param s
+	 *            Name of the file to evaluate
+	 * @param encoding
+	 *            Java charset name of file's encoding
+	 * @throws TclException
+	 *             on any TCL error or on a file read error
+	 */
+	public void evalFile(String s, String encoding) throws TclException {
 		String fileContent; // Contains the content of the file.
 
-		fileContent = readScriptFromFile(s);
+		fileContent = readScriptFromFile(s,encoding);
 
 		if (fileContent == null) {
 			throw new TclException(this, "couldn't read file \"" + s + "\"");
@@ -2570,15 +2585,18 @@ public class Interp extends EventuallyFreed {
 	 * 
 	 * @param s
 	 *            name of file
+	 *  @param encoding
+	 *            Java charset encoder name
 	 * @returns script as a String, or null if it can't be read
 	 * 
 	 * @throws TclException
 	 *             on file errors
 	 */
 
-	private String readScriptFromFile(String s) throws TclException {
+	private String readScriptFromFile(String s, String encoding) throws TclException {
 		File sourceFile;
 		FileChannel fchan = new FileChannel();
+		fchan.setEncoding(encoding);
 		boolean wasOpened = false;
 		TclObject result = TclString.newInstance(new StringBuffer(64));
 

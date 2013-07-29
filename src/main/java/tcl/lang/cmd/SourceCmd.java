@@ -45,27 +45,39 @@ public class SourceCmd implements Command {
 	public void cmdProc(Interp interp, TclObject argv[]) throws TclException {
 		String fileName = null;
 		boolean url = false;
-
-		if (argv.length == 2) {
-			fileName = argv[1].toString();
-		} else if (argv.length == 3) {
-			if (argv[1].toString().equals("-url")) {
+		String encoding = EncodingCmd.systemTclEncoding;
+		
+		for (int i=1; i<argv.length; i++) {
+			String argstr = argv[i].toString();
+			if (i==argv.length-1) {
+				fileName = argstr;
+			} else if (argstr.equals("-url")) {
 				url = true;
-				fileName = argv[2].toString();
+			} else if (argstr.equals("-encoding")) {
+				if (i==argv.length-1) encoding=null;
+				else encoding = argv[++i].toString();
+			} else {
+				throw new TclException(interp,"bad option \""+argstr+"\": must be -encoding or -url");
 			}
 		}
+		
 
-		if (fileName == null) {
-			throw new TclNumArgsException(interp, 1, argv, "?-url? fileName");
+		if (fileName == null || encoding==null) {
+			throw new TclNumArgsException(interp, 1, argv, "?-encoding name? ?-url? fileName");
 		}
-
+		String javaEncoding = EncodingCmd.getJavaName(encoding);
+		if (javaEncoding == null) {
+			throw new TclException(interp, "unknown encoding \""
+					+ encoding + "\"");
+		}
+		
 		try {
 			if (fileName.startsWith("resource:/")) {
 				interp.evalResource(fileName.substring(9));
 			} else if (url) {
 				interp.evalURL(null, fileName);
 			} else {
-				interp.evalFile(fileName);
+				interp.evalFile(fileName,javaEncoding);
 			}
 		} catch (TclException e) {
 			int code = e.getCompletionCode();
