@@ -73,9 +73,9 @@ public class SourceCmd implements Command {
 		
 		try {
 			if (fileName.startsWith("resource:/")) {
-				interp.evalResource(fileName.substring(9));
+				interp.evalResource(fileName.substring(9), javaEncoding);
 			} else if (url) {
-				interp.evalURL(null, fileName);
+				interp.evalURL(null, fileName, javaEncoding);
 			} else {
 				interp.evalFile(fileName,javaEncoding);
 			}

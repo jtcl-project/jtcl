@@ -2553,7 +2553,7 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 * Loads a Tcl script from a URL and evaluate it in the current interpreter.
+	 * Loads a Tcl script (encoded in system encoding) from a URL and evaluate it in the current interpreter.
 	 * 
 	 * @param context
 	 *            URL context under which s is to be interpreted
@@ -2563,9 +2563,25 @@ public class Interp extends EventuallyFreed {
 	 *             on any TCL or read error
 	 */
 	public void evalURL(URL context, String s) throws TclException {
+		evalURL(context,s, EncodingCmd.systemJavaEncoding);
+	}
+	
+	/**
+	 * Loads a Tcl script from a URL and evaluate it in the current interpreter.
+	 * 
+	 * @param context
+	 *            URL context under which s is to be interpreted
+	 * @param s
+	 *            the URL
+	 * @param javaEncoding
+	 *            Java charset name in which script is encoded
+	 * @throws TclException
+	 *             on any TCL or read error
+	 */
+	public void evalURL(URL context, String s, String javaEncoding) throws TclException {
 		String fileContent; // Contains the content of the file.
 
-		fileContent = readScriptFromURL(context, s);
+		fileContent = readScriptFromURL(context, s, javaEncoding);
 		if (fileContent == null) {
 			throw new TclException(this, "cannot read URL \"" + s + "\"");
 		}
@@ -2645,7 +2661,7 @@ public class Interp extends EventuallyFreed {
 	 *            URL to be read (based on the context)
 	 * @return The content of the script file.
 	 */
-	private String readScriptFromURL(URL context, String s) {
+	private String readScriptFromURL(URL context, String s, String javaEncoding) {
 		Object content = null;
 		URL url;
 
@@ -2698,7 +2714,7 @@ public class Interp extends EventuallyFreed {
 			return trimToCtrlZ(convertStringCRLF((String) content));
 		} else if (content instanceof InputStream) {
 			// return up to ^Z for tcl8.4 compatibility
-			return trimToCtrlZ(readScriptFromInputStream((InputStream) content));
+			return trimToCtrlZ(readScriptFromInputStream((InputStream) content, javaEncoding));
 		} else {
 			return null;
 		}
@@ -2744,12 +2760,15 @@ public class Interp extends EventuallyFreed {
 	 * 
 	 * @param s
 	 *            Java InputStream containing script
+	 * @param javaEncoding
+	 *            Java charset name of stream
 	 * @return the content of the script.
 	 */
-	private String readScriptFromInputStream(InputStream s) {
+	private String readScriptFromInputStream(InputStream s, String javaEncoding) {
 		TclObject result = TclString.newInstance(new StringBuffer(64));
 		ReadInputStreamChannel rc = new ReadInputStreamChannel(this, s);
-
+		rc.setEncoding(javaEncoding);
+		
 		try {
 			rc.read(this, result, TclIO.READ_ALL, 0);
 			return result.toString();
@@ -2797,7 +2816,7 @@ public class Interp extends EventuallyFreed {
 	}
 
 	/**
-	 * Execute a Tcl script stored in the given Java resource location.
+	 * Execute a Tcl script stored in the given Java resource location, encoded in the system encoding
 	 * 
 	 * Results: The return value is void. However, a standard Tcl Exception may be generated. The interpreter's result
 	 * object will contain the value of the evaluation but will persist only until the next call to one of the eval
@@ -2811,6 +2830,25 @@ public class Interp extends EventuallyFreed {
 	 */
 
 	public void evalResource(String resName) throws TclException {
+		evalResource(resName, EncodingCmd.systemJavaEncoding);
+	}
+	/**
+	 * Execute a Tcl script stored in the given Java resource location.
+	 * 
+	 * Results: The return value is void. However, a standard Tcl Exception may be generated. The interpreter's result
+	 * object will contain the value of the evaluation but will persist only until the next call to one of the eval
+	 * functions.
+	 * 
+	 * Side effects: The side effects will be determined by the exact Tcl code to be evaluated.
+	 * 
+	 * @param resName
+	 *            the location of the Java resource. See the Java documentation of Class.getResourceAsStream() for
+	 *            details on resource naming.
+	 *  @param javaEncoding
+	 *            Java charset name for Unicode encoding of resource
+	 */
+
+	public void evalResource(String resName, String javaEncoding) throws TclException {
 		final boolean USE_SCRIPT_CACHE = true;
 
 		boolean couldBeCached = false;
@@ -2849,7 +2887,7 @@ public class Interp extends EventuallyFreed {
 					if (stream == null) {
 						throw new TclException(this, "cannot read resource \"" + resName + "\"");
 					}
-					script = readScriptFromInputStream(stream);
+					script = readScriptFromInputStream(stream, javaEncoding);
 					if (script == null) {
 						throw new TclException(this, "cannot read resource \"" + resName + "\"");
 					}
@@ -2866,7 +2904,7 @@ public class Interp extends EventuallyFreed {
 			if (stream == null) {
 				throw new TclException(this, "cannot read resource \"" + resName + "\"");
 			}
-			script = readScriptFromInputStream(stream);
+			script = readScriptFromInputStream(stream, javaEncoding);
 			if (script == null) {
 				throw new TclException(this, "cannot read resource \"" + resName + "\"");
 			}
