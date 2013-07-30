@@ -15,6 +15,8 @@
 
 package tcl.lang;
 
+import tcl.lang.cmd.EncodingCmd;
+
 
 /**
  * The Shell class is similar to the Tclsh program: you can use it to execute a
@@ -41,37 +43,46 @@ public class Shell {
 
 	public static void main(String args[]) {
 		String fileName = null;
-
+		String encoding = EncodingCmd.systemTclEncoding;
+		
 		// Create the interpreter. This will also create the built-in
 		// Tcl commands.
 
 		Interp interp = new Interp();
 
+		// if first options are -encoding name, set the encoding of command line script
+		int i = 0;
+		if (args.length > i && args[i].equals("-encoding")) {
+			++i;
+			if (args.length > i) {
+				encoding = args[i++];
+			}
+		}
+		
 		// Make command-line arguments available in the Tcl variables "argc"
 		// and "argv". If the first argument doesn't start with a "-" then
 		// strip it off and use it as the name of a script file to process.
 		// We also set the argv0 and tcl_interactive vars here.
 
-		if ((args.length > 0) && !(args[0].startsWith("-"))) {
-			fileName = args[0];
+		
+		if ((args.length > i) && !(args[i].startsWith("-"))) {
+			fileName = args[i++];
 		}
 
 		TclObject argv = TclList.newInstance();
 		argv.preserve();
 		try {
-			int i = 0;
-			int argc = args.length;
+			int argc = 0;
 			if (fileName == null) {
 				interp.setVar("argv0", "tcl.lang.Shell", TCL.GLOBAL_ONLY);
 				interp.setVar("tcl_interactive", forceNonInteractive ? "0" : "1", TCL.GLOBAL_ONLY);
 			} else {
 				interp.setVar("argv0", fileName, TCL.GLOBAL_ONLY);
 				interp.setVar("tcl_interactive", "0", TCL.GLOBAL_ONLY);
-				i++;
-				argc--;
 			}
 			for (; i < args.length; i++) {
 				TclList.append(interp, argv, TclString.newInstance(args[i]));
+				++argc;
 			}
 			interp.setVar("argv", argv, TCL.GLOBAL_ONLY);
 			interp.setVar("argc", java.lang.Integer.toString(argc),
@@ -91,7 +102,14 @@ public class Shell {
 		if (fileName != null) {
 			int exitCode = 0;
 			try {
-				interp.evalFile(fileName);
+				String javaEncoding = EncodingCmd.getJavaName(encoding);
+				if (javaEncoding==null) {
+					System.err.println("unknown encoding \""
+							+ encoding + "\"");
+					exitCode = 2;
+				} else {
+					interp.evalFile(fileName, javaEncoding);
+				}
 			} catch (TclException e) {
 				int code = e.getCompletionCode();
 				if (code == TCL.RETURN) {
