@@ -76,7 +76,9 @@ JTcl Differences from Tcl 8.4
 
   []
  
-  * <<encoding>> maps characters using Java's Unicode facilities.  
+  * <<encoding>>, <<fconfigure -encoding>> and <<source -encoding>> map characters 
+     using Java's Unicode facilities.   JTcl replaces illegal UTF-8 byte sequences with the Unicode
+     replacement character U+FFFD, rather than their Cp1252 equivalent. 
 
   []
  
@@ -133,4 +135,6 @@ JTcl Differences from Tcl 8.4
   * <<lrepeat>>
 
   * <<lreverse>>
+  
+  * <<source -encoding name>> and the  <<-encoding>> shell command line option
 
