@@ -43,10 +43,8 @@ JTcl Differences from Tcl 8.4
      * <<file stat>> does not return information for <<dev, gid, ino, mode>>, and <<nlink>> attributes; <<ctime>> and <<atime>>
        attributes report the same value as <<mtime>>.
 
-     * <<file link>>, <<file readlink>> and <<file type>>, and the <<type>> field returned from <<file stat>>  
-       attempt to identify a link target by looking for a difference between the values returned by 
-       <java.io.File.getCanonicalPath()> and <java.io.File.getAbsolutePath()>.
-       and may incorrectly indicate that regular file is a link.
+     * <<file link>> and <<file readlink>> return an absolute, canonical path to the target of the link, even if the target
+       is a relative path.
 
      * <<file link>> cannot create links.
 

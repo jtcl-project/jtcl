@@ -1036,6 +1036,7 @@ public class FileUtil {
 		return separators;
 	}
 
+	
 	/**
 	 * This important function attempts to extract from the given TclObject a
 	 * unique normalized path representation, whose string value can be used as
@@ -1070,9 +1071,8 @@ public class FileUtil {
 
 	/**
 	 * Get the target file of a link, or null if the specified file is not a
-	 * link. This method is a guess, which may return false positives. For
-	 * example, if "link" is "/usr/../usr/lib", this method will return
-	 * "/usr/lib" as if "link" were really a link. FIXME: Java 1.7 will provide
+	 * link.  Note that this returns a full absolute path to the link
+	 * target; even if the link target is  relative. FIXME: Java 1.7 will provide
 	 * a better link test
 	 * 
 	 * @param link
@@ -1080,25 +1080,24 @@ public class FileUtil {
 	 * @return target of the 'link' File, if it is a link, or null if not.
 	 */
 	public static File getLinkTarget(File link) {
-		String absPath = link.getAbsolutePath();
-		File canFile;
 		try {
-			canFile = link.getCanonicalFile();
+			File absFile = link.getAbsoluteFile();
+
+			String name = absFile.getName();
+			if (".".equals(name) || "..".equals(name)) {
+				return null; // can't be a link
+			} else {
+				File parent = absFile.getParentFile();
+				String normalized = new File(parent.getCanonicalFile(), name).getPath();
+				File canNormalizedFile = new File(normalized);
+				String canNormalized = canNormalizedFile.getCanonicalPath();
+				
+				if (normalized==null || canNormalized==null) return null;
+				if (normalized.equals(canNormalized)) return null;  // no link since they resolve the same
+				return canNormalizedFile;
+			}
 		} catch (IOException e) {
 			return null;
-		}
-
-		/*
-		 * If absolute path is the same as canonical path, this cannot be a link
-		 */
-		if (absPath.equals(canFile.getPath())) {
-			return null;
-		} else {
-			/*
-			 * Otherwise, it's possible that we have a link; this could also be
-			 * true for "/usr/../usr/lib
-			 */
-			return canFile;
 		}
 	}
 
