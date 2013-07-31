@@ -1052,7 +1052,15 @@ public class FileUtil {
 
 		try {
 			file = FileUtil.getNewFileObj(interp, pathObj.toString());
-			return TclString.newInstance(file.getCanonicalPath());
+			String name = file.getName();
+			File parent = file.getParentFile();
+			File normalized;
+			if (".".equals(name) || "..".equals(name)) {
+				normalized = file.getCanonicalFile();
+			} else {
+				normalized = new File(parent.getCanonicalFile(), name);
+			}
+			return TclString.newInstance(normalized);
 		} catch (TclException e) {
 			return null;
 		} catch (IOException e) {
