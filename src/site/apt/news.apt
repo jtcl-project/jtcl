@@ -2,14 +2,24 @@
  JTcl News
  ----
 
-July 30, 2013
+August 4, 2013
 
   JTcl 2.6.0 has been released.  This is primarily a bug fix release.
 
-  * Fixed a regression bug where trying to invoke an unknown method with the <<java>>
-    package caused an exception.
+  * Fixed a regression bug where trying to invoke an unknown object 
+    method with the <<java>> package caused an exception.
 
-  * Added <<JTcl>> as a dummy package, which provides the JTcl version when needed.
+  * Fixed a bug when trying to decode an invalid Unicode character, could
+    cause an infinite loop.
+
+  * Fixed a bug where <<file normalize>> should not try to resolve last path
+    component if it is a link.
+
+  * Added <<source -encoding encname>> option, as well as 
+    <<jtcl -encoding encname>> option when starting the JTcl command line shell.
+
+  * Added <<JTcl>> as a informational package, which provides the JTcl version 
+    when required, <<package require JTcl>>.
 
 
  Please report bugs and other unexpected behaviors at the JTcl project

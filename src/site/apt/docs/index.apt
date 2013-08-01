@@ -11,7 +11,7 @@
    * Packages included in the JTcl distribution
    
       * <<JTcl>> (current version) \
-        <Note - this package provides the JTcl version, if needed.>
+        <Note - this is an information package, which provides the JTcl version.>
 
       * {{{./tcl8.4.19/html/TclCmd/dict.htm} dict}} 8.5 \
         <Note - this package is provided as a compatibility measure for Tcl 8.4 code using the backported 'dict' package.  The 'dict' command is available without requiring this package.>

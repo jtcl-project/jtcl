@@ -122,6 +122,14 @@ JTcl Differences from Tcl 8.4
 
   []
 
+  * JTcl allows file path names to be prefixed with <<resource:/>> for <open> and <source> commands.
+    which allow opening or sourcing files that are included on the Java CLASSPATH, or within any
+    jar file on the CLASSPATH.  Resource files may only be opened in read only mode.  Note that use of 
+    resource:/ is not supported by the <file> command.
+
+
+  []
+
   JTcl also includes the following backported 8.5 commands:
 
   * <<apply>>
@@ -134,5 +142,7 @@ JTcl Differences from Tcl 8.4
 
   * <<lreverse>>
   
-  * <<source -encoding name>> and the  <<-encoding>> shell command line option
+  * <<source -encoding name>> and the  <<-encoding>> shell command line option 
+    (e.g., <jtcl -encoding enc-name source.tcl>, where enc-name is a valid JTcl
+    character encoding.)
 
