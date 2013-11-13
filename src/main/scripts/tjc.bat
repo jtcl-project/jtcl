@@ -21,8 +21,8 @@ set dir=%~dp0
 set cp="%dir%\jtcl-%jtclver%.jar;%CLASSPATH%"
 
 if "%TCLLIBPATH%" == "" goto nullTcllib
-set tcllibpath=-DTCLLIBPATH="%TCLLIBPATH%"
+set tcllibpathvar=-DTCLLIBPATH="%TCLLIBPATH%"
 :nullTcllib
 
-java %tcllibpath% -cp %cp% %JAVA_OPTS% %jtclmain% %*
+java %tcllibpathvar% -cp %cp% %JAVA_OPTS% %jtclmain% %*
 

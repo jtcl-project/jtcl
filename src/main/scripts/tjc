@@ -18,6 +18,7 @@ ismsys=false
 case "`uname`" in
     CYGWIN*) iscygwin=true ;;
     MINGW*) ismsys=true ;;
+    MSYS*) ismsys=true ;;
 esac
 
 JAVA=java
