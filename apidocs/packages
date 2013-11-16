@@ -1,9 +1,0 @@
-tcl.lang
-tcl.lang.channel
-tcl.lang.cmd
-tcl.lang.process
-tcl.pkg.fleet
-tcl.pkg.itcl
-tcl.pkg.java
-tcl.pkg.java.reflect
-tcl.pkg.tjc
