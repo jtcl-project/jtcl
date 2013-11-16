@@ -3,7 +3,7 @@
   <bannerLeft>
     <name>JTcl</name>
     <src>images/jtcl-horz-med.png</src>
-    <href>http://jtcl.kenai.com</href>
+    <href>http://jtcl-project.github.io/jtcl/</href>
   </bannerLeft>
     <!--
   <bannerRight>
@@ -17,16 +17,16 @@
     </links>
 
     <menu name="JTcl Links">
-      <item name="Download" href="http://kenai.com/projects/jtcl/downloads"/>
+      <item name="Download" href="https://github.com/jtcl-project/jtcl/releases"/>
       <item name="News" href="news.html"/>
       <item name="Getting Started" href="gettingstarted.html"/>
       <item name="Documentation" href="docs/index.html"/>
       <item name="FAQ" href="faq.html"/>
       <item name="Projects Using JTcl" href="projects.html"/>
-      <item name="Bugs" href="http://kenai.com/bugzilla/buglist.cgi?product=jtcl"/>
+      <item name="Bugs" href="https://github.com/jtcl-project/jtcl/issues"/>
       <item name="Mailing Lists" href="http://kenai.com/projects/jtcl/lists"/>
-      <item name="Source Code" href="http://kenai.com/projects/jtcl/sources/jtcl-main/show"/>      
-      <item name="Project Page" href="http://kenai.com/projects/jtcl"/>      
+      <item name="Source Code" href="https://github.com/jtcl-project/jtcl"/>
+      <item name="Project Page" href="http://jtcl-project.github.io/jtcl/"/>
       <item name="License" href="licenses.html"/>      
     </menu>
   </body>

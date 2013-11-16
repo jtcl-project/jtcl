@@ -51,7 +51,7 @@ Creating a development environment
 
 
 ------------------------
-hg clone https://hg.kenai.com/hg/jtcl~jtcl-main 
+git clone https://github.com/jtcl-project/jtcl.git
 ------------------------
    
    JTcl source code includes <<.project>> and <<.classpath>> files for the 

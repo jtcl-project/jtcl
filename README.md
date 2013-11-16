@@ -15,7 +15,7 @@ have to install Java if you don't already have it installed.
 
 Download JTcl distribution from: 
 
-    http://kenai.com/projects/jtcl/downloads
+    https://github.com/jtcl-project/jtcl/releases
 
 JTcl is distributed as a ZIP archive.  Download the latest 
 jtcl-{version}-bin.zip file from the JTcl website, and unzip into a directory 
@@ -57,7 +57,7 @@ DOCUMENTATION
 Local documentation, which consists a copy of the the JTcl web site, can be 
 downloaded from:
 
-    http://kenai.com/projects/jtcl/downloads 
+    https://github.com/jtcl-project/jtcl/releases
 
 Documenation is distributed as a ZIP archive, Download the latest 
 jtcl-{version}-doc.zip file from the JTcl website, and unzip into a directory 
@@ -71,7 +71,7 @@ share information.  The JTcl Bug tracker should be used to
 report bugs.
 
 Mailing lists: http://kenai.com/projects/jtcl/lists
-Bug reporting: http://kenai.com/bugzilla/buglist.cgi?product=jtcl
+Bug reporting: https://github.com/jtcl-project/jtcl/issues
 
 
 **The JTcl Team**
