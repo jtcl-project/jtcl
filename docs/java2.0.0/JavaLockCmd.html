@@ -1,0 +1,51 @@
+<HTML>
+<TITLE>
+The java::lock Command
+</TITLE>
+
+<BODY>
+<HR>
+
+<H3>
+The java::lock Command
+</H3>
+
+<HR>
+
+<DL>
+
+<H3>
+Usage:
+</H3>
+
+<DD><B>java::lock</B> <I>javaObj</I>
+
+<P>
+
+The <B>java::lock</B> command prevents the Java object, <I>javaObj</I>,
+from getting garbage collected. A Tcl variable that stores a Java
+object handle has an internal rep that holds a reference to the Java object.
+If the Tcl variable's internal rep is changed (e.g. to a Tcl List), the
+reference to the Java object is removed, and the Java object could be
+garbage collected. The <B>java::lock</B> command maintains a copy of
+<I>javaObj</I>'s internal rep, so the Java object will be not be
+garbage collected. Multiple locks can be placed on the same Java
+object. If <I>javaObject</I> is not a valid reference to a Java
+object, a Tcl error is generated. It is important to note that use
+of the <B>java::lock</B> command is optional, it is not required. A
+Java object handle that is stored in a Tcl variable
+will not be garbage collected unless the Tcl variable is unset, or
+the internal representation is changed.
+
+<P>
+
+</DL>
+
+<PRE>
+<A HREF="../license.html">Copyright</A> &#169; 1997-1998 Sun Microsystems, Inc.
+</PRE>
+
+
+</BODY>
+</HTML>
+

@@ -1,0 +1,62 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+</head>
+<body>
+<div style="text-align: center;"><big><big><span
+ style="font-weight: bold;">TJC Compiler Manual<br>
+JDK Config File<br>
+</span></big></big><big><big><span style="font-weight: bold;"></span></big></big></div>
+<big><big><span style="font-weight: bold;"><br>
+</span></big></big>The JDK config file tells <span
+ style="font-weight: bold;">tjc</span>
+where to find the <span style="font-weight: bold;">javac</span> and <span
+ style="font-weight: bold;">jar</span> executables for your system. It
+must be named <span style="font-family: monospace;">jdk.cfg</span> and
+it must be located in the <span style="font-family: monospace;">bin/</span>
+directory where the <span style="font-weight: bold;">tjc</span> script
+was installed. The JDK config file also
+sets the CLASSPATH environment variable that will be used when
+compiling with <span style="font-weight: bold;">javac</span>. For
+most users, the classpath will just need to include paths for the <span
+ style="font-family: monospace;">tcljava.jar</span>, <span
+ style="font-family: monospace;">jacl.jar</span>, and <span
+ style="font-family: monospace;">tjc.jar</span> files from a Jacl
+install.<br>
+<br>
+<span style="font-weight: bold;">EXAMPLE:</span><span
+ style="font-family: monospace;"><br>
+<br style="font-family: monospace;">
+</span>
+<div style="margin-left: 40px;"><span style="font-family: monospace;">JAVAC
+= C:/jdk14/bin/javac</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">JAR = C:/jdk14/bin/jar</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">CLASSPATH =
+C:/install/tjc/lib/tcljava1.3.1/jacl.jar;</span><span
+ style="font-family: monospace;"><span style="font-family: monospace;">C:/install/tjc/lib/tcljava1.3.1/</span></span><span
+ style="font-family: monospace;">tcljava.jar;</span><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;">C:/install/tjc/lib/tcljava1.3.1/</span></span><span
+ style="font-family: monospace;">tjc.jar</span><br>
+</span><span style="font-family: monospace;"><br>
+</span></div>
+In the above example, JDK software is installed in <span
+ style="font-family: monospace;">C:/jdk14</span>. The <span
+ style="font-family: monospace;">CLASSPATH</span> variable is set to
+include paths of <span style="font-family: monospace;"><span
+ style="font-family: monospace;">tcljava.jar</span>, <span
+ style="font-family: monospace;">jacl.jar</span>, and <span
+ style="font-family: monospace;">tjc.jar</span></span>. The jar
+files were installed into this directory when Jacl was installed into <span
+ style="font-family: monospace;">C:/install/tjc</span>,
+but the jar files could be located anywhere on the filesystem as long
+as the <span style="font-family: monospace;">CLASSPATH </span>is set
+properly.<br>
+<br>
+In the example above, the tjc install dir is <span
+ style="font-family: monospace;">C:/install/tjc</span>, so the JDK
+config file must be saved in <span style="font-family: monospace;">C:/install/tjc/bin/jdk.cfg.</span>
+<span style="font-family: monospace;"></span>
+</body>
+</html>

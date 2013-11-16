@@ -1,0 +1,251 @@
+<HTML>
+<TITLE>
+The java::try Command
+</TITLE>
+
+<BODY>
+<HR>
+
+<H3>
+The java::try Command
+</H3>
+
+<HR>
+
+<DL>
+
+<H3>
+Usage:
+</H3>
+
+<DD><B>java::try</B> <I>script</I> ?<I>catch exception_pair script</I>? ?<I>finally script</I>?
+
+<P>
+
+
+The <B>java::try</B> command provides access to Java's try-catch-finally
+construct. In Tcl, the <B>catch</B> command is used to manage
+exceptional runtime conditions. Unfortunatly, the <B>catch</B> command
+is not able to deal with multiple error conditions without complex
+and ugly code. This makes it difficult to use the <B>catch</B> command
+with Java methods because Java methods can raise exceptions of
+multiple types. The <B>java::try</B> command solves this problem by
+providing a way to manage multiple exceptional conditions in Tcl,
+just like Java programmers can do with the try-catch-finally construct.
+
+<P>
+The <I>script</I> argument is evaluated in the interpreter. If a
+Tcl error or a Java exception is raised during the evaluation of
+<I>script</I> then each <I>catch</I> clause is searched to determine
+if a match to the exceptional condition is found. A match is found
+if a Tcl error was generated and the first element of the
+<I>exception_pair</I> list is TclException, or if the error was a Java
+exception and the first element of the <I>exception_pair</I> list is
+a Java class name that exactly matches or is a superclass of the thrown exception.
+If a match for the exceptional condition is found then the <I>script</I>
+argument is executed to handle the exception. After
+each <I>catch</I> clause has been processed the optional <I>finally</I>
+clause will be checked and if given, the <I>script</I> for the finally
+clause will be executed. It is important to note that if a
+<I>finally</I> clause is given, the  <I>script</I> for the finally
+clause will be executed even if the exceptional condition was not caught
+in any of the <I>catch</I> clauses and that after the evaluation the
+original exceptional condition will be raised again. At least one
+<I>catch</I> clause must be given if the optional <I>finally</I>
+clause is not provided.
+</P>
+
+<P>
+The only special case to take note of is <code>TclInterruptedException</code>.
+This exception can't be caught since it is used to indicate that
+interp execution has been interrupted. If a <code>TclInterruptedException</code>
+is raised, none of the catch blocks will be matched, but a
+finally block will still be run before the exception is propagated.
+</P>
+
+</DL>
+
+<DL>
+
+<H3>
+Examples:
+</H3>
+
+<DD>
+
+
+Lets assume we have a Tcl proc called "bad" that raises an
+exceptional condition.
+
+<P>
+
+<code>
+proc bad {} { do something bad }
+</code>
+
+<P>
+
+We could use the <b>catch</b> command around an invocation of <b>bad</b> to protect
+the script from errors.
+
+<P>
+
+<code>
+<pre>
+if {[catch {bad} err]} {
+    puts "error in procedure bad: $err"
+}
+</pre>
+</code>
+
+If we wanted to do the same thing using the <b>java::try</b> command
+we could use the following code.
+
+<code>
+<pre>
+java::try {
+    bad
+} catch {TclException err} {
+    puts "error in procedure bad: $err"
+}
+</pre>
+</code>
+
+<P>
+
+Of course this example does not really demonstrate why the
+<b>java::try</b> command is any better then using <b>catch</b>.
+To see why we need the <b>java::try</b> command we need to look
+at an example where multiple exceptional conditions could be raised.
+
+<P>
+
+Suppose we wanted to call a Tcl command that was implemented with
+a combination of Tcl and Java code. For this example we assume
+a <b>jcombo</b> command already exists in the interpreter. We could
+then use the <b>java::try</b> command to manage exceptional conditions
+that could be raised while processing the <b>jcombo</b> command.
+
+<P>
+
+<code>
+<pre>
+java::try {
+    jcombo
+} catch {TclException e} {
+    puts "a Tcl error occurred"
+} catch {IOException e} {
+    puts "a Java IOException occurred"
+} catch {NumberFormatException e} {
+    puts "a Java NumberFormatException occurred"
+}
+</pre>
+</code>
+
+<P>
+
+It is possible to use the <b>catch</b> command to catch both Tcl and Java
+errors, but the code would be very complex and would not be as easy
+to understand as this simple example.
+
+<P>
+
+An experienced user might notice that the name of the
+exception type in the above example is not fully qualified.
+For instance, the fully qualified name of <b>IOException</b> is
+<b>java.io.IOException</b>. The <b>java::try</b> command will
+accept either form of the exception type name. The following
+two examples are equivalent.
+
+<P>
+
+<code>
+<pre>
+java::try {
+    #some code
+} catch {java.io.IOException e} {
+}
+
+java::try {
+    #some code
+} catch {IOException e} {
+}
+</pre>
+</code>
+
+<P>
+
+
+Here is an example of using <b>java::try</b> with a <I>finally</I> clause.
+The finally script will be evaluated once the main script has been evaluated
+and all of the exception handlers have been checked.
+
+<P>
+
+<code>
+<pre>
+java::try {
+    #some code
+} catch {TclException e} {
+    #handle Tcl error
+} finally {
+    #do local cleanup
+}
+</pre>
+</code>
+
+<P>
+
+The finally clause can also be used without a catch clause.
+
+<P>
+
+<code>
+<pre>
+java::try {
+    #some code
+} finally {
+    #do local cleanup
+}
+</pre>
+</code>
+
+<P>
+
+
+One important thing to note about the <b>java::try</b> command
+is that as long as the finally script does not raise an exceptional
+condition, the value returned by the command will be the return value
+of the main <I>script</I> or a catch <I>script</I>. This example
+demonstrates the behavior.
+
+<P>
+
+<code>
+<pre>
+java::try {
+    set i 1
+} finally {
+    set j 2
+}
+</pre>
+</code>
+
+<P>
+
+The value returned by the <b>java::try</b> command in this example
+will be 1 not 2. If an exceptional condition is raised inside the
+finally script, it will be propagated normally.
+
+<P>
+
+</DL>
+
+<PRE>
+<A HREF="../license.html">Copyright</A> &#169; 1997-1998 Sun Microsystems, Inc.
+</PRE>
+
+
+</BODY>
+</HTML>
+

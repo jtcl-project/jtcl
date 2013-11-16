@@ -1,0 +1,75 @@
+<HTML>
+<TITLE>
+The java::cast Command
+</TITLE>
+
+<BODY>
+<HR>
+
+<H3>
+The java::cast Command
+</H3>
+
+<HR>
+
+<DL>
+
+<H3>
+Usage:
+</H3>
+
+<DD><B>java::cast</b> <I>signature</I> <I>javaObj</I>
+
+<P>
+
+The <B>java::cast</B> command converts a Java object from one type
+to another. The <I>signature</I> argument provides the name of the
+Java class that the <i>javaObj</i> will be cast to.
+The <i>javaObj</i> argument must be a valid Java object handle and the
+<I>signature</I> argument must specify an accessible Java class that the <i>javaObj</i>
+argument can be assigned to. Casting is done in a type safe way as defined
+by the Java Language Specification. If a cast would violate the rules defined
+in the Java Language Specification, an error will be raised. Casting also
+works on java array objects. Array objects can be cast to an array of
+a parent class type or to the generic type <b>Object</b>.
+
+<P>
+
+</DL>
+
+<DL>
+
+<H3>
+Examples:
+</H3>
+
+<DD>
+
+An instance of the Java class <B>java.lang.String</b> can be allocated
+and cast into an instance of the class <b>java.lang.Object</b>
+with the following code.
+
+<code>
+<pre>
+# Get an instance of a String object.
+set string [java::new String "Hi there"]
+
+# Cast the String to an Object reference
+set object [java::cast Object $string]
+
+# Cast the Object reference back up to a String reference
+set string2 [java::cast String $object]
+</pre>
+</code>
+
+<P>
+
+</DL>
+
+<PRE>
+<A HREF="../license.html">Copyright</A> &#169; 1997-1998 Sun Microsystems, Inc.
+</PRE>
+
+
+</BODY>
+</HTML>

@@ -1,0 +1,130 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML><HEAD><TITLE>Man page of local</TITLE>
+</HEAD><BODY>
+<H1>local</H1>
+Section: [incr&nbsp;Tcl] (n)<BR>Updated: <BR><A HREF="#index">Index</A>
+<A HREF="index.html">Return to Main Contents</A><HR>
+
+
+<BR>
+
+
+
+<PRE>
+<BR>
+<HR></PRE>
+
+
+
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+local - create an object local to a procedure
+<A NAME="lbAC">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+<B>itcl::local </B><I>className objName</I> ?<I>arg arg ...</I>?
+
+<PRE>
+<BR>
+<HR>
+
+</PRE>
+
+<BR>
+
+
+
+<P>
+<A NAME="lbAD">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<P>
+
+The <B>local</B> command creates an <B>[incr&nbsp;Tcl]</B> object that
+is local to the current call frame.  When the call frame goes away,
+the object is automatically deleted.  This command is useful for
+creating objects that are local to a procedure.
+<P>
+
+As a side effect, this command creates a variable named
+&quot;itcl-local-<I>xxx</I>&quot;, where <I>xxx</I> is the name of
+the object that is created.  This variable detects when the
+call frame is destroyed and automatically deletes the
+associated object.
+<P>
+<A NAME="lbAE">&nbsp;</A>
+<H2>EXAMPLE</H2>
+
+In the following example, a simple &quot;counter&quot; object is used
+within the procedure &quot;test&quot;.  The counter is created as a
+local object, so it is automatically deleted each time the
+procedure exits.  The <B>puts</B> statements included in the
+constructor/destructor show the object coming and going
+as the procedure is called.
+
+<DL COMPACT><DT><DD>
+<PRE>
+
+itcl::class counter {
+    private variable count 0
+    constructor {} {
+        puts &quot;created: $this&quot;
+    }
+    destructor {
+        puts &quot;deleted: $this&quot;
+    }
+
+    method bump {{by 1}} {
+        incr count $by
+    }
+    method get {} {
+        return $count
+    }
+}
+
+proc test {val} {
+    local counter x
+    for {set i 0} {$i &lt; $val} {incr i} {
+        x bump
+    }
+    return [x get]
+}
+
+set result [test 5]
+puts &quot;test: $result&quot;
+
+set result [test 10]
+puts &quot;test: $result&quot;
+
+puts &quot;objects: [itcl::find objects *]&quot;
+
+</PRE>
+
+</DL>
+
+
+<P>
+<A NAME="lbAF">&nbsp;</A>
+<H2>KEYWORDS</H2>
+
+class, object, procedure
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAD">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAE">EXAMPLE</A><DD>
+<DT><A HREF="#lbAF">KEYWORDS</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="index.html">man2html</A>,
+using the manual pages.<BR>
+Time: 20:52:35 GMT, December 21, 2006
+</BODY>
+</HTML>

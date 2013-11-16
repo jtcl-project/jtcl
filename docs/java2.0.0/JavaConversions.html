@@ -1,0 +1,55 @@
+<HTML>
+<TITLE>
+Java Conversions
+</TITLE>
+
+<BODY>
+<HR>
+<H3>
+Java Conversions
+</H3>
+
+<HR>
+
+
+<DL>
+
+<H3>
+About:
+</H3>
+
+<DD>
+
+Any command that returns a Java object or primitive Java type will
+automatically convert the object or primitive type to a corresponding
+Tcl value. This conversion can be skipped by using the <B>-noconvert</B>
+option. This applies to the <b>java::call</b>, <b>java::field</b>,
+<b>java::prop</b>, <b>javaObj</b>, and <b>javaArrayObj</b> commands. The
+<b>java::new</b> command does not do any conversion because it
+makes no sense to convert a Java object that was just allocated.
+If the returned value is a primitive Java type it will be converted
+to an integer or floating-point Tcl value. If the result is a <b>String</b> object,
+then the Java string object is converted into a Tcl string. For all other
+object types, a Java object handle is created and returned. If the
+<B>-noconvert</B> option is specified a Java object handle is always returned.
+
+
+<P>
+
+Tcl values are also be converted to Java objects and primitive Java types
+when they are given as arguments to Java commands. The default conversion
+for all Tcl values is a <b>java.lang.String</b> object. To override this default a
+full signature must be provided for Java method invocations.
+
+</DL>
+
+<DL>
+
+<PRE>
+<A HREF="../license.html">Copyright</A> &#169; 1997-1998 Sun Microsystems, Inc.
+</PRE>
+
+
+</BODY>
+</HTML>
+

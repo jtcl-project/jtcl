@@ -1,0 +1,34 @@
+<HTML><HEAD><TITLE>Built-In Commands - rename manual page</TITLE></HEAD><BODY>
+<H3><A NAME="M2">NAME</A></H3>
+rename - Rename or delete a command
+<H3><A NAME="M3">SYNOPSIS</A></H3>
+<B>rename </B><I>oldName newName</I><BR>
+<H3><A NAME="M4">DESCRIPTION</A></H3>
+Rename the command that used to be called <I>oldName</I> so that it
+is now called <I>newName</I>.
+If <I>newName</I> is an empty string then <I>oldName</I> is deleted.
+<I>oldName</I> and <I>newName</I> may include namespace qualifiers
+(names of containing namespaces).
+If a command is renamed into a different namespace,
+future invocations of it will execute in the new namespace.
+The <B>rename</B> command returns an empty string as result.
+<H3><A NAME="M5">EXAMPLE</A></H3>
+The <B>rename</B> command can be used to wrap the standard Tcl commands
+with your own monitoring machinery.  For example, you might wish to
+count how often the <B><A HREF="../TclCmd/source.htm">source</A></B> command is called:
+<PRE><B>rename</B> ::source ::theRealSource
+set sourceCount 0
+proc ::source args {
+    global sourceCount
+    puts &quot;called source for the [incr sourceCount]'th time&quot;
+    uplevel 1 ::theRealSource $args
+}</PRE>
+<H3><A NAME="M6">SEE ALSO</A></H3>
+<B><A HREF="../TclCmd/namespace.htm">namespace</A></B>, <B><A HREF="../TclCmd/proc.htm">proc</A></B>
+<H3><A NAME="M7">KEYWORDS</A></H3>
+<A href="../Keywords/C.htm#command">command</A>, <A href="../Keywords/D.htm#delete">delete</A>, <A href="../Keywords/N.htm#namespace">namespace</A>, <A href="../Keywords/R.htm#rename">rename</A>
+<HR><PRE>
+<A HREF="../copyright.htm">Copyright</A> &#169; 1993 The Regents of the University of California.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1994-1997 Sun Microsystems, Inc.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1995-1997 Roger E. Critchlow Jr.</PRE>
+</BODY></HTML>

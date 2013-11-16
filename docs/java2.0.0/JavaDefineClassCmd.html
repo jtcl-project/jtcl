@@ -1,0 +1,93 @@
+<HTML>
+<TITLE>
+The java::defineclass Command
+</TITLE>
+
+<BODY>
+<HR>
+
+<H3>
+The java::defineclass Command
+</H3>
+
+<HR>
+
+<DL>
+
+<H3>
+Usage:
+</H3>
+
+<DD><B>java::defineclass</B> <I>classData</I>
+
+<P>
+
+The <B>java::defineclass</B> command is used to convert a string of bytes 
+into a Java Class object. The <I>classData</I> argument is a string of
+bytes that compose a class. For example, the <I>classData</I> 
+string could be from reading a Java class file. The <I>classData</I>
+argument could also be a reflected instance of a byte[] Java object.
+The <I>ClassData</I> argument
+is passed to the TclClassLoader, where the TclClassLoader attempts to
+construct a Java Class object from the bytes.  If <I>classData</I> 
+does not represent a valid class, <B>java::defineclass</B> returns a
+null object, otherwise it will return a handle to the Java Class
+object.  A class is not valid if; the TclClassLoader cannot decifer a
+class from <I>classData</I>, the class has already been loaded into the
+VM, or if the class is in the reserved java package.
+
+<P>
+
+The TclClassLoader maintains a cache of the Java Class objects loaded
+by the <B>java::defineclass</B> routine.  The name of the class, which
+is stored within the class bytecodes, is extracted and is used to
+reference the cached Java Class object.  If the class name is used in
+future calls (e.g. <B>java::new</B>) the class defined by
+<I>classData</I> is used.
+
+</DL>
+
+<DL>
+
+<H3>
+Example:
+</H3>
+
+<DD>
+
+In this example, a Java class is read from the filesystem
+and then defined using the <b>java::defineclass</b> command.
+
+<code>
+<pre>
+set fd [open Foo.class r]
+fconfigure $file -translation binary
+set data [read $fd]
+close $fd
+
+# This returns a java.lang.Class object.
+set class [java::defineclass $data]
+
+# Get an instance of the object by invoking the
+# java.lang.Class.newInstance() method.
+set object [$class newInstance]
+
+# The class is now loaded into the VM, so we
+# can also create instances of it by name
+set object [java::new Foo]
+
+</pre>
+</code>
+
+<P>
+
+</DL>
+
+<PRE>
+<A HREF="../license.html">Copyright</A> &#169; 1997-1998 Sun Microsystems, Inc.
+</PRE>
+
+
+</BODY>
+</HTML>
+

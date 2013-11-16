@@ -1,0 +1,77 @@
+<HTML>
+<TITLE>
+The java::call Command
+</TITLE>
+
+<BODY>
+<HR>
+
+<H3>
+The java::call Command
+</H3>
+
+<HR>
+
+
+<DL>
+
+<H3>
+Usage:
+</H3>
+<DD><B>java::call</B> ?<B>-noconvert</B>? <I>class signature</I> ?<I>arg arg ...</I>?
+
+<P>
+
+The <B>java::call</B> command is used to invoke accessible static methods
+on Java classes from Tcl code. The <I>class</I> argument specifies the
+name of the declaring class of the method to invoke. The <I>signature</I>
+argument specifies which class method to invoke. Signatures are covered
+in the <A HREF="JavaSignatures.html">Signatures</A> section.
+
+<P>
+
+Additional parameters to the <B>java::call</B> command are converted
+to Java objects or primitive Java types before being passed to the
+Java method. The <A HREF="JavaConversions.html">Conversions</a> section
+describes the result and possible error conditions of the
+<B>java::call</B> command, including the effect of the optional
+<B>-noconvert</B> flag.
+
+</DL>
+
+<DL>
+
+<H3>
+Example:
+</H3>
+
+<DD>
+
+A Java method can be invoked directly from Tcl code using the
+<B>java::call</B> command. In this example, the static method
+<B>toBinaryString(int)</B> in the class <b>java.lang.Integer</b>
+is invoked from Tcl.
+
+<code>
+<pre>
+# Call the method java.lang.Integer.toBinaryString(int)
+set string [java::call Integer toBinaryString 5]
+
+# This will print "result is 101", the binary representation of 5
+puts "result is $string"
+
+</pre>
+</code>
+
+<P>
+
+</DL>
+
+<PRE>
+<A HREF="../license.html">Copyright</A> &#169; 1997-1998 Sun Microsystems, Inc.
+</PRE>
+
+
+</BODY>
+</HTML>
+

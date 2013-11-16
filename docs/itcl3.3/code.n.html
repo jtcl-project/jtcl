@@ -1,0 +1,197 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML><HEAD><TITLE>Man page of code</TITLE>
+</HEAD><BODY>
+<H1>code</H1>
+Section: [incr&nbsp;Tcl] (n)<BR>Updated: 3.0<BR><A HREF="#index">Index</A>
+<A HREF="index.html">Return to Main Contents</A><HR>
+
+
+<BR>
+
+
+
+<PRE>
+<BR>
+<HR></PRE>
+
+
+
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+code - capture the namespace context for a code fragment
+<A NAME="lbAC">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+<B>itcl::code </B>?<B>-namespace </B><I>name</I>? <I>command </I>?<I>arg arg ...</I>?
+
+<PRE>
+<BR>
+<HR>
+
+</PRE>
+
+<BR>
+
+
+
+<P>
+<A NAME="lbAD">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<P>
+
+Creates a scoped value for the specified <I>command</I> and its
+associated <I>arg</I> arguments.  A scoped value is a list with three
+elements:  the &quot;@scope&quot; keyword, a namespace context,
+and a value string.  For example, the command
+
+<DL COMPACT><DT><DD>
+<PRE>
+
+namespace foo {
+    code puts &quot;Hello World!&quot;
+}
+
+</PRE>
+
+</DL>
+
+
+produces the scoped value:
+
+<DL COMPACT><DT><DD>
+<PRE>
+
+@scope ::foo {puts {Hello World!}}
+
+</PRE>
+
+</DL>
+
+
+Note that the <B>code</B> command captures the current namespace
+context.  If the <B>-namespace</B> flag is specified, then the
+current context is ignored, and the <I>name</I> string is used
+as the namespace context.
+<P>
+
+Extensions like Tk execute ordinary code fragments in the global
+namespace.  A scoped value captures a code fragment together with
+its namespace context in a way that allows it to be executed
+properly later.  It is needed, for example, to wrap up code fragments
+when a Tk widget is used within a namespace:
+
+<DL COMPACT><DT><DD>
+<PRE>
+
+namespace foo {
+    private proc report {mesg} {
+        puts &quot;click: $mesg&quot;
+    }
+
+    button .b1 -text &quot;Push Me&quot;         -command [code report &quot;Hello World!&quot;]
+    pack .b1
+}
+
+</PRE>
+
+</DL>
+
+
+The code fragment associated with button .b1 only makes
+sense in the context of namespace &quot;foo&quot;.  Furthermore, the
+&quot;report&quot; procedure is private, and can only be accessed within
+that namespace.  The <B>code</B> command wraps up the code
+fragment in a way that allows it to be executed properly
+when the button is pressed.
+<P>
+
+Also, note that the <B>code</B> command preserves the integrity
+of arguments on the command line.  This makes it a natural replacement
+for the <B>list</B> command, which is often used to format Tcl code
+fragments.  In other words, instead of using the <B>list</B> command
+like this:
+
+<DL COMPACT><DT><DD>
+<PRE>
+
+after 1000 [list puts &quot;Hello $name!&quot;]
+
+</PRE>
+
+</DL>
+
+
+use the <B>code</B> command like this:
+
+<DL COMPACT><DT><DD>
+<PRE>
+
+after 1000 [code puts &quot;Hello $name!&quot;]
+
+</PRE>
+
+</DL>
+
+
+This not only formats the command correctly, but also captures
+its namespace context.
+<P>
+
+Scoped commands can be invoked like ordinary code fragments, with
+or without the <B>eval</B> command.  For example, the following
+statements work properly:
+
+<DL COMPACT><DT><DD>
+<PRE>
+
+set cmd {@scope ::foo .b1}
+$cmd configure -background red
+
+set opts {-bg blue -fg white}
+eval $cmd configure $opts
+
+</PRE>
+
+</DL>
+
+
+Note that scoped commands by-pass the usual protection mechanisms;
+the command:
+
+<DL COMPACT><DT><DD>
+<PRE>
+
+@scope ::foo {report {Hello World!}}
+
+</PRE>
+
+</DL>
+
+
+can be used to access the &quot;foo::report&quot; proc from any namespace
+context, even though it is private.
+<P>
+<A NAME="lbAE">&nbsp;</A>
+<H2>KEYWORDS</H2>
+
+scope, callback, namespace, public, protected, private
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAD">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAE">KEYWORDS</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="index.html">man2html</A>,
+using the manual pages.<BR>
+Time: 20:52:35 GMT, December 21, 2006
+</BODY>
+</HTML>

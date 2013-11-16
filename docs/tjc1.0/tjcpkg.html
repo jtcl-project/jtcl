@@ -1,0 +1,255 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+</head>
+<body>
+<div style="text-align: center;"><big><big><span
+ style="font-weight: bold;">TJC Package Manual<br>
+</span></big></big><br>
+<div style="text-align: left;">Usage:<br>
+<div style="margin-left: 40px;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;">package require TJC<br>
+<br>
+TJC::package package</span><br>
+</span><span style="font-family: monospace;">TJC::command procname
+classname<br>
+</span><span style="font-family: monospace;"><span
+ style="font-family: monospace;">TJC::compile cmd</span><br>
+</span><span style="font-family: monospace;"><br>
+</span></div>
+TJC is implemented as part of Jacl and includes runtime
+support for TJC compiled procedures. The TJC package is loaded into
+Jacl via the following Tcl command:<br>
+<br>
+<span style="font-family: monospace;">% package require TJC</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">1.0</span><br
+ style="font-family: monospace;">
+<br>
+The <span style="font-family: monospace;">TJC</span> package defines
+the <span style="font-family: monospace;">TJC</span> namespace and
+adds three Tcl commands to the<span style="font-family: monospace;"> TJC</span>
+namespace. The <span style="font-family: monospace;">TJC::package</span>
+command is used to load a TJC compiled package into the Jacl
+interpreter. Loading a TJC compiled package will source each of the Tcl
+scripts included in the package and define each of the compiled Tcl
+commands included in the package. In the following example, a TJC
+compiled package named <span style="font-family: monospace;">foo.bar.baz</span>
+is loaded.<br>
+<br>
+<span style="font-family: monospace;">% TJC::package foo.bar.baz</span><span
+ style="font-family: monospace;"></span><br>
+<br>
+A TJC package is initialized by loading a class named <span
+ style="font-family: monospace;">TJCExtension</span> from the named
+package. This class implements the standard Extension API for Jacl
+extensions, so one could also load a TJC package via the <span
+ style="font-family: monospace;">java::load</span> command as follows:<br>
+<br>
+<span style="font-family: monospace;">% java::load
+foo.bar.baz.TJCExtension<br>
+<br>
+</span>The benefit of the <span style="font-family: monospace;">TJC::package</span>
+command is that it is simpler and it can be used even when the <span
+ style="font-family: monospace;">java</span> package has not been
+loaded into Jacl.<br>
+<br>
+The <span style="font-family: monospace;">TJC::command</span> Tcl
+command is normally used only by the internal implementation of TJC.
+End users will not need to invoke the this command. The command is used
+to associate a Tcl command name with a compiled Java class file. When a
+Tcl script is parsed, it is scanned for proc declaration that can be
+compiled. The code for compiled proc declarations is then replaced with
+a call to <span style="font-family: monospace;">TJC::command</span>.<br>
+<br>
+Original Tcl Script:<br>
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; set i 0</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; proc hello {}
+{ return "Hello World" }</span><br style="font-family: monospace;">
+<br>
+Modified Tcl Script:<br>
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; set i 0</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; TJC::command
+hello foo.bar.baz.HelloCmd</span><br style="font-family: monospace;">
+<br>
+At runtime, a <span style="font-family: monospace;">[TJC::package
+foo.bar.baz]</span> command would cause the modified Tcl script to be
+evaluated. The modified Tcl script would define the <span
+ style="font-family: monospace;">hello</span> command using the
+compiled implementation in the Java class named <span
+ style="font-family: monospace;">HelloCmd</span>.<big><big><br>
+<br>
+</big></big>
+<h3><a name="runtime"></a>Compiling Tcl procs at runtime<br>
+</h3>
+Support for compiling Tcl procedures at runtime is included as part of
+the TJC package. Using <span style="font-family: monospace;">TJC::compile</span>,
+one can compile a Tcl proc into Java source code and then into Java
+byte code. The Java byte code implementation of the command will then
+be loaded into the interpreter. Note that this runtime compilation is
+not started by default and there is no means to automatically compile
+all Tcl procs that are defined in the interpreter. The user needs to
+explicitly indicate which procs should be compiled after the procs have
+been defined. The most simple usage is the following.<br>
+<br>
+<span style="font-family: monospace;">package require TJC</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">proc hello {} {</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; return "Hello
+World"</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">}</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">TJC::compile hello</span><br
+ style="font-family: monospace;">
+<br>
+The above invocation will start a second thread to do the compilation.
+When the command has been compiled, the Tcl proc hello will be replaced
+with a compiled version that performs the same operations as the Tcl
+proc. Most users will only ever need to use the <span
+ style="font-family: monospace;">TJC::compile</span> command as shown
+above.<br>
+<br>
+In the example above, the user has no way of knowing when the compile
+job is finished. If the user needs to be informed when the compile job
+is done, the <span style="font-family: monospace;">TJC::compile</span>
+command supports notification via a callback or via a variable. The
+following shows how a callback can be invoked when a compile job is
+done.<br>
+<br>
+<span style="font-family: monospace;">package require TJC</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">proc hello {} {</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; return "Hello
+World"</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">}</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">proc my_hello_ready { status cmd
+msg } {</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; if {$status ==
+"OK"} {</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+puts "command \"$cmd\" was compiled"</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; } else {</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+puts "command \"$cmd\" could not be compiled: $msg"</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; }</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">}</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">TJC::compile hello -readycmd
+my_hello_ready</span><br style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">(after waiting a moment, the
+following should be printed)</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">command "::hello" was compiled</span><br
+ style="font-family: monospace;">
+<br>
+In the example above, the callback is invoked with a status string that
+can be "OK" or "ERROR". The cmd argument is the fully qualified name of
+the compiled command. The msg argument is a string indicating a
+compiler error if status is not "OK".<br>
+<br>
+In following example, notification is implemented with a variable. The
+example sets a variable when the command has been compiled and
+installed. The value that the ready variable is set to is the same as
+the arguments to the <span style="font-family: monospace;">-readycmd</span>
+command.<br>
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">package require TJC</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">proc hello {} {</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; return "Hello
+World"</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">}</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">TJC::compile hello -readyvar
+my_hello_ready<br>
+vwait my_hello_ready<br>
+puts $my_hello_ready</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">(after a moment, the following
+should be printed)<br>
+OK ::hello {}</span><br>
+<br>
+<h3>Compiling Java classes at runtime</h3>
+<span style="font-family: monospace;">TJC::command</span> can also be
+used to compile source code for a Java class into byte code at runtime.
+This functionality makes it easy to add dynamic generation of Java code
+to an application. It can be extremely powerfull when used with the
+java package. The following example shows how a static Java method can
+be compiled and invoked.<br>
+<br>
+<span style="font-family: monospace;">package require TJC<br>
+package require java<br style="font-family: monospace;">
+</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">set jclass mytest.dynamic.Test1</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">set jsrc {</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">package mytest.dynamic;</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">public class Test1 {</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; public static
+String call() {</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+return "CALLED";</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; }</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">}</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">}</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">set jinfo [list $jclass $jsrc]</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">TJC::compile -java $jinfo
+-readyvar my_class_ready</span><br style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">vwait my_class_ready<br>
+puts $my_class_ready</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">
+(after a moment, the following should be printed)<br>
+OK mytest.dynamic.Test1 {}</span><br style="font-family: monospace;">
+<br>
+<span style="font-family: monospace;">(since the class has been loaded,
+its methods can be invoked)</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">java::call <span
+ style="font-family: monospace;">mytest.dynamic.Test1 call</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">CALLED</span><br
+ style="font-family: monospace;">
+<br>
+<br>
+</span>Note that when <span style="font-family: monospace;">-java</span>
+is passed to <span style="font-family: monospace;">TJC::command</span>,
+either a <span style="font-family: monospace;">-readyvar</span> or <span
+ style="font-family: monospace;">-readycmd</span> argument pair must
+also be passed. One or more classes generated from the Java class
+declaration are loaded into the current class loader. Be aware that the
+class loader can only load a given Java class once. Redefining or
+unloading a class
+is not supported. Also note that when a -readycmd or -readyvar
+notification is done with a -java argument, the Java classes that were
+loaded are passed in place of the cmd element.<br>
+<big><br>
+</big></div>
+</div>
+</body>
+</html>

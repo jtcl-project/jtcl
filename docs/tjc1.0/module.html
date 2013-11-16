@@ -1,0 +1,225 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+</head>
+<body>
+<div style="text-align: center;"><big><big><span
+ style="font-weight: bold;">TJC Compiler Manual<br>
+&nbsp;
+Module File<br>
+</span></big></big><big><big><span style="font-weight: bold;"></span></big></big></div>
+<big><big><span style="font-weight: bold;"><br>
+</span></big></big>
+A tjc module file indicates where Tcl<span style="font-weight: bold;"></span>
+source files are located on your system and how they should be compiled.<br>
+<br>
+<span style="font-weight: bold;">EXAMPLE FILE:</span> <span
+ style="font-family: monospace;">rec.tjc<br>
+<br style="font-family: monospace;">
+</span>
+<div style="margin-left: 40px;"><span style="font-family: monospace;">PACKAGE
+com.chairsoft.recliner.controls</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">OPTIONS </span><span
+ style="font-family: monospace;"><span style="font-family: monospace;">+inline-containers
++inline-controls </span></span><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;">+cache-commands</span></span></span><span
+ style="font-family: monospace;"><span style="font-family: monospace;"></span><br>
+</span><span style="font-family: monospace;"></span><span
+ style="font-family: monospace;"><span style="font-family: monospace;"></span><br>
+</span><span style="font-family: monospace;">SOURCE
+</span><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;">C:/tcl_source/</span></span></span><span
+ style="font-family: monospace;">modules/controls/*.tcl<br>
+INIT_SOURCE init.tcl<br style="font-family: monospace;">
+</span><br style="font-family: monospace;">
+<span style="font-family: monospace;"># Include zog.tcl in the jar but
+don't compile it</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">INCLUDE_SOURCE </span><span
+ style="font-family: monospace;"><span style="font-family: monospace;"></span></span><span
+ style="font-family: monospace;"><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;"></span></span></span></span><span
+ style="font-family: monospace;">zog.tcl</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">PROC_OPTIONS {zog_setup}
+-</span><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;">inline-containers</span></span></span><span
+ style="font-family: monospace;"> \<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+-</span><span style="font-family: monospace;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;">inline-controls</span></span><br
+ style="font-family: monospace;">
+</span><span style="font-family: monospace;"><br>
+</span></div>
+A comment line begins with the # character. Both comment lines and
+empty lines are ignored. A line can be continued by adding a \
+character to the end of the line.<br>
+<br>
+The <span style="font-family: monospace;">PACKAGE</span> declaration
+in the above example indicates the name of the Java package that
+compiled Tcl procedures will be placed in. In the above example, a Tcl
+procedure
+named <span style="font-family: monospace;">foo</span> would be
+compiled and saved in a Java file named <span
+ style="font-family: monospace;">com/chairsoft/recliner/controls/FooCmd.java</span>.
+Each module file must contain a
+<span style="font-family: monospace;">PACKAGE</span> declaration.<br>
+<br>
+The <span style="font-family: monospace;">OPTIONS</span> <span
+ style="font-family: monospace;"></span>declaration will define the set
+of options to be applied to all procedures compiled in this module. If
+the user needs to change the options for a specific procedure, one or
+more <span style="font-family: monospace;">PROC_OPTIONS</span>
+declarations can be
+used to add or subtract from the module options. The supported options
+flags are listed below.<br>
+<br>
+The <span style="font-family: monospace;">SOURCE</span> <span
+ style="font-family: monospace;"></span>declaration defines one or more
+paths or path patterns. A <span style="font-family: monospace;">SOURCE</span>
+<span style="font-family: monospace;"></span>declaration must not
+include two different files that have the same filename. A <span
+ style="font-family: monospace;">SOURCE</span> <span
+ style="font-family: monospace;"></span>declaration is required in each
+module config file.<br>
+<br>
+The <span style="font-family: monospace;">INIT_SOURCE</span> <span
+ style="font-family: monospace;"></span>declaration defines a single
+Tcl file that will be sourced when the package is loaded. This init
+file must already appear in the <span style="font-family: monospace;">SOURCE</span>
+<span style="font-family: monospace;"></span>declaration , so just the
+filename and not the whole path need appear in the <span
+ style="font-family: monospace;">INIT_SOURCE</span>
+<span style="font-family: monospace;"></span>declaration. The init file
+for a package must source all other Tcl files included in the package.
+An <span style="font-family: monospace;">INIT_</span><span
+ style="font-family: monospace;">SOURCE</span> <span
+ style="font-family: monospace;"></span>declaration is required in each
+tjc config file.<br>
+<br>
+The <span style="font-family: monospace;">INCLUDE_SOURCE</span> <span
+ style="font-family: monospace;"></span>declaration is like the <span
+ style="font-family: monospace;">SOURCE</span> <span
+ style="font-family: monospace;"></span>declaration except that it
+indicates that the given Tcl file should not be compiled and should be
+included as is. A file in the <span style="font-family: monospace;">INCLUDE_SOURCE</span>
+<span style="font-family: monospace;"></span>declaration must already
+appear in the <span style="font-family: monospace;">SOURCE</span> <span
+ style="font-family: monospace;"></span>declaration, so only the
+filename need appear in the declaration. An <span
+ style="font-family: monospace;">INCLUDE_SOURCE</span> <span
+ style="font-family: monospace;"></span>declaration is optional for a
+tjc config file.<br>
+<br>
+The supported flags for the <span style="font-family: monospace;">OPTIONS</span>
+<span style="font-family: monospace;"></span>and <span
+ style="font-family: monospace;">PROC_OPTIONS</span> declarations are
+as follows:<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">+O</span><br>
+<br>
+The <span style="font-family: monospace;">+O</span> option will enable
+all commonly used optimization options. Most users will set only this
+flag.<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">-compile</span><br>
+<br>
+The <span style="font-family: monospace;">-compile</span> option will
+disable all compilation features. The generated Java class file will
+work exactly the same as a Tcl command defined via proc. This option is
+intended only for testing purposes and should not be used.<br>
+<span style="font-family: monospace; font-weight: bold;"></span><br>
+<span style="font-family: monospace; font-weight: bold;"></span><span
+ style="font-family: monospace; font-weight: bold;">+inline-containers</span><br>
+<br>
+The <span style="font-family: monospace;">+inline-containers</span>
+option will enable inlining for Tcl's catch, expr, for, foreach, if,
+switch, and while commands. These commands are called containers
+because they contain other Tcl commands to be executed. A significant
+performance improvement is achieved by inlining these container
+commands
+and the commands contained within. Tcl's for, foreach, and while loop
+commands are converted to Java for loops. The if Tcl command is
+converted directly to a Java if statement. Math operations are
+optimized in expr, for, if, and while commands. Be extra careful to
+<a href="optcode.html">enclose each math expression in braces</a>, or
+container commands cannot be compiled. Note that Tcl's eval command and
+others like it
+cannot be inlined. This option is enabled by the <span
+ style="font-family: monospace;">+O </span>option.<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">+inline-controls</span><br>
+<br>
+The <span style="font-family: monospace;">+inline-controls</span>
+option will enable inlining for Tcl's break, continue, and return
+commands. The break and continue commands can only be inlined inside
+loops. The return command can be inlined unless it is in a catch block.
+This option is enabled by the <span style="font-family: monospace;">+O
+</span>option.<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">+cache-commands</span><br>
+<br>
+The <span style="font-family: monospace;">+cache-commands</span>
+option
+will enable caching of Tcl command references inside the body of a TJC
+compiled proc. In interpreted operation, Jacl will lookup the
+implementation
+of a Tcl command by name each time the command is invoked. A TJC
+compiled proc can avoid looking up the Tcl command each time by saving
+a reference to the command implementation after the first invocation.
+The cache is refreshed whenever a command is deleted or renamed. This
+option will cache references to built-in Tcl commands and user defined
+Tcl commands. This option is enabled by the <span
+ style="font-family: monospace;">+O </span>option.<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">-constant-increment</span><br>
+<br>
+The <span style="font-family: monospace;">-constant-increment</span>
+option will enable an optimization that avoids incrementing and
+decrementing the ref count for shared constant values during Tcl method
+invocations. This option generates smaller code that executes more
+quickly. This option is enabled by the <span
+ style="font-family: monospace;">+O </span>option.<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">+cache-variables</span><br>
+<br>
+The <span style="font-family: monospace;">+cache-variables</span>
+option
+will enable caching of local scalar variables inside the body of a TJC
+compiled proc. A TJC compiled proc will execute more quickly when this
+option is enabled because variables are resolved only once instead of
+each time the variable is acccessed. Currently, only scalar variables
+are cached, array variables are resolved as usual. This option is
+enabled by the <span style="font-family: monospace;">+O </span>option.<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">+inline-commands</span><br>
+<br>
+The <span style="font-family: monospace;">+inline-commands</span>
+option
+will enable generation of optimized inline code for built-in Tcl
+commands. TJC implements inlining of Tcl's <span
+ style="font-family: monospace;">append, global, incr, lappend, lindex,
+list, llength,</span> and
+<span style="font-family: monospace;">set</span> commands. This option
+is enabled by the <span style="font-family: monospace;">+O </span>option.<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">+omit-results</span><br>
+<br>
+The <span style="font-family: monospace;">+omit-results</span>
+option will omit code that resets or sets the interp result
+when the result of a command is not used by another command.
+Inlined Tcl commands will emit optimized code for the most common
+use cases when this option is enabled.
+This option is enabled by the <span style="font-family: monospace;">+O </span>option.<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">+inline-expr</span><br>
+<br>
+The <span style="font-family: monospace;">+inline-expr</span>
+option will emit inlined code for <code>expr</code> commands
+and expr arguments to commands like <code>if</code>, <code>while</code>,
+and <code>for</code>.
+This option is enabled by the <span style="font-family: monospace;">+O </span>option.<br>
+<br>
+</body>
+</html>

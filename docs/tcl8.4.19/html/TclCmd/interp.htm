@@ -1,0 +1,622 @@
+<HTML><HEAD><TITLE>Tcl Built-In Commands - interp manual page</TITLE></HEAD><BODY>
+<DL>
+<DD><A HREF="interp.htm#M2" NAME="L638">NAME</A>
+<DL><DD>interp - Create and manipulate Tcl interpreters</DL>
+<DD><A HREF="interp.htm#M3" NAME="L639">SYNOPSIS</A>
+<DL>
+<DD><B>interp </B><I>option </I>?<I>arg arg ...</I>?
+</DL>
+<DD><A HREF="interp.htm#M4" NAME="L640">DESCRIPTION</A>
+<DD><A HREF="interp.htm#M5" NAME="L641">THE INTERP COMMAND</A>
+<DL>
+<DD><A HREF="interp.htm#M6" NAME="L642"><B>interp</B> <B>alias</B> <I>srcPath</I> <I>srcToken</I></A>
+<DD><A HREF="interp.htm#M7" NAME="L643"><B>interp</B> <B>alias</B> <I>srcPath</I> <I>srcToken</I> <B>{}</B></A>
+<DD><A HREF="interp.htm#M8" NAME="L644"><B>interp</B> <B>alias</B> <I>srcPath</I> <I>srcCmd</I> <I>targetPath</I> <I>targetCmd </I>?<I>arg arg ...</I>?</A>
+<DD><A HREF="interp.htm#M9" NAME="L645"><B>interp</B> <B>aliases </B>?<I>path</I>?</A>
+<DD><A HREF="interp.htm#M10" NAME="L646"><B>interp</B> <B>create </B>?<B>-safe</B>? ?<B>-&nbsp;-</B>? ?<I>path</I>?</A>
+<DD><A HREF="interp.htm#M11" NAME="L647"><B>interp</B> <B>delete </B>?<I>path ...?</I></A>
+<DD><A HREF="interp.htm#M12" NAME="L648"><B>interp</B> <B>eval</B> <I>path arg </I>?<I>arg ...</I>?</A>
+<DD><A HREF="interp.htm#M13" NAME="L649"><B>interp exists </B><I>path</I></A>
+<DD><A HREF="interp.htm#M14" NAME="L650"><B>interp expose </B><I>path</I> <I>hiddenName</I> ?<I>exposedCmdName</I>?</A>
+<DD><A HREF="interp.htm#M15" NAME="L651"><B>interp</B> <B>hide</B> <I>path</I> <I>exposedCmdName</I> ?<I>hiddenCmdName</I>?</A>
+<DD><A HREF="interp.htm#M16" NAME="L652"><B>interp</B> <B>hidden</B> <I>path</I></A>
+<DD><A HREF="interp.htm#M17" NAME="L653"><B>interp</B> <B>invokehidden</B> <I>path</I> ?<B>-global</B>? <I>hiddenCmdName</I> ?<I>arg ...</I>?</A>
+<DD><A HREF="interp.htm#M18" NAME="L654"><B>interp issafe</B> ?<I>path</I>?</A>
+<DD><A HREF="interp.htm#M19" NAME="L655"><B>interp marktrusted</B> <I>path</I></A>
+<DD><A HREF="interp.htm#M20" NAME="L656"><B>interp</B> <B>recursionlimit</B> <I>path</I> ?<I>newlimit</I>?</A>
+<DD><A HREF="interp.htm#M21" NAME="L657"><B>interp</B> <B>share</B> <I>srcPath channelId destPath</I></A>
+<DD><A HREF="interp.htm#M22" NAME="L658"><B>interp</B> <B>slaves</B> ?<I>path</I>?</A>
+<DD><A HREF="interp.htm#M23" NAME="L659"><B>interp</B> <B>target</B> <I>path alias</I></A>
+<DD><A HREF="interp.htm#M24" NAME="L660"><B>interp</B> <B>transfer</B> <I>srcPath channelId destPath</I></A>
+</DL>
+<DD><A HREF="interp.htm#M25" NAME="L661">SLAVE COMMAND</A>
+<DL>
+<DD><A HREF="interp.htm#M26" NAME="L662"><I>slave </I><B>aliases</B></A>
+<DD><A HREF="interp.htm#M27" NAME="L663"><I>slave </I><B>alias </B><I>srcToken</I></A>
+<DD><A HREF="interp.htm#M28" NAME="L664"><I>slave </I><B>alias </B><I>srcToken </I><B>{}</B></A>
+<DD><A HREF="interp.htm#M29" NAME="L665"><I>slave </I><B>alias </B><I>srcCmd targetCmd </I>?<I>arg ..</I>?</A>
+<DD><A HREF="interp.htm#M30" NAME="L666"><I>slave </I><B>eval </B><I>arg </I>?<I>arg ..</I>?</A>
+<DD><A HREF="interp.htm#M31" NAME="L667"><I>slave </I><B>expose </B><I>hiddenName </I>?<I>exposedCmdName</I>?</A>
+<DD><A HREF="interp.htm#M32" NAME="L668"><I>slave </I><B>hide </B><I>exposedCmdName</I> ?<I>hiddenCmdName</I>?</A>
+<DD><A HREF="interp.htm#M33" NAME="L669"><I>slave </I><B>hidden</B></A>
+<DD><A HREF="interp.htm#M34" NAME="L670"><I>slave </I><B>invokehidden</B> ?<B>-global</B> <I>hiddenName </I>?<I>arg ..</I>?</A>
+<DD><A HREF="interp.htm#M35" NAME="L671"><I>slave </I><B>issafe</B></A>
+<DD><A HREF="interp.htm#M36" NAME="L672"><I>slave </I><B>marktrusted</B></A>
+<DD><A HREF="interp.htm#M37" NAME="L673"><I>slave</I> <B>recursionlimit</B> ?<I>newlimit</I>?</A>
+</DL>
+<DD><A HREF="interp.htm#M38" NAME="L674">SAFE INTERPRETERS</A>
+<DD><A HREF="interp.htm#M39" NAME="L675">ALIAS INVOCATION</A>
+<DD><A HREF="interp.htm#M40" NAME="L676">HIDDEN COMMANDS</A>
+<DD><A HREF="interp.htm#M41" NAME="L677">CREDITS</A>
+<DD><A HREF="interp.htm#M42" NAME="L678">EXAMPLES</A>
+<DD><A HREF="interp.htm#M43" NAME="L679">SEE ALSO</A>
+<DD><A HREF="interp.htm#M44" NAME="L680">KEYWORDS</A>
+</DL><HR>
+<H3><A NAME="M2">NAME</A></H3>
+interp - Create and manipulate Tcl interpreters
+<H3><A NAME="M3">SYNOPSIS</A></H3>
+<B>interp </B><I>option </I>?<I>arg arg ...</I>?<BR>
+<H3><A NAME="M4">DESCRIPTION</A></H3>
+This command makes it possible to create one or more new Tcl 
+interpreters that co-exist with the creating interpreter in the
+same application.  The creating interpreter is called the <I>master</I>
+and the new interpreter is called a <I>slave</I>. 
+A master can create any number of slaves, and each slave can
+itself create additional slaves for which it is master, resulting
+in a hierarchy of interpreters.
+<P>
+Each interpreter is independent from the others: it has its own name
+space for commands, procedures, and global variables.
+A master interpreter may create connections between its slaves and
+itself using a mechanism called an <I>alias</I>.  An <I>alias</I> is
+a command in a slave interpreter which, when invoked, causes a
+command to be invoked in its master interpreter or in another slave
+interpreter.  The only other connections between interpreters are
+through environment variables (the <B>env</B> variable), which are
+normally shared among all interpreters in the application. Note that the
+name space for files (such as the names returned by the <B><A HREF="../TclCmd/open.htm">open</A></B> command)
+is no longer shared between interpreters. Explicit commands are provided to
+share files and to transfer references to open files from one interpreter
+to another.
+<P>
+The <B>interp</B> command also provides support for <I>safe</I>
+interpreters.  A safe interpreter is a slave whose functions have
+been greatly restricted, so that it is safe to execute untrusted
+scripts without fear of them damaging other interpreters or the
+application's environment. For example, all IO channel creation
+commands and subprocess creation commands are made inaccessible to safe
+interpreters.
+See <B>SAFE INTERPRETERS</B> below for more information on
+what features are present in a safe interpreter.
+The dangerous functionality is not removed from the safe interpreter;
+instead, it is <I>hidden</I>, so that only trusted interpreters can obtain
+access to it. For a detailed explanation of hidden commands, see
+<B>HIDDEN COMMANDS</B>, below.
+The alias mechanism can be used for protected communication (analogous to a
+kernel call) between a slave interpreter and its master. 
+See <B>ALIAS INVOCATION</B>, below, for more details 
+on how the alias mechanism works.
+<P>
+A qualified interpreter name is a proper Tcl lists containing a subset of its
+ancestors in the interpreter hierarchy, terminated by the string naming the
+interpreter in its immediate master. Interpreter names are relative to the
+interpreter in which they are used. For example, if <B>a</B> is a slave of
+the current interpreter and it has a slave <B>a1</B>, which in turn has a
+slave <B>a11</B>, the qualified name of <B>a11</B> in <B>a</B> is the list
+<B>a1 a11</B>.
+<P>
+The <B>interp</B> command, described below, accepts qualified interpreter
+names as arguments; the interpreter in which the command is being evaluated
+can always be referred to as <B>{}</B> (the empty list or string). Note that
+it is impossible to refer to a master (ancestor) interpreter by name in a
+slave interpreter except through aliases. Also, there is no global name by
+which one can refer to the first interpreter created in an application.
+Both restrictions are motivated by safety concerns.
+<H3><A NAME="M5">THE INTERP COMMAND</A></H3>
+The <B>interp</B> command is used to create, delete, and manipulate
+slave interpreters, and to share or transfer
+channels between interpreters.  It can have any of several forms, depending
+on the <I>option</I> argument:
+<P>
+<DL>
+<DT><A NAME="M6"><B>interp</B> <B>alias</B> <I>srcPath</I> <I>srcToken</I></A><DD>
+Returns a Tcl list whose elements are the <I>targetCmd</I> and
+<I>arg</I>s associated with the alias represented by <I>srcToken</I>
+(this is the value returned when the alias was
+created; it is possible that the name of the source command in the
+slave is different from <I>srcToken</I>).
+<P><DT><A NAME="M7"><B>interp</B> <B>alias</B> <I>srcPath</I> <I>srcToken</I> <B>{}</B></A><DD>
+Deletes the alias for <I>srcToken</I> in the slave interpreter identified by
+<I>srcPath</I>.
+<I>srcToken</I> refers to the value returned when the alias
+was created;  if the source command has been renamed, the renamed
+command will be deleted.
+<P><DT><A NAME="M8"><B>interp</B> <B>alias</B> <I>srcPath</I> <I>srcCmd</I> <I>targetPath</I> <I>targetCmd </I>?<I>arg arg ...</I>?</A><DD>
+This command creates an alias between one slave and another (see the
+<B>alias</B> slave command below for creating aliases between a slave
+and its master).  In this command, either of the slave interpreters
+may be anywhere in the hierarchy of interpreters under the interpreter
+invoking the command.
+<I>SrcPath</I> and <I>srcCmd</I> identify the source of the alias.
+<I>SrcPath</I> is a Tcl list whose elements select a particular
+interpreter.  For example, ``<B>a b</B>'' identifies an interpreter
+<B>b</B>, which is a slave of interpreter <B>a</B>, which is a slave
+of the invoking interpreter.  An empty list specifies the interpreter
+invoking the command.  <I>srcCmd</I> gives the name of a new
+command, which will be created in the source interpreter.
+<I>TargetPath</I> and <I>targetCmd</I> specify a target interpreter
+and command, and the <I>arg</I> arguments, if any, specify additional
+arguments to <I>targetCmd</I> which are prepended to any arguments specified
+in the invocation of <I>srcCmd</I>.
+<I>TargetCmd</I> may be undefined at the time of this call, or it may
+already exist; it is not created by this command.
+The alias arranges for the given target command to be invoked
+in the target interpreter whenever the given source command is
+invoked in the source interpreter.  See <B>ALIAS INVOCATION</B> below for
+more details. 
+The command returns a token that uniquely identifies the command created
+<I>srcCmd</I>, even if the command is renamed afterwards. The token may but
+does not have to be equal to <I>srcCmd</I>.
+<P><DT><A NAME="M9"><B>interp</B> <B>aliases </B>?<I>path</I>?</A><DD>
+This command returns a Tcl list of the tokens of all the source commands for
+aliases defined in the interpreter identified by <I>path</I>. The tokens
+correspond to the values returned when 
+the aliases were created (which may not be the same 
+as the current names of the commands).
+<P><DT><A NAME="M10"><B>interp</B> <B>create </B>?<B>-safe</B>? ?<B>-&nbsp;-</B>? ?<I>path</I>?</A><DD>
+Creates a slave interpreter identified by <I>path</I> and a new command,
+called a <I>slave command</I>. The name of the slave command is the last
+component of <I>path</I>. The new slave interpreter and the slave command
+are created in the interpreter identified by the path obtained by removing
+the last component from <I>path</I>. For example, if <I>path is </I><B>a b
+c</B> then a new slave interpreter and slave command named <B>c</B> are
+created in the interpreter identified by the path <B>a b</B>.
+The slave command may be used to manipulate the new interpreter as
+described below. If <I>path</I> is omitted, Tcl creates a unique name of the
+form <B>interp</B><I>x</I>, where <I>x</I> is an integer, and uses it for the
+interpreter and the slave command. If the <B>-safe</B> switch is specified
+(or if the master interpreter is a safe interpreter), the new slave
+interpreter will be created as a safe interpreter with limited
+functionality; otherwise the slave will include the full set of Tcl
+built-in commands and variables. The <B>-&nbsp;-</B> switch can be used to
+mark the end of switches;  it may be needed if <I>path</I> is an unusual
+value such as <B>-safe</B>. The result of the command is the name of the
+new interpreter. The name of a slave interpreter must be unique among all
+the slaves for its master;  an error occurs if a slave interpreter by the
+given name already exists in this master.
+The initial recursion limit of the slave interpreter is set to the
+current recursion limit of its parent interpreter.
+<P><DT><A NAME="M11"><B>interp</B> <B>delete </B>?<I>path ...?</I></A><DD>
+Deletes zero or more interpreters given by the optional <I>path</I>
+arguments, and for each interpreter, it also deletes its slaves. The
+command also deletes the slave command for each interpreter deleted.
+For each <I>path</I> argument, if no interpreter by that name
+exists, the command raises an error.
+<P><DT><A NAME="M12"><B>interp</B> <B>eval</B> <I>path arg </I>?<I>arg ...</I>?</A><DD>
+This command concatenates all of the <I>arg</I> arguments in the same
+fashion as the <B><A HREF="../TclCmd/concat.htm">concat</A></B> command, then evaluates the resulting string as
+a Tcl script in the slave interpreter identified by <I>path</I>. The result
+of this evaluation (including error information such as the <B>errorInfo</B>
+and <B>errorCode</B> variables, if an error occurs) is returned to the
+invoking interpreter.
+Note that the script will be executed in the current context stack frame of the
+<I>path</I> interpreter; this is so that the implementations (in a master
+interpreter) of aliases in a slave interpreter can execute scripts in
+the slave that find out information about the slave's current state
+and stack frame.
+<P><DT><A NAME="M13"><B>interp exists </B><I>path</I></A><DD>
+Returns  <B>1</B> if a slave interpreter by the specified <I>path</I>
+exists in this master, <B>0</B> otherwise. If <I>path</I> is omitted, the
+invoking interpreter is used.
+<P><DT><A NAME="M14"><B>interp expose </B><I>path</I> <I>hiddenName</I> ?<I>exposedCmdName</I>?</A><DD>
+Makes the hidden command <I>hiddenName</I> exposed, eventually bringing
+it back under a new <I>exposedCmdName</I> name (this name is currently
+accepted only if it is a valid global name space name without any ::),
+in the interpreter
+denoted by <I>path</I>.
+If an exposed command with the targeted name already exists, this command
+fails.
+Hidden commands are explained in more detail in <B>HIDDEN COMMANDS</B>, below.
+<P><DT><A NAME="M15"><B>interp</B> <B>hide</B> <I>path</I> <I>exposedCmdName</I> ?<I>hiddenCmdName</I>?</A><DD>
+Makes the exposed command <I>exposedCmdName</I> hidden, renaming
+it to the hidden command <I>hiddenCmdName</I>, or keeping the same name if
+<I>hiddenCmdName</I> is not given, in the interpreter denoted 
+by <I>path</I>.
+If a hidden command with the targeted name already exists, this command
+fails.
+Currently both <I>exposedCmdName</I> and <I>hiddenCmdName</I> can 
+not contain namespace qualifiers, or an error is raised.
+Commands to be hidden by <B>interp hide</B> are looked up in the global
+namespace even if the current namespace is not the global one. This
+prevents slaves from fooling a master interpreter into hiding the wrong
+command, by making the current namespace be different from the global one.
+Hidden commands are explained in more detail in <B>HIDDEN COMMANDS</B>, below.
+<P><DT><A NAME="M16"><B>interp</B> <B>hidden</B> <I>path</I></A><DD>
+Returns a list of the names of all hidden commands in the interpreter
+identified by <I>path</I>.
+<P><DT><A NAME="M17"><B>interp</B> <B>invokehidden</B> <I>path</I> ?<B>-global</B>? <I>hiddenCmdName</I> ?<I>arg ...</I>?</A><DD>
+Invokes the hidden command <I>hiddenCmdName</I> with the arguments supplied
+in the interpreter denoted by <I>path</I>. No substitutions or evaluation
+are applied to the arguments.
+If the <B>-global</B> flag is present, the hidden command is invoked at the
+global level in the target interpreter; otherwise it is invoked at the
+current call frame and can access local variables in that and outer call
+frames.
+Hidden commands are explained in more detail in <B>HIDDEN COMMANDS</B>, below.
+<P><DT><A NAME="M18"><B>interp issafe</B> ?<I>path</I>?</A><DD>
+Returns <B>1</B> if the interpreter identified by the specified <I>path</I>
+is safe, <B>0</B> otherwise.
+<P><DT><A NAME="M19"><B>interp marktrusted</B> <I>path</I></A><DD>
+Marks the interpreter identified by <I>path</I> as trusted. Does
+not expose the hidden commands. This command can only be invoked from a
+trusted interpreter.
+The command has no effect if the interpreter identified by <I>path</I> is
+already trusted.
+<P><DT><A NAME="M20"><B>interp</B> <B>recursionlimit</B> <I>path</I> ?<I>newlimit</I>?</A><DD>
+Returns the maximum allowable nesting depth for the interpreter
+specified by <I>path</I>.  If <I>newlimit</I> is specified,
+the interpreter recursion limit will be set so that nesting
+of more than <I>newlimit</I> calls to <B>Tcl_Eval()</B>
+and related procedures in that interpreter will return an error.
+The <I>newlimit</I> value is also returned.
+The <I>newlimit</I> value must be a positive integer between 1 and the
+maximum value of a non-long integer on the platform.  
+<P>
+The command sets the maximum size of the Tcl call stack only. It cannot
+by itself prevent stack overflows on the C stack being used by the
+application. If your machine has a limit on the size of the C stack, you
+may get stack overflows before reaching the limit set by the command. If
+this happens, see if there is a mechanism in your system for increasing
+the maximum size of the C stack. 
+<P><DT><A NAME="M21"><B>interp</B> <B>share</B> <I>srcPath channelId destPath</I></A><DD>
+Causes the IO channel identified by <I>channelId</I> to become shared
+between the interpreter identified by <I>srcPath</I> and the interpreter
+identified by <I>destPath</I>. Both interpreters have the same permissions
+on the IO channel.
+Both interpreters must close it to close the underlying IO channel; IO
+channels accessible in an interpreter are automatically closed when an
+interpreter is destroyed.
+<P><DT><A NAME="M22"><B>interp</B> <B>slaves</B> ?<I>path</I>?</A><DD>
+Returns a Tcl list of the names of all the slave interpreters associated
+with the interpreter identified by <I>path</I>. If <I>path</I> is omitted,
+the invoking interpreter is used.
+<P><DT><A NAME="M23"><B>interp</B> <B>target</B> <I>path alias</I></A><DD>
+Returns a Tcl list describing the target interpreter for an alias. The
+alias is specified with an interpreter path and source command name, just
+as in <B>interp alias</B> above. The name of the target interpreter is
+returned as an interpreter path, relative to the invoking interpreter.
+If the target interpreter for the alias is the invoking interpreter then an
+empty list is returned. If the target interpreter for the alias is not the
+invoking interpreter or one of its descendants then an error is generated.
+The target command does not have to be defined at the time of this invocation.
+<P><DT><A NAME="M24"><B>interp</B> <B>transfer</B> <I>srcPath channelId destPath</I></A><DD>
+Causes the IO channel identified by <I>channelId</I> to become available in
+the interpreter identified by <I>destPath</I> and unavailable in the
+interpreter identified by <I>srcPath</I>.
+<P></DL>
+<H3><A NAME="M25">SLAVE COMMAND</A></H3>
+For each slave interpreter created with the <B>interp</B> command, a
+new Tcl command is created in the master interpreter with the same
+name as the new interpreter. This command may be used to invoke
+various operations on the interpreter.  It has the following
+general form:
+<PRE><I>slave command </I>?<I>arg arg ...</I>?</PRE>
+<I>Slave</I> is the name of the interpreter, and <I>command</I>
+and the <I>arg</I>s determine the exact behavior of the command.
+The valid forms of this command are:
+<P>
+<DL>
+<DT><A NAME="M26"><I>slave </I><B>aliases</B></A><DD>
+Returns a Tcl list whose elements are the tokens of all the
+aliases in <I>slave</I>.  The tokens correspond to the values returned when
+the aliases were created (which may not be the same 
+as the current names of the commands).
+<P><DT><A NAME="M27"><I>slave </I><B>alias </B><I>srcToken</I></A><DD>
+Returns a Tcl list whose elements are the <I>targetCmd</I> and
+<I>arg</I>s associated with the alias represented by <I>srcToken</I>
+(this is the value returned when the alias was
+created; it is possible that the actual source command in the
+slave is different from <I>srcToken</I>).
+<P><DT><A NAME="M28"><I>slave </I><B>alias </B><I>srcToken </I><B>{}</B></A><DD>
+Deletes the alias for <I>srcToken</I> in the slave interpreter.
+<I>srcToken</I> refers to the value returned when the alias
+was created;  if the source command has been renamed, the renamed
+command will be deleted.
+<P><DT><A NAME="M29"><I>slave </I><B>alias </B><I>srcCmd targetCmd </I>?<I>arg ..</I>?</A><DD>
+Creates an alias such that whenever <I>srcCmd</I> is invoked
+in <I>slave</I>, <I>targetCmd</I> is invoked in the master.
+The <I>arg</I> arguments will be passed to <I>targetCmd</I> as additional
+arguments, prepended before any arguments passed in the invocation of
+<I>srcCmd</I>.
+See <B>ALIAS INVOCATION</B> below for details.
+The command returns a token that uniquely identifies the command created
+<I>srcCmd</I>, even if the command is renamed afterwards. The token may but
+does not have to be equal to <I>srcCmd</I>.
+<P><DT><A NAME="M30"><I>slave </I><B>eval </B><I>arg </I>?<I>arg ..</I>?</A><DD>
+This command concatenates all of the <I>arg</I> arguments in
+the same fashion as the <B><A HREF="../TclCmd/concat.htm">concat</A></B> command, then evaluates
+the resulting string as a Tcl script in <I>slave</I>.
+The result of this evaluation (including error information
+such as the <B>errorInfo</B> and <B>errorCode</B> variables, if an
+error occurs) is returned to the invoking interpreter.
+Note that the script will be executed in the current context stack frame
+of <I>slave</I>; this is so that the implementations (in a master
+interpreter) of aliases in a slave interpreter can execute scripts in
+the slave that find out information about the slave's current state
+and stack frame.
+<P><DT><A NAME="M31"><I>slave </I><B>expose </B><I>hiddenName </I>?<I>exposedCmdName</I>?</A><DD>
+This command exposes the hidden command <I>hiddenName</I>, eventually bringing
+it back under a new <I>exposedCmdName</I> name (this name is currently
+accepted only if it is a valid global name space name without any ::),
+in <I>slave</I>.
+If an exposed command with the targeted name already exists, this command
+fails.
+For more details on hidden commands, see <B>HIDDEN COMMANDS</B>, below.
+<P><DT><A NAME="M32"><I>slave </I><B>hide </B><I>exposedCmdName</I> ?<I>hiddenCmdName</I>?</A><DD>
+This command hides the exposed command <I>exposedCmdName</I>, renaming it to 
+the hidden command <I>hiddenCmdName</I>, or keeping the same name if the
+argument is not given, in the <I>slave</I> interpreter.
+If a hidden command with the targeted name already exists, this command
+fails.
+Currently both <I>exposedCmdName</I> and <I>hiddenCmdName</I> can 
+not contain namespace qualifiers, or an error is raised.
+Commands to be hidden are looked up in the global
+namespace even if the current namespace is not the global one. This
+prevents slaves from fooling a master interpreter into hiding the wrong
+command, by making the current namespace be different from the global one.
+For more details on hidden commands, see <B>HIDDEN COMMANDS</B>, below.
+<P><DT><A NAME="M33"><I>slave </I><B>hidden</B></A><DD>
+Returns a list of the names of all hidden commands in <I>slave</I>.
+<P><DT><A NAME="M34"><I>slave </I><B>invokehidden</B> ?<B>-global</B> <I>hiddenName </I>?<I>arg ..</I>?</A><DD>
+This command invokes the hidden command <I>hiddenName</I> with the
+supplied arguments, in <I>slave</I>. No substitutions or evaluations are
+applied to the arguments.
+If the <B>-global</B> flag is given, the command is invoked at the global
+level in the slave; otherwise it is invoked at the current call frame and
+can access local variables in that or outer call frames.
+For more details on hidden commands,
+see <B>HIDDEN COMMANDS</B>, below.
+<P><DT><A NAME="M35"><I>slave </I><B>issafe</B></A><DD>
+Returns  <B>1</B> if the slave interpreter is safe, <B>0</B> otherwise.
+<P><DT><A NAME="M36"><I>slave </I><B>marktrusted</B></A><DD>
+Marks the slave interpreter as trusted. Can only be invoked by a
+trusted interpreter. This command does not expose any hidden
+commands in the slave interpreter. The command has no effect if the slave
+is already trusted.
+<P><DT><A NAME="M37"><I>slave</I> <B>recursionlimit</B> ?<I>newlimit</I>?</A><DD>
+Returns the maximum allowable nesting depth for the <I>slave</I> interpreter.
+If <I>newlimit</I> is specified, the recursion limit in <I>slave</I> will be
+set so that nesting of more than <I>newlimit</I> calls to <B>Tcl_Eval()</B>
+and related procedures in <I>slave</I> will return an error.
+The <I>newlimit</I> value is also returned.
+The <I>newlimit</I> value must be a positive integer between 1 and the
+maximum value of a non-long integer on the platform.  
+<P>
+The command sets the maximum size of the Tcl call stack only. It cannot
+by itself prevent stack overflows on the C stack being used by the
+application. If your machine has a limit on the size of the C stack, you
+may get stack overflows before reaching the limit set by the command. If
+this happens, see if there is a mechanism in your system for increasing
+the maximum size of the C stack. 
+<P></DL>
+<H3><A NAME="M38">SAFE INTERPRETERS</A></H3>
+A safe interpreter is one with restricted functionality, so that
+is safe to execute an arbitrary script from your worst enemy without
+fear of that script damaging the enclosing application or the rest
+of your computing environment.  In order to make an interpreter
+safe, certain commands and variables are removed from the interpreter.
+For example, commands to create files on disk are removed, and the
+<B><A HREF="../TclCmd/exec.htm">exec</A></B> command is removed, since it could be used to cause damage
+through subprocesses.
+Limited access to these facilities can be provided, by creating
+aliases to the master interpreter which check their arguments carefully
+and provide restricted access to a safe subset of facilities.
+For example, file creation might be allowed in a particular subdirectory
+and subprocess invocation might be allowed for a carefully selected and
+fixed set of programs.
+<P>
+A safe interpreter is created by specifying the <B>-safe</B> switch
+to the <B>interp create</B> command.  Furthermore, any slave created
+by a safe interpreter will also be safe.
+<P>
+A safe interpreter is created with exactly the following set of
+built-in commands:
+<PRE><B>after	append	array	binary
+break	case	catch	clock
+close	concat	continue	eof
+error	eval	expr	fblocked
+fcopy	fileevent	flush	for
+foreach	format	gets	global
+if	incr	info	interp
+join	lappend	lindex	linsert
+list	llength	lrange	lreplace
+lsearch	lsort	namespace	package
+pid	proc	puts	read
+regexp	regsub	rename	return
+scan	seek	set	split
+string	subst	switch	tell
+time	trace	unset	update
+uplevel	upvar	variable	vwait
+while</B></PRE>
+The following commands are hidden by <B>interp create</B> when it
+creates a safe interpreter:
+<PRE><B>cd	encoding	exec	exit
+fconfigure	file	glob	load
+open	pwd	socket	source</B></PRE>
+These commands can be recreated later as Tcl procedures or aliases, or
+re-exposed by <B>interp expose</B>.
+<P>
+The following commands from Tcl's library of support procedures are
+not present in a safe interpreter:
+<PRE><B>auto_exec_ok	auto_import	auto_load
+auto_load_index	auto_qualify	unknown</B></PRE>
+Note in particular that safe interpreters have no default <B><A HREF="../TclCmd/unknown.htm">unknown</A></B>
+command, so Tcl's default autoloading facilities are not available.  
+Autoload access to Tcl's commands that are normally autoloaded:
+<PRE><B>
+auto_mkindex	auto_mkindex_old
+auto_reset	history
+parray	pkg_mkIndex
+::pkg::create	::safe::interpAddToAccessPath
+::safe::interpCreate	::safe::interpConfigure
+::safe::interpDelete	::safe::interpFindInAccessPath
+::safe::interpInit	::safe::setLogCmd
+tcl_endOfWord	tcl_findLibrary
+tcl_startOfNextWord	tcl_startOfPreviousWord
+tcl_wordBreakAfter	tcl_wordBreakBefore</B></PRE>
+can only be provided by explicit definition of an <B><A HREF="../TclCmd/unknown.htm">unknown</A></B> command
+in the safe interpreter.  This will involve exposing the <B><A HREF="../TclCmd/source.htm">source</A></B>
+command.  This is most easily accomplished by creating the safe interpreter
+with Tcl's <B>Safe-Tcl</B> mechanism.  <B>Safe-Tcl</B> provides safe
+versions of <B><A HREF="../TclCmd/source.htm">source</A></B>, <B><A HREF="../TclCmd/load.htm">load</A></B>, and other Tcl commands needed
+to support autoloading of commands and the loading of packages.
+<P>
+In addition, the <B>env</B> variable is not present in a safe interpreter,
+so it cannot share environment variables with other interpreters. The
+<B>env</B> variable poses a security risk, because users can store
+sensitive information in an environment variable. For example, the PGP
+manual recommends storing the PGP private key protection password in
+the environment variable <I>PGPPASS</I>. Making this variable available
+to untrusted code executing in a safe interpreter would incur a
+security risk.
+<P>
+If extensions are loaded into a safe interpreter, they may also restrict
+their own functionality to eliminate unsafe commands. For a discussion of
+management of extensions for safety see the manual entries for
+<B>Safe-Tcl</B> and the <B><A HREF="../TclCmd/load.htm">load</A></B> Tcl command.
+<P>
+A safe interpreter may not alter the recursion limit of any interpreter,
+including itself.
+<H3><A NAME="M39">ALIAS INVOCATION</A></H3>
+The alias mechanism has been carefully designed so that it can
+be used safely when an untrusted script is executing
+in a safe slave and the target of the alias is a trusted
+master.  The most important thing in guaranteeing safety is to
+ensure that information passed from the slave to the master is
+never evaluated or substituted in the master;  if this were to
+occur, it would enable an evil script in the slave to invoke
+arbitrary functions in the master, which would compromise security.
+<P>
+When the source for an alias is invoked in the slave interpreter, the
+usual Tcl substitutions are performed when parsing that command.
+These substitutions are carried out in the source interpreter just
+as they would be for any other command invoked in that interpreter.
+The command procedure for the source command takes its arguments
+and merges them with the <I>targetCmd</I> and <I>arg</I>s for the
+alias to create a new array of arguments.  If the words
+of <I>srcCmd</I> were ``<I>srcCmd arg1 arg2 ... argN</I>'',
+the new set of words will be
+``<I>targetCmd arg arg ... arg arg1 arg2 ... argN</I>'',
+where <I>targetCmd</I> and <I>arg</I>s are the values supplied when the
+alias was created.  <I>TargetCmd</I> is then used to locate a command
+procedure in the target interpreter, and that command procedure
+is invoked with the new set of arguments.  An error occurs if
+there is no command named <I>targetCmd</I> in the target interpreter.
+No additional substitutions are performed on the words:  the
+target command procedure is invoked directly, without
+going through the normal Tcl evaluation mechanism.
+Substitutions are thus performed on each word exactly once:
+<I>targetCmd</I> and <I>args</I> were substituted when parsing the command
+that created the alias, and <I>arg1 - argN</I> are substituted when
+the alias's source command is parsed in the source interpreter.
+<P>
+When writing the <I>targetCmd</I>s for aliases in safe interpreters,
+it is very important that the arguments to that command never be
+evaluated or substituted, since this would provide an escape
+mechanism whereby the slave interpreter could execute arbitrary
+code in the master.  This in turn would compromise the security
+of the system.
+<H3><A NAME="M40">HIDDEN COMMANDS</A></H3>
+Safe interpreters greatly restrict the functionality available to Tcl
+programs executing within them.
+Allowing the untrusted Tcl program to have direct access to this
+functionality is unsafe, because it can be used for a variety of
+attacks on the environment.
+However, there are times when there is a legitimate need to use the
+dangerous functionality in the context of the safe interpreter. For
+example, sometimes a program must be <B><A HREF="../TclCmd/source.htm">source</A></B>d into the interpreter.
+Another example is Tk, where windows are bound to the hierarchy of windows
+for a specific interpreter; some potentially dangerous functions, e.g.
+window management, must be performed on these windows within the
+interpreter context.
+<P>
+The <B>interp</B> command provides a solution to this problem in the form of
+<I>hidden commands</I>. Instead of removing the dangerous commands entirely
+from a safe interpreter, these commands are hidden so they become
+unavailable to Tcl scripts executing in the interpreter. However, such
+hidden commands can be invoked by any trusted ancestor of the safe
+interpreter, in the context of the safe interpreter, using <B>interp
+invoke</B>. Hidden commands and exposed commands reside in separate name
+spaces. It is possible to define a hidden command and an exposed command by
+the same name within one interpreter.
+<P>
+Hidden commands in a slave interpreter can be invoked in the body of
+procedures called in the master during alias invocation. For example, an
+alias for <B><A HREF="../TclCmd/source.htm">source</A></B> could be created in a slave interpreter. When it is
+invoked in the slave interpreter, a procedure is called in the master
+interpreter to check that the operation is allowable (e.g. it asks to
+source a file that the slave interpreter is allowed to access). The
+procedure then it invokes the hidden <B><A HREF="../TclCmd/source.htm">source</A></B> command in the slave
+interpreter to actually source in the contents of the file. Note that two
+commands named <B><A HREF="../TclCmd/source.htm">source</A></B> exist in the slave interpreter: the alias, and
+the hidden command.
+<P>
+Because a master interpreter may invoke a hidden command as part of
+handling an alias invocation, great care must be taken to avoid evaluating
+any arguments passed in through the alias invocation.
+Otherwise, malicious slave interpreters could cause a trusted master
+interpreter to execute dangerous commands on their behalf. See the section
+on <B>ALIAS INVOCATION</B> for a more complete discussion of this topic.
+To help avoid this problem, no substitutions or evaluations are
+applied to arguments of <B>interp invokehidden</B>.
+<P>
+Safe interpreters are not allowed to invoke hidden commands in themselves
+or in their descendants. This prevents safe slaves from gaining access to
+hidden functionality in themselves or their descendants.
+<P>
+The set of hidden commands in an interpreter can be manipulated by a trusted
+interpreter using <B>interp expose</B> and <B>interp hide</B>. The <B>interp
+expose</B> command moves a hidden command to the
+set of exposed commands in the interpreter identified by <I>path</I>,
+potentially renaming the command in the process. If an exposed command by
+the targeted name already exists, the operation fails. Similarly,
+<B>interp hide</B> moves an exposed command to the set of hidden commands in
+that interpreter. Safe interpreters are not allowed to move commands
+between the set of hidden and exposed commands, in either themselves or
+their descendants.
+<P>
+Currently, the names of hidden commands cannot contain namespace
+qualifiers, and you must first rename a command in a namespace to the
+global namespace before you can hide it.
+Commands to be hidden by <B>interp hide</B> are looked up in the global
+namespace even if the current namespace is not the global one. This
+prevents slaves from fooling a master interpreter into hiding the wrong
+command, by making the current namespace be different from the global one.
+<H3><A NAME="M41">CREDITS</A></H3>
+This mechanism is based on the Safe-Tcl prototype implemented
+by Nathaniel Borenstein and Marshall Rose.
+<H3><A NAME="M42">EXAMPLES</A></H3>
+Creating and using an alias for a command in the current interpreter:
+<PRE><B>interp alias</B> {} getIndex {} lsearch {alpha beta gamma delta}
+set idx [getIndex delta]</PRE>
+<P>
+Executing an arbitrary command in a safe interpreter where every
+invokation of <B><A HREF="../TclCmd/lappend.htm">lappend</A></B> is logged:
+<PRE>set i [<B>interp create</B> -safe]
+<B>interp hide</B> $i lappend
+<B>interp alias</B> $i lappend {} loggedLappend $i
+proc loggedLappend {i args} {
+   puts &quot;logged invokation of lappend $args&quot;
+   # Be extremely careful about command construction
+   eval [linsert $args 0 &#92;
+         <B>interp invokehidden</B> $i lappend]
+}
+<B>interp eval</B> $i $someUntrustedScript</PRE>
+<H3><A NAME="M43">SEE ALSO</A></H3>
+<B><A HREF="../TclCmd/load.htm">load</A></B>, <B>safe</B>, <B><A HREF="../TclLib/CrtSlave.htm">Tcl_CreateSlave</A></B>
+<H3><A NAME="M44">KEYWORDS</A></H3>
+<A href="../Keywords/A.htm#alias">alias</A>, <A href="../Keywords/M.htm#master interpreter">master interpreter</A>, <A href="../Keywords/S.htm#safe interpreter">safe interpreter</A>, <A href="../Keywords/S.htm#slave interpreter">slave interpreter</A>
+<HR><PRE>
+<A HREF="../copyright.htm">Copyright</A> &#169; 1995-1996 Sun Microsystems, Inc.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1995-1997 Roger E. Critchlow Jr.</PRE>
+</BODY></HTML>

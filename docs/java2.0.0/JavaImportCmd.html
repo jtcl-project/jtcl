@@ -1,0 +1,209 @@
+<HTML>
+<TITLE>
+The java::import Command
+</TITLE>
+
+<BODY>
+<HR>
+
+<H3>
+The java::import Command
+</H3>
+
+<HR>
+
+<DL>
+
+<H3>
+Usage:
+</H3>
+
+<DD><B>java::import</B> ?<B>-forget</B>? ?<B>-package</B> <I>pkg</I>? ?<I>class ...</I>?
+
+<P>
+
+The <B>java::import</B> command provides a means to specify Java class names
+in a shortened format. This functionality is the equivalent
+of the <I>import</I> statement in Java.
+Once imported, the Java class
+<B>java.util.Hashtable</B> could be specified with the shortened name
+<B>Hashtable</B>. Each <I>class</I> argument
+is checked to ensure that it is the name of a accessible class and does
+not conflict with another class imported from another package. The optional
+<B>-package</B> <I>pkg</I> arguments are used to indicate the package that
+each <I>class</I> argument is imported from. If the <B>-package</B> <I>pkg</I>
+arguments are given, none of the <I>class</I> arguments can include a package
+specifier, meaning the '.' character must not appear in a <I>class</I> name.
+
+<P>
+
+The imported <B>class</b> name may be specified using the wildcard character <b>*</b> 
+(asterisk), which allows any class in the corresponding package to be imported.  
+Classes loaded using the wildcard import are lazily-loaded and will be resolved
+after any explicitly-named classes.
+
+
+<P>
+
+If the <B>java::import</B> command is invoked with no arguments it will return
+a list of all the currently imported classes. If the <B>java::import</B>
+command is invoked with only the optional <B>-package</B> <I>pkg</I> arguments,
+then only those classes imported from the specified package will be returned.
+
+<P>
+
+The <B>-forget</B> argument will invalidate a previously imported class name.
+The optional <B>-package</B> <I>pkg</I> arguments can be combined with the
+<B>-forget</B> argument to forget about all the imported classes from a
+given package.  If a wildcard class ("*") is specified, that corresponding
+package is forgotten, except that any classes loaded via a previous
+wildcard import will remain available for subsequent loading, unless
+explicitly forgotten.
+
+<P>
+
+</DL>
+
+<DL>
+
+<H3>
+Examples:
+</H3>
+
+<DD>
+
+This example demonstrates how to allocate a <B>java.util.Hashtable</B>
+object using the fully qualified name and the imported name.
+
+<code>
+<pre>
+# Use fully qualified name with the java::new command
+set h1 [java::new java.util.Hashtable]
+
+# Import the class name shortcut
+java::import java.util.Hashtable
+
+# Use imported name with the java::new command
+set h2 [java::new Hashtable]
+
+</pre>
+</code>
+
+
+This example demonstrates how to use the optional
+<B>-package</B> <I>pkg</I> arguments to import more
+than one class from a given package.
+
+<code>
+<pre>
+# Import two classes from the java.util package
+java::import -package java.util Hashtable Vector
+
+# Call java methods using the shortened names
+set h [java::new Hashtable]
+set bool [java::instanceof $h Hashtable]
+set v [java::new Vector]
+set array [java::new {Hashtable[]} {10}]
+
+</pre>
+</code>
+
+
+This example demonstrates how to use the optional
+<B>-forget</B> argument to remove a class from the
+import list.
+
+<code>
+<pre>
+# Import two classes from the java.util package
+java::import java.util.Hashtable java.util.Vector
+
+# Woops, I did not want java.util.Vector
+java::import -forget java.util.Vector
+
+</pre>
+</code>
+
+This example demonstrates how to combine the
+<B>-forget</B> argument and the
+<B>-package</B> <I>pkg</I> arguments to remove
+all imported classes from a given package.
+
+<code>
+<pre>
+# Import two classes from the java.util package
+java::import java.util.Hashtable java.util.Vector
+
+# Now forget about both of them
+java::import -forget -package java.util
+
+</pre>
+</code>
+
+This example demonstrates how to query the import list.
+
+<code>
+<pre>
+# Import classes from two different packages
+java::import java.net.Socket java.util.Hashtable
+
+# Will print "java.net.Socket java.util.Hashtable"
+puts [java::import]
+
+# Will print "java.util.Hashtable"
+puts [java::import -package java.util]
+
+# Note that the command above <b>does not</b> import all
+# the classes from a named package.
+
+</pre>
+</code>
+
+
+This example demostrates wildcard imports.
+
+<code>
+<pre>
+# Wildcard import from java.util.*
+java::import java.util.*
+
+# Import java.sql.Date
+java::import java.sql.Date
+
+# Load java.util.HashMap by creating a new instance
+set hashMap [java::new HashMap]
+
+# Load java.sql.Date, with current time
+# Note! java.sql.Date was imported explicitly, and takes precedence
+#       over java.util.Date
+set sqlDate [java::new Date [java::call System currentTimeMillis]]
+
+# See the current import list
+puts [java::import]
+
+# result: java.sql.Date java.util.HashMap java.util.*
+
+# Forget the java.util.* import
+java::import -forget java.util.*
+
+# See the current import list
+puts [java::import]
+
+# result: java.sql.Date java.util.HashMap
+# Note that java.util.HashMap is now a resolved import
+
+
+</pre>
+</code>
+
+<P>
+
+</DL>
+
+<PRE>
+<A HREF="../license.html">Copyright</A> &#169; 1997-1998 Sun Microsystems, Inc.
+</PRE>
+
+
+</BODY>
+</HTML>

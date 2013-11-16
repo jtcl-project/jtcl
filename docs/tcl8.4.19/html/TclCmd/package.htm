@@ -1,0 +1,223 @@
+<HTML><HEAD><TITLE>Tcl Built-In Commands - package manual page</TITLE></HEAD><BODY>
+<DL>
+<DD><A HREF="package.htm#M2" NAME="L928">NAME</A>
+<DL><DD>package - Facilities for package loading and version control</DL>
+<DD><A HREF="package.htm#M3" NAME="L929">SYNOPSIS</A>
+<DL>
+<DD><B>package forget ?</B><I>package package ...</I>?
+<DD><B>package ifneeded </B><I>package version</I> ?<I>script</I>?
+<DD><B>package names</B>
+<DD><B>package present </B>?<B>-exact</B>? <I>package </I>?<I>version</I>?
+<DD><B>package provide </B><I>package </I>?<I>version</I>?
+<DD><B>package require </B>?<B>-exact</B>? <I>package </I>?<I>version</I>?
+<DD><B>package unknown </B>?<I>command</I>?
+<DD><B>package vcompare </B><I>version1 version2</I>
+<DD><B>package versions </B><I>package</I>
+<DD><B>package vsatisfies </B><I>version1 version2</I>
+</DL>
+<DD><A HREF="package.htm#M4" NAME="L930">DESCRIPTION</A>
+<DL>
+<DD><A HREF="package.htm#M5" NAME="L931"><B>package forget ?</B><I>package package ...</I>?</A>
+<DD><A HREF="package.htm#M6" NAME="L932"><B>package ifneeded </B><I>package version</I> ?<I>script</I>?</A>
+<DD><A HREF="package.htm#M7" NAME="L933"><B>package names</B></A>
+<DD><A HREF="package.htm#M8" NAME="L934"><B>package present </B>?<B>-exact</B>? <I>package </I>?<I>version</I>?</A>
+<DD><A HREF="package.htm#M9" NAME="L935"><B>package provide </B><I>package </I>?<I>version</I>?</A>
+<DD><A HREF="package.htm#M10" NAME="L936"><B>package require </B>?<B>-exact</B>? <I>package </I>?<I>version</I>?</A>
+<DD><A HREF="package.htm#M11" NAME="L937"><B>package unknown </B>?<I>command</I>?</A>
+<DD><A HREF="package.htm#M12" NAME="L938"><B>package vcompare </B><I>version1 version2</I></A>
+<DD><A HREF="package.htm#M13" NAME="L939"><B>package versions </B><I>package</I></A>
+<DD><A HREF="package.htm#M14" NAME="L940"><B>package vsatisfies </B><I>version1 version2</I></A>
+</DL>
+<DD><A HREF="package.htm#M15" NAME="L941">VERSION NUMBERS</A>
+<DD><A HREF="package.htm#M16" NAME="L942">PACKAGE INDICES</A>
+<DD><A HREF="package.htm#M17" NAME="L943">EXAMPLES</A>
+<DD><A HREF="package.htm#M18" NAME="L944">SEE ALSO</A>
+<DD><A HREF="package.htm#M19" NAME="L945">KEYWORDS</A>
+</DL><HR>
+<H3><A NAME="M2">NAME</A></H3>
+package - Facilities for package loading and version control
+<H3><A NAME="M3">SYNOPSIS</A></H3>
+<B>package forget ?</B><I>package package ...</I>?<BR>
+<B>package ifneeded </B><I>package version</I> ?<I>script</I>?<BR>
+<B>package names</B><BR>
+<B>package present </B>?<B>-exact</B>? <I>package </I>?<I>version</I>?<BR>
+<B>package provide </B><I>package </I>?<I>version</I>?<BR>
+<B>package require </B>?<B>-exact</B>? <I>package </I>?<I>version</I>?<BR>
+<B>package unknown </B>?<I>command</I>?<BR>
+<B>package vcompare </B><I>version1 version2</I><BR>
+<B>package versions </B><I>package</I><BR>
+<B>package vsatisfies </B><I>version1 version2</I><BR>
+<H3><A NAME="M4">DESCRIPTION</A></H3>
+This command keeps a simple database of the packages available for
+use by the current interpreter and how to load them into the
+interpreter.
+It supports multiple versions of each package and arranges
+for the correct version of a package to be loaded based on what
+is needed by the application.
+This command also detects and reports version clashes.
+Typically, only the <B>package require</B> and <B>package provide</B>
+commands are invoked in normal Tcl scripts;  the other commands are used
+primarily by system scripts that maintain the package database.
+<P>
+The behavior of the <B>package</B> command is determined by its first argument.
+The following forms are permitted:
+<P>
+<DL>
+<DT><A NAME="M5"><B>package forget ?</B><I>package package ...</I>?</A><DD>
+Removes all information about each specified package from this interpreter,
+including information provided by both <B>package ifneeded</B> and
+<B>package provide</B>.
+<P><DT><A NAME="M6"><B>package ifneeded </B><I>package version</I> ?<I>script</I>?</A><DD>
+This command typically appears only in system configuration
+scripts to set up the package database.
+It indicates that a particular version of
+a particular package is available if needed, and that the package
+can be added to the interpreter by executing <I>script</I>.
+The script is saved in a database for use by subsequent
+<B>package require</B> commands;  typically, <I>script</I>
+sets up auto-loading for the commands in the package (or calls
+<B><A HREF="../TclCmd/load.htm">load</A></B> and/or <B><A HREF="../TclCmd/source.htm">source</A></B> directly), then invokes
+<B>package provide</B> to indicate that the package is present.
+There may be information in the database for several different
+versions of a single package.
+If the database already contains information for <I>package</I>
+and <I>version</I>, the new <I>script</I> replaces the existing
+one.
+If the <I>script</I> argument is omitted, the current script for
+version <I>version</I> of package <I>package</I> is returned,
+or an empty string if no <B>package ifneeded</B> command has
+been invoked for this <I>package</I> and <I>version</I>.
+<P><DT><A NAME="M7"><B>package names</B></A><DD>
+Returns a list of the names of all packages in the
+interpreter for which a version has been provided (via
+<B>package provide</B>) or for which a <B>package ifneeded</B>
+script is available.
+The order of elements in the list is arbitrary.
+<P><DT><A NAME="M8"><B>package present </B>?<B>-exact</B>? <I>package </I>?<I>version</I>?</A><DD>
+This command is equivalent to <B>package require</B> except that it
+does not try and load the package if it is not already loaded.
+<P><DT><A NAME="M9"><B>package provide </B><I>package </I>?<I>version</I>?</A><DD>
+This command is invoked to indicate that version <I>version</I>
+of package <I>package</I> is now present in the interpreter.
+It is typically invoked once as part of an <B>ifneeded</B> script,
+and again by the package itself when it is finally loaded.
+An error occurs if a different version of <I>package</I> has been
+provided by a previous <B>package provide</B> command.
+If the <I>version</I> argument is omitted, then the command
+returns the version number that is currently provided, or an
+empty string if no <B>package provide</B> command has been
+invoked for <I>package</I> in this interpreter.  
+<P><DT><A NAME="M10"><B>package require </B>?<B>-exact</B>? <I>package </I>?<I>version</I>?</A><DD>
+This command is typically invoked by Tcl code that wishes to use
+a particular version of a particular package.  The arguments
+indicate which package is wanted, and the command ensures that
+a suitable version of the package is loaded into the interpreter.
+If the command succeeds, it returns the version number that is
+loaded;  otherwise it generates an error.
+If both the <B>-exact</B>
+switch and the <I>version</I> argument are specified then only the
+given version is acceptable.  If <B>-exact</B> is omitted but
+<I>version</I> is specified, then versions later than <I>version</I>
+are also acceptable as long as they have the same major version
+number as <I>version</I>.
+If both <B>-exact</B> and <I>version</I> are omitted then any
+version whatsoever is acceptable.
+If a version of <I>package</I> has already been provided (by invoking
+the <B>package provide</B> command), then its version number must
+satisfy the criteria given by <B>-exact</B> and <I>version</I> and
+the command returns immediately.
+Otherwise, the command searches the database of information provided by
+previous <B>package ifneeded</B> commands to see if an acceptable
+version of the package is available.
+If so, the script for the highest acceptable version number is evaluated
+in the global namespace;
+it must do whatever is necessary to load the package,
+including calling <B>package provide</B> for the package.
+If the <B>package ifneeded</B> database does not contain an acceptable
+version of the package and a <B>package unknown</B> command has been
+specified for the interpreter then that command is evaluated in the
+global namespace;  when
+it completes, Tcl checks again to see if the package is now provided
+or if there is a <B>package ifneeded</B> script for it.
+If all of these steps fail to provide an acceptable version of the
+package, then the command returns an error.
+<P><DT><A NAME="M11"><B>package unknown </B>?<I>command</I>?</A><DD>
+This command supplies a ``last resort'' command to invoke during
+<B>package require</B> if no suitable version of a package can be found
+in the <B>package ifneeded</B> database.
+If the <I>command</I> argument is supplied, it contains the first part
+of a command;  when the command is invoked during a <B>package require</B>
+command, Tcl appends two additional arguments giving the desired package
+name and version.
+For example, if <I>command</I> is <B>foo bar</B> and later the command
+<B>package require test 2.4</B> is invoked, then Tcl will execute
+the command <B>foo bar test 2.4</B> to load the package.
+If no version number is supplied to the <B>package require</B> command,
+then the version argument for the invoked command will be an empty string.
+If the <B>package unknown</B> command is invoked without a <I>command</I>
+argument, then the current <B>package unknown</B> script is returned,
+or an empty string if there is none.
+If <I>command</I> is specified as an empty string, then the current
+<B>package unknown</B> script is removed, if there is one.
+<P><DT><A NAME="M12"><B>package vcompare </B><I>version1 version2</I></A><DD>
+Compares the two version numbers given by <I>version1</I> and <I>version2</I>.
+Returns -1 if <I>version1</I> is an earlier version than <I>version2</I>,
+0 if they are equal, and 1 if <I>version1</I> is later than <B>version2</B>.
+<P><DT><A NAME="M13"><B>package versions </B><I>package</I></A><DD>
+Returns a list of all the version numbers of <I>package</I>
+for which information has been provided by <B>package ifneeded</B>
+commands.
+<P><DT><A NAME="M14"><B>package vsatisfies </B><I>version1 version2</I></A><DD>
+Returns 1 if scripts written for <I>version2</I> will work unchanged
+with <I>version1</I> (i.e. <I>version1</I> is equal to or greater
+than <I>version2</I> and they both have the same major version
+number), 0 otherwise.
+<P></DL>
+<H3><A NAME="M15">VERSION NUMBERS</A></H3>
+Version numbers consist of one or more decimal numbers separated
+by dots, such as 2 or 1.162 or 3.1.13.1.
+The first number is called the major version number.
+Larger numbers correspond to later versions of a package, with
+leftmost numbers having greater significance.
+For example, version 2.1 is later than 1.3 and version
+3.4.6 is later than 3.3.5.
+Missing fields are equivalent to zeroes:  version 1.3 is the
+same as version 1.3.0 and 1.3.0.0, so it is earlier than 1.3.1 or 1.3.0.2.
+A later version number is assumed to be upwards compatible with
+an earlier version number as long as both versions have the same
+major version number.
+For example, Tcl scripts written for version 2.3 of a package should
+work unchanged under versions 2.3.2, 2.4, and 2.5.1.
+Changes in the major version number signify incompatible changes:
+if code is written to use version 2.1 of a package, it is not guaranteed
+to work unmodified with either version 1.7.3 or version 3.1.
+<H3><A NAME="M16">PACKAGE INDICES</A></H3>
+The recommended way to use packages in Tcl is to invoke <B>package require</B>
+and <B>package provide</B> commands in scripts, and use the procedure
+<B>pkg_mkIndex</B> to create package index files.
+Once you've done this, packages will be loaded automatically
+in response to <B>package require</B> commands.
+See the documentation for <B>pkg_mkIndex</B> for details.
+<H3><A NAME="M17">EXAMPLES</A></H3>
+To state that a Tcl script requires the Tk and http packages, put this
+at the top of the script:
+<PRE><B>package require</B> Tk
+<B>package require</B> http</PRE>
+<P>
+To test to see if the Snack package is available and load if it is
+(often useful for optional enhancements to programs where the loss of
+the functionality is not critical) do this:
+<PRE>if {[catch {<B>package require</B> Snack}]} {
+   # Error thrown - package not found.
+   # Set up a dummy interface to work around the absence
+} else {
+   # We have the package, configure the app to use it
+}</PRE>
+<H3><A NAME="M18">SEE ALSO</A></H3>
+<B><A HREF="../TclCmd/msgcat.htm">msgcat</A></B>, <B>packagens</B>, <B>pkgMkIndex</B>
+<H3><A NAME="M19">KEYWORDS</A></H3>
+<A href="../Keywords/P.htm#package">package</A>, <A href="../Keywords/V.htm#version">version</A>
+<HR><PRE>
+<A HREF="../copyright.htm">Copyright</A> &#169; 1996 Sun Microsystems, Inc.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1995-1997 Roger E. Critchlow Jr.</PRE>
+</BODY></HTML>

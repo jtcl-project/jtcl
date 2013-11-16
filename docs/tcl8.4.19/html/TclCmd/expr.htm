@@ -1,0 +1,440 @@
+<HTML><HEAD><TITLE>Tcl Built-In Commands - expr manual page</TITLE></HEAD><BODY>
+<DL>
+<DD><A HREF="expr.htm#M2" NAME="L282">NAME</A>
+<DL><DD>expr - Evaluate an expression</DL>
+<DD><A HREF="expr.htm#M3" NAME="L283">SYNOPSIS</A>
+<DL>
+<DD><B>expr </B><I>arg </I>?<I>arg arg ...</I>?
+</DL>
+<DD><A HREF="expr.htm#M4" NAME="L284">DESCRIPTION</A>
+<DD><A HREF="expr.htm#M5" NAME="L285">OPERANDS</A>
+<DL>
+</DL>
+<DD><A HREF="expr.htm#M6" NAME="L286">OPERATORS</A>
+<DL>
+<DD><A HREF="expr.htm#M7" NAME="L287"><B>-  +  ~  !</B></A>
+<DD><A HREF="expr.htm#M8" NAME="L288"><B>*  /  %</B></A>
+<DD><A HREF="expr.htm#M9" NAME="L289"><B>+  -</B></A>
+<DD><A HREF="expr.htm#M10" NAME="L290"><B>&lt;&lt;  &gt;&gt;</B></A>
+<DD><A HREF="expr.htm#M11" NAME="L291"><B>&lt;  &gt;  &lt;=  &gt;=</B></A>
+<DD><A HREF="expr.htm#M12" NAME="L292"><B>==  !=</B></A>
+<DD><A HREF="expr.htm#M13" NAME="L293"><B>eq  ne</B></A>
+<DD><A HREF="expr.htm#M14" NAME="L294"><B>&amp;</B></A>
+<DD><A HREF="expr.htm#M15" NAME="L295"><B>^</B></A>
+<DD><A HREF="expr.htm#M16" NAME="L296"><B>|</B></A>
+<DD><A HREF="expr.htm#M17" NAME="L297"><B>&amp;&amp;</B></A>
+<DD><A HREF="expr.htm#M18" NAME="L298"><B>||</B></A>
+<DD><A HREF="expr.htm#M19" NAME="L299"><I>x</I><B>?</B><I>y</I><B>:</B><I>z</I></A>
+</DL>
+<DD><A HREF="expr.htm#M20" NAME="L300">MATH FUNCTIONS</A>
+<DL>
+<DD><A HREF="expr.htm#M21" NAME="L301"><B>abs(</B><I>arg</I><B>)</B></A>
+<DD><A HREF="expr.htm#M22" NAME="L302"><B>acos(</B><I>arg</I><B>)</B></A>
+<DD><A HREF="expr.htm#M23" NAME="L303"><B>asin(</B><I>arg</I><B>)</B></A>
+<DD><A HREF="expr.htm#M24" NAME="L304"><B>atan(</B><I>arg</I><B>)</B></A>
+<DD><A HREF="expr.htm#M25" NAME="L305"><B>atan2(</B><I>y, x</I><B>)</B></A>
+<DD><A HREF="expr.htm#M26" NAME="L306"><B>ceil(</B><I>arg</I><B>)</B></A>
+<DD><A HREF="expr.htm#M27" NAME="L307"><B>cos(</B><I>arg</I><B>)</B></A>
+<DD><A HREF="expr.htm#M28" NAME="L308"><B>cosh(</B><I>arg</I><B>)</B></A>
+<DD><A HREF="expr.htm#M29" NAME="L309"><B>double(</B><I>arg</I><B>)</B></A>
+<DD><A HREF="expr.htm#M30" NAME="L310"><B>exp(</B><I>arg</I><B>)</B></A>
+<DD><A HREF="expr.htm#M31" NAME="L311"><B>floor(</B><I>arg</I><B>)</B></A>
+<DD><A HREF="expr.htm#M32" NAME="L312"><B>fmod(</B><I>x, y</I><B>)</B></A>
+<DD><A HREF="expr.htm#M33" NAME="L313"><B>hypot(</B><I>x, y</I><B>)</B></A>
+<DD><A HREF="expr.htm#M34" NAME="L314"><B>int(</B><I>arg</I><B>)</B></A>
+<DD><A HREF="expr.htm#M35" NAME="L315"><B>log(</B><I>arg</I><B>)</B></A>
+<DD><A HREF="expr.htm#M36" NAME="L316"><B>log10(</B><I>arg</I><B>)</B></A>
+<DD><A HREF="expr.htm#M37" NAME="L317"><B>pow(</B><I>x, y</I><B>)</B></A>
+<DD><A HREF="expr.htm#M38" NAME="L318"><B>rand()</B></A>
+<DD><A HREF="expr.htm#M39" NAME="L319"><B>round(</B><I>arg</I><B>)</B></A>
+<DD><A HREF="expr.htm#M40" NAME="L320"><B>sin(</B><I>arg</I><B>)</B></A>
+<DD><A HREF="expr.htm#M41" NAME="L321"><B>sinh(</B><I>arg</I><B>)</B></A>
+<DD><A HREF="expr.htm#M42" NAME="L322"><B>sqrt(</B><I>arg</I><B>)</B></A>
+<DD><A HREF="expr.htm#M43" NAME="L323"><B>srand(</B><I>arg</I><B>)</B></A>
+<DD><A HREF="expr.htm#M44" NAME="L324"><B>tan(</B><I>arg</I><B>)</B></A>
+<DD><A HREF="expr.htm#M45" NAME="L325"><B>tanh(</B><I>arg</I><B>)</B></A>
+<DD><A HREF="expr.htm#M46" NAME="L326"><B>wide(</B><I>arg</I><B>)</B></A>
+</DL>
+<DD><A HREF="expr.htm#M47" NAME="L327">TYPES, OVERFLOW, AND PRECISION</A>
+<DD><A HREF="expr.htm#M48" NAME="L328">STRING OPERATIONS</A>
+<DD><A HREF="expr.htm#M49" NAME="L329">PERFORMANCE CONSIDERATIONS</A>
+<DD><A HREF="expr.htm#M50" NAME="L330">EXAMPLES</A>
+<DD><A HREF="expr.htm#M51" NAME="L331">SEE ALSO</A>
+<DD><A HREF="expr.htm#M52" NAME="L332">KEYWORDS</A>
+</DL><HR>
+<H3><A NAME="M2">NAME</A></H3>
+expr - Evaluate an expression
+<H3><A NAME="M3">SYNOPSIS</A></H3>
+<B>expr </B><I>arg </I>?<I>arg arg ...</I>?<BR>
+<H3><A NAME="M4">DESCRIPTION</A></H3>
+Concatenates <I>arg</I>s (adding separator spaces between them),
+evaluates the result as a Tcl expression, and returns the value.
+The operators permitted in Tcl expressions are a subset of
+the operators permitted in C expressions, and they have the
+same meaning and precedence as the corresponding C operators.
+Expressions almost always yield numeric results
+(integer or floating-point values).
+For example, the expression
+<PRE><B>expr 8.2 + 6</B></PRE>
+evaluates to 14.2.
+Tcl expressions differ from C expressions in the way that
+operands are specified.  Also, Tcl expressions support
+non-numeric operands and string comparisons.
+<H3><A NAME="M5">OPERANDS</A></H3>
+A Tcl expression consists of a combination of operands, operators,
+and parentheses.
+White space may be used between the operands and operators and
+parentheses; it is ignored by the expression's instructions.
+Where possible, operands are interpreted as integer values.
+Integer values may be specified in decimal (the normal case), in octal (if the
+first character of the operand is <B>0</B>), or in hexadecimal (if the first
+two characters of the operand are <B>0x</B>).
+If an operand does not have one of the integer formats given
+above, then it is treated as a floating-point number if that is
+possible.  Floating-point numbers may be specified in any of the
+ways accepted by an ANSI-compliant C compiler (except that the
+<B>f</B>, <B>F</B>, <B>l</B>, and <B>L</B> suffixes will not be permitted in
+most installations).  For example, all of the
+following are valid floating-point numbers:  2.1, 3., 6e4, 7.91e+16.
+If no numeric interpretation is possible (note that all literal
+operands that are not numeric or boolean must be quoted with either
+braces or with double quotes), then an operand is left as a string
+(and only a limited set of operators may be applied to it).
+<P>
+On 32-bit systems, integer values MAX_INT (0x7FFFFFFF) and MIN_INT
+(-0x80000000) will be represented as 32-bit values, and integer values
+outside that range will be represented as 64-bit values (if that is
+possible at all.)
+<P>
+Operands may be specified in any of the following ways:
+<P>
+<DL>
+<DT>[1]<DD>
+As a numeric value, either integer or floating-point.
+<P><DT>[2]<DD>
+As a boolean value, using any form understood by <B>string is boolean</B>.
+<P><DT>[3]<DD>
+As a Tcl variable, using standard <B>$</B> notation.
+The variable's value will be used as the operand.
+<P><DT>[4]<DD>
+As a string enclosed in double-quotes.
+The expression parser will perform backslash, variable, and
+command substitutions on the information between the quotes,
+and use the resulting value as the operand
+<P><DT>[5]<DD>
+As a string enclosed in braces.
+The characters between the open brace and matching close brace
+will be used as the operand without any substitutions.
+<P><DT>[6]<DD>
+As a Tcl command enclosed in brackets.
+The command will be executed and its result will be used as
+the operand.
+<P><DT>[7]<DD>
+As a mathematical function whose arguments have any of the above
+forms for operands, such as <B>sin($x)</B>.  See below for a list of defined
+functions.
+<P></DL>
+<P>
+Where the above substitutions occur (e.g. inside quoted strings), they
+are performed by the expression's instructions.
+However, the command parser may already have performed one round of
+substitution before the expression processor was called.
+As discussed below, it is usually best to enclose expressions
+in braces to prevent the command parser from performing substitutions
+on the contents.
+<P>
+For some examples of simple expressions, suppose the variable
+<B>a</B> has the value 3 and
+the variable <B>b</B> has the value 6.
+Then the command on the left side of each of the lines below
+will produce the value on the right side of the line:
+<PRE><B>expr 3.1 + $a	6.1
+expr 2 + &quot;$a.$b&quot;	5.6
+expr 4*[llength &quot;6 2&quot;]	8
+expr {{word one} &lt; &quot;word $a&quot;}	0</B></PRE>
+<H3><A NAME="M6">OPERATORS</A></H3>
+The valid operators are listed below, grouped in decreasing order
+of precedence:
+<P>
+<DL>
+<DT><A NAME="M7"><B>-  +  ~  !</B></A><DD>
+Unary minus, unary plus, bit-wise NOT, logical NOT.  None of these operators
+may be applied to string operands, and bit-wise NOT may be
+applied only to integers.
+<P><DT><A NAME="M8"><B>*  /  %</B></A><DD>
+Multiply, divide, remainder.  None of these operators may be
+applied to string operands, and remainder may be applied only
+to integers.
+The remainder will always have the same sign as the divisor and
+an absolute value smaller than the divisor.
+<P><DT><A NAME="M9"><B>+  -</B></A><DD>
+Add and subtract.  Valid for any numeric operands.
+<P><DT><A NAME="M10"><B>&lt;&lt;  &gt;&gt;</B></A><DD>
+Left and right shift.  Valid for integer operands only.
+A right shift always propagates the sign bit.
+<P><DT><A NAME="M11"><B>&lt;  &gt;  &lt;=  &gt;=</B></A><DD>
+Boolean less, greater, less than or equal, and greater than or equal.
+Each operator produces 1 if the condition is true, 0 otherwise.
+These operators may be applied to strings as well as numeric operands,
+in which case string comparison is used.
+<P><DT><A NAME="M12"><B>==  !=</B></A><DD>
+Boolean equal and not equal.  Each operator produces a zero/one result.
+Valid for all operand types.
+<P><DT><A NAME="M13"><B>eq  ne</B></A><DD>
+Boolean string equal and string not equal.  Each operator produces a
+zero/one result.  The operand types are interpreted only as strings.
+<P><DT><A NAME="M14"><B>&amp;</B></A><DD>
+Bit-wise AND.  Valid for integer operands only.
+<P><DT><A NAME="M15"><B>^</B></A><DD>
+Bit-wise exclusive OR.  Valid for integer operands only.
+<P><DT><A NAME="M16"><B>|</B></A><DD>
+Bit-wise OR.  Valid for integer operands only.
+<P><DT><A NAME="M17"><B>&amp;&amp;</B></A><DD>
+Logical AND.  Produces a 1 result if both operands are non-zero,
+0 otherwise.
+Valid for boolean and numeric (integers or floating-point) operands only.
+<P><DT><A NAME="M18"><B>||</B></A><DD>
+Logical OR.  Produces a 0 result if both operands are zero, 1 otherwise.
+Valid for boolean and numeric (integers or floating-point) operands only.
+<P><DT><A NAME="M19"><I>x</I><B>?</B><I>y</I><B>:</B><I>z</I></A><DD>
+If-then-else, as in C.  If <I>x</I>
+evaluates to non-zero, then the result is the value of <I>y</I>.
+Otherwise the result is the value of <I>z</I>.
+The <I>x</I> operand must have a boolean or numeric value.
+<P></DL>
+<P>
+See the C manual for more details on the results
+produced by each operator.
+All of the binary operators group left-to-right within the same
+precedence level.  For example, the command
+<PRE><B>expr 4*2 &lt; 7</B></PRE>
+returns 0.
+<P>
+The <B>&amp;&amp;</B>, <B>||</B>, and <B>?:</B> operators have ``lazy
+evaluation'', just as in C, 
+which means that operands are not evaluated if they are
+not needed to determine the outcome.  For example, in the command
+<PRE><B>expr {$v ? [a] : [b]}</B></PRE>
+only one of <B>[a]</B> or <B>[b]</B> will actually be evaluated,
+depending on the value of <B>$v</B>.  Note, however, that this is
+only true if the entire expression is enclosed in braces;  otherwise
+the Tcl parser will evaluate both <B>[a]</B> and <B>[b]</B> before
+invoking the <B>expr</B> command.
+<H3><A NAME="M20">MATH FUNCTIONS</A></H3>
+Tcl supports the following mathematical functions in expressions, all
+of which work solely with floating-point numbers unless otherwise noted:
+<PRE><B>abs</B>	<B>cosh</B>	<B>log</B>	<B>sqrt</B>
+<B>acos</B>	<B>double</B>	<B>log10</B>	<B>srand</B>
+<B>asin</B>	<B>exp</B>	<B>pow</B>	<B>tan</B>
+<B>atan</B>	<B>floor</B>	<B>rand</B>	<B>tanh</B>
+<B>atan2</B>	<B>fmod</B>	<B>round</B>	<B>wide</B>
+<B>ceil</B>	<B>hypot</B>	<B>sin</B>
+<B>cos</B>	<B>int</B>	<B>sinh</B></PRE>
+<P>
+<P>
+<DL>
+<DT><A NAME="M21"><B>abs(</B><I>arg</I><B>)</B></A><DD>
+Returns the absolute value of <I>arg</I>.  <I>Arg</I> may be either
+integer or floating-point, and the result is returned in the same form.
+<P><DT><A NAME="M22"><B>acos(</B><I>arg</I><B>)</B></A><DD>
+Returns the arc cosine of <I>arg</I>, in the range [<I>0</I>,<I>pi</I>]
+radians. <I>Arg</I> should be in the range [<I>-1</I>,<I>1</I>].
+<P><DT><A NAME="M23"><B>asin(</B><I>arg</I><B>)</B></A><DD>
+Returns the arc sine of <I>arg</I>, in the range [<I>-pi/2</I>,<I>pi/2</I>]
+radians.  <I>Arg</I> should be in the range [<I>-1</I>,<I>1</I>].
+<P><DT><A NAME="M24"><B>atan(</B><I>arg</I><B>)</B></A><DD>
+Returns the arc tangent of <I>arg</I>, in the range [<I>-pi/2</I>,<I>pi/2</I>]
+radians.
+<P><DT><A NAME="M25"><B>atan2(</B><I>y, x</I><B>)</B></A><DD>
+Returns the arc tangent of <I>y</I>/<I>x</I>, in the range [<I>-pi</I>,<I>pi</I>]
+radians.  <I>x</I> and <I>y</I> cannot both be 0.  If <I>x</I> is greater
+than <I>0</I>, this is equivalent to <B>atan(</B><I>y/x</I><B>)</B>.
+<P><DT><A NAME="M26"><B>ceil(</B><I>arg</I><B>)</B></A><DD>
+Returns the smallest integral floating-point value (i.e. with a zero
+fractional part) not less than <I>arg</I>.
+<P><DT><A NAME="M27"><B>cos(</B><I>arg</I><B>)</B></A><DD>
+Returns the cosine of <I>arg</I>, measured in radians.
+<P><DT><A NAME="M28"><B>cosh(</B><I>arg</I><B>)</B></A><DD>
+Returns the hyperbolic cosine of <I>arg</I>.  If the result would cause
+an overflow, an error is returned.
+<P><DT><A NAME="M29"><B>double(</B><I>arg</I><B>)</B></A><DD>
+If <I>arg</I> is a floating-point value, returns <I>arg</I>, otherwise converts
+<I>arg</I> to floating-point and returns the converted value.
+<P><DT><A NAME="M30"><B>exp(</B><I>arg</I><B>)</B></A><DD>
+Returns the exponential of <I>arg</I>, defined as <I>e</I>**<I>arg</I>.
+If the result would cause an overflow, an error is returned.
+<P><DT><A NAME="M31"><B>floor(</B><I>arg</I><B>)</B></A><DD>
+Returns the largest integral floating-point value (i.e. with a zero
+fractional part) not greater than <I>arg</I>.
+<P><DT><A NAME="M32"><B>fmod(</B><I>x, y</I><B>)</B></A><DD>
+Returns the floating-point remainder of the division of <I>x</I> by
+<I>y</I>.  If <I>y</I> is 0, an error is returned.
+<P><DT><A NAME="M33"><B>hypot(</B><I>x, y</I><B>)</B></A><DD>
+Computes the length of the hypotenuse of a right-angled triangle
+<B>sqrt(</B><I>x</I>*<I>x</I>+<I>y</I>*<I>y</I><B>)</B>.
+<P><DT><A NAME="M34"><B>int(</B><I>arg</I><B>)</B></A><DD>
+If <I>arg</I> is an integer value of the same width as the machine
+word, returns <I>arg</I>, otherwise
+converts <I>arg</I> to an integer (of the same size as a machine word,
+i.e. 32-bits on 32-bit systems, and 64-bits on 64-bit systems) by
+truncation and returns the converted value.
+<P><DT><A NAME="M35"><B>log(</B><I>arg</I><B>)</B></A><DD>
+Returns the natural logarithm of <I>arg</I>.  <I>Arg</I> must be a
+positive value.
+<P><DT><A NAME="M36"><B>log10(</B><I>arg</I><B>)</B></A><DD>
+Returns the base 10 logarithm of <I>arg</I>.  <I>Arg</I> must be a
+positive value.
+<P><DT><A NAME="M37"><B>pow(</B><I>x, y</I><B>)</B></A><DD>
+Computes the value of <I>x</I> raised to the power <I>y</I>.  If <I>x</I>
+is negative, <I>y</I> must be an integer value.
+<P><DT><A NAME="M38"><B>rand()</B></A><DD>
+Returns a pseudo-random floating-point value in the range (<I>0</I>,<I>1</I>).  
+The generator algorithm is a simple linear congruential generator that
+is not cryptographically secure.  Each result from <B>rand</B> completely
+determines all future results from subsequent calls to <B>rand</B>, so
+<B>rand</B> should not be used to generate a sequence of secrets, such as
+one-time passwords.  The seed of the generator is initialized from the
+internal clock of the machine or may be set with the <B>srand</B> function.
+<P><DT><A NAME="M39"><B>round(</B><I>arg</I><B>)</B></A><DD>
+If <I>arg</I> is an integer value, returns <I>arg</I>, otherwise converts
+<I>arg</I> to integer by rounding and returns the converted value.
+<P><DT><A NAME="M40"><B>sin(</B><I>arg</I><B>)</B></A><DD>
+Returns the sine of <I>arg</I>, measured in radians.
+<P><DT><A NAME="M41"><B>sinh(</B><I>arg</I><B>)</B></A><DD>
+Returns the hyperbolic sine of <I>arg</I>.  If the result would cause
+an overflow, an error is returned.
+<P><DT><A NAME="M42"><B>sqrt(</B><I>arg</I><B>)</B></A><DD>
+Returns the square root of <I>arg</I>.  <I>Arg</I> must be non-negative.
+<P><DT><A NAME="M43"><B>srand(</B><I>arg</I><B>)</B></A><DD>
+The <I>arg</I>, which must be an integer, is used to reset the seed for
+the random number generator of <B>rand</B>.  Returns the first random
+number (see <B>rand()</B>) from that seed.  Each interpreter has its own seed.
+<P><DT><A NAME="M44"><B>tan(</B><I>arg</I><B>)</B></A><DD>
+Returns the tangent of <I>arg</I>, measured in radians.
+<P><DT><A NAME="M45"><B>tanh(</B><I>arg</I><B>)</B></A><DD>
+Returns the hyperbolic tangent of <I>arg</I>.
+<P><DT><A NAME="M46"><B>wide(</B><I>arg</I><B>)</B></A><DD>
+Converts <I>arg</I> to an integer value at least 64-bits wide (by sign-extension
+if <I>arg</I> is a 32-bit number) if it is not one already.
+<P></DL>
+<P>
+In addition to these predefined functions, applications may
+define additional functions using <B><A HREF="../TclLib/CrtMathFnc.htm">Tcl_CreateMathFunc</A></B>().
+<H3><A NAME="M47">TYPES, OVERFLOW, AND PRECISION</A></H3>
+All internal computations involving integers are done with the C type
+<I>long</I>, and all internal computations involving floating-point are
+done with the C type <I>double</I>.
+When converting a string to floating-point, exponent overflow is
+detected and results in a Tcl error.
+For conversion to integer from string, detection of overflow depends
+on the behavior of some routines in the local C library, so it should
+be regarded as unreliable.
+In any case, integer overflow and underflow are generally not detected
+reliably for intermediate results.  Floating-point overflow and underflow
+are detected to the degree supported by the hardware, which is generally
+pretty reliable.
+<P>
+Conversion among internal representations for integer, floating-point,
+and string operands is done automatically as needed.
+For arithmetic computations, integers are used until some
+floating-point number is introduced, after which floating-point is used.
+For example,
+<PRE><B>expr 5 / 4</B></PRE>
+returns 1, while
+<PRE><B>expr 5 / 4.0</B>
+<B>expr 5 / ( [string length &quot;abcd&quot;] + 0.0 )</B></PRE>
+both return 1.25.
+Floating-point values are always returned with a ``<B>.</B>''
+or an <B>e</B> so that they will not look like integer values.  For
+example,
+<PRE><B>expr 20.0/5.0</B></PRE>
+returns <B>4.0</B>, not <B>4</B>.
+<H3><A NAME="M48">STRING OPERATIONS</A></H3>
+String values may be used as operands of the comparison operators,
+although the expression evaluator tries to do comparisons as integer
+or floating-point when it can,
+except in the case of the <B>eq</B> and <B>ne</B> operators.
+If one of the operands of a comparison is a string and the other
+has a numeric value, the numeric operand is converted back to
+a string using the C <I>sprintf</I> format specifier
+<B>%d</B> for integers and <B>%g</B> for floating-point values.
+For example, the commands
+<PRE><B>expr {&quot;0x03&quot; &gt; &quot;2&quot;}</B>
+<B>expr {&quot;0y&quot; &lt; &quot;0x12&quot;}</B></PRE>
+both return 1.  The first comparison is done using integer
+comparison, and the second is done using string comparison after
+the second operand is converted to the string <B>18</B>.
+Because of Tcl's tendency to treat values as numbers whenever
+possible, it isn't generally a good idea to use operators like <B>==</B>
+when you really want string comparison and the values of the
+operands could be arbitrary;  it's better in these cases to use
+the <B>eq</B> or <B>ne</B> operators, or
+the <B><A HREF="../TclCmd/string.htm">string</A></B> command instead.
+
+<H3><A NAME="M49">PERFORMANCE CONSIDERATIONS</A></H3>
+Enclose expressions in braces for the best speed and the smallest
+storage requirements.
+This allows the Tcl bytecode compiler to generate the best code.
+<P>
+As mentioned above, expressions are substituted twice:
+once by the Tcl parser and once by the <B>expr</B> command.
+For example, the commands
+<PRE><B>set a 3</B>
+<B>set b {$a + 2}</B>
+<B>expr $b*4</B></PRE>
+return 11, not a multiple of 4.
+This is because the Tcl parser will first substitute <B>$a + 2</B> for
+the variable <B>b</B>,
+then the <B>expr</B> command will evaluate the expression <B>$a + 2*4</B>.
+<P>
+Most expressions do not require a second round of substitutions.
+Either they are enclosed in braces or, if not,
+their variable and command substitutions yield numbers or strings
+that don't themselves require substitutions.
+However, because a few unbraced expressions 
+need two rounds of substitutions,
+the bytecode compiler must emit
+additional instructions to handle this situation.
+The most expensive code is required for
+unbraced expressions that contain command substitutions.
+These expressions must be implemented by generating new code
+each time the expression is executed.
+<H3><A NAME="M50">EXAMPLES</A></H3>
+Define a procedure that computes an &quot;interesting&quot; mathematical
+function:
+<PRE>proc calc {x y} {
+    <B>expr</B> { ($x*$x - $y*$y) / exp($x*$x + $y*$y) }
+}</PRE>
+<P>
+Convert polar coordinates into cartesian coordinates:
+<PRE># convert from ($radius,$angle)
+set x [<B>expr</B> { $radius * cos($angle) }]
+set y [<B>expr</B> { $radius * sin($angle) }]</PRE>
+<P>
+Convert cartesian coordinates into polar coordinates:
+<PRE># convert from ($x,$y)
+set radius [<B>expr</B> { hypot($y, $x) }]
+set angle  [<B>expr</B> { atan2($y, $x) }]</PRE>
+<P>
+Print a message describing the relationship of two string values to
+each other:
+<PRE>puts &quot;a and b are [<B>expr</B> {$a eq $b ? {equal} : {different}}]&quot;</PRE>
+<P>
+Set a variable to whether an environment variable is both defined at
+all and also set to a true boolean value:
+<PRE>set isTrue [<B>expr</B> {
+    [info exists ::env(SOME_ENV_VAR)] &amp;&amp;
+    [string is true -strict $::env(SOME_ENV_VAR)]
+}]</PRE>
+<P>
+Generate a random integer in the range 0..99 inclusive:
+<PRE>set randNum [<B>expr</B> { int(100 * rand()) }]</PRE>
+<H3><A NAME="M51">SEE ALSO</A></H3>
+<B><A HREF="../TclCmd/array.htm">array</A></B>, <B><A HREF="../TclCmd/for.htm">for</A></B>, <B><A HREF="../TclCmd/if.htm">if</A></B>, <B><A HREF="../TclCmd/string.htm">string</A></B>, <B><A HREF="../TclCmd/Tcl.htm">Tcl</A></B>, <B><A HREF="../TclCmd/while.htm">while</A></B>
+<H3><A NAME="M52">KEYWORDS</A></H3>
+<A href="../Keywords/A.htm#arithmetic">arithmetic</A>, <A href="../Keywords/B.htm#boolean">boolean</A>, <A href="../Keywords/C.htm#compare">compare</A>, <A href="../Keywords/E.htm#expression">expression</A>, <A href="../Keywords/F.htm#fuzzy comparison">fuzzy comparison</A>
+<HR><PRE>
+<A HREF="../copyright.htm">Copyright</A> &#169; 1993 The Regents of the University of California.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1994-2000 Sun Microsystems, Inc.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1995-1997 Roger E. Critchlow Jr.</PRE>
+</BODY></HTML>

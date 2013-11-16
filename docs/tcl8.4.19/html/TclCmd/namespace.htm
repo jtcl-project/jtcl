@@ -1,0 +1,577 @@
+<HTML><HEAD><TITLE>Tcl Built-In Commands - namespace manual page</TITLE></HEAD><BODY>
+<DL>
+<DD><A HREF="namespace.htm#M2" NAME="L844">NAME</A>
+<DL><DD>namespace - create and manipulate contexts for commands and variables</DL>
+<DD><A HREF="namespace.htm#M3" NAME="L845">SYNOPSIS</A>
+<DL>
+<DD><B>namespace </B>?<I>option</I>? ?<I>arg ...</I>?
+</DL>
+<DD><A HREF="namespace.htm#M4" NAME="L846">DESCRIPTION</A>
+<DL>
+<DD><A HREF="namespace.htm#M5" NAME="L847"><B>namespace children </B>?<I>namespace</I>? ?<I>pattern</I>?</A>
+<DD><A HREF="namespace.htm#M6" NAME="L848"><B>namespace code </B><I>script</I></A>
+<DD><A HREF="namespace.htm#M7" NAME="L849"><B>namespace current</B></A>
+<DD><A HREF="namespace.htm#M8" NAME="L850"><B>namespace delete </B>?<I>namespace namespace ...</I>?</A>
+<DD><A HREF="namespace.htm#M9" NAME="L851"><B>namespace eval</B> <I>namespace arg</I> ?<I>arg ...</I>?</A>
+<DD><A HREF="namespace.htm#M10" NAME="L852"><B>namespace exists</B> <I>namespace</I></A>
+<DD><A HREF="namespace.htm#M11" NAME="L853"><B>namespace export </B>?-<B>clear</B>? ?<I>pattern pattern ...</I>?</A>
+<DD><A HREF="namespace.htm#M12" NAME="L854"><B>namespace forget </B>?<I>pattern pattern ...</I>?</A>
+<DD><A HREF="namespace.htm#M13" NAME="L855"><B>namespace import </B>?<B>-force</B>? ?<I>pattern</I> <I>pattern ...</I>?</A>
+<DD><A HREF="namespace.htm#M14" NAME="L856"><B>namespace inscope</B> <I>namespace</I> <I>script</I> ?<I>arg ...</I>?</A>
+<DD><A HREF="namespace.htm#M15" NAME="L857"><B>namespace origin </B><I>command</I></A>
+<DD><A HREF="namespace.htm#M16" NAME="L858"><B>namespace parent</B> ?<I>namespace</I>?</A>
+<DD><A HREF="namespace.htm#M17" NAME="L859"><B>namespace qualifiers</B> <I>string</I></A>
+<DD><A HREF="namespace.htm#M18" NAME="L860"><B>namespace tail</B> <I>string</I></A>
+<DD><A HREF="namespace.htm#M19" NAME="L861"><B>namespace which</B> ?-<B>command</B>? ?-<B>variable</B>? <I>name</I></A>
+</DL>
+<DD><A HREF="namespace.htm#M20" NAME="L862">WHAT IS A NAMESPACE?</A>
+<DD><A HREF="namespace.htm#M21" NAME="L863">QUALIFIED NAMES</A>
+<DD><A HREF="namespace.htm#M22" NAME="L864">NAME RESOLUTION</A>
+<DD><A HREF="namespace.htm#M23" NAME="L865">IMPORTING COMMANDS</A>
+<DD><A HREF="namespace.htm#M24" NAME="L866">EXPORTING COMMANDS</A>
+<DD><A HREF="namespace.htm#M25" NAME="L867">SCOPED SCRIPTS</A>
+<DD><A HREF="namespace.htm#M26" NAME="L868">EXAMPLES</A>
+<DD><A HREF="namespace.htm#M27" NAME="L869">SEE ALSO</A>
+<DD><A HREF="namespace.htm#M28" NAME="L870">KEYWORDS</A>
+</DL><HR>
+<H3><A NAME="M2">NAME</A></H3>
+namespace - create and manipulate contexts for commands and variables
+<H3><A NAME="M3">SYNOPSIS</A></H3>
+<B>namespace </B>?<I>option</I>? ?<I>arg ...</I>?<BR>
+<H3><A NAME="M4">DESCRIPTION</A></H3>
+The <B>namespace</B> command lets you create, access, and destroy
+separate contexts for commands and variables.
+See the section <B>WHAT IS A NAMESPACE?</B> below
+for a brief overview of namespaces.
+The legal values of <I>option</I> are listed below.
+Note that you can abbreviate the <I>option</I>s.
+<P>
+<DL>
+<DT><A NAME="M5"><B>namespace children </B>?<I>namespace</I>? ?<I>pattern</I>?</A><DD>
+Returns a list of all child namespaces that belong to the
+namespace <I>namespace</I>.
+If <I>namespace</I> is not specified,
+then the children are returned for the current namespace.
+This command returns fully-qualified names,
+which start with a double colon (<B>::</B>).
+If the optional <I>pattern</I> is given,
+then this command returns only the names that match the glob-style pattern.
+The actual pattern used is determined as follows:
+a pattern that starts with double colon (<B>::</B>) is used directly,
+otherwise the namespace <I>namespace</I>
+(or the fully-qualified name of the current namespace)
+is prepended onto the pattern.
+<P><DT><A NAME="M6"><B>namespace code </B><I>script</I></A><DD>
+Captures the current namespace context for later execution
+of the script <I>script</I>.
+It returns a new script in which <I>script</I> has been wrapped
+in a <B>namespace inscope</B> command.
+The new script has two important properties.
+First, it can be evaluated in any namespace and will cause
+<I>script</I> to be evaluated in the current namespace
+(the one where the <B>namespace code</B> command was invoked).
+Second, additional arguments can be appended to the resulting script
+and they will be passed to <I>script</I> as additional arguments.
+For example, suppose the command
+<B>set script [namespace code {foo bar}]</B>
+is invoked in namespace <B>::a::b</B>.
+Then <B>eval &quot;$script x y&quot;</B>
+can be executed in any namespace (assuming the value of
+<B>script</B> has been passed in properly)
+and will have the same effect as the command
+<B>::namespace eval ::a::b {foo bar x y}</B>.
+This command is needed because
+extensions like Tk normally execute callback scripts
+in the global namespace.
+A scoped command captures a command together with its namespace context
+in a way that allows it to be executed properly later.
+See the section <B>SCOPED SCRIPTS</B> for some examples
+of how this is used to create callback scripts.
+<P><DT><A NAME="M7"><B>namespace current</B></A><DD>
+Returns the fully-qualified name for the current namespace.
+The actual name of the global namespace is ``''
+(i.e., an empty string),
+but this command returns <B>::</B> for the global namespace
+as a convenience to programmers.
+<P><DT><A NAME="M8"><B>namespace delete </B>?<I>namespace namespace ...</I>?</A><DD>
+Each namespace <I>namespace</I> is deleted
+and all variables, procedures, and child namespaces
+contained in the namespace are deleted.
+If a procedure is currently executing inside the namespace,
+the namespace will be kept alive until the procedure returns;
+however, the namespace is marked to prevent other code from
+looking it up by name.
+If a namespace doesn't exist, this command returns an error.
+If no namespace names are given, this command does nothing.
+<P><DT><A NAME="M9"><B>namespace eval</B> <I>namespace arg</I> ?<I>arg ...</I>?</A><DD>
+Activates a namespace called <I>namespace</I> and evaluates some code
+in that context.
+If the namespace does not already exist, it is created.
+If more than one <I>arg</I> argument is specified,
+the arguments are concatenated together with a space between each one
+in the same fashion as the <B><A HREF="../TclCmd/eval.htm">eval</A></B> command,
+and the result is evaluated.
+<BR>
+<P>
+If <I>namespace</I> has leading namespace qualifiers
+and any leading namespaces do not exist,
+they are automatically created.
+<P><DT><A NAME="M10"><B>namespace exists</B> <I>namespace</I></A><DD>
+Returns <B>1</B> if <I>namespace</I> is a valid namespace in the current
+context, returns <B>0</B> otherwise.
+<P><DT><A NAME="M11"><B>namespace export </B>?-<B>clear</B>? ?<I>pattern pattern ...</I>?</A><DD>
+Specifies which commands are exported from a namespace.
+The exported commands are those that can be later imported
+into another namespace using a <B>namespace import</B> command.
+Both commands defined in a namespace and
+commands the namespace has previously imported
+can be exported by a namespace.
+The commands do not have to be defined
+at the time the <B>namespace export</B> command is executed.
+Each <I>pattern</I> may contain glob-style special characters,
+but it may not include any namespace qualifiers.
+That is, the pattern can only specify commands
+in the current (exporting) namespace.
+Each <I>pattern</I> is appended onto the namespace's list of export patterns.
+If the -<B>clear</B> flag is given,
+the namespace's export pattern list is reset to empty before any
+<I>pattern</I> arguments are appended.
+If no <I>pattern</I>s are given and the -<B>clear</B> flag isn't given,
+this command returns the namespace's current export list.
+<P><DT><A NAME="M12"><B>namespace forget </B>?<I>pattern pattern ...</I>?</A><DD>
+Removes previously imported commands from a namespace.
+Each <I>pattern</I> is a simple or qualified name such as
+<B>x</B>, <B>foo::x</B> or <B>a::b::p*</B>.
+Qualified names contain double colons (<B>::</B>) and qualify a name
+with the name of one or more namespaces.
+Each <I>qualified pattern</I> is qualified with the name of an
+exporting namespace 
+and may have glob-style special characters in the command name
+at the end of the qualified name.
+Glob characters may not appear in a namespace name.
+For each <I>simple pattern</I> this command deletes the matching
+commands of the 
+current namespace that were imported from a different namespace.
+For <I>qualified patterns</I>, this command first finds the matching
+exported commands. 
+It then checks whether any of those commands
+were previously imported by the current namespace.
+If so, this command deletes the corresponding imported commands. 
+In effect, this un-does the action of a <B>namespace import</B> command.
+<P><DT><A NAME="M13"><B>namespace import </B>?<B>-force</B>? ?<I>pattern</I> <I>pattern ...</I>?</A><DD>
+Imports commands into a namespace.
+Each <I>pattern</I> is a qualified name like
+<B>foo::x</B> or <B>a::p*</B>.
+That is, it includes the name of an exporting namespace
+and may have glob-style special characters in the command name
+at the end of the qualified name.
+Glob characters may not appear in a namespace name.
+All the commands that match a <I>pattern</I> string
+and which are currently exported from their namespace
+are added to the current namespace.
+This is done by creating a new command in the current namespace
+that points to the exported command in its original namespace;
+when the new imported command is called, it invokes the exported command.
+This command normally returns an error
+if an imported command conflicts with an existing command.
+However, if the -<B>force</B> option is given,
+imported commands will silently replace existing commands.
+The <B>namespace import</B> command has snapshot semantics:
+that is, only requested commands that are currently defined
+in the exporting namespace are imported.
+In other words, you can import only the commands that are in a namespace
+at the time when the <B>namespace import</B> command is executed.
+If another command is defined and exported in this namespace later on,
+it will not be imported.
+<P><DT><A NAME="M14"><B>namespace inscope</B> <I>namespace</I> <I>script</I> ?<I>arg ...</I>?</A><DD>
+Executes a script in the context of the specified <I>namespace</I>.
+This command is not expected to be used directly by programmers;
+calls to it are generated implicitly when applications
+use <B>namespace code</B> commands to create callback scripts
+that the applications then register with, e.g., Tk widgets.
+The <B>namespace inscope</B> command is much like the <B>namespace eval</B>
+command except that the <I>namespace</I> must already exist,
+and <B>namespace inscope</B> appends additional <I>arg</I>s
+as proper list elements.
+<BR>
+<B>namespace inscope ::foo $script $x $y $z</B>
+is equivalent to
+<B>namespace eval ::foo [concat $script [list $x $y $z]]</B>
+thus additional arguments will not undergo a second round of substitution,
+as is the case with <B>namespace eval</B>.
+<P><DT><A NAME="M15"><B>namespace origin </B><I>command</I></A><DD>
+Returns the fully-qualified name of the original command
+to which the imported command <I>command</I> refers.
+When a command is imported into a namespace,
+a new command is created in that namespace
+that points to the actual command in the exporting namespace.
+If a command is imported into a sequence of namespaces
+<I>a, b,...,n</I> where each successive namespace
+just imports the command from the previous namespace,
+this command returns the fully-qualified name of the original command
+in the first namespace, <I>a</I>.
+If <I>command</I> does not refer to an imported command,
+the command's own fully-qualified name is returned.
+<P><DT><A NAME="M16"><B>namespace parent</B> ?<I>namespace</I>?</A><DD>
+Returns the fully-qualified name of the parent namespace
+for namespace <I>namespace</I>.
+If <I>namespace</I> is not specified,
+the fully-qualified name of the current namespace's parent is returned.
+<P><DT><A NAME="M17"><B>namespace qualifiers</B> <I>string</I></A><DD>
+Returns any leading namespace qualifiers for <I>string</I>.
+Qualifiers are namespace names separated by double colons (<B>::</B>).
+For the <I>string</I> <B>::foo::bar::x</B>,
+this command returns <B>::foo::bar</B>,
+and for <B>::</B> it returns an empty string.
+This command is the complement of the <B>namespace tail</B> command.
+Note that it does not check whether the
+namespace names are, in fact,
+the names of currently defined namespaces.
+<P><DT><A NAME="M18"><B>namespace tail</B> <I>string</I></A><DD>
+Returns the simple name at the end of a qualified string.
+Qualifiers are namespace names separated by double colons (<B>::</B>).
+For the <I>string</I> <B>::foo::bar::x</B>,
+this command returns <B>x</B>,
+and for <B>::</B> it returns an empty string.
+This command is the complement of the <B>namespace qualifiers</B> command.
+It does not check whether the namespace names are, in fact,
+the names of currently defined namespaces.
+<P><DT><A NAME="M19"><B>namespace which</B> ?-<B>command</B>? ?-<B>variable</B>? <I>name</I></A><DD>
+Looks up <I>name</I> as either a command or variable
+and returns its fully-qualified name.
+For example, if <I>name</I> does not exist in the current namespace
+but does exist in the global namespace,
+this command returns a fully-qualified name in the global namespace.
+If the command or variable does not exist,
+this command returns an empty string.  If the variable has been
+created but not defined, such as with the <B><A HREF="../TclCmd/variable.htm">variable</A></B> command
+or through a <B><A HREF="../TclCmd/trace.htm">trace</A></B> on the variable, this command will return the 
+fully-qualified name of the variable.
+If no flag is given, <I>name</I> is treated as a command name.
+See the section <B>NAME RESOLUTION</B> below for an explanation of
+the rules regarding name resolution.
+<P></DL>
+<H3><A NAME="M20">WHAT IS A NAMESPACE?</A></H3>
+A namespace is a collection of commands and variables.
+It encapsulates the commands and variables to ensure that they
+won't interfere with the commands and variables of other namespaces.
+Tcl has always had one such collection,
+which we refer to as the <I>global namespace</I>.
+The global namespace holds all global variables and commands.
+The <B>namespace eval</B> command lets you create new namespaces.
+For example,
+<PRE><B>namespace eval</B> Counter {
+   <B>namespace export</B> bump
+   variable num 0
+
+   proc bump {} {
+      variable num
+      incr num
+   }
+}</PRE>
+creates a new namespace containing the variable <B>num</B> and
+the procedure <B>bump</B>.
+The commands and variables in this namespace are separate from
+other commands and variables in the same program.
+If there is a command named <B>bump</B> in the global namespace,
+for example, it will be different from the command <B>bump</B>
+in the <B>Counter</B> namespace.
+<P>
+Namespace variables resemble global variables in Tcl.
+They exist outside of the procedures in a namespace
+but can be accessed in a procedure via the <B><A HREF="../TclCmd/variable.htm">variable</A></B> command,
+as shown in the example above.
+<P>
+Namespaces are dynamic.
+You can add and delete commands and variables at any time,
+so you can build up the contents of a
+namespace over time using a series of <B>namespace eval</B> commands.
+For example, the following series of commands has the same effect
+as the namespace definition shown above:
+<PRE><B>namespace eval</B> Counter {
+   variable num 0
+   proc bump {} {
+      variable num
+      return [incr num]
+   }
+}
+<B>namespace eval</B> Counter {
+   proc test {args} {
+      return $args
+   }
+}
+<B>namespace eval</B> Counter {
+    rename test &quot;&quot;
+}</PRE>
+Note that the <B>test</B> procedure is added to the <B>Counter</B> namespace,
+and later removed via the <B><A HREF="../TclCmd/rename.htm">rename</A></B> command.
+<P>
+Namespaces can have other namespaces within them,
+so they nest hierarchically.
+A nested namespace is encapsulated inside its parent namespace
+and can not interfere with other namespaces.
+<H3><A NAME="M21">QUALIFIED NAMES</A></H3>
+Each namespace has a textual name such as
+<B><A HREF="../TclCmd/history.htm">history</A></B> or <B>::safe::interp</B>.
+Since namespaces may nest,
+qualified names are used to refer to
+commands, variables, and child namespaces contained inside namespaces.
+Qualified names are similar to the hierarchical path names for
+Unix files or Tk widgets,
+except that <B>::</B> is used as the separator
+instead of <B>/</B> or <B>.</B>.
+The topmost or global namespace has the name ``'' (i.e., an empty string),
+although <B>::</B> is a synonym.
+As an example, the name <B>::safe::interp::create</B>
+refers to the command <B>create</B> in the namespace <B><A HREF="../TclCmd/interp.htm">interp</A></B>
+that is a child of namespace <B>::safe</B>,
+which in turn is a child of the global namespace, <B>::</B>.
+<P>
+If you want to access commands and variables from another namespace,
+you must use some extra syntax.
+Names must be qualified by the namespace that contains them.
+From the global namespace,
+we might access the <B>Counter</B> procedures like this:
+<PRE>Counter::bump 5
+Counter::Reset</PRE>
+We could access the current count like this:
+<PRE>puts &quot;count = $Counter::num&quot;</PRE>
+When one namespace contains another, you may need more than one
+qualifier to reach its elements.
+If we had a namespace <B>Foo</B> that contained the namespace <B>Counter</B>,
+you could invoke its <B>bump</B> procedure
+from the global namespace like this:
+<PRE>Foo::Counter::bump 3</PRE>
+<P>
+You can also use qualified names when you create and rename commands.
+For example, you could add a procedure to the <B>Foo</B>
+namespace like this:
+<PRE>proc Foo::Test {args} {return $args}</PRE>
+And you could move the same procedure to another namespace like this:
+<PRE>rename Foo::Test Bar::Test</PRE>
+<P>
+There are a few remaining points about qualified names
+that we should cover.
+Namespaces have nonempty names except for the global namespace.
+<B>::</B> is disallowed in simple command, variable, and namespace names
+except as a namespace separator.
+Extra colons in any separator part of a qualified name are ignored;
+i.e. two or more colons are treated as a namespace separator.
+A trailing <B>::</B> in a qualified variable or command name
+refers to the variable or command named {}.
+However, a trailing <B>::</B> in a qualified namespace name is ignored.
+<H3><A NAME="M22">NAME RESOLUTION</A></H3>
+In general, all Tcl commands that take variable and command names
+support qualified names.
+This means you can give qualified names to such commands as
+<B><A HREF="../TclCmd/set.htm">set</A></B>, <B><A HREF="../TclCmd/proc.htm">proc</A></B>, <B><A HREF="../TclCmd/rename.htm">rename</A></B>, and <B><A HREF="../TclCmd/interp.htm">interp alias</A></B>.
+If you provide a fully-qualified name that starts with a <B>::</B>,
+there is no question about what command, variable, or namespace
+you mean.
+However, if the name does not start with a <B>::</B>
+(i.e., is <I>relative</I>), 
+Tcl follows a fixed rule for looking it up:
+Command and variable names are always resolved
+by looking first in the current namespace,
+and then in the global namespace.
+Namespace names, on the other hand, are always resolved
+by looking in only the current namespace.
+<P>
+In the following example,
+<PRE>set traceLevel 0
+<B>namespace eval</B> Debug {
+   printTrace $traceLevel
+}</PRE>
+Tcl looks for <B>traceLevel</B> in the namespace <B>Debug</B>
+and then in the global namespace.
+It looks up the command <B>printTrace</B> in the same way.
+If a variable or command name is not found in either context,
+the name is undefined.
+To make this point absolutely clear, consider the following example:
+<PRE>set traceLevel 0
+<B>namespace eval</B> Foo {
+   variable traceLevel 3
+
+   <B>namespace eval</B> Debug {
+      printTrace $traceLevel
+   }
+}</PRE>
+Here Tcl looks for <B>traceLevel</B> first in the namespace <B>Foo::Debug</B>.
+Since it is not found there, Tcl then looks for it 
+in the global namespace.
+The variable <B>Foo::traceLevel</B> is completely ignored
+during the name resolution process.
+<P>
+You can use the <B>namespace which</B> command to clear up any question
+about name resolution.
+For example, the command:
+<PRE><B>namespace eval</B> Foo::Debug {<B>namespace which</B> -variable traceLevel}</PRE>
+returns <B>::traceLevel</B>.
+On the other hand, the command,
+<PRE><B>namespace eval</B> Foo {<B>namespace which</B> -variable traceLevel}</PRE>
+returns <B>::Foo::traceLevel</B>.
+<P>
+As mentioned above,
+namespace names are looked up differently
+than the names of variables and commands.
+Namespace names are always resolved in the current namespace.
+This means, for example,
+that a <B>namespace eval</B> command that creates a new namespace
+always creates a child of the current namespace
+unless the new namespace name begins with <B>::</B>.
+<P>
+Tcl has no access control to limit what variables, commands,
+or namespaces you can reference.
+If you provide a qualified name that resolves to an element
+by the name resolution rule above,
+you can access the element.
+<P>
+You can access a namespace variable
+from a procedure in the same namespace
+by using the <B><A HREF="../TclCmd/variable.htm">variable</A></B> command.
+Much like the <B><A HREF="../TclCmd/global.htm">global</A></B> command,
+this creates a local link to the namespace variable.
+If necessary, it also creates the variable in the current namespace
+and initializes it.
+Note that the <B><A HREF="../TclCmd/global.htm">global</A></B> command only creates links
+to variables in the global namespace.
+It is not necessary to use a <B><A HREF="../TclCmd/variable.htm">variable</A></B> command
+if you always refer to the namespace variable using an
+appropriate qualified name.
+<H3><A NAME="M23">IMPORTING COMMANDS</A></H3>
+Namespaces are often used to represent libraries.
+Some library commands are used so frequently
+that it is a nuisance to type their qualified names.
+For example, suppose that all of the commands in a package
+like BLT are contained in a namespace called <B>Blt</B>.
+Then you might access these commands like this:
+<PRE>Blt::graph .g -background red
+Blt::table . .g 0,0</PRE>
+If you use the <B>graph</B> and <B>table</B> commands frequently,
+you may want to access them without the <B>Blt::</B> prefix.
+You can do this by importing the commands into the current namespace,
+like this:
+<PRE><B>namespace import</B> Blt::*</PRE>
+This adds all exported commands from the <B>Blt</B> namespace
+into the current namespace context, so you can write code like this:
+<PRE>graph .g -background red
+table . .g 0,0</PRE>
+The <B>namespace import</B> command only imports commands
+from a namespace that that namespace exported
+with a <B>namespace export</B> command.
+<P>
+Importing <I>every</I> command from a namespace is generally
+a bad idea since you don't know what you will get.
+It is better to import just the specific commands you need.
+For example, the command
+<PRE><B>namespace import</B> Blt::graph Blt::table</PRE>
+imports only the <B>graph</B> and <B>table</B> commands into the
+current context.
+<P>
+If you try to import a command that already exists, you will get an
+error.  This prevents you from importing the same command from two
+different packages.  But from time to time (perhaps when debugging),
+you may want to get around this restriction.  You may want to
+reissue the <B>namespace import</B> command to pick up new commands
+that have appeared in a namespace.  In that case, you can use the
+<B>-force</B> option, and existing commands will be silently overwritten:
+<PRE><B>namespace import</B> -force Blt::graph Blt::table</PRE>
+If for some reason, you want to stop using the imported commands,
+you can remove them with a <B>namespace forget</B> command, like this:
+<PRE><B>namespace forget</B> Blt::*</PRE>
+This searches the current namespace for any commands imported from <B>Blt</B>.
+If it finds any, it removes them.  Otherwise, it does nothing.
+After this, the <B>Blt</B> commands must be accessed with the <B>Blt::</B>
+prefix.
+<P>
+When you delete a command from the exporting namespace like this:
+<PRE>rename Blt::graph &quot;&quot;</PRE>
+the command is automatically removed from all namespaces that import it.
+<H3><A NAME="M24">EXPORTING COMMANDS</A></H3>
+You can export commands from a namespace like this:
+<PRE><B>namespace eval</B> Counter {
+   <B>namespace export</B> bump reset
+   variable Num 0
+   variable Max 100
+
+   proc bump {{by 1}} {
+      variable Num
+      incr Num $by
+      Check
+      return $Num
+   }
+   proc reset {} {
+      variable Num
+      set Num 0
+   }
+   proc Check {} {
+      variable Num
+      variable Max
+      if {$Num &gt; $Max} {
+         error &quot;too high!&quot;
+      }
+   }
+}</PRE>
+The procedures <B>bump</B> and <B>reset</B> are exported,
+so they are included when you import from the <B>Counter</B> namespace,
+like this:
+<PRE><B>namespace import</B> Counter::*</PRE>
+However, the <B>Check</B> procedure is not exported,
+so it is ignored by the import operation.
+<P>
+The <B>namespace import</B> command only imports commands
+that were declared as exported by their namespace.
+The <B>namespace export</B> command specifies what commands
+may be imported by other namespaces.
+If a <B>namespace import</B> command specifies a command
+that is not exported, the command is not imported.
+<H3><A NAME="M25">SCOPED SCRIPTS</A></H3>
+The <B>namespace code</B> command is the means by which a script may be
+packaged for evaluation in a namespace other than the one in which it
+was created.  It is used most often to create event handlers, Tk bindings,
+and traces for evaluation in the global context.  For instance, the following
+code indicates how to direct a variable trace callback into the current
+namespace:
+<PRE><B>namespace eval</B> a {
+   variable b
+   proc theTraceCallback { n1 n2 op } {
+      upvar 1 $n1 var
+      puts &quot;the value of $n1 has changed to $var&quot;
+      return
+   }
+   trace variable b w [<B>namespace code</B> theTraceCallback]
+}
+set a::b c</PRE>
+When executed, it prints the message:
+<PRE>the value of a::b has changed to c</PRE>
+<H3><A NAME="M26">EXAMPLES</A></H3>
+Create a namespace containing a variable and an exported command:
+<PRE><B>namespace eval</B> foo {
+   variable bar 0
+   proc grill {} {
+      variable bar
+      puts &quot;called [incr bar] times&quot;
+   }
+   <B>namespace export</B> grill
+}</PRE>
+<P>
+Call the command defined in the previous example in various ways.
+<PRE># Direct call
+foo::grill
+
+# Import into current namespace, then call local alias
+namespace import foo::grill
+grill</PRE>
+<P>
+Look up where the command imported in the previous example came from:
+<PRE>puts &quot;grill came from [<B>namespace origin</B> grill]&quot;</PRE>
+<H3><A NAME="M27">SEE ALSO</A></H3>
+<B><A HREF="../TclCmd/variable.htm">variable</A></B>
+<H3><A NAME="M28">KEYWORDS</A></H3>
+<A href="../Keywords/E.htm#exported">exported</A>, <A href="../Keywords/I.htm#internal">internal</A>, <A href="../Keywords/V.htm#variable">variable</A>
+<HR><PRE>
+<A HREF="../copyright.htm">Copyright</A> &#169; 1993-1997 Bell Labs Innovations for Lucent Technologies
+<A HREF="../copyright.htm">Copyright</A> &#169; 1997 Sun Microsystems, Inc.
+<A HREF="../copyright.htm">Copyright</A> &#169; 2000 Scriptics Corporation.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1995-1997 Roger E. Critchlow Jr.</PRE>
+</BODY></HTML>

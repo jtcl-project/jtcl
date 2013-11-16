@@ -1,0 +1,71 @@
+<HTML>
+<TITLE>
+The java::instanceof Command
+</TITLE>
+
+<BODY>
+<HR>
+
+<H3>
+The java::instanceof Command
+</H3>
+
+<HR>
+
+
+<DL>
+
+<H3>
+Usage:
+</H3>
+
+<DD><B>java::instanceof</B> <I>javaObj type</I>
+
+<P>
+The <B>java::instanceof</B> command is used to determine if a Java
+object is of a given type. The <I>javaObj</I> argument specifies an
+object handle. The <I>type</I> argument specifies an
+interface or class name.  If the <I>type</I> argument is
+a class name, <B>java::instanceof</B> will return 1 if the <I>javaObj</I>
+argument is an instance of <I>type</I> or an instance of a subclass
+of <I>type</I>.  If the <I>type</I> argument is an interface name,
+<B>java::instanceof</B> returns 1 if the
+<I>javaObj</I> argument implements the interface. Otherwise,
+<B>java::instanceof</B> returns 0.
+
+<P>
+
+</DL>
+
+<DL>
+
+<H3>
+Examples:
+</H3>
+
+<DD>
+
+This examples shows using the <B>java::instanceof</B> command to
+query the inheritance relationship of a <B>java.lang.String</B>
+object.
+
+<P>
+
+<code>
+<pre>
+% set obj [java::new String mystring]
+% java::instanceof $obj Object
+1
+</pre>
+</code>
+
+</DL>
+
+<PRE>
+<A HREF="../license.html">Copyright</A> &#169; 1997-1998 Sun Microsystems, Inc.
+</PRE>
+
+
+</BODY>
+</HTML>
+

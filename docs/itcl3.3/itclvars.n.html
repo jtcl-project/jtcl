@@ -1,0 +1,158 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML><HEAD><TITLE>Man page of itclvars</TITLE>
+</HEAD><BODY>
+<H1>itclvars</H1>
+Section: [incr&nbsp;Tcl] (n)<BR>Updated: 3.0<BR><A HREF="#index">Index</A>
+<A HREF="index.html">Return to Main Contents</A><HR>
+
+
+<BR>
+
+
+
+<PRE>
+<BR>
+<HR></PRE>
+
+
+
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+itclvars - variables used by [incr&nbsp;Tcl]
+
+<PRE>
+<BR>
+<HR>
+
+</PRE>
+
+<BR>
+
+
+
+<P>
+<A NAME="lbAC">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<P>
+
+The following global variables are created and managed automatically
+by the <B>[incr&nbsp;Tcl]</B> library.  Except where noted below, these
+variables should normally be treated as read-only by application-specific
+code and by users.
+<DL COMPACT>
+<DT><B>itcl::library</B><DD>
+When an interpreter is created, <B>[incr&nbsp;Tcl]</B> initializes this variable
+to hold the name of a directory containing the system library of
+<B>[incr&nbsp;Tcl]</B> scripts.  The initial value of <B>itcl::library</B>
+is set from the ITCL_LIBRARY environment variable if it exists,
+or from a compiled-in value otherwise.
+<DT><B>itcl::patchLevel</B><DD>
+When an interpreter is created, <B>[incr&nbsp;Tcl]</B> initializes this
+variable to hold the current patch level for <B>[incr&nbsp;Tcl]</B>.
+For example, the value &quot;<B>2.0p1</B>&quot; indicates <B>[incr&nbsp;Tcl]</B>
+version 2.0 with the first set of patches applied.
+<DT><B>itcl::purist</B><DD>
+When an interpreter is created containing Tcl/Tk and the
+<B>[incr&nbsp;Tcl]</B> namespace facility, this variable controls
+a &quot;backward-compatibility&quot; mode for widget access.
+<P>
+In vanilla Tcl/Tk, there is a single pool of commands, so the
+access command for a widget is the same as the window name.
+When a widget is created within a namespace, however, its access
+command is installed in that namespace, and should be accessed
+outside of the namespace using a qualified name.  For example,
+
+<DL COMPACT><DT><DD>
+<PRE>
+
+namespace foo {
+    namespace bar {
+        button .b -text &quot;Testing&quot;
+    }
+}
+foo::bar::.b configure -background red
+pack .b
+
+</PRE>
+
+</DL>
+
+
+Note that the window name &quot;.b&quot; is still used in conjunction
+with commands like <B>pack</B> and <B>destroy</B>.  However, the
+access command for the widget (i.e., name that appears as the
+<I>first</I> argument on a command line) must be more specific.
+<P>
+The &quot;<B>winfo command</B>&quot; command can be used to query the
+fully-qualified access command for any widget, so one can write:
+
+<DL COMPACT><DT><DD>
+<PRE>
+
+[winfo command .b] configure -background red
+
+</PRE>
+
+</DL>
+
+
+and this is good practice when writing library procedures.  Also,
+in conjunction with the <B>bind</B> command, the &quot;%q&quot; field can be
+used in place of &quot;%W&quot; as the access command:
+
+<DL COMPACT><DT><DD>
+<PRE>
+
+bind Button &lt;Key-Return&gt; {%q flash; %q invoke}
+
+</PRE>
+
+</DL>
+
+
+While this behavior makes sense from the standpoint of encapsulation,
+it causes problems with existing Tcl/Tk applications.  Many existing
+applications are written with bindings that use &quot;%W&quot;.  Many
+library procedures assume that the window name is the access
+command.
+<P>
+The <B>itcl::purist</B> variable controls a backward-compatibility
+mode.  By default, this variable is &quot;0&quot;, and the window name
+can be used as an access command in any context.  Whenever the
+<B>unknown</B> procedure stumbles across a widget name, it simply
+uses &quot;<B>winfo command</B>&quot; to determine the appropriate command
+name.  If this variable is set to &quot;1&quot;, this backward-compatibility
+mode is disabled.  This gives better encapsulation, but using the
+window name as the access command may lead to &quot;invalid command&quot;
+errors.
+<DT><B>itcl::version</B><DD>
+When an interpreter is created, <B>[incr&nbsp;Tcl]</B> initializes this
+variable to hold the version number of the form <I>x.y</I>.
+Changes to <I>x</I> represent major changes with probable
+incompatibilities and changes to <I>y</I> represent small enhancements
+and bug fixes that retain backward compatibility.
+<P>
+</DL>
+<A NAME="lbAD">&nbsp;</A>
+<H2>KEYWORDS</H2>
+
+itcl, variables
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAD">KEYWORDS</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="index.html">man2html</A>,
+using the manual pages.<BR>
+Time: 20:52:35 GMT, December 21, 2006
+</BODY>
+</HTML>

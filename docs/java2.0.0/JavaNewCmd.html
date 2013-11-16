@@ -1,0 +1,151 @@
+<HTML>
+<TITLE>
+The java::new Command
+</TITLE>
+
+<BODY>
+<HR>
+
+<H3>
+The java::new Command
+</H3>
+
+<HR>
+
+
+<DL>
+
+<H3>
+Usage:
+</H3>
+<DD><B>java::new </B><I>signature</I> ?<I>arg arg ...</I>?
+<DD><B>java::new </B><I>arraySignature</I> <I>sizeList</I> ?<I>valueList</I>?
+
+<DD>
+
+<P>
+
+The <B>java::new</B> command is used to create new instances of accessible Java
+objects from Tcl. The first form of the command accepts a <I>signature</I>
+argument which specifies the signature of the constructor for the
+Java object that will be created. The second form accepts an
+<I>arraySignature</I> argument which specifies the class type of the
+array and the number of dimensions in the array.
+
+<P>
+
+When <B>java::new</B> is called with a non-array signature, the appropriate
+constructor for the Java object is invoked with the arguments to the
+<B>java::new</B> command provided as arguments to the Java constructor.
+If the arguments to <B>java::new</B> are not already Java objects, then
+those Tcl values are converted to Java objects or primitive values
+before being passed to the constructor. When the constructor finishes,
+a Java object handle is returned by the <B>java::new</B> command.
+Because the specification of signatures for constructors and methods
+is very simmilar, a seperate
+<A HREF="JavaSignatures.html">Signatures</A> section covers them both.
+
+<P>
+
+When <B>java::new</B> is called with an <I>arraySignature</I> argument,
+the signature is examined to determine the type of the array and
+the number of dimensions. The <I>arraySignature</I> argument consists
+of a class or a primitive data type followed by one or more pairs of brackets.
+The number of pairs of brackets determines the dimension of the array.
+For example, {int[][][]} indicates a three dimensional array of integers;
+the curly braces keeps the Tcl interpreter from evaluating the empty brackets
+as empty commands.
+
+<P>
+
+The <I>sizeList</I> argument determines the number of array elements
+allocated for each
+dimension in the array.  The <I>i</I>'th element of <I>sizeList</I>
+specifies the size of the <I>i</I>'th dimension of the array.  If
+<I>sizeList</I> contains more elements than the number of dimensions
+specified by the <I>arraySignature</I>, then an error is returned.  If
+<I>sizeList</I> contains fewer elements than the number of dimensions
+specified by the <I>arraySignature</I>, then the size will be determined by
+the <I>valueList</I>, if present.
+
+<P>
+
+The <I>valueList</I> argument is used to set initial values of the array
+cells.  Elements of the <I>valueList</I> must be of the same type as the
+base class of the array. If the array is multidimensional, then the list
+must contain sublists of a depth equal to the number of dimensions of
+the array. If no element is specified in the <I>valueList</I> for a
+particular array cell, the cell will be initialized to the standard
+default value for the corresponding Java array type. If the length of the
+<I>sizeList</I> is smaller than the number of array dimensions, the
+size of each row whose size is not specified by the <I>sizeList</I> is
+determined by the length of the corresponding sublist in
+<I>valueList</I>, or 0 if the <I>valueList</I> contains no corresponding
+sublist.  An error occurs if any dimension other than the last has
+size 0.
+
+<P>
+
+The <A HREF="JavaConversions.html">Conversions</a> section describes how
+arguments to the <B>java::new</B> command might be converted to Java
+objects or primitive types.
+
+</DL>
+
+<DL>
+
+<H3>
+Examples:
+</H3>
+
+<DD>
+
+The following example shows how to allocate an instance of the Java class
+<B>java.lang.String</b>, and how to get a Tcl string representation of the
+<B>java.lang.String</b> object.
+
+<code>
+<pre>
+# Allocate an instance of a String object.
+set jstring [java::new String "Hello World"]
+
+# Convert the Java string to a Tcl string
+set tstring [$jstring toString]
+</pre>
+</code>
+
+<P>
+
+In this example, we see how to allocate an array of <B>java.lang.String</b>
+objects. This example also demonstrates Java array object commands and their
+equivalent Java statements, see the <A HREF="JavaArrayObjCmd.html">javaArrayObj</A>
+section for more information.
+
+<code>
+<pre>
+# This is equivalent to the Java statement.
+# String[] arr = new String[2];
+set arr [java::new {String[]} {2}]
+
+# Set the values of the array elements.
+# This is equivalent to the following Java statements.
+# arr[0] = "Hello";
+# arr[1] = "World";
+$arr set 0 "Hello"
+$arr set 1 "World"
+
+</pre>
+</code>
+
+<P>
+
+</DL>
+
+<PRE>
+<A HREF="../license.html">Copyright</A> &#169; 1997-1998 Sun Microsystems, Inc.
+</PRE>
+
+
+</BODY>
+</HTML>
+

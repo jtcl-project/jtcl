@@ -1,0 +1,460 @@
+<HTML><HEAD><TITLE>Tcl Built-In Commands - tclvars manual page</TITLE></HEAD><BODY>
+<DL>
+<DD><A HREF="tclvars.htm#M2" NAME="L1456">NAME</A>
+<DL><DD>tclvars - Variables used by Tcl</DL>
+<DD><A HREF="tclvars.htm#M3" NAME="L1457">DESCRIPTION</A>
+<DL>
+<DD><A HREF="tclvars.htm#M4" NAME="L1458"><B>env</B></A>
+<DL>
+<DD><A HREF="tclvars.htm#M5" NAME="L1459"><B>LOGIN</B></A>
+<DD><A HREF="tclvars.htm#M6" NAME="L1460"><B>USER</B></A>
+<DD><A HREF="tclvars.htm#M7" NAME="L1461"><B>SYS_FOLDER</B></A>
+<DD><A HREF="tclvars.htm#M8" NAME="L1462"><B>APPLE_M_FOLDER</B></A>
+<DD><A HREF="tclvars.htm#M9" NAME="L1463"><B>CP_FOLDER</B></A>
+<DD><A HREF="tclvars.htm#M10" NAME="L1464"><B>DESK_FOLDER</B></A>
+<DD><A HREF="tclvars.htm#M11" NAME="L1465"><B>EXT_FOLDER</B></A>
+<DD><A HREF="tclvars.htm#M12" NAME="L1466"><B>PREF_FOLDER</B></A>
+<DD><A HREF="tclvars.htm#M13" NAME="L1467"><B>PRINT_MON_FOLDER</B></A>
+<DD><A HREF="tclvars.htm#M14" NAME="L1468"><B>SHARED_TRASH_FOLDER</B></A>
+<DD><A HREF="tclvars.htm#M15" NAME="L1469"><B>TRASH_FOLDER</B></A>
+<DD><A HREF="tclvars.htm#M16" NAME="L1470"><B>START_UP_FOLDER</B></A>
+<DD><A HREF="tclvars.htm#M17" NAME="L1471"><B>HOME</B></A>
+</DL>
+<DD><A HREF="tclvars.htm#M18" NAME="L1472"><B>errorCode</B></A>
+<DL>
+<DD><A HREF="tclvars.htm#M19" NAME="L1473"><B>ARITH</B><I> code msg</I></A>
+<DD><A HREF="tclvars.htm#M20" NAME="L1474"><B>CHILDKILLED</B><I> pid sigName msg</I></A>
+<DD><A HREF="tclvars.htm#M21" NAME="L1475"><B>CHILDSTATUS</B><I> pid code</I></A>
+<DD><A HREF="tclvars.htm#M22" NAME="L1476"><B>CHILDSUSP</B><I> pid sigName msg</I></A>
+<DD><A HREF="tclvars.htm#M23" NAME="L1477"><B>NONE</B></A>
+<DD><A HREF="tclvars.htm#M24" NAME="L1478"><B>POSIX </B><I>errName msg</I></A>
+</DL>
+<DD><A HREF="tclvars.htm#M25" NAME="L1479"><B>errorInfo</B></A>
+<DD><A HREF="tclvars.htm#M26" NAME="L1480"><B>tcl_library</B></A>
+<DD><A HREF="tclvars.htm#M27" NAME="L1481"><B>tcl_patchLevel</B></A>
+<DD><A HREF="tclvars.htm#M28" NAME="L1482"><B>tcl_pkgPath</B></A>
+<DD><A HREF="tclvars.htm#M29" NAME="L1483"><B>tcl_platform</B></A>
+<DL>
+<DD><A HREF="tclvars.htm#M30" NAME="L1484"><B>byteOrder</B></A>
+<DD><A HREF="tclvars.htm#M31" NAME="L1485"><B>debug</B></A>
+<DD><A HREF="tclvars.htm#M32" NAME="L1486"><B>machine</B></A>
+<DD><A HREF="tclvars.htm#M33" NAME="L1487"><B>os</B></A>
+<DD><A HREF="tclvars.htm#M34" NAME="L1488"><B>osVersion</B></A>
+<DD><A HREF="tclvars.htm#M35" NAME="L1489"><B>platform</B></A>
+<DD><A HREF="tclvars.htm#M36" NAME="L1490"><B>threaded</B></A>
+<DD><A HREF="tclvars.htm#M37" NAME="L1491"><B>user</B></A>
+<DD><A HREF="tclvars.htm#M38" NAME="L1492"><B>wordSize</B></A>
+</DL>
+<DD><A HREF="tclvars.htm#M39" NAME="L1493"><B>tcl_precision</B></A>
+<DD><A HREF="tclvars.htm#M40" NAME="L1494"><B>tcl_rcFileName</B></A>
+<DD><A HREF="tclvars.htm#M41" NAME="L1495"><B>tcl_rcRsrcName</B></A>
+<DD><A HREF="tclvars.htm#M42" NAME="L1496"><B>tcl_traceCompile</B></A>
+</DL>
+<DL>
+<DD><A HREF="tclvars.htm#M43" NAME="L1497"><B>tcl_traceExec</B></A>
+</DL>
+<DL>
+<DD><A HREF="tclvars.htm#M44" NAME="L1498"><B>tcl_wordchars</B></A>
+<DD><A HREF="tclvars.htm#M45" NAME="L1499"><B>tcl_nonwordchars</B></A>
+<DD><A HREF="tclvars.htm#M46" NAME="L1500"><B>tcl_version</B></A>
+</DL>
+<DD><A HREF="tclvars.htm#M47" NAME="L1501">OTHER GLOBAL VARIABLES</A>
+<DL>
+<DD><A HREF="tclvars.htm#M48" NAME="L1502"><B>argc</B></A>
+<DD><A HREF="tclvars.htm#M49" NAME="L1503"><B>argv</B></A>
+<DD><A HREF="tclvars.htm#M50" NAME="L1504"><B>argv0</B></A>
+<DD><A HREF="tclvars.htm#M51" NAME="L1505"><B>tcl_interactive</B></A>
+</DL>
+<DL>
+<DD><A HREF="tclvars.htm#M52" NAME="L1506"><B>geometry</B></A>
+</DL>
+<DD><A HREF="tclvars.htm#M53" NAME="L1507">SEE ALSO</A>
+<DD><A HREF="tclvars.htm#M54" NAME="L1508">KEYWORDS</A>
+</DL><HR>
+<H3><A NAME="M2">NAME</A></H3>
+tclvars - Variables used by Tcl
+<H3><A NAME="M3">DESCRIPTION</A></H3>
+The following global variables are created and managed automatically
+by the Tcl library.  Except where noted below, these variables should
+normally be treated as read-only by application-specific code and by users.
+<P>
+<DL>
+<DT><A NAME="M4"><B>env</B></A><DD>
+This variable is maintained by Tcl as an array
+whose elements are the environment variables for the process.
+Reading an element will return the value of the corresponding
+environment variable.
+Setting an element of the array will modify the corresponding
+environment variable or create a new one if it doesn't already
+exist.
+Unsetting an element of <B>env</B> will remove the corresponding
+environment variable.
+Changes to the <B>env</B> array will affect the environment
+passed to children by commands like <B><A HREF="../TclCmd/exec.htm">exec</A></B>.
+If the entire <B>env</B> array is unset then Tcl will stop
+monitoring <B>env</B> accesses and will not update environment
+variables.
+<DL><DD>
+Under Windows, the environment variables PATH and COMSPEC in any
+capitalization are converted automatically to upper case.  For instance, the
+PATH variable could be exported by the operating system as ``path'',
+``Path'', ``PaTh'', etc., causing otherwise simple Tcl code to have to
+support many special cases.  All other environment variables inherited by
+Tcl are left unmodified.  Setting an env array variable to blank is the
+same as unsetting it as this is the behavior of the underlying Windows OS.
+It should be noted that relying on an existing and empty environment variable
+won't work on windows and is discouraged for cross-platform usage.
+</DL>
+<DL><DD>
+On the Macintosh, the environment variable is constructed by Tcl as no
+global environment variable exists.  The environment variables that
+are created for Tcl include:
+<P>
+<DL>
+<DT><A NAME="M5"><B>LOGIN</B></A><DD>
+This holds the Chooser name of the Macintosh.
+<P><DT><A NAME="M6"><B>USER</B></A><DD>
+This also holds the Chooser name of the Macintosh.
+<P><DT><A NAME="M7"><B>SYS_FOLDER</B></A><DD>
+The path to the system directory.
+<P><DT><A NAME="M8"><B>APPLE_M_FOLDER</B></A><DD>
+The path to the Apple Menu directory.
+<P><DT><A NAME="M9"><B>CP_FOLDER</B></A><DD>
+The path to the control panels directory.
+<P><DT><A NAME="M10"><B>DESK_FOLDER</B></A><DD>
+The path to the desk top directory.
+<P><DT><A NAME="M11"><B>EXT_FOLDER</B></A><DD>
+The path to the system extensions directory.
+<P><DT><A NAME="M12"><B>PREF_FOLDER</B></A><DD>
+The path to the preferences directory.
+<P><DT><A NAME="M13"><B>PRINT_MON_FOLDER</B></A><DD>
+The path to the print monitor directory.
+<P><DT><A NAME="M14"><B>SHARED_TRASH_FOLDER</B></A><DD>
+The path to the network trash directory.
+<P><DT><A NAME="M15"><B>TRASH_FOLDER</B></A><DD>
+The path to the trash directory.
+<P><DT><A NAME="M16"><B>START_UP_FOLDER</B></A><DD>
+The path to the start up directory.
+<P><DT><A NAME="M17"><B>HOME</B></A><DD>
+The path to the application's default directory.
+<P></DL>
+<P>
+You can also create your own environment variables for the Macintosh.
+A file named  <I>Tcl Environment Variables</I> may be placed in the
+preferences folder in the Mac system folder.  Each line of this file
+should be of the form <I>VAR_NAME=var_data</I>.
+<P>
+The last alternative is to place environment variables in a 'STR#' 
+resource named <I>Tcl Environment Variables</I> of the application.  This
+is considered a little more ``Mac like'' than a Unix style Environment
+Variable file.  Each entry in the 'STR#' resource has the same format
+as above.  The source code file <I>tclMacEnv.c</I> contains the
+implementation of the env mechanisms.  This file contains many
+#define's that allow customization of the env mechanisms to fit your
+applications needs.
+</DL>
+<P><DT><A NAME="M18"><B>errorCode</B></A><DD>
+After an error has occurred, this variable will be set to hold
+a list value representing additional information about the error
+in a form that is easy to process with programs.
+The first element of the list identifies a general class of
+errors, and determines the format of the rest of the list.
+The following formats for <B>errorCode</B> are used by the
+Tcl core; individual applications may define additional formats.
+<P>
+<DL>
+<DT><A NAME="M19"><B>ARITH</B><I> code msg</I></A><DD>
+This format is used when an arithmetic error occurs (e.g. an attempt
+to divide by zero in the <B><A HREF="../TclCmd/expr.htm">expr</A></B> command).
+<I>Code</I> identifies the precise error and <I>msg</I> provides a
+human-readable description of the error.  <I>Code</I> will be either
+DIVZERO (for an attempt to divide by zero),
+DOMAIN (if an argument is outside the domain of a function, such as acos(-3)),
+IOVERFLOW (for integer overflow),
+OVERFLOW (for a floating-point overflow),
+or UNKNOWN (if the cause of the error cannot be determined).
+<P><DT><A NAME="M20"><B>CHILDKILLED</B><I> pid sigName msg</I></A><DD>
+This format is used when a child process has been killed because of
+a signal.  The second element of <B>errorCode</B> will be the
+process's identifier (in decimal).
+The third element will be the symbolic name of the signal that caused
+the process to terminate; it will be one of the names from the
+include file signal.h, such as <B>SIGPIPE</B>.
+The fourth element will be a short human-readable message
+describing the signal, such as ``write on pipe with no readers''
+for <B>SIGPIPE</B>.
+<P><DT><A NAME="M21"><B>CHILDSTATUS</B><I> pid code</I></A><DD>
+This format is used when a child process has exited with a non-zero
+exit status.  The second element of <B>errorCode</B> will be the
+process's identifier (in decimal) and the third element will be the exit
+code returned by the process (also in decimal).
+<P><DT><A NAME="M22"><B>CHILDSUSP</B><I> pid sigName msg</I></A><DD>
+This format is used when a child process has been suspended because
+of a signal.
+The second element of <B>errorCode</B> will be the process's identifier,
+in decimal.
+The third element will be the symbolic name of the signal that caused
+the process to suspend; this will be one of the names from the
+include file signal.h, such as <B>SIGTTIN</B>.
+The fourth element will be a short human-readable message
+describing the signal, such as ``background tty read''
+for <B>SIGTTIN</B>.
+<P><DT><A NAME="M23"><B>NONE</B></A><DD>
+This format is used for errors where no additional information is
+available for an error besides the message returned with the
+error.  In these cases <B>errorCode</B> will consist of a list
+containing a single element whose contents are <B>NONE</B>.
+<P><DT><A NAME="M24"><B>POSIX </B><I>errName msg</I></A><DD>
+If the first element of <B>errorCode</B> is <B>POSIX</B>, then
+the error occurred during a POSIX kernel call.
+The second element of the list will contain the symbolic name
+of the error that occurred, such as <B>ENOENT</B>; this will
+be one of the values defined in the include file errno.h.
+The third element of the list will be a human-readable
+message corresponding to <I>errName</I>, such as
+``no such file or directory'' for the <B>ENOENT</B> case.
+</DL><P>To set <B>errorCode</B>, applications should use library
+procedures such as <B><A HREF="../TclLib/AddErrInfo.htm">Tcl_SetErrorCode</A></B> and <B><A HREF="../TclLib/AddErrInfo.htm">Tcl_PosixError</A></B>,
+or they may invoke the <B><A HREF="../TclCmd/error.htm">error</A></B> command.
+If one of these methods hasn't been used, then the Tcl
+interpreter will reset the variable to <B>NONE</B> after
+the next error.<DL>
+</DL>
+<P><DT><A NAME="M25"><B>errorInfo</B></A><DD>
+After an error has occurred, this string will contain one or more lines
+identifying the Tcl commands and procedures that were being executed
+when the most recent error occurred.
+Its contents take the form of a stack trace showing the various
+nested Tcl commands that had been invoked at the time of the error.
+<P><DT><A NAME="M26"><B>tcl_library</B></A><DD>
+This variable holds the name of a directory containing the
+system library of Tcl scripts, such as those used for auto-loading.
+The value of this variable is returned by the <B><A HREF="../TclCmd/info.htm">info library</A></B> command.
+See the <B>library</B> manual entry for details of the facilities 
+provided by the Tcl script library.
+Normally each application or package will have its own application-specific
+script library in addition to the Tcl script library;
+each application should set a global variable with a name like
+<B>$</B><I>app</I><B>_library</B> (where <I>app</I> is the application's name)
+to hold the network file name for that application's library directory.
+The initial value of <B>tcl_library</B> is set when an interpreter
+is created by searching several different directories until one is
+found that contains an appropriate Tcl startup script.
+If the <B>TCL_LIBRARY</B> environment variable exists, then
+the directory it names is checked first.
+If <B>TCL_LIBRARY</B> isn't set or doesn't refer to an appropriate
+directory, then Tcl checks several other directories based on a
+compiled-in default location, the location of the binary containing
+the application, and the current working directory.
+<P><DT><A NAME="M27"><B>tcl_patchLevel</B></A><DD>
+When an interpreter is created Tcl initializes this variable to
+hold a string giving the current patch level for Tcl, such as
+<B>7.3p2</B> for Tcl 7.3 with the first two official patches, or
+<B>7.4b4</B> for the fourth beta release of Tcl 7.4.
+The value of this variable is returned by the <B><A HREF="../TclCmd/info.htm">info patchlevel</A></B>
+command.
+<P><DT><A NAME="M28"><B>tcl_pkgPath</B></A><DD>
+This variable holds a list of directories indicating where packages are
+normally installed.  It is not used on Windows.  It typically contains
+either one or two entries; if it contains two entries, the first is
+normally a directory for platform-dependent packages (e.g., shared library
+binaries) and the second is normally a directory for platform-independent
+packages (e.g., script files). Typically a package is installed as a
+subdirectory of one of the entries in <B>$tcl_pkgPath</B>. The directories
+in <B>$tcl_pkgPath</B> are included by default in the <B>auto_path</B>
+variable, so they and their immediate subdirectories are automatically
+searched for packages during <B>package require</B> commands.  Note:
+<B>tcl_pkgPath</B> it not intended to be modified by the application.  Its
+value is added to <B>auto_path</B> at startup; changes to <B>tcl_pkgPath</B>
+are not reflected in <B>auto_path</B>.  If you want Tcl to search additional
+directories for packages you should add the names of those directories to
+<B>auto_path</B>, not <B>tcl_pkgPath</B>.
+<P><DT><A NAME="M29"><B>tcl_platform</B></A><DD>
+This is an associative array whose elements contain information about
+the platform on which the application is running, such as the name of
+the operating system, its current release number, and the machine's
+instruction set.  The elements listed below will always
+be defined, but they may have empty strings as values if Tcl couldn't
+retrieve any relevant information.  In addition, extensions
+and applications may add additional values to the array.  The
+predefined elements are:
+<P>
+<DL>
+<DT><A NAME="M30"><B>byteOrder</B></A><DD>
+The native byte order of this machine: either <B>littleEndian</B> or
+<B>bigEndian</B>. 
+<P><DT><A NAME="M31"><B>debug</B></A><DD>
+If this variable exists, then the interpreter was compiled with and linked
+to a debug-enabled C run-time.  This variable will only exist on Windows,
+so extension writers can specify which package to load depending on the
+C run-time library that is in use.  This is not an indication that this core
+contains symbols.
+<P><DT><A NAME="M32"><B>machine</B></A><DD>
+The instruction set executed by this machine, such as
+<B>intel</B>, <B>PPC</B>, <B>68k</B>, or <B>sun4m</B>.  On UNIX machines, this
+is the value returned by <B>uname -m</B>.
+<P><DT><A NAME="M33"><B>os</B></A><DD>
+The name of the operating system running on this machine,
+such as <B>Windows 95</B>, <B>Windows NT</B>, <B>MacOS</B>, or <B>SunOS</B>.
+On UNIX machines, this is the value returned by <B>uname -s</B>.
+On Windows 95 and Windows 98, the value returned will be <B>Windows
+95</B> to provide better backwards compatibility to Windows 95; to
+distinguish between the two, check the <B>osVersion</B>.
+<P><DT><A NAME="M34"><B>osVersion</B></A><DD>
+The version number for the operating system running on this machine.
+On UNIX machines, this is the value returned by <B>uname -r</B>.  On
+Windows 95, the version will be 4.0; on Windows 98, the version will
+be 4.10.
+<P><DT><A NAME="M35"><B>platform</B></A><DD>
+Either <B>windows</B>, <B>macintosh</B>, or <B>unix</B>.  This identifies the
+general operating environment of the machine.
+<P><DT><A NAME="M36"><B>threaded</B></A><DD>
+If this variable exists, then the interpreter
+was compiled with threads enabled.
+<P><DT><A NAME="M37"><B>user</B></A><DD>
+This identifies the
+current user based on the login information available on the platform.
+This comes from the USER or LOGNAME environment variable on Unix,
+and the value from GetUserName on Windows and Macintosh.
+<P><DT><A NAME="M38"><B>wordSize</B></A><DD>
+This gives the size of the native-machine word in bytes (strictly, it
+is same as the result of evaluating <I>sizeof(long)</I> in C.)
+<P></DL>
+<P><DT><A NAME="M39"><B>tcl_precision</B></A><DD>
+This variable controls the number of digits to generate
+when converting floating-point values to strings.  It defaults
+to 12.
+17 digits is ``perfect'' for IEEE floating-point in that it allows
+double-precision values to be converted to strings and back to
+binary with no loss of information.  However, using 17 digits prevents
+any rounding, which produces longer, less intuitive results.  For example,
+<B>expr 1.4</B> returns 1.3999999999999999 with <B>tcl_precision</B>
+set to 17, vs. 1.4 if <B>tcl_precision</B> is 12.
+<DL><DD>
+All interpreters in a process share a single <B>tcl_precision</B> value:
+changing it in one interpreter will affect all other interpreters as
+well.  However, safe interpreters are not allowed to modify the
+variable.
+</DL>
+<P><DT><A NAME="M40"><B>tcl_rcFileName</B></A><DD>
+This variable is used during initialization to indicate the name of a
+user-specific startup file.  If it is set by application-specific
+initialization, then the Tcl startup code will check for the existence
+of this file and <B><A HREF="../TclCmd/source.htm">source</A></B> it if it exists.  For example, for <B><A HREF="../UserCmd/wish.htm">wish</A></B>
+the variable is set to <B>~/.wishrc</B> for Unix and <B>~/wishrc.tcl</B>
+for Windows.
+<P><DT><A NAME="M41"><B>tcl_rcRsrcName</B></A><DD>
+This variable is only used on Macintosh systems.  The variable is used
+during initialization to indicate the name of a user-specific
+<B><A HREF="../TkCmd/text.htm">TEXT</A></B> resource located in the application or extension resource
+forks.  If it is set by application-specific initialization, then the
+Tcl startup code will check for the existence of this resource and
+<B><A HREF="../TclCmd/source.htm">source</A></B> it if it exists.  For example, the Macintosh <B><A HREF="../UserCmd/wish.htm">wish</A></B>
+application has the variable is set to <B>tclshrc</B>.
+<P><DT><A NAME="M42"><B>tcl_traceCompile</B></A><DD>
+The value of this variable can be set to control
+how much tracing information
+is displayed during bytecode compilation.
+By default, tcl_traceCompile is zero and no information is displayed.
+Setting tcl_traceCompile to 1 generates a one-line summary in stdout
+whenever a procedure or top-level command is compiled.
+Setting it to 2 generates a detailed listing in stdout of the
+bytecode instructions emitted during every compilation.
+This variable is useful in
+tracking down suspected problems with the Tcl compiler.
+It is also occasionally useful when converting
+existing code to use Tcl8.0.
+<P></DL>
+<P>
+This variable and functionality only exist if
+<B>TCL_COMPILE_DEBUG</B> was defined during Tcl's compilation.
+<P>
+<DL>
+<DT><A NAME="M43"><B>tcl_traceExec</B></A><DD>
+The value of this variable can be set to control
+how much tracing information
+is displayed during bytecode execution.
+By default, tcl_traceExec is zero and no information is displayed.
+Setting tcl_traceExec to 1 generates a one-line trace in stdout
+on each call to a Tcl procedure.
+Setting it to 2 generates a line of output
+whenever any Tcl command is invoked
+that contains the name of the command and its arguments.
+Setting it to 3 produces a detailed trace showing the result of
+executing each bytecode instruction.
+Note that when tcl_traceExec is 2 or 3,
+commands such as <B><A HREF="../TclCmd/set.htm">set</A></B> and <B><A HREF="../TclCmd/incr.htm">incr</A></B>
+that have been entirely replaced by a sequence
+of bytecode instructions are not shown.
+Setting this variable is useful in
+tracking down suspected problems with the bytecode compiler
+and interpreter.
+It is also occasionally useful when converting
+code to use Tcl8.0.
+<P></DL>
+<P>
+This variable and functionality only exist if
+<B>TCL_COMPILE_DEBUG</B> was defined during Tcl's compilation.
+<P>
+<DL>
+<DT><A NAME="M44"><B>tcl_wordchars</B></A><DD>
+The value of this variable is a regular expression that can be set to
+control what are considered ``word'' characters, for instances like
+selecting a word by double-clicking in text in Tk.  It is platform
+dependent.  On Windows, it defaults to <B>&#92;S</B>, meaning anything
+but a Unicode space character.  Otherwise it defaults to <B>&#92;w</B>,
+which is any Unicode word character (number, letter, or underscore).
+<P><DT><A NAME="M45"><B>tcl_nonwordchars</B></A><DD>
+The value of this variable is a regular expression that can be set to
+control what are considered ``non-word'' characters, for instances like
+selecting a word by double-clicking in text in Tk.  It is platform
+dependent.  On Windows, it defaults to <B>&#92;s</B>, meaning any Unicode space
+character.  Otherwise it defaults to <B>&#92;W</B>, which is anything but a
+Unicode word character (number, letter, or underscore).
+<P><DT><A NAME="M46"><B>tcl_version</B></A><DD>
+When an interpreter is created Tcl initializes this variable to
+hold the version number for this version of Tcl in the form <I>x.y</I>.
+Changes to <I>x</I> represent major changes with probable
+incompatibilities and changes to <I>y</I> represent small enhancements and
+bug fixes that retain backward compatibility.
+The value of this variable is returned by the <B><A HREF="../TclCmd/info.htm">info tclversion</A></B>
+command.
+<P></DL>
+<H3><A NAME="M47">OTHER GLOBAL VARIABLES</A></H3>
+The following variables are only guaranteed to exist in <B><A HREF="../UserCmd/tclsh.htm">tclsh</A></B>
+and <B><A HREF="../UserCmd/wish.htm">wish</A></B> executables; the Tcl library does not define them
+itself but many Tcl environments do.
+<P>
+<DL>
+<DT><A NAME="M48"><B>argc</B></A><DD>
+The number of arguments to <B><A HREF="../UserCmd/tclsh.htm">tclsh</A></B> or <B><A HREF="../UserCmd/wish.htm">wish</A></B>.
+<P><DT><A NAME="M49"><B>argv</B></A><DD>
+Tcl list of arguments to <B><A HREF="../UserCmd/tclsh.htm">tclsh</A></B> or <B><A HREF="../UserCmd/wish.htm">wish</A></B>.
+<P><DT><A NAME="M50"><B>argv0</B></A><DD>
+The script that <B><A HREF="../UserCmd/tclsh.htm">tclsh</A></B> or <B><A HREF="../UserCmd/wish.htm">wish</A></B> started executing (if it was
+specified) or otherwise the name by which <B><A HREF="../UserCmd/tclsh.htm">tclsh</A></B> or <B><A HREF="../UserCmd/wish.htm">wish</A></B>
+was invoked.
+<P><DT><A NAME="M51"><B>tcl_interactive</B></A><DD>
+Contains 1 if <B><A HREF="../UserCmd/tclsh.htm">tclsh</A></B> or <B><A HREF="../UserCmd/wish.htm">wish</A></B> is running interactively (no
+script was specified and standard input is a terminal-like device), 0
+otherwise.
+<P></DL>
+<P>
+The <B><A HREF="../UserCmd/wish.htm">wish</A></B> executably additionally specifies the following global
+variable:
+<P>
+<DL>
+<DT><A NAME="M52"><B>geometry</B></A><DD>
+If set, contains the user-supplied geometry specification to use for
+the main Tk window.
+
+<P></DL>
+<H3><A NAME="M53">SEE ALSO</A></H3>
+<B><A HREF="../TclCmd/eval.htm">eval</A></B>, <B><A HREF="../UserCmd/tclsh.htm">tclsh</A></B>, <B><A HREF="../UserCmd/wish.htm">wish</A></B>
+<H3><A NAME="M54">KEYWORDS</A></H3>
+<A href="../Keywords/A.htm#arithmetic">arithmetic</A>, <A href="../Keywords/B.htm#bytecode">bytecode</A>, <A href="../Keywords/C.htm#compiler">compiler</A>, <A href="../Keywords/E.htm#error">error</A>, <A href="../Keywords/E.htm#environment">environment</A>, <A href="../Keywords/P.htm#POSIX">POSIX</A>, <A href="../Keywords/P.htm#precision">precision</A>, <A href="../Keywords/S.htm#subprocess">subprocess</A>, <A href="../Keywords/V.htm#variables">variables</A>
+<HR><PRE>
+<A HREF="../copyright.htm">Copyright</A> &#169; 1993 The Regents of the University of California.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1994-1997 Sun Microsystems, Inc.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1995-1997 Roger E. Critchlow Jr.</PRE>
+</BODY></HTML>

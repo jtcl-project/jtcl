@@ -1,0 +1,159 @@
+<HTML>
+<TITLE>
+The javaArrayObj Command
+</TITLE>
+
+<BODY>
+<HR>
+
+<H3>
+The javaArrayObj Command
+</H3>
+
+<HR>
+
+<DL>
+
+<H3>
+Usage:
+</H3>
+
+<DD><I>javaArrayObj</I> ?<B>-noconvert</B>? <I>option</I> ?<I>arg arg ...</I>?
+
+<P>
+
+If a Java object handle represents an instance of an array object,
+then it is also the name of a Tcl command that takes the following
+options: <B>length</B>, <B>get</B>, <B>set</B>, <B>getrange</B>, and
+<B>setrange</B>.  If any other option is chosen, the behavior of the
+array object command defaults to that of the object command described
+above.  The <B>-noconvert</B> flag can only be used with the <B>get</B>,
+<B>getrange</B>, and default options.  The options for this command
+behave as follows:
+
+<P>
+
+<DL>
+
+<P>
+
+<DT><B>length</B><DD>
+Returns the number of elements in the Java object.  If the object is a
+multi-dimensional array, the number of elements in the first dimension
+is returned.
+
+<P>
+
+<DT><B>get</B> ?<B>-noconvert</B>? <I>indexList</I><DD>
+Returns the value stored in the multi-dimensional array cell specified
+by <I>indexList</I>.  The <I>i</I>'th element in <I>indexList</I>
+specifies the index value of the <I>i</I>'th array dimension.  For
+example, the result of the following commands is the string &quot;easy&quot;.
+
+<code>
+<pre>
+set a [java::new {String[]} {6} {Java scripting is easy in Tcl}]
+$a get 3
+</pre>
+</code>
+
+To retrieve a k-dimensional subarray of an n-dimensional array,
+specifiy an <I>indexList</I> with <I>n - k</I> index values.  For
+example, the following commands result in <I>subArray</I> containing a
+1-dimensional char array handle that refers to a[1][0], the internal
+value of which is {e f}. 
+
+<code>
+<pre>
+set a [java::new {char[][][]} {2 2 2} {{{a b} {c d}} {{e f} {g h}}}]
+set subArray [$a get {1 0}]
+</pre>
+</code>
+
+<P>
+<DT><B>set</B> <I>indexList</I> <I>value</I><DD>
+Sets the multi-dimensional array cell specified by <I>indexList</I> to
+<I>value</I>.  The <I>i</I>'th element in <I>indexList</I> specifies the
+index value of the <I>i</I>'th array dimension.  If <I>value</I> is not
+the correct data type, an error is returned.  For example, the
+following commands result in <I>a</I> having an internal value of {Tcl
+is a great scripting language!}.
+
+<code>
+<pre>
+set a [java::new {String[]} {6} {Tcl is a good scripting language!}]
+$a set 3 great
+</pre>
+</code>
+
+<P>
+<DT><B>getrange</B> ?<B>-noconvert</B>? ?<I>indexList</I> ?<I>count</I>?<DD>
+Returns the list of objects corresponding to the specified range of
+the array.  The range starts at the element specified by
+<I>indexList</I> and spans a maximum of <I>count</I> elements or the
+remaining elements of the subarray.  The <I>indexList</I> defaults to
+0, and <I>count</I> defaults to the length of the subarray.  For
+example, the result of the following commands is the list {scripting
+is easy}.
+
+<code>
+<pre>
+set a [java::new {String[]} {6} {Java scripting is easy in Tcl}]
+$a getrange 1 3
+</pre>
+</code>
+
+To retrieve a k-dimensional subarray
+of an n-dimensional array, specifiy an <I>indexList</I> with <I>n -
+k</I> index values.  For example, the following commands result in
+<I>pair</I> containing two 1-dimensional char array handles that refer
+to a[0][1] and a[0][2], the internal values of which are {c d} and {e
+f} respectively.
+
+<code>
+<pre>
+set a [java::new {char[][][]} {2 3 2} {{{a b} {c d} {e f}} {{g h} {i j} {k l}}}]
+set pair [$a getrange {0 1} 2]
+</pre>
+</code>
+
+<P>
+<DT><B>setrange</B> ?<I>indexList</I>? ?<I>count</I>? <I>valueList</I><DD>
+Sets the range of array elements to elements of <I>valueList</I>.  The
+range starts at the element specified by <I>indexList</I> and spans a
+minimum of <I>count</I> elements, the remaining elements of the
+subarray, or the size of <I>valueList</I>.  If an element of
+<I>valueList</I> in the replacement range is not the correct data type,
+an error is returned.  For example, the following commands result in
+<I>a</I> having an internal value of {Tcl is an excellent scripting
+language!}
+
+<code>
+<pre>
+set a [java::new {String[]} {6} {Tcl is a good scripting language!}]
+$a setrange 2 {an excellent}
+</pre>
+</code>
+
+<P>
+
+</DL>
+
+
+<P>
+
+The <A HREF="JavaConversions.html">Conversions</a> section describes the result
+and possible error conditions of the object command, including the
+effect of the optional <B>-noconvert</B> flag.
+
+<P>
+
+</DL>
+
+<PRE>
+<A HREF="../license.html">Copyright</A> &#169; 1997-1998 Sun Microsystems, Inc.
+</PRE>
+
+
+</BODY>
+</HTML>

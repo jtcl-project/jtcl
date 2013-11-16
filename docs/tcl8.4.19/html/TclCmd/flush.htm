@@ -1,0 +1,34 @@
+<HTML><HEAD><TITLE>Tcl Built-In Commands - flush manual page</TITLE></HEAD><BODY>
+<H3><A NAME="M2">NAME</A></H3>
+flush - Flush buffered output for a channel
+<H3><A NAME="M3">SYNOPSIS</A></H3>
+<B>flush </B><I>channelId</I><BR>
+<H3><A NAME="M4">DESCRIPTION</A></H3>
+Flushes any output that has been buffered for <I>channelId</I>.
+<P>
+<I>ChannelId</I> must be an identifier for an open channel such as a
+Tcl standard channel (<B>stdout</B> or <B>stderr</B>), the return
+value from an invocation of <B><A HREF="../TclCmd/open.htm">open</A></B> or <B><A HREF="../TclCmd/socket.htm">socket</A></B>, or the result
+of a channel creation command provided by a Tcl extension.  The
+channel must have been opened for writing.
+<P>
+If the channel is in blocking mode the command does not return until all the
+buffered output has been flushed to the channel. If the channel is in
+nonblocking mode, the command may return before all buffered output has been
+flushed; the remainder will be flushed in the background as fast as the
+underlying file or device is able to absorb it.
+<H3><A NAME="M5">EXAMPLE</A></H3>
+Prompt for the user to type some information in on the console:
+<PRE>puts -nonewline &quot;Please type your name: &quot;
+<B>flush</B> stdout
+gets stdin name
+puts &quot;Hello there, $name!&quot;</PRE>
+<H3><A NAME="M6">SEE ALSO</A></H3>
+<B><A HREF="../TclCmd/file.htm">file</A></B>, <B><A HREF="../TclCmd/open.htm">open</A></B>, <B><A HREF="../TclCmd/socket.htm">socket</A></B>, <B><A HREF="../TclLib/StdChannels.htm">Tcl_StandardChannels</A></B>
+<H3><A NAME="M7">KEYWORDS</A></H3>
+<A href="../Keywords/B.htm#blocking">blocking</A>, <A href="../Keywords/B.htm#buffer">buffer</A>, <A href="../Keywords/C.htm#channel">channel</A>, <A href="../Keywords/F.htm#flush">flush</A>, <A href="../Keywords/N.htm#nonblocking">nonblocking</A>, <A href="../Keywords/O.htm#output">output</A>
+<HR><PRE>
+<A HREF="../copyright.htm">Copyright</A> &#169; 1993 The Regents of the University of California.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1994-1996 Sun Microsystems, Inc.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1995-1997 Roger E. Critchlow Jr.</PRE>
+</BODY></HTML>

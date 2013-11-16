@@ -1,0 +1,233 @@
+<HTML><HEAD><TITLE>Tcl Built-In Commands - filename manual page</TITLE></HEAD><BODY>
+<DL>
+<DD><A HREF="filename.htm#M2" NAME="L417">NAME</A>
+<DL><DD>filename - File name conventions supported by Tcl commands</DL>
+<DD><A HREF="filename.htm#M3" NAME="L418">INTRODUCTION</A>
+<DD><A HREF="filename.htm#M4" NAME="L419">PATH TYPES</A>
+<DD><A HREF="filename.htm#M5" NAME="L420">PATH SYNTAX</A>
+<DL>
+<DD><A HREF="filename.htm#M6" NAME="L421"><B>mac</B></A>
+<DL>
+<DD><A HREF="filename.htm#M7" NAME="L422"><B>:</B></A>
+<DD><A HREF="filename.htm#M8" NAME="L423"><B>MyFile</B></A>
+<DD><A HREF="filename.htm#M9" NAME="L424"><B>MyDisk:MyFile</B></A>
+<DD><A HREF="filename.htm#M10" NAME="L425"><B>:MyDir:MyFile</B></A>
+<DD><A HREF="filename.htm#M11" NAME="L426"><B>::MyFile</B></A>
+<DD><A HREF="filename.htm#M12" NAME="L427"><B>:::MyFile</B></A>
+<DD><A HREF="filename.htm#M13" NAME="L428"><B>/MyDisk/MyFile</B></A>
+<DD><A HREF="filename.htm#M14" NAME="L429"><B>	../MyFile</B></A>
+</DL>
+<DD><A HREF="filename.htm#M15" NAME="L430"><B>unix</B></A>
+<DL>
+<DD><A HREF="filename.htm#M16" NAME="L431"><B>/</B></A>
+<DD><A HREF="filename.htm#M17" NAME="L432"><B>/etc/passwd</B></A>
+<DD><A HREF="filename.htm#M18" NAME="L433"><B>	.</B></A>
+<DD><A HREF="filename.htm#M19" NAME="L434"><B>foo</B></A>
+<DD><A HREF="filename.htm#M20" NAME="L435"><B>foo/bar</B></A>
+<DD><A HREF="filename.htm#M21" NAME="L436"><B>	../foo</B></A>
+</DL>
+<DD><A HREF="filename.htm#M22" NAME="L437"><B>windows</B></A>
+<DL>
+<DD><A HREF="filename.htm#M23" NAME="L438"><B>	&#92;&#92;Host&#92;share/file</B></A>
+<DD><A HREF="filename.htm#M24" NAME="L439"><B>c:foo</B></A>
+<DD><A HREF="filename.htm#M25" NAME="L440"><B>c:/foo</B></A>
+<DD><A HREF="filename.htm#M26" NAME="L441"><B>foo&#92;bar</B></A>
+<DD><A HREF="filename.htm#M27" NAME="L442"><B>	&#92;foo</B></A>
+<DD><A HREF="filename.htm#M28" NAME="L443"><B>	&#92;&#92;foo</B></A>
+</DL>
+</DL>
+<DD><A HREF="filename.htm#M29" NAME="L444">TILDE SUBSTITUTION</A>
+<DD><A HREF="filename.htm#M30" NAME="L445">PORTABILITY ISSUES</A>
+<DD><A HREF="filename.htm#M31" NAME="L446">KEYWORDS</A>
+<DD><A HREF="filename.htm#M32" NAME="L447">SEE ALSO</A>
+</DL><HR>
+<H3><A NAME="M2">NAME</A></H3>
+filename - File name conventions supported by Tcl commands
+<H3><A NAME="M3">INTRODUCTION</A></H3>
+All Tcl commands and C procedures that take file names as arguments
+expect the file names to be in one of three forms, depending on the
+current platform.  On each platform, Tcl supports file names in the
+standard forms(s) for that platform.  In addition, on all platforms,
+Tcl supports a Unix-like syntax intended to provide a convenient way
+of constructing simple file names.  However, scripts that are intended
+to be portable should not assume a particular form for file names.
+Instead, portable scripts must use the <B><A HREF="../TclCmd/file.htm">file split</A></B> and <B>file
+join</B> commands to manipulate file names (see the <B><A HREF="../TclCmd/file.htm">file</A></B> manual
+entry for more details).
+
+<H3><A NAME="M4">PATH TYPES</A></H3>
+File names are grouped into three general types based on the starting point
+for the path used to specify the file: absolute, relative, and
+volume-relative.  Absolute names are completely qualified, giving a path to
+the file relative to a particular volume and the root directory on that
+volume.  Relative names are unqualified, giving a path to the file relative 
+to the current working directory.  Volume-relative names are partially
+qualified, either giving the path relative to the root directory on the
+current volume, or relative to the current directory of the specified
+volume.  The <B><A HREF="../TclCmd/file.htm">file pathtype</A></B> command can be used to determine the
+type of a given path.
+
+<H3><A NAME="M5">PATH SYNTAX</A></H3>
+The rules for native names depend on the value reported in the Tcl
+array element <B>tcl_platform(platform)</B>:
+<P>
+<DL>
+<DT><A NAME="M6"><B>mac</B></A><DD>
+On Apple Macintosh systems, Tcl supports two forms of path names.  The
+normal Mac style names use colons as path separators.  Paths may be
+relative or absolute, and file names may contain any character other
+than colon.  A leading colon causes the rest of the path to be
+interpreted relative to the current directory.  If a path contains a
+colon that is not at the beginning, then the path is interpreted as an
+absolute path.  Sequences of two or more colons anywhere in the path
+are used to construct relative paths where <B>::</B> refers to the
+parent of the current directory, <B>:::</B> refers to the parent of the
+parent, and so forth.
+<P>
+In addition to Macintosh style names, Tcl also supports a subset of
+Unix-like names.  If a path contains no colons, then it is interpreted
+like a Unix path.  Slash is used as the path separator.  The file name
+<B>	.</B> refers to the current directory, and <B>	..</B> refers to the
+parent of the current directory.  However, some names like <B>/</B> or
+<B>/..</B> have no mapping, and are interpreted as Macintosh names.  In
+general, commands that generate file names will return Macintosh style
+names, but commands that accept file names will take both Macintosh
+and Unix-style names.
+<P>
+The following examples illustrate various forms of path names:
+<P>
+<DL>
+<DT><A NAME="M7"><B>:</B></A><DD>
+Relative path to the current folder.
+<P><DT><A NAME="M8"><B>MyFile</B></A><DD>
+Relative path to a file named <B>MyFile</B> in the current folder.
+<P><DT><A NAME="M9"><B>MyDisk:MyFile</B></A><DD>
+Absolute path to a file named <B>MyFile</B> on the device named <B>MyDisk</B>.
+<P><DT><A NAME="M10"><B>:MyDir:MyFile</B></A><DD>
+Relative path to a file name <B>MyFile</B> in a folder named
+<B>MyDir</B> in the current folder.
+<P><DT><A NAME="M11"><B>::MyFile</B></A><DD>
+Relative path to a file named <B>MyFile</B> in the folder above the
+current folder.
+<P><DT><A NAME="M12"><B>:::MyFile</B></A><DD>
+Relative path to a file named <B>MyFile</B> in the folder two levels above the
+current folder. 
+<P><DT><A NAME="M13"><B>/MyDisk/MyFile</B></A><DD>
+Absolute path to a file named <B>MyFile</B> on the device named
+<B>MyDisk</B>.
+<P><DT><A NAME="M14"><B>	../MyFile</B></A><DD>
+Relative path to a file named <B>MyFile</B> in the folder above the
+current folder.
+<P></DL>
+<P><DT><A NAME="M15"><B>unix</B></A><DD>
+On Unix platforms, Tcl uses path names where the components are
+separated by slashes.  Path names may be relative or absolute, and
+file names may contain any character other than slash.  The file names
+<B>	.</B> and <B>	..</B> are special and refer to the current directory
+and the parent of the current directory respectively.  Multiple
+adjacent slash characters are interpreted as a single separator.
+The following examples illustrate various forms of path names:
+<P>
+<DL>
+<DT><A NAME="M16"><B>/</B></A><DD>
+Absolute path to the root directory.
+<P><DT><A NAME="M17"><B>/etc/passwd</B></A><DD>
+Absolute path to the file named <B>passwd</B> in the directory
+<B>etc</B> in the root directory.
+<P><DT><A NAME="M18"><B>	.</B></A><DD>
+Relative path to the current directory.
+<P><DT><A NAME="M19"><B>foo</B></A><DD>
+Relative path to the file <B>foo</B> in the current directory.
+<P><DT><A NAME="M20"><B>foo/bar</B></A><DD>
+Relative path to the file <B>bar</B> in the directory <B>foo</B> in the
+current directory.
+<P><DT><A NAME="M21"><B>	../foo</B></A><DD>
+Relative path to the file <B>foo</B> in the directory above the current
+directory. 
+<P></DL>
+<P><DT><A NAME="M22"><B>windows</B></A><DD>
+On Microsoft Windows platforms, Tcl supports both drive-relative and UNC
+style names.  Both <B>/</B> and <B>&#92;</B> may be used as directory separators
+in either type of name.  Drive-relative names consist of an optional drive
+specifier followed by an absolute or relative path.  UNC paths follow the
+general form <B>&#92;&#92;servername&#92;sharename&#92;path&#92;file</B>, but must at
+the very least contain the server and share components, i.e. 
+<B>&#92;&#92;servername&#92;sharename</B>.  In both forms,
+the file names <B>.</B> and <B>..</B> are special and refer to the current
+directory and the parent of the current directory respectively.  The
+following examples illustrate various forms of path names:
+<P>
+<DL>
+<DT><A NAME="M23"><B>	&#92;&#92;Host&#92;share/file</B></A><DD>
+Absolute UNC path to a file called <B><A HREF="../TclCmd/file.htm">file</A></B> in the root directory of
+the export point <B>share</B> on the host <B>Host</B>.  Note that
+repeated use of <B><A HREF="../TclCmd/file.htm">file dirname</A></B> on this path will give
+<B>//Host/share</B>, and will never give just <B>//Host</B>.
+<P><DT><A NAME="M24"><B>c:foo</B></A><DD>
+Volume-relative path to a file <B>foo</B> in the current directory on drive
+<B>c</B>.
+<P><DT><A NAME="M25"><B>c:/foo</B></A><DD>
+Absolute path to a file <B>foo</B> in the root directory of drive
+<B>c</B>.
+<P><DT><A NAME="M26"><B>foo&#92;bar</B></A><DD>
+Relative path to a file <B>bar</B> in the <B>foo</B> directory in the current
+directory on the current volume.
+<P><DT><A NAME="M27"><B>	&#92;foo</B></A><DD>
+Volume-relative path to a file <B>foo</B> in the root directory of the current
+volume.
+<P><DT><A NAME="M28"><B>	&#92;&#92;foo</B></A><DD>
+Volume-relative path to a file <B>foo</B> in the root directory of the current
+volume.  This is not a valid UNC path, so the assumption is that the
+extra backslashes are superfluous.
+<P></DL>
+<P></DL>
+<H3><A NAME="M29">TILDE SUBSTITUTION</A></H3>
+In addition to the file name rules described above, Tcl also supports
+<I>csh</I>-style tilde substitution.  If a file name starts with a
+tilde, then the file name will be interpreted as if the first element
+is replaced with the location of the home directory for the given
+user.  If the tilde is followed immediately by a separator, then the
+<B>$HOME</B> environment variable is substituted.  Otherwise the
+characters between the tilde and the next separator are taken as a
+user name, which is used to retrieve the user's home directory for
+substitution.
+<P>
+The Macintosh and Windows platforms do not support tilde substitution
+when a user name follows the tilde.  On these platforms, attempts to
+use a tilde followed by a user name will generate an error that the
+user does not exist when Tcl attempts to interpret that part of the
+path or otherwise access the file.  The behaviour of these paths
+when not trying to interpret them is the same as on Unix.  File
+names that have a tilde without a user name will be correctly
+substituted using the <B>$HOME</B> environment variable, just like 
+for Unix.
+
+<H3><A NAME="M30">PORTABILITY ISSUES</A></H3>
+Not all file systems are case sensitive, so scripts should avoid code
+that depends on the case of characters in a file name.  In addition,
+the character sets allowed on different devices may differ, so scripts
+should choose file names that do not contain special characters like:
+<B>&lt;&gt;:&quot;/&#92;|</B>.  The safest approach is to use names consisting of
+alphanumeric characters only.  Also Windows 3.1 only supports file
+names with a root of no more than 8 characters and an extension of no
+more than 3 characters.
+<P>
+On Windows platforms there are file and path length restrictions. 
+Complete paths or filenames longer than about 260 characters will lead
+to errors in most file operations.
+<P>
+Another Windows peculiarity is that any number of trailing dots '.'  in
+filenames are totally ignored, so, for example, attempts to create a
+file or directory with a name &quot;foo.&quot; will result in the creation of a
+file/directory with name &quot;foo&quot;.  This fact is reflected in the
+results of 'file normalize'.  Furthermore, a file name consisting only
+of dots '.........' or dots with trailing characters '.....abc' is
+illegal.
+<H3><A NAME="M31">KEYWORDS</A></H3>
+<A href="../Keywords/C.htm#current directory">current directory</A>, <A href="../Keywords/A.htm#absolute file name">absolute file name</A>, <A href="../Keywords/R.htm#relative file name">relative file name</A>, <A href="../Keywords/V.htm#volume-relative file name">volume-relative file name</A>, <A href="../Keywords/P.htm#portability">portability</A>
+<H3><A NAME="M32">SEE ALSO</A></H3>
+<B><A HREF="../TclCmd/file.htm">file</A></B>, <B><A HREF="../TclCmd/glob.htm">glob</A></B>
+<HR><PRE>
+<A HREF="../copyright.htm">Copyright</A> &#169; 1995-1996 Sun Microsystems, Inc.
+<A HREF="../copyright.htm">Copyright</A> &#169; 1995-1997 Roger E. Critchlow Jr.</PRE>
+</BODY></HTML>

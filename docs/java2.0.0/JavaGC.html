@@ -1,0 +1,116 @@
+<HTML>
+<TITLE>
+Garbage Collection
+</TITLE>
+
+<BODY>
+<HR>
+<H3>
+Garbage Collection
+</H3>
+
+<HR>
+
+
+<DL>
+
+<H3>
+About:
+</H3>
+
+<DD>
+
+The object handle associated with a Java object is considered to be an
+object reference by the Java VM, ensuring that the Java object is not
+garbage collected while Tcl is using it.  Tcl will release the object
+handle when the last reference to the handle in a Tcl script goes
+away. In practice this means that Java object handles must be stored
+in Tcl variables or passed as arguments to other commands to keep
+them from being released. See the <A HREF="JavaRefCount.html">Reference Counting</A>
+section for a detailed description of how Jacl and Tcl Blend implement
+reference counting. Constructing a
+Java object handle using <B>concat</B> or some other string
+manipulation command will produce a string that can be used where a
+Java object handle is expected, but it will not count as a reference
+to the object for garbage collection purposes.
+
+<P>
+
+Tcl objects usually remain one type over their life, but occasionally a
+Tcl object must be converted from one type to another. For example, a
+Java object handle may be passed as the argument to the <B>llength</B>
+command.  The internal rep of the Tcl object is converted from a Java
+object handle to a Tcl List.  When this happens the ref count of the Java
+object handle is decremented.  If the ref count becomes zero, the Java
+object handle is invalidated and the Tcl variable no longer accesses a
+Java object.  For example:
+
+<code>
+<pre>
+# Create a new Java Object.  The ref count equals one.
+set o [java::new java.lang.Object]
+
+# Call a method of the Java Object.
+puts [$o toString]
+
+# Convert the Java object handle to a Tcl List.  This
+# decrements the ref count by one.  The ref count equals
+# zero and the  Java object is invalidated.
+llength $o
+
+# This command will generate an error, because the
+# Tcl object no longer references a valid Java object.
+puts [$o toString]
+</pre>
+</code>
+
+The solution is to guarantee that the Java object handle's ref count
+does not become zero.  Use the <B>java::lock</B> and <B>java::unlock</B>
+commands to maintain a permanent reference to the Java object handle.
+For example:
+
+<code>
+<pre>
+# Create a new Java object.  The ref count equals one.
+set o [java::new java.lang.Object]
+
+# Lock the Java Object handle so it is not invalidated.
+# The ref count now equals two.
+java::lock $o
+
+# Convert the Java object to a Tcl List.  This decrements
+# the ref count by one.  The ref count equals one and the 
+# Java object remains valid.
+llength $o
+
+# Now this command works.  It also increments the ref count
+# of the java object, because a Tcl List is being converted
+# to the original Java object handle.
+puts [$o toString]
+
+# Remove the lock and decrement the ref count.
+java::unlock $o
+
+# Now this will fail as in the previous example.
+llength $o
+puts [$o toString]
+</pre>
+</code>
+
+<P>
+
+If you want to interactively enter commands without worrying
+about the details of Java object reference counting, you
+can use the
+<A HREF="JavaAutoLockCmd.html">java::autolock</a> command.
+
+</DL>
+
+<PRE>
+<A HREF="../license.html">Copyright</A> &#169; 1997-1998 Sun Microsystems, Inc.
+</PRE>
+
+
+</BODY>
+</HTML>
+
