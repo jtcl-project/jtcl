@@ -140,6 +140,8 @@
                 <version>0.9</version>
                 <configuration>
                     <message>Creating site for ${project.version}</message>
+                    <repositoryOwner>jtcl-project</repositoryOwner>
+                    <repositoryName>jtcl</repositoryName>
                 </configuration>
                 <executions>
                     <execution>
