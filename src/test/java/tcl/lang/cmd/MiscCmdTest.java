@@ -20,6 +20,7 @@ public class MiscCmdTest extends TclCmdTest {
 		LinkedList<String> expectedFailureList = new LinkedList<String>(Arrays.asList( new String[] {
 				//  previously failing test now seems to be working in Java 1.6.0_31
 				//  "io-14.9" // test requires that we can exec a new tcltest environment
+                "io-29.27"
 			}));
 		String resName = "/tcl/lang/cmd/io.test";
 		tclTestResource(TCLTEST_NAMEOFEXECUTABLE,resName, expectedFailureList);
