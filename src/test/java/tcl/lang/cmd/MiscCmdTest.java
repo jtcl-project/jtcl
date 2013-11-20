@@ -1,38 +1,41 @@
 package tcl.lang.cmd;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedList;
-
+import org.junit.Test;
 import tcl.lang.TclCmdTest;
 
+import java.util.LinkedList;
+
 public class MiscCmdTest extends TclCmdTest {
-	public void testBasic() throws Exception {
-		LinkedList<String> expectedFailureList = new LinkedList<String>(Arrays.asList( new String[] {
-				"basic-24.3" // 'info commands' result in a different order; this is not a bug
-			}));
-		
-		String resName = "/tcl/lang/cmd/basic.test";
-		tclTestResource(TCLTEST_NAMEOFEXECUTABLE, resName, expectedFailureList);
-	}
-	
-	public void testIo() throws Exception {
-		LinkedList<String> expectedFailureList = new LinkedList<String>(Arrays.asList( new String[] {
-				//  previously failing test now seems to be working in Java 1.6.0_31
-				//  "io-14.9" // test requires that we can exec a new tcltest environment
+
+    @Test
+    public void basic() throws Exception {
+        LinkedList<String> expectedFailureList = expectedFailures(
+                "basic-24.3" // 'info commands' result in a different order; this is not a bug
+        );
+
+        String resName = "/tcl/lang/cmd/basic.test";
+        tclTestResource(TCLTEST_NAMEOFEXECUTABLE, resName, expectedFailureList);
+    }
+
+    @Test
+    public void io() throws Exception {
+        LinkedList<String> expectedFailureList = expectedFailures(
                 "io-29.27"
-			}));
-		String resName = "/tcl/lang/cmd/io.test";
-		tclTestResource(TCLTEST_NAMEOFEXECUTABLE,resName, expectedFailureList);
-	}
-	
-	public void testUtil() throws Exception {
-		String resName = "/tcl/lang/cmd/util.test";
-		tclTestResource(resName);
-	}
-	
-	public void testVar() throws Exception {
-		String resName = "/tcl/lang/cmd/var.test";
-		tclTestResource(resName);
-	}
+        );
+        String resName = "/tcl/lang/cmd/io.test";
+        tclTestResource(TCLTEST_NAMEOFEXECUTABLE, resName, expectedFailureList);
+    }
+
+    @Test
+    public void util() throws Exception {
+        String resName = "/tcl/lang/cmd/util.test";
+        tclTestResource(resName);
+    }
+
+    @Test
+    public void var() throws Exception {
+        String resName = "/tcl/lang/cmd/var.test";
+        tclTestResource(resName);
+    }
+
 }

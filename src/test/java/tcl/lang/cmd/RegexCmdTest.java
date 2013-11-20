@@ -1,28 +1,28 @@
 package tcl.lang.cmd;
 
+import org.junit.Test;
 import tcl.lang.TclCmdTest;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 
 public class RegexCmdTest extends TclCmdTest {
-	public void testCmd() throws Exception {
-		LinkedList<String> expectedFailureList = new LinkedList<String>(Arrays.asList( new String[] {
-          
-        }));
+
+    @Test
+	public void regexCommand() throws Exception {
 		String resName = "/tcl/lang/cmd/regexp.test";
-		tclTestResource(TCLTEST_NAMEOFEXECUTABLE,resName,expectedFailureList);
-	}
-	
-	public void testRegexComp() throws Exception {
-		LinkedList<String> expectedFailureList = new LinkedList<String>(Arrays.asList( new String[] {
-            
-        }));
-		String resName = "/tcl/lang/cmd/regexpComp.test";
-		tclTestResource(TCLTEST_NAMEOFEXECUTABLE, resName, expectedFailureList);
+		tclTestResource(TCLTEST_NAMEOFEXECUTABLE, resName, Collections.<String>emptyList());
 	}
 
-    public void testRegexSyntax() throws Exception {
+    @Test
+	public void regexpCompCommandegexComp() throws Exception {
+		String resName = "/tcl/lang/cmd/regexpComp.test";
+		tclTestResource(TCLTEST_NAMEOFEXECUTABLE, resName, Collections.<String>emptyList());
+	}
+
+    @Test
+    public void regexSyntax() throws Exception {
         // These expected fails are due to the differences between Java's Matcher
         // and the C TCL regex engine.
         // TCL always attempts to match the longest string
@@ -39,10 +39,10 @@ public class RegexCmdTest extends TclCmdTest {
         // or for things that are not supported (BRE's, ERE's).  Due to the unique nature
         // of reg.test, it's much easier to turn off tests there than to use 
         // expectedFailureList here.  This list is reserved for real bugs.
-		LinkedList<String> expectedFailureList = new LinkedList<String>(Arrays.asList( new String[] {
+		LinkedList<String> expectedFailureList = expectedFailures(
             "reg-3.5.execute",  "reg-14.9.execute", "reg-26.1.execute",
             "reg-26.2.execute", "reg-26.3.execute" 
-        }));
+        );
         String resName = "/tcl/lang/cmd/reg.test";
         
         // create the testregexp command, which is 'regexp' with the ability to process -xflags arg
@@ -52,4 +52,5 @@ public class RegexCmdTest extends TclCmdTest {
 
 		tclTestResource(resName, expectedFailureList);
     }
+
 }
