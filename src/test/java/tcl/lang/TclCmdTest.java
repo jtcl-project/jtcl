@@ -49,32 +49,6 @@ public abstract class TclCmdTest {
     }
 
     /**
-     * Execute code, print results.
-     *
-     * @param code
-     */
-    public void tclTestCode(String code) throws Exception {
-        interp.eval(code);
-        System.out.println(interp.getResult().toString());
-    }
-
-    /**
-     * Test a Tcl test file resource, test file is assumed to 'package require tcltest'.
-     * Failures in tcl test cases are ignored.
-     *
-     * @param resName The name of a tcltest file as a resource path.
-     * @throws Exception
-     */
-    public void tclTestResourceIgnoreFailures(String resName) throws Exception {
-        try {
-            interp.evalResource(resName);
-        } catch (TclException e) {
-            String errStr = interp.getVar("errorInfo", 0).toString();
-            throw new Exception(errStr, e);
-        }
-    }
-
-    /**
      * Test a Tcl test file resource.
      * No failures are expected in running of the tcl test cases, if any occur, the junit test will fail.
      *
@@ -110,7 +84,7 @@ public abstract class TclCmdTest {
      * @throws Exception
      */
     public void tclTestResource(String preTestCode, String resName, List<String> expectedFailureCases) throws Exception {
-        List unexpectedFailures = new LinkedList();
+        List<String> unexpectedFailures = new LinkedList<String>();
 
         // set up temporary file for tcltest output
         File tmpFile = File.createTempFile("tclCmdTest", ".txt");
@@ -330,9 +304,39 @@ public abstract class TclCmdTest {
         }
     }
 
+    // HELPER METHODS
 
     protected LinkedList<String> expectedFailures(String... expectedFailures) {
         return new LinkedList<String>(asList(expectedFailures));
+    }
+
+
+    // UNUSED METHODS
+
+    /**
+     * Execute code, print results.
+     *
+     * @param code
+     */
+    public void tclTestCode(String code) throws Exception {
+        interp.eval(code);
+        System.out.println(interp.getResult().toString());
+    }
+
+    /**
+     * Test a Tcl test file resource, test file is assumed to 'package require tcltest'.
+     * Failures in tcl test cases are ignored.
+     *
+     * @param resName The name of a tcltest file as a resource path.
+     * @throws Exception
+     */
+    public void tclTestResourceIgnoreFailures(String resName) throws Exception {
+        try {
+            interp.evalResource(resName);
+        } catch (TclException e) {
+            String errStr = interp.getVar("errorInfo", 0).toString();
+            throw new Exception(errStr, e);
+        }
     }
 
 }
