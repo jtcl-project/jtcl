@@ -25,7 +25,8 @@ public class ExecCmdTest extends TclCmdTest {
                 // so the JVM must be running.  However, putting processes in the background does
                 // work, even though these tests fail.
                 "exec-11.5",
-                "exec-17.1"
+                "exec-17.1",
+                "exec-2.6"
         );
         String resName = "/tcl/lang/cmd/exec.test";
         tclTestResource(TCLTEST_NAMEOFEXECUTABLE, resName, expectedFailureList);
