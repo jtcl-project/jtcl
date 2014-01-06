@@ -39,7 +39,6 @@
         </resources>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.3.2</version>
                 <configuration>
@@ -74,7 +73,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <version>1.7</version>
                 <executions>
@@ -94,7 +92,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>2.4</version>
                 <configuration>
@@ -108,12 +105,10 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-ant-plugin</artifactId>
                 <version>2.3</version>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>2.4</version>
                 <executions>
@@ -161,7 +156,6 @@
     <reporting>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>2.9.1</version>
                 <configuration>
