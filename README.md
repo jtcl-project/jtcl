@@ -1,4 +1,5 @@
 JTcl - Tcl Language Interpreter in Java
+----------------------------------------
 
 http://jtcl-project.github.io/jtcl/
 
@@ -6,7 +7,6 @@ JTcl is an implementation of Tcl (Tool Command Language) written in Java.
 JTcl implements a large extent of Tcl 8.4 syntax and commands, limited 
 only by API restrictions of the Java Virtual Machine.  JTcl is based on 
 the Jacl interpreter (http://tcljava.sf.net)
-
 
 INSTALLING JTCL
 
