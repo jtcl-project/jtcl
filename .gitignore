@@ -3,3 +3,4 @@ tjc.jar
 tjcsrc.jar
 *.iml
 .idea
+.vagrant
