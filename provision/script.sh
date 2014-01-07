@@ -6,10 +6,10 @@ add-apt-repository ppa:webupd8team/java
 apt-get update
 
 # Accept license and install Oracle JDK
-echo Installing Oracle JDK 7 ...
+echo Installing Oracle JDK  $1...
 echo debconf shared/accepted-oracle-license-v1-1 select true | debconf-set-selections
 echo debconf shared/accepted-oracle-license-v1-1 seen true | debconf-set-selections
-apt-get -y install oracle-java7-installer
+apt-get -y install oracle-java$1-installer
 
 # Install Apache Maven
 echo Installing Apache Maven ...

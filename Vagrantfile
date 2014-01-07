@@ -16,6 +16,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Run shell script in order to provision necessary things
   config.vm.provision "shell" do |shell|
     shell.path = "provision/script.sh"
+    # Set jdk version
+    shell.args = "6"
   end
 
 end
