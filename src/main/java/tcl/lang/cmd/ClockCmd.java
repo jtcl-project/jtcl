@@ -153,6 +153,14 @@ public class ClockCmd implements Command {
 				throw new TclNumArgsException(interp, 2, objv, "dateString ?-base clockValue? ?-gmt boolean?");
 			}
 			dateString = objv[2].toString();
+			
+			// check for empty datestring
+			if (dateString.trim().length() == 0) {
+				long millis = System.currentTimeMillis();
+				int seconds = (int) (millis / 1000);
+				interp.setResult(seconds);
+				break;
+			}
 
 			for (argIx = 3; argIx + 1 < objv.length; argIx += 2) {
 				int scanOpt = TclIndex.get(interp, objv[argIx], scanOpts, "switch", 0);
