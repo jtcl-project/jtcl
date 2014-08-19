@@ -1,0 +1,71 @@
+#!/bin/sh
+
+# jtcl [ script  [ arg ... ] ]
+# 
+# invokes the non-interactive shell, no command prompts are printed
+# optional environment variables:
+#
+# JAVA_HOME  - directory of JDK/JRE, if not set then 'java' must be found on PATH
+# CLASSPATH  - colon separated list of additional jar files & class directories
+# JAVA_OPTS  - list of JVM options, e.g. "-Xmx256m -Dfoo=bar"
+# TCLLIBPATH - space separated list of Tcl libraries directories
+#
+
+jtclver=${project.version}
+jtclmain=tcl.lang.NonInteractiveShell
+
+iscygwin=false
+ismsys=false
+case "`uname`" in
+    CYGWIN*) iscygwin=true ;;
+    MINGW*) ismsys=true ;;
+    MSYS*) ismsys=true ;;
+esac
+
+JAVA=java
+if [ -n "$JAVA_HOME" ] ; then
+    if [ -x "$JAVA_HOME/jre/sh/java"  ] ; then
+        # AIX location
+        JAVA="$JAVA_HOME/jre/sh/java"
+    else
+        JAVA="$JAVA_HOME/bin/java"
+    fi
+fi
+
+# get the directory path of this script
+# resolve script symlink, if any
+pgm="$0"
+while [ -h "$pgm" ]; do
+    ls=`ls -ld "$pgm"`
+    link=`expr "$ls" : '.*-> \(.*\)$'`
+    if expr "$link" : '/.*' > /dev/null; then
+        pgm="$link"
+    else
+        pgm=`dirname "$PRG"`/"$link"
+    fi
+done
+
+dir=`dirname "$pgm"`
+
+# set classpath, or add to existing
+if [ -z "$CLASSPATH" ] ; then
+    CLASSPATH="$dir/jtcl-$jtclver.jar"
+    if $iscygwin ; then
+        CLASSPATH=`cygpath -pw "$CLASSPATH"`
+    fi
+else
+    if $ismsys ; then
+        jtcldir=`$dir/echopath "$dir"`
+        CLASSPATH="$jtcldir/jtcl-$jtclver.jar;$CLASSPATH"
+    elif $iscygwin ; then
+        CLASSPATH=`cygpath -pu "$CLASSPATH"`
+        CLASSPATH="$dir/jtcl-$jtclver.jar;$CLASSPATH"
+        CLASSPATH=`cygpath -pw "$CLASSPATH"`
+    else 
+        CLASSPATH="$dir/jtcl-$jtclver.jar:$CLASSPATH"
+    fi
+fi
+
+export CLASSPATH
+
+exec "$JAVA" -DTCLLIBPATH="$TCLLIBPATH" -cp "$CLASSPATH" $JAVA_OPTS $jtclmain ${1+"$@"}

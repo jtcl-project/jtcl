@@ -3,19 +3,12 @@
 #
 # dr. jacl and mr. hyde - split personality programming:  write java in tcl
 #
-# Copyright 2002-2008, Tom Poindexter
-#
-# version 1.6  november 15, 2011  Tom Poindexter
-#
 # inspired by 'CriTcl', by Jean-Claude Wippler   http://wiki.tcl.tk/tcl/critcl
 #
-# see: Project Gutenberg   http://promo.net/pg/
-# "The Strange Case of Dr. Jekyll and Mr. Hyde"
-#        by Robert Louis Stevenson
 #
 ################################################################################
 
-package provide hyde 1.6
+package provide hyde 1.7
 package require java
 
 namespace eval hyde {
@@ -494,10 +487,10 @@ proc hyde::compile_exec_compiler {name codeStr cmdExec cmdArgs {keepClass 0}} {
     }
     set oldcd [pwd]
     cd $compileDir
-    set rc [catch {eval exec $cmdExec $cmdArgs $name.java} result]
+    set rc [catch {eval exec $cmdExec $cmdArgs $name.java << {""}} result]
     cd $oldcd
     set byteCodeList [list]
-    if {$rc == 0 && [file isfile $compileDir/$name.class]} {
+    if {[file isfile $compileDir/$name.class]} {
 	foreach classfile [lsort -dictionary [glob -nocomplain $compileDir/$name.class $compileDir/$name\$.class]] {
 	    set fd [open $classfile]
 	    fconfigure $fd -translation binary
@@ -621,8 +614,12 @@ proc hyde::compileWith_janino {name codeStr {keepClass 0}} {
 	java::call System setProperty java.class.path $old_java_class_path
     }
 
+    set err ""
+    set bytecode_arr [java::null]
     if {[catch {set bytecode_arr [$janino compile $codeStr]} err]} {
 	error $err
+    } elseif {[java::isnull $bytecode_arr]} {
+        error "janino compile failed: $err"
     }
 
     if {[$bytecode_arr length] < 1} {
@@ -732,8 +729,12 @@ proc hyde::compileWith_janinocp {name codeStr {keepClass 0}} {
 	java::call System setProperty java.class.path $old_java_class_path
     }
 
+    set err ""
+    set bytecode_arr [java::null]
     if {[catch {set bytecode_arr [$janinocp compile $codeStr]} err]} {
 	error $err
+    } elseif {[java::isnull $bytecode_arr]} {
+        error "janino compile failed: $err"
     }
 
     if {[$bytecode_arr length] < 1} {
@@ -1172,6 +1173,7 @@ proc hyde::jclass {name args} {
     set packageName "hyde"
     set accessType public
     set importList ""
+    set includeStr ""
     set includeFile ""
     set extendsClass ""
     set implementsList ""
@@ -1181,6 +1183,10 @@ proc hyde::jclass {name args} {
     set body ""
     while {[llength $args] > 1} {
 	switch -- [lindex $args 0] {
+	    -source {
+		set includeStr [lindex $args 1]
+		set args [lrange $args 2 end]
+	    }
 	    -include {
 		set includeFile [lindex $args 1]
 		set args [lrange $args 2 end]
@@ -1233,7 +1239,9 @@ proc hyde::jclass {name args} {
 	error "hyde: jclass: '-access $accessType' invalid, must be one of: [join $types]"
     }
 
-    if {[string length $includeFile]} {
+    if {[string length $includeStr]} {
+        set body $includeStr
+    } elseif {[string length $includeFile]} {
 	if { [catch {set fd [open $includeFile]} ] } {
 	    error "hyde: jclass: -include file '$includeFile' could not be opened for reading"
 	} else {
@@ -1242,7 +1250,7 @@ proc hyde::jclass {name args} {
 	}
     } else {
 	if {![string length [append body [lindex $args 0]]] && [llength $propertyList] == 0} {
-	    error "hyde: jclass: must include one of '-include file', '-properties proplist' or '-body body'"
+	    error "hyde: jclass: must include one of '-source sourcetext', '-include file', '-properties proplist' or '-body body'"
 	}
     }
 
@@ -1482,8 +1490,10 @@ proc hyde::jclass {name args} {
 	    }
     }
 
-    # if -include a file, use it as codeStr
-    if {[string length $includeFile]} {
+    # if -source or -include a file, use it as codeStr
+    if {[string length $includeStr]} {
+	set codeStr $includeStr
+    } elseif {[string length $includeFile]} {
 	set codeStr $body
     } else {
 	append codeStr \n$body\n\n \}
@@ -1502,7 +1512,7 @@ proc hyde::jclass {name args} {
     # a new object, then garbage collect the newly created object
     set defobj [defineclass $byteCodeList]
     if {[java::isnull $defobj]} {
-	error "hyde: jclass: defineclass failed for $classname"
+	error "hyde: jclass: defineclass failed for $name"
     }
 
     return ""

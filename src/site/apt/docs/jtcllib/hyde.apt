@@ -234,7 +234,7 @@ Hyde
 
     specifies a Tcl list of packages that are
     required by the Java code.  Each import class-list item
-    may import all classes from a pacakge, e.g.
+    may import all classes from a package, e.g.
     <import {java.sql.* java.util.Date}>  Optional.
 
     * -extends class
@@ -305,7 +305,7 @@ Hyde
 
     specifies a Tcl list of packages that are
     required by the Java code.  Each import class-list item
-    may import all classes from a pacakge, e.g.
+    may import all classes from a package, e.g.
     <import {java.sql.* java.util.Date}>   Optional.
 
     * -dispose code
@@ -343,7 +343,7 @@ Hyde
   ::hyde::jclass classname -package <package-name>  -access <type>
     -import <class-list>  -extends <class> -implements <class-list>
     -properties <property-type-list>  -hashequals <property-list> 
-    -tostring <property-list>  -include <java-file>  -body <body>
+    -tostring <property-list>  -source <java-source-text> -include <java-file>  -body <body>
    body
 
   ::hyde::jclass compiles and loads arbitrary Java class.  Java code compiled is
@@ -390,7 +390,7 @@ Hyde
 
     specifies a Tcl list of packages that are
     required by the Java code.  Each import class-list item
-    may import all classes from a pacakge, e.g.
+    may import all classes from a package, e.g.
     <import {java.sql.* java.util.Date}>  Any class name used
     in <extends> <implements> <import> or as a field,
     local variable, or argument should be included in the
@@ -453,13 +453,23 @@ Hyde
     If the <property-list> value is <*> then all property fields will
     be used for hashCode and equals methods.  Optional.
 
+    * -source java-source-text
+      
+    specifies a string containing Java source
+    to include as the class definition.
+    The class or interface defined in the <java-source-text>
+    mustmatch the <classname> argument, and the <package>
+    argument must be specified and match the package name
+    of the file.   No other argument are allowed when using the
+    <include> argument.  Optional.
+
     * -include java-file
       
     specifies a file containing Java source
     to include as the class definition.
     The class or interface defined in the <java-file>
     mustmatch the <classname> argument, and the <package>
-    argument must be specified and match the pacakge name
+    argument must be specified and match the package name
     of the file.   No other argument are allowed when using the
     <include> argument.  Optional.
 

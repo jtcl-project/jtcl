@@ -27,6 +27,10 @@ in /usr/local/bin (or any other directory on your PATH of your choice):
 
     sudo ln -s `pwd`/jtcl /usr/local/bin
 
+Non-interactive versions are also included, `jtclni' and `jtclni.bat'.  These
+scripts start JTcl with a command shell that does not print command prompts, and
+are useful when stdin is a pipe or redirected from a file.
+
 
 LICENSE
 
