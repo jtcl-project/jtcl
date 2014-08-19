@@ -41,8 +41,7 @@ public class UnsetCmd implements Command {
 		boolean noComplain = false;
 
 		if (objv.length < 2) {
-			throw new TclNumArgsException(interp, 1, objv,
-					"?-nocomplain? ?--? ?varName varName ...?");
+			return;
 		}
 
 		/*
@@ -56,7 +55,9 @@ public class UnsetCmd implements Command {
 		if (opt.startsWith("-")) {
 			if ("-nocomplain".equals(opt)) {
 				noComplain = true;
-				opt = objv[++firstArg].toString();
+				if (++firstArg < objv.length) {
+					opt = objv[firstArg].toString();
+				}
 			}
 			if ("--".equals(opt)) {
 				firstArg++;
