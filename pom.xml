@@ -8,7 +8,9 @@
     <properties>
         <project.build.sourceEncoding>US-ASCII</project.build.sourceEncoding>
         <project.reporting.outputEncoding>US-ASCII</project.reporting.outputEncoding>
+<!--
         <github.global.server>github</github.global.server>
+-->
     </properties>
     <name>jtcl</name>
     <url>http://jtcl-project.github.io/jtcl/</url>

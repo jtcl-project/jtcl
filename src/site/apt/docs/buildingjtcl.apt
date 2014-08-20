@@ -47,7 +47,7 @@ mvn clean test
 Creating a development environment
 
    Install Java JDK 1.6 or higher, if not already installed.
-   The JTcl project uses the {{{http://git-scm.com}} version control system. 
+   The JTcl project uses the {{{http://git-scm.com}}} version control system. 
 
 
 ------------------------
