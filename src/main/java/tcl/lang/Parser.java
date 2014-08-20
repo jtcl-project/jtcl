@@ -1775,11 +1775,11 @@ public class Parser {
 			return new BackSlashResult('\\', script_index + 1, count);
 		}
 		default: {
-			// FIXME: This octal impl needs to be updated so that it does
-			// not allow 09 to match the Tcl 8.4 impl.
-			if ((c >= '0') && (c <= '9')) {
+
+			
+			if ((c >= '0') && (c <= '7')) {
 				// Convert it to an octal number. This implementation is
-				// compatible with tcl 7.6 - characters 8 and 9 are allowed.
+				// compatible with tcl 8.4+ - characters 8 and 9 are not allowed.
 
 				result = c - '0';
 				script_index++;
@@ -1789,7 +1789,7 @@ public class Parser {
 						break getoctal;
 					}
 					c = script_array[script_index];
-					if (!((c >= '0') && (c <= '9'))) {
+					if (!((c >= '0') && (c <= '7'))) {
 						break getoctal;
 					}
 					count++;
@@ -1800,7 +1800,7 @@ public class Parser {
 						break getoctal;
 					}
 					c = script_array[script_index];
-					if (!((c >= '0') && (c <= '9'))) {
+					if (!((c >= '0') && (c <= '7'))) {
 						break getoctal;
 					}
 					count++;
