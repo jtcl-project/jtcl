@@ -6,6 +6,8 @@ September 1, 2014
 
   JTcl 2.7.0 has been released.  This is primarily a bug fix release.
 
+  * JTcl now requires Java 1.6 or higher.  **POTENTIAL INCOMPATIBILITY**
+
   * Fixed an exception when "clock scan" was called with an empty string argument.
 
   * Fixed an exception when "unset -nocomplain" was called without an arugment.

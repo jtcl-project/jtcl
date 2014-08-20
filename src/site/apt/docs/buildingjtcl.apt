@@ -4,7 +4,7 @@
  
  Building JTcl
  
-   JTcl builds with {{{http://ant.apache.org/}Ant}} or {{{http://maven.apache.org/}Maven}}.  
+   JTcl builds with {{{http://ant.apache.org/}Ant}} or {{{http://maven.apache.org/}Maven}} (preferred).  
 
    The TJC package, <Tcl to Java Compiler>, is written in Tcl (stage 1) and is compiled with itself
    to produce Java code (stage 2).  Subsequently, building the TJC stage 2 compiler 
@@ -46,13 +46,14 @@ mvn clean test
    
 Creating a development environment
 
-   Install Java JDK 1.5 or higher, if not already installed.
-   The JTcl project uses the {{{http://mercurial.selenic.com/}Mercurial}} version control system. 
+   Install Java JDK 1.6 or higher, if not already installed.
+   The JTcl project uses the {{{http://git-scm.com}} version control system. 
 
 
 ------------------------
-hg clone https://hg.kenai.com/hg/jtcl~jtcl-main 
+git clone git@github.com:jtcl-project/jtcl.git
 ------------------------
    
    JTcl source code includes <<.project>> and <<.classpath>> files for the 
-   {{{http://eclipse.org/}Eclipse}} development system.
+   {{{http://eclipse.org/}Eclipse}} development system.  
+

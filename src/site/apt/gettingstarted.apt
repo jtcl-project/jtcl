@@ -4,12 +4,11 @@
 
 Getting started with JTcl
 
-  * Install Java 1.5 or higher (latest Java version preferred.)  If you don't already have Java installed, 
-    download and install the appropriate Java package (Linux, Solaris, Windows) from 
+  * Install Java 1.6 or higher (latest Java version preferred.)  If you don't already have Java installed, 
+    download and install the appropriate Java package (Linux, Solaris, Windows, Mac OSX) from 
     {{{http://www.oracle.com/technetwork/java/javase/downloads/index.html}Oracle.com}}.
-    Apple Macintosh OSX 10.6 and below have Java 1.5 installed.  Many Linux 
-    distributions have a Java package that can be installed via the
-    system package manager.   Install either the Java JRE or JDK package.
+    Other Java JVMs that are based on HotSpot (OpenJDK, IBM, etc.) are also likely to work.
+    Install either the Java JRE or JDK package.
     
     []
     
@@ -23,10 +22,12 @@ Getting started with JTcl
     <<unzip jtcl->><(version)><<-bin.zip>>\
     <<cd jtcl->><(version)>\
     \
-    Optional for Linux/Unix systems:  make a symbolic link in /usr/local/bin (or any other directory
+    Optional for Linux/Unix systems:  make symbolic links in /usr/local/bin (or any other directory
     on your PATH of your choice):\
     \
     <<sudo ln  -s  `pwd`/jtcl  /usr/local/bin>>
+    \
+    <<sudo ln  -s  `pwd`/jtclni  /usr/local/bin>>
     
     []
   
