@@ -12,7 +12,7 @@ Getting started with JTcl
     
     []
     
-  * {{{http://kenai.com/projects/jtcl/downloads}Download}} the JTcl distribution ZIP file, and
+  * {{{https://github.com/jtcl-project/jtcl/releases}Download}} the JTcl distribution ZIP file, and
     unzip into a directory of your choice.\
     \
     Example:\

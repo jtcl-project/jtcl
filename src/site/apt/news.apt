@@ -52,9 +52,6 @@ August 4, 2013
     when required, <<package require JTcl>>.
 
 
- Please report bugs and other unexpected behaviors at the JTcl project
- site's {{{http://kenai.com/bugzilla/buglist.cgi?product=jtcl}Bug tracking system}}.
-
  <The JTcl Team>
 
 
@@ -79,9 +76,6 @@ July 1, 2013
     resolved classes.  Patch contributed by Fabrice Ilponse.
 
 
- Please report bugs and other unexpected behaviors at the JTcl project
- site's {{{http://kenai.com/bugzilla/buglist.cgi?product=jtcl}Bug tracking system}}.
-
  <The JTcl Team>
 
 
@@ -100,9 +94,6 @@ October 11, 2012
     * Compiling Tcl code to Java using TJC now uses the <-debug> compiler flag to include debugging information
       in the generated class files.
 
-
- Please report bugs and other unexpected behaviors at the JTcl project
- site's {{{http://kenai.com/bugzilla/buglist.cgi?product=jtcl}Bug tracking system}}.
 
  <The JTcl Team>
 
@@ -123,9 +114,6 @@ July 12, 2012
 
     * <<dict>> now preserves order of entries.
 
-
- Please report bugs and other unexpected behaviors at the JTcl project
- site's {{{http://kenai.com/bugzilla/buglist.cgi?product=jtcl}Bug tracking system}}.
 
  <The JTcl Team>
 
@@ -149,9 +137,6 @@ February 23, 2012
     * An ArrayIndexOutOfBounds exception was fixed in MarkableInputStream.
 
 
- Please report bugs and other unexpected behaviors at the JTcl project
- site's {{{http://kenai.com/bugzilla/buglist.cgi?product=jtcl}Bug tracking system}}.
-
  <The JTcl Team>
 
 
@@ -172,9 +157,6 @@ December 19, 2011
 
 
 
-
- Please report bugs and other unexpected behaviors at the JTcl project
- site's {{{http://kenai.com/bugzilla/buglist.cgi?product=jtcl}Bug tracking system}}.
 
  <The JTcl Team>
 
@@ -198,10 +180,6 @@ July 14, 2011
   * Javadoc for JTcl interpreter is now generated and included in website and doc zip file.
 
 
-
-
- Please report bugs and other unexpected behaviors at the JTcl project
- site's {{{http://kenai.com/bugzilla/buglist.cgi?product=jtcl}Bug tracking system}}.
 
  <The JTcl Team>
 
@@ -229,15 +207,12 @@ April 13, 2011
 
 
 
- Please report bugs and other unexpected behaviors at the JTcl project
- site's {{{http://kenai.com/bugzilla/buglist.cgi?product=jtcl}Bug tracking system}}.
-
  <The JTcl Team>
 
 November 17, 2010
 
   JTcl 2.0.0-a1 has been released!  This is the first release of JTcl, and you may
   find bugs.  Please report bugs and other unexpected behaviors at the JTcl project
-  site's {{{http://kenai.com/bugzilla/buglist.cgi?product=jtcl}Bug tracking system}}.
+  site's {{{https://github.com/jtcl-project/jtcl/issues}Bug tracking system}}.
 
   <The JTcl Team>

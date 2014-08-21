@@ -51,7 +51,8 @@ Creating a development environment
 
 
 ------------------------
-git clone git@github.com:jtcl-project/jtcl.git
+git clone https://github.com/jtcl-project/jtcl.git
+
 ------------------------
    
    JTcl source code includes <<.project>> and <<.classpath>> files for the 
