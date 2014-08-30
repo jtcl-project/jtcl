@@ -2,31 +2,32 @@
  JTcl News
  ----
 
-September 1, 2014
+August 30, 2014
 
   JTcl 2.7.0 has been released.  This is primarily a bug fix release.
 
   * JTcl now requires Java 1.6 or higher.  **POTENTIAL INCOMPATIBILITY**
 
-  * Fixed an exception when "clock scan" was called with an empty string argument.
+  * Fixed an exception when <<clock scan>> was called with an empty string argument.
 
-  * Fixed an exception when "unset -nocomplain" was called without an arugment.
+  * Fixed an exception when <<unset -nocomplain>> was called without an arugment.
 
   * Fixed parsing backslashed octal characters to conform to Tcl 8.4+, ascii digits
     '8' and '9' now terminate octal parsing.  This is a change from previous versions
     which adhered to Tcl 8.3 and before by treating these as octal when preceded by a valid octal digit.
      **POTENTIAL INCOMPATIBILITY**
 
-  * Added shell commands "jtclni" and "jtclni.bat" to start JTcl with the non-interactive
+  * Added shell commands <<jtclni>> and <<jtclni.bat>> to start JTcl with the non-interactive
     shell.  This is useful when stdin is a pipe or redirected from a file to avoid printing
     command prompts.
 
-  * A new option "-source java-source-text" was added to the hyde package "::hyde::jclass" command.
+  * A new option <-source java-source-text> was added to the hyde package <::hyde::jclass> command.
     which allows a complete Java class to be specified as a string.
 
-  * JTcl project is now hosted at Github.  The project page is at {{https://github.com/jtcl-project/jtcl}}
-    and the main website is {{http://jtcl-project.github.io/jtcl}}.  The JTcl mailing list is now 
-    located at {{https://groups.google.com/forum/#!forum/jtcl-project}}.
+  * <<The JTcl project is now hosted at Github>>.  The project page is at {{https://github.com/jtcl-project/jtcl}}
+    and the main website is {{http://jtcl-project.github.io/jtcl}}.  
+
+  * The JTcl mailing list is now located at {{https://groups.google.com/forum/#!forum/jtcl-project}}.
 
  Please report bugs and other unexpected behaviors at the JTcl project
  site's {{{https://github.com/jtcl-project/jtcl/issues}Bug tracking system}}.
