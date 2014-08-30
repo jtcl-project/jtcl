@@ -10,8 +10,8 @@ the Jacl interpreter (http://tcljava.sf.net)
 
 INSTALLING JTCL
 
-JTcl requires a Java JVM 1.5 or higher (Java 1.6+ is recommended).  You may 
-have to install Java if you don't already have it installed.  
+JTcl requires a Java JVM 1.6 or higher.  You may have to install Java 
+if you don't already have it installed.  
 
 Download JTcl distribution from: 
 
