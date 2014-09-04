@@ -293,7 +293,7 @@ public class Util {
 	 * @return
 	 * @throws TclException
 	 */
-	static long getWideInt(Interp interp, String str) throws TclException {
+	public static long getWideInt(Interp interp, String str) throws TclException {
 		return getInt(interp, str);
 	}
 
@@ -387,7 +387,7 @@ public class Util {
 	 * 
 	 * @return
 	 */
-	static final String checkBadOctal(Interp interp, String value) {
+	public static final String checkBadOctal(Interp interp, String value) {
 		int p = 0;
 		final int len = value.length();
 
@@ -636,7 +636,7 @@ public class Util {
 	 * @return the double value
 	 * @throws TclException
 	 */
-	static double getDouble(Interp interp, String s) throws TclException {
+	public static double getDouble(Interp interp, String s) throws TclException {
 		int len = s.length();
 		int i = 0;
 		char c;
@@ -1041,7 +1041,7 @@ public class Util {
 	 * @return true if found.
 	 * @throws TclException
 	 */
-	static final boolean findElement(Interp interp, String s, int i, int len, FindElemResult fer) throws TclException {
+	public static final boolean findElement(Interp interp, String s, int i, int len, FindElemResult fer) throws TclException {
 		int openBraces = 0;
 		boolean inQuotes = false;
 		char c = '\0';
@@ -1236,7 +1236,7 @@ public class Util {
 	 * @return flags
 	 * @throws TclException
 	 */
-	static int scanElement(Interp interp, String string) throws TclException {
+	public static int scanElement(Interp interp, String string) throws TclException {
 		int flags, nestingLevel;
 		char c;
 		int len;
@@ -1373,7 +1373,7 @@ public class Util {
 	 * @param sbuf
 	 *            Buffer to write element to
 	 */
-	static void convertElement(String s, int flags, StringBuffer sbuf) {
+	public static void convertElement(String s, int flags, StringBuffer sbuf) {
 		int i = 0;
 		char c;
 		final int len = (s == null ? 0 : s.length());
@@ -1662,7 +1662,7 @@ public class Util {
 	 * 
 	 * @return Platform int
 	 */
-	final static int getActualPlatform() {
+	public final static int getActualPlatform() {
 		if (Util.isWindows()) {
 			return JACL.PLATFORM_WINDOWS;
 		}
@@ -1763,7 +1763,7 @@ public class Util {
 	 *            String to check
 	 * @return true if looks like an integer
 	 */
-	static boolean looksLikeInt(String s) {
+	public static boolean looksLikeInt(String s) {
 		return Expression.looksLikeInt(s, s.length(), 0, true);
 	}
 
@@ -1804,7 +1804,7 @@ public class Util {
 	 *            The number to format into a string
 	 * @return String rep
 	 */
-	static String printDouble(double number) {
+	public static String printDouble(double number) {
 		String s = FormatCmd.toString(number, precision, 10);
 		int length = s.length();
 		for (int i = 0; i < length; i++) {
