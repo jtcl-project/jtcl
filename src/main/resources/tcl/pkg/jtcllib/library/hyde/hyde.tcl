@@ -614,6 +614,10 @@ proc hyde::compileWith_janino {name codeStr {keepClass 0}} {
 	java::call System setProperty java.class.path $old_java_class_path
     }
 
+    if {[lsearch -exact $env(TCL_CLASSPATH) $compileDir] == -1} {
+        lappend env(TCL_CLASSPATH) $compileDir
+    }
+
     set err ""
     set bytecode_arr [java::null]
     if {[catch {set bytecode_arr [$janino compile $codeStr]} err]} {
@@ -727,6 +731,10 @@ proc hyde::compileWith_janinocp {name codeStr {keepClass 0}} {
 	set janinocp [java::new hydeinternal.JaninoCP [[[java::getinterp] getClassLoader] getParent ] ]
 
 	java::call System setProperty java.class.path $old_java_class_path
+    }
+
+    if {[lsearch -exact $env(TCL_CLASSPATH) $compileDir] == -1} {
+        lappend env(TCL_CLASSPATH) $compileDir
     }
 
     set err ""
@@ -914,7 +922,7 @@ proc hyde::compileWith_pizza {name codeStr {keepClass 0}} {
 ###############################################################################
 # generic compile proc
 
-proc hyde::compile {name codeStr {keepClass 0}} {
+proc hyde::compile {name codeStr {keepClass 1}} {
     variable compiler
     variable cacheCode
     variable debug
