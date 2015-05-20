@@ -47,6 +47,8 @@ public class OpenCmd implements Command {
 
 		boolean pipeline = false; /* True if opening pipeline chan */
 		int prot = 0666; /* Final rdwr permissions of file */
+		boolean isBinaryEncoding = false;
+		boolean isReadWrite = false;
 		int modeFlags = TclIO.RDONLY; /*
 									 * Rdwr mode for the file. See the TclIO
 									 * class for more info on the valid modes
@@ -63,39 +65,50 @@ public class OpenCmd implements Command {
 			int len = modeStr.length();
 
 			// This "r+1" hack is just to get a test case to pass
-			if ((len == 0) || (modeStr.startsWith("r+") && len >= 3)) {
+			if ((len == 0) || (modeStr.startsWith("r+") && len >= 4)) {
 				throw new TclException(interp, "illegal access mode \""
 						+ modeStr + "\"");
 			}
 
-			if (len < 3) {
+			if (len > 1 && len < 4) {
+				String rest = modeStr.substring(1);
+				if (rest.equals("b") || rest.equals("+") || 
+					rest.equals("b+") || rest.equals("+b")) {
+
+					if (rest.equals("+") || rest.equals("+b") || rest.equals("b+")) {
+						isReadWrite = true;
+					}
+					if (rest.equals("b") || rest.equals("+b") || rest.equals("b+")) {
+						isBinaryEncoding = true;
+					}
+				} else {
+					throw new TclException(interp, "illegal access mode \""
+						+ modeStr + "\"");
+				}
+			}
+
+			if (len < 4) {
 				switch (modeStr.charAt(0)) {
 				case 'r': {
-					if (len == 1) {
-						modeFlags = TclIO.RDONLY;
-						break;
-					} else if (modeStr.charAt(1) == '+') {
+					modeFlags = TclIO.RDONLY;
+					if (isReadWrite) {
 						modeFlags = TclIO.RDWR;
-						break;
 					}
+					break;
 				}
 				case 'w': {
-					if (len == 1) {
-						modeFlags = (TclIO.WRONLY | TclIO.CREAT | TclIO.TRUNC);
-						break;
-					} else if (modeStr.charAt(1) == '+') {
+					modeFlags = (TclIO.WRONLY | TclIO.CREAT | TclIO.TRUNC);
+					if (isReadWrite) {
 						modeFlags = (TclIO.RDWR | TclIO.CREAT | TclIO.TRUNC);
-						break;
 					}
+					break;
 				}
 				case 'a': {
-					if (len == 1) {
-						modeFlags = (TclIO.WRONLY | TclIO.APPEND);
-						break;
-					} else if (modeStr.charAt(1) == '+') {
+					modeFlags = (TclIO.WRONLY | TclIO.APPEND);
+					if (isReadWrite) {
 						modeFlags = (TclIO.RDWR | TclIO.CREAT | TclIO.APPEND);
-						break;
 					}
+					break;
 				}
 				default: {
 					throw new TclException(interp, "illegal access mode \""
@@ -133,11 +146,13 @@ public class OpenCmd implements Command {
 						modeFlags |= TclIO.EXCL;
 					} else if (marg.toString().equals("TRUNC")) {
 						modeFlags |= TclIO.TRUNC;
+					} else if (marg.toString().equals("BINARY")) {
+						isBinaryEncoding = true;
 					} else {
 						throw new TclException(interp, "invalid access mode \""
 								+ marg.toString()
 								+ "\": must be RDONLY, WRONLY, RDWR, APPEND, "
-								+ "CREAT EXCL, NOCTTY, NONBLOCK, or TRUNC");
+								+ "CREAT EXCL, NOCTTY, NONBLOCK, TRUNC, or BINARY");
 					}
 				}
 				if (!gotRorWflag) {
@@ -174,11 +189,17 @@ public class OpenCmd implements Command {
 					ResourceChannel resource = new ResourceChannel();
 					resource.open(interp, fileName.substring(9), modeFlags);
 					TclIO.registerChannel(interp, resource);
+					if (isBinaryEncoding) {
+						resource.setEncoding(null);
+					}
 					interp.setResult(resource.getChanName());
 				} else {
 					FileChannel file = new FileChannel();
 					file.open(interp, fileName, modeFlags);
 					TclIO.registerChannel(interp, file);
+					if (isBinaryEncoding) {
+						file.setEncoding(null);
+					}
 					interp.setResult(file.getChanName());
 				}
 			} catch (IOException e) {
@@ -199,6 +220,9 @@ public class OpenCmd implements Command {
 				throw new TclException(interp, "cannot open pipeline: "+e.getMessage());
 			}
 			TclIO.registerChannel(interp, pipelineChannel);
+			if (isBinaryEncoding) {
+				pipelineChannel.setEncoding(null);
+			}
 			interp.setResult(pipelineChannel.getChanName());
 		}
 	}
