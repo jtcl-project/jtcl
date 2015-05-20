@@ -1245,6 +1245,11 @@ class FuncSig implements InternalRep {
 			if (Modifier.isStatic(newMeth.getModifiers()) || !PkgInvoker.isAccessible(newMeth)) {
 				continue;
 			}
+			
+			// Don't merge methods whose return type is not accessible. issue #9
+			if (! PkgInvoker.isAccessible(newMeth.getReturnType())) {
+				continue;
+			}
 
 			for (int j = 0; j < alist.size(); j++) {
 				Method oldMeth = (Method) alist.get(j);
@@ -1255,9 +1260,17 @@ class FuncSig implements InternalRep {
 					Class oldCls = oldMeth.getDeclaringClass();
 					int newRank = getMethodRank(c, newMeth);
 					int oldRank = getMethodRank(oldCls, oldMeth);
-
+					
 					if (newRank > oldRank) {
 						alist.set(j, newMeth);
+					} else if (newRank == oldRank) {
+						// if ranks are equal, replace if newMeth is more specific, i.e., has
+						// more parents in class hierarchy.  issue #9
+						int newHier = getParents(newMeth.getDeclaringClass());
+						int oldHier = getParents(oldMeth.getDeclaringClass());
+						if (newHier > oldHier) {
+							alist.set(j, newMeth);
+						}
 					}
 					break;
 				}
@@ -1469,6 +1482,28 @@ class FuncSig implements InternalRep {
 		}
 
 		return 0;
+	}
+	
+	/*
+	 * ----------------------------------------------------------------------
+	 * 
+	 * getParents --
+	 * 
+	 * Returns the number of parent super classes for a given class.
+	 * 
+	 * Results: number of parent classes Plus 1 (for self).
+	 * 
+	 * Side effects: None.
+	 * 
+	 * ----------------------------------------------------------------------
+	 */
+	private static int getParents(Class c) {
+		Class parent = c.getSuperclass();
+		if (parent == null) {
+			return 1;
+		} else {
+			return 1 + getParents(parent);
+		}
 	}
 
 } // end FuncSig.
