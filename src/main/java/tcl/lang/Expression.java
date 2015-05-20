@@ -1022,9 +1022,9 @@ public class Expression {
 				dividend = value.getIntValue();
 				divisor = value2.getIntValue();
 
-				if (dividend == Integer.MIN_VALUE && divisor == -1) {
-					// Avoid integer overflow on (Integer.MIN_VALUE / -1)
-					quotient = Integer.MIN_VALUE;
+				if (dividend == TCL.INT_MIN && divisor == -1) {
+					// Avoid integer overflow on (TCL.INT_MIN / -1)
+					quotient = TCL.INT_MIN;
 				} else {
 					quotient = dividend / divisor;
 					// Round down to a smaller negative number if
@@ -1069,27 +1069,26 @@ public class Expression {
 			dividend = value.getIntValue();
 			divisor = value2.getIntValue();
 
-			if (dividend == Integer.MIN_VALUE && divisor == -1) {
-				// Avoid integer overflow on (Integer.MIN_VALUE % -1)
+			if (dividend == TCL.INT_MIN && divisor == -1) {
+				// Avoid integer overflow on (TCL.INT_MIN  % -1)
 				remainder = 0;
 			} else {
 				if (divisor < 0) {
 					divisor = -divisor;
-					dividend = -dividend; // Note: -Integer.MIN_VALUE ==
-											// Integer.MIN_VALUE
+					dividend = -dividend; // Note: -TCL.INT_MIN  == TCL.INT_MIN
 					neg_divisor = true;
 				}
 				remainder = dividend % divisor;
 
 				// remainder is (remainder + divisor) when the
 				// remainder is negative. Watch out for the
-				// special case of a Integer.MIN_VALUE dividend
+				// special case of a TCL.INT_MIN dividend
 				// and a negative divisor. Don't add the divisor
 				// in that case because the remainder should
 				// not be negative.
 
 				if (remainder < 0
-						&& !(neg_divisor && (dividend == Integer.MIN_VALUE))) {
+						&& !(neg_divisor && (dividend == TCL.INT_MIN))) {
 					remainder += divisor;
 				}
 			}
