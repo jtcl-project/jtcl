@@ -38,7 +38,7 @@ Getting started with JTcl
     or to run as an interactive shell:\
     \
     <<jtcl>>
-    \
+    
 
     JTcl should be started with the non-interactive shell <<jtclni>>  when stdin is a pipe or redirected from
     a file.  

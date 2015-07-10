@@ -16,14 +16,6 @@
 
    The full JTcl release and website are built with Maven.
    
-Building with Ant
-   
-------------------------
-ant clean
-ant compile
-ant package
-------------------------
-   
 Building with Maven
    
   Build the JTcl release, output files in the <target> directory:
@@ -44,10 +36,18 @@ mvn -DskipTests clean compile jar:jar
 mvn clean test
 ------------------------
    
+Building with Ant (deprecated)
+   
+------------------------
+ant clean
+ant compile
+ant package
+------------------------
+   
 Creating a development environment
 
    Install Java JDK 1.6 or higher, if not already installed.
-   The JTcl project uses the {{{http://git-scm.com}}} version control system. 
+   The JTcl project uses the {{{http://git-scm.com}Git}} version control system. 
 
 
 ------------------------

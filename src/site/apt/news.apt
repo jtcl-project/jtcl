@@ -2,6 +2,29 @@
  JTcl News
  ----
 
+July 11, 2015
+
+  JTcl 2.8.0 has been released.  This is primarily a bug fix release.
+
+  * Fixed a bug in the <<java>> package that allowed methods to
+    be selected for invocation that returned unaccessible classes.  This
+    was manifest with java.lang.StringBuilder and java.lang.StringBuffer instance methods that
+    returned an error <Return type "java.lang.AbstractStringBuilder" is not accessible.>
+
+  * Fixed incorrect use of Integer MIN_VALUE/MAX_VALUE with TCL equivalents (which are
+    redefined from Long MIN_VALUE/MAX_VALUE).
+
+  * Allow "b" and BINARY access modifiers on <<open>> command <(enhancement.)>   This sets
+    the file's encoding to binary.  Examples: <open file wb>;  <open file \{RDONLY BINARY\}>
+
+  * Static utility methods in Util.java now are <public> for use by extensions <(enhancement.)>
+
+ Please report bugs and other unexpected behaviors at the JTcl project
+ site's {{{https://github.com/jtcl-project/jtcl/issues}Bug tracking system}}.
+
+ <The JTcl Team>
+
+
 August 30, 2014
 
   JTcl 2.7.0 has been released.  This is primarily a bug fix release.
