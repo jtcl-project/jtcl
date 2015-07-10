@@ -433,7 +433,7 @@ unmatched open brace in list
 \"open \$path(test3) \"FOO \\{BAR BAZ\"\""
 test iocmd-12.7 {POSIX open access modes: errors} {
   list [catch {open $path(test3) {FOO BAR BAZ}} msg] $msg
-} {1 {invalid access mode "FOO": must be RDONLY, WRONLY, RDWR, APPEND, CREAT EXCL, NOCTTY, NONBLOCK, or TRUNC}}
+} {1 {invalid access mode "FOO": must be RDONLY, WRONLY, RDWR, APPEND, CREAT EXCL, NOCTTY, NONBLOCK, TRUNC, or BINARY}}
 test iocmd-12.8 {POSIX open access modes: errors} {
     list [catch {open $path(test3) {TRUNC CREAT}} msg] $msg
 } {1 {access mode must include either RDONLY, WRONLY, or RDWR}}
