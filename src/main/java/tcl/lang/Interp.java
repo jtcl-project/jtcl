@@ -611,6 +611,7 @@ public class Interp extends EventuallyFreed {
 			// Set up tcl_platform, tcl_version, tcl_library and other
 			// global variables.
 
+			setVar("tcl_platform", "engine", "JTcl", TCL.GLOBAL_ONLY);
 			setVar("tcl_platform", "platform", "java", TCL.GLOBAL_ONLY);
 			setVar("tcl_platform", "byteOrder", "bigEndian", TCL.GLOBAL_ONLY);
 			setVar("tcl_platform", "user", Util.tryGetSystemProperty("user.name", "unknown"), TCL.GLOBAL_ONLY);
