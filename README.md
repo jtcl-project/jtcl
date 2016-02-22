@@ -70,7 +70,7 @@ Please subscribe and use the JTcl mailing list for questions and to
 share information.  The JTcl Bug tracker should be used to
 report bugs.
 
-Mailing lists: http://groups.google.com/jtcl
+Mailing lists: https://groups.google.com/d/forum/jtcl-project
 Bug reporting: https://github.com/jtcl-project/jtcl/issues
 
 
