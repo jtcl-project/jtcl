@@ -249,7 +249,8 @@ proc jdk_tool_javac { filenames } {
           set javac [list javac -classpath [file normalize $::env(CLASSPATH)]]
     }
 
-    set javac_flags "-g -target 1.5"
+    # without Xlint, any output from javac is considered (erroneously) as failure
+    set javac_flags "-g -source 1.5 -target 1.5 -Xlint:-options"
 
     if {![file exists $TJC_build]} {
         file mkdir $TJC_build
