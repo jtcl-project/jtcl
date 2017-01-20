@@ -1,0 +1,13 @@
+---
+language: java
+sudo: false
+cache:
+  directories:
+    - $HOME/.m2
+jdk:
+  - oraclejdk8
+  - oraclejdk7
+  - openjdk6
+install: ant -debug -noinput get-deps
+script: |
+    ant -debug -noinput -lib $HOME/.m2/repository/junit/junit/3.8.1 test
