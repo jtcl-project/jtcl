@@ -64,11 +64,11 @@ public class Interp extends EventuallyFreed {
 	/**
 	 * We pretend this is Tcl 8.4
 	 */
-	static final String TCL_VERSION = "8.4";
+	public static final String TCL_VERSION = "8.4";
 	/**
 	 * We pretend this is Tcl 8.4, patch level 0.
 	 */
-	static final String TCL_PATCH_LEVEL = "8.4.0";
+	public static final String TCL_PATCH_LEVEL = "8.4.0";
 
 	/**
 	 * Total number of times a command procedure has been called for this interpreter.
