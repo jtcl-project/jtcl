@@ -40,7 +40,7 @@ public class JtclScriptEngineFactory implements ScriptEngineFactory {
     }
 
     public String getEngineVersion() {
-        return "2.8.0";
+        return "2.9.0";
     }
 
     public List<String> getExtensions() {
