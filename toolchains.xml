@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF8"?>
+<toolchains>
+
+    <!-- JDK toolchains -->
+    <toolchain>
+      <type>jdk</type>
+      <provides>
+        <version>1.6</version>
+        <vendor>sun</vendor>
+      </provides>
+      <configuration>
+
+        <!-- change jdkHome to the location of your Java 1.6 sdk -->
+
+        <jdkHome>/usr/local/java16</jdkHome>
+
+
+      </configuration>
+    </toolchain>
+     
+</toolchains>

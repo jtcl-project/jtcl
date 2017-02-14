@@ -40,6 +40,33 @@
             </resource>
         </resources>
         <plugins>
+       <plugin>
+
+         <!-- toolchains plugin expects to find $USER/.m2/toolchains.xml -->
+         <!-- or use the toolchains.xml in this directory                -->
+         <!-- as: mvn (dash)(dash)global-toolchains `pwd`/toolchains.xml -->
+         <!-- be sure to edit toolchains.xml to set the path to your java 1.6 sdk -->
+
+
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-toolchains-plugin</artifactId>
+         <version>1.1</version>
+         <executions>
+           <execution>
+             <goals>
+               <goal>toolchain</goal>
+             </goals>
+           </execution>
+         </executions>
+         <configuration>
+         <toolchains>
+           <jdk>
+              <version>1.6</version>
+              <vendor>sun</vendor>
+           </jdk>
+         </toolchains>
+        </configuration>
+       </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
